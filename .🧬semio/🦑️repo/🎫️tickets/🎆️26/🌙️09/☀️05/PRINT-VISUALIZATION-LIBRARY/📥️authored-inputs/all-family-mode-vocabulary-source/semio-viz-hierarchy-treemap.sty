@@ -1,0 +1,41 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-viz-hierarchy-treemap}[2026/09/05 v0.3.0 semio viz namespace hierarchy-treemap families]
+
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+\RequirePackage{semio-viz-hierarchy}
+\RequirePackage{semio-viz-family}
+
+\ExplSyntaxOn
+
+%region 🔖️Keys
+% 📋 `semio / viz / family / treemap` accepts every key of `semio / viz / hierarchy`
+% (data, id, parent, value, path, delimiter, aggregate, sort), of
+% `… / hierarchy / layout` (size, tile, ratio, padding, paddingInner, paddingOuter,
+% paddingTop, paddingRight, paddingBottom, paddingLeft, round, relaxation) and of
+% `… / hierarchy / render` (width, height, inset, labels, labelColumn, fill,
+% opacity, stroke, strokeWidth) plus its own:
+%   depth  (first depth that is drawn; 1 hides the root rectangle) default 1
+\int_new:N \l_semio_viz_hierarchy_treemap_depth_int
+
+\keys_define:nn { semio / viz / family / treemap } {
+  depth .int_set:N = \l_semio_viz_hierarchy_treemap_depth_int,
+}
+%endregion 🔖️Keys
+
+%region 🔖️Families
+% 🗺️ The space-filling treemap. `tile=squarify` (d3's golden-ratio rows) is the
+% default; `slice`, `dice`, `slice-dice`, `binary` and `resquarify` are d3's other
+% tilings, `strip` is the fixed-orientation Bederson strip treemap and `voronoi`
+% the capacity-constrained power diagram, both documented in semio-viz-hierarchy.
+\SemioVizFamily{treemap}{
+  \int_set:Nn \l_semio_viz_hierarchy_treemap_depth_int { 1 }
+  \semio_viz_hierarchy_family_setup:nnn { treemap }
+    { fill = branch, sort = value-descending, labels = true } {#1}
+  \semio_viz_hierarchy_family_layout:n { treemap }
+  \semio_viz_hierarchy_draw_rects:VVn \c_semio_viz_hierarchy_family_tl
+    \l_semio_viz_hierarchy_table_tl { \l_semio_viz_hierarchy_treemap_depth_int }
+}
+%endregion 🔖️Families
+
+\ExplSyntaxOff

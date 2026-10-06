@@ -1,0 +1,344 @@
+{
+  "nativeActualImageControls": {
+    "schema": {
+      "type": "object",
+      "required": [
+        "canvas",
+        "center",
+        "pixels",
+        "sourceSize",
+        "cases",
+        "toleranceMm"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "canvas": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          }
+        },
+        "center": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "number"
+          }
+        },
+        "sourceSize": {
+          "const": [
+            2,
+            3
+          ]
+        },
+        "pixels": {
+          "type": "array",
+          "minItems": 6,
+          "maxItems": 6,
+          "items": {
+            "type": "array",
+            "minItems": 4,
+            "maxItems": 4,
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            }
+          }
+        },
+        "toleranceMm": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 8,
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "size",
+              "aspect",
+              "rotate",
+              "opacity"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "size": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "aspect": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "rotate": {
+                "type": "number"
+              },
+              "opacity": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    "vectors": {
+      "canvas": [
+        80,
+        40
+      ],
+      "center": [
+        40,
+        20
+      ],
+      "sourceSize": [
+        2,
+        3
+      ],
+      "pixels": [
+        [
+          255,
+          0,
+          0,
+          255
+        ],
+        [
+          0,
+          255,
+          0,
+          255
+        ],
+        [
+          0,
+          0,
+          255,
+          255
+        ],
+        [
+          255,
+          255,
+          0,
+          255
+        ],
+        [
+          255,
+          0,
+          255,
+          255
+        ],
+        [
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "toleranceMm": 0.04,
+      "cases": [
+        {
+          "id": "wide",
+          "size": 36,
+          "aspect": 2,
+          "rotate": 0,
+          "opacity": 1
+        },
+        {
+          "id": "square",
+          "size": 36,
+          "aspect": 1,
+          "rotate": 0,
+          "opacity": 1
+        },
+        {
+          "id": "tall",
+          "size": 36,
+          "aspect": 0.5,
+          "rotate": 0,
+          "opacity": 1
+        },
+        {
+          "id": "large",
+          "size": 100,
+          "aspect": 2,
+          "rotate": 0,
+          "opacity": 1
+        },
+        {
+          "id": "rotate-positive",
+          "size": 36,
+          "aspect": 2,
+          "rotate": 30,
+          "opacity": 1
+        },
+        {
+          "id": "rotate-negative",
+          "size": 36,
+          "aspect": 2,
+          "rotate": -45,
+          "opacity": 1
+        },
+        {
+          "id": "translucent",
+          "size": 36,
+          "aspect": 2,
+          "rotate": 30,
+          "opacity": 0.4
+        },
+        {
+          "id": "invisible",
+          "size": 36,
+          "aspect": 2,
+          "rotate": 30,
+          "opacity": 0
+        }
+      ]
+    }
+  },
+  "nativeTextRenderingControls": {
+    "schema": {
+      "type": "array",
+      "minItems": 16,
+      "maxItems": 16,
+      "items": {
+        "type": "object",
+        "required": [
+          "mode",
+          "fill",
+          "stroke",
+          "visible"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "mode": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 7
+          },
+          "fill": {
+            "enum": [
+              0,
+              1
+            ]
+          },
+          "stroke": {
+            "enum": [
+              0,
+              1
+            ]
+          },
+          "visible": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "vectors": [
+      {
+        "mode": 0,
+        "fill": 0,
+        "stroke": 1,
+        "visible": false
+      },
+      {
+        "mode": 0,
+        "fill": 1,
+        "stroke": 0,
+        "visible": true
+      },
+      {
+        "mode": 1,
+        "fill": 0,
+        "stroke": 1,
+        "visible": true
+      },
+      {
+        "mode": 1,
+        "fill": 1,
+        "stroke": 0,
+        "visible": false
+      },
+      {
+        "mode": 2,
+        "fill": 0,
+        "stroke": 1,
+        "visible": true
+      },
+      {
+        "mode": 2,
+        "fill": 1,
+        "stroke": 0,
+        "visible": true
+      },
+      {
+        "mode": 3,
+        "fill": 0,
+        "stroke": 1,
+        "visible": false
+      },
+      {
+        "mode": 3,
+        "fill": 1,
+        "stroke": 0,
+        "visible": false
+      },
+      {
+        "mode": 4,
+        "fill": 0,
+        "stroke": 1,
+        "visible": false
+      },
+      {
+        "mode": 4,
+        "fill": 1,
+        "stroke": 0,
+        "visible": true
+      },
+      {
+        "mode": 5,
+        "fill": 0,
+        "stroke": 1,
+        "visible": true
+      },
+      {
+        "mode": 5,
+        "fill": 1,
+        "stroke": 0,
+        "visible": false
+      },
+      {
+        "mode": 6,
+        "fill": 0,
+        "stroke": 1,
+        "visible": true
+      },
+      {
+        "mode": 6,
+        "fill": 1,
+        "stroke": 0,
+        "visible": true
+      },
+      {
+        "mode": 7,
+        "fill": 0,
+        "stroke": 1,
+        "visible": false
+      },
+      {
+        "mode": 7,
+        "fill": 1,
+        "stroke": 0,
+        "visible": false
+      }
+    ]
+  }
+}

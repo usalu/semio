@@ -1,0 +1,32 @@
+[
+  {
+    "path": "dashboard/🖥️terminal/🦀️.rs",
+    "replace": [
+      {
+        "from": "inventory_status: \"discovering commands\".into(), preferences,",
+        "to": "inventory_status: \"discovering commands\".into(), last_progress: 0, preferences,"
+      },
+      {
+        "from": "dash.windows.push(w1); dash.remount(&mut tui);",
+        "to": "dash.windows.push(w1); dash.sort_commands(); dash.remount(&mut tui);"
+      },
+      {
+        "from": "push_window_to_stack(&mut dash.layout, &dash.focused, WindowLayoutWindowNode { window_kind_id: new_id.clone(), title: Some(\"Commands\".into()), corner: None });",
+        "to": "dash.place_window(&new_id);"
+      },
+      {
+        "from": "if let Some(widget_state) = tui.scene.node_mut(*widget).widget() {\n                                if let Some(signal)",
+        "to": "if k.key == Key::Esc && matches!(&tui.scene.node(*widget).content, NodeContent::Widget(WidgetState::Wizard(state)) if state.filter.is_empty()) { dash.handle_wizard_signal(&mut tui, &fid, WidgetSignal::NavigateBack); need_paint = true; continue; }\n                            if let Some(widget_state) = tui.scene.node_mut(*widget).widget() {\n                                if let Some(signal)"
+      }
+    ]
+  },
+  {
+    "path": "dashboard/🖥️terminal/🧪️tests/🔬️unit/🦀️.rs",
+    "replace": [
+      {
+        "from": "inventory_status: String::new(), preferences:",
+        "to": "inventory_status: String::new(), last_progress: 0, preferences:"
+      }
+    ]
+  }
+]

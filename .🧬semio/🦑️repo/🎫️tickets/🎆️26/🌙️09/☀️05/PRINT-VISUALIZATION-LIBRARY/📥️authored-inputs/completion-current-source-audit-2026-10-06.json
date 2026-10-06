@@ -1,0 +1,52 @@
+[
+  {
+    "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\🔣️.json",
+    "bytes": 1598112,
+    "sha256": "6D603BDCF76B08695E1F08925A0A3E17A2998DE1061F22B02BB638453A8EDBCC"
+  },
+  {
+    "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🖼️assets\\🔣️viz-catalog.json",
+    "bytes": 819528,
+    "sha256": "5453A0BE1B3E8C2D3675FC98855B08E2D659BB98CFFF96C3856783A1858AF2D0"
+  },
+  {
+    "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🖋️latex\\semio-viz-catalog.sty",
+    "bytes": 310529,
+    "sha256": "48AAD285001248EA4CE8DD4A82C4053F22EAA8958EA63205602E8EEDDC55A2F3"
+  },
+  {
+    "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🖋️latex\\semio-viz-scientific-biology.sty",
+    "bytes": 98859,
+    "sha256": "062FB347E807995BB16B434813AD101AA42DFDF6F3E64B25A047D6D711075230"
+  },
+  {
+    "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🖋️latex\\semio-viz-scientific-signal.sty",
+    "bytes": 40621,
+    "sha256": "D31E8214211FAF4737FC5534E0F4D73AA02B6C5F447CEEB94CF57A7EDDD7C713"
+  },
+  {
+    "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🖋️latex\\semio-viz-scientific-surface.sty",
+    "bytes": 31322,
+    "sha256": "A04790A75B05F2FC945CA7A783A336ADC5EA29F7097A3205B0B90BEC819D3018"
+  },
+  {
+    "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🖋️latex\\semio-viz-scientific-geometry.sty",
+    "bytes": 69025,
+    "sha256": "67DCCE96106106ED197E872D48AE37AA59B4D35972E07F006656BFC8A47896C9"
+  },
+  {
+    "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🖋️latex\\semio-viz-scientific-field.sty",
+    "bytes": 52766,
+    "sha256": "745CF1244ECDE64A3DA82D5D653A4A1D042029A817B7E785B1258B69E0A07EE8"
+  },
+  {
+    "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🖋️latex\\semio-viz-geo-routes.sty",
+    "bytes": 28744,
+    "sha256": "434E42F1AE4C623B81DD2478E98CD85C196AD99E99C8FEA8AE2F569998BBA3C9"
+  },
+  {
+    "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🖋️latex\\semio-viz-network-arc.sty",
+    "bytes": 11188,
+    "sha256": "67E16AD2F93F6B009B114C7C61C1445CAF5A22487E2EEA81306ADA688CCB348E"
+  }
+]

@@ -11,7 +11,7 @@ import { LayeredOverview, capturePosterFromCanvases, type LayeredCardState, type
 const HOME = ["learner", "physics", "intro", "heating", "board", "cooling", "badges", "demand", "prefs"] as const;
 const LABEL = (id: string): string => id.charAt(0).toUpperCase() + id.slice(1);
 const GRID: Readonly<Record<string, LayeredCell>> = Object.fromEntries(HOME.map((id, index) => [id, { column: index % 3, row: Math.floor(index / 3) }]));
-const LABELS: LayeredOverviewProps["labels"] = { grid: "Quizzes", overview: "Overview", waiting: (pane) => `${pane.label} is waiting to start`, failed: (pane) => `${pane.label} could not be loaded.` };
+const LABELS: LayeredOverviewProps["labels"] = { grid: "Quizzes", overview: "Overview", waiting: (pane) => `${pane.label} is waiting to start`, failed: (pane) => `${pane.label} could not be loaded.`, neighbour: (pane, direction) => `Go ${direction} to ${pane.label}` };
 const LATER = { warmStartMs: 1e9, warmIntervalMs: 1e9 } as const;
 
 /** 🥞️ Pages that record when they are rendered. */
@@ -456,21 +456,323 @@ describe("LayeredOverview", () => {
     expect(veil()!.dataset.veil).toBe("whole");
   });
 
-  it("lists one snap section per pane under its own glass (near the view only), and locks the list while a page is open", () => {
-    const wide = renderHome({ mode: "list", reducedMotion: "always", windowing: { radius: 9 } });
-    expect(wide.root.querySelectorAll("[data-layered-veil][data-level='dialog']")).toHaveLength(9);
-    wide.unmount();
-    const { root } = renderHome({ mode: "list", reducedMotion: "always" });
-    expect(root.dataset.mode).toBe("list");
-    const list = screen.getByRole("group", { name: "Quizzes" });
-    expect(list.className).toContain("snap-mandatory");
-    expect(list.querySelectorAll("[data-layered-section]")).toHaveLength(9);
-    expect([...list.querySelectorAll<HTMLElement>("[data-layered-section]")].map((section) => section.querySelector("[data-layered-veil]") !== null)).toEqual([true, true, false, false, false, false, false, false, false]);
-    expect(within(list).getAllByRole("region")).toHaveLength(9);
-    fireEvent.click(screen.getByRole("button", { name: "Open Board" }));
-    expect(list.className).toContain("overflow-hidden");
+});
+
+describe("LayeredOverview swipe", () => {
+  /** 📐️ A 900 × 900 view, as the swipe measures it. */
+  const measured = (root: HTMLElement) => {
+    Object.defineProperty(root, "clientWidth", { configurable: true, value: 900 });
+    Object.defineProperty(root, "clientHeight", { configurable: true, value: 900 });
+  };
+  /** 👆️ A finger (or the mouse) from one point to another in `steps` moves over `ms`, lifted at the end unless `hold`. */
+  const swipe = (target: HTMLElement, from: readonly [number, number], to: readonly [number, number], ms: number, options: { readonly steps?: number; readonly pointerType?: string; readonly hold?: boolean; readonly pointerId?: number } = {}) => {
+    const { steps = 10, pointerType = "touch", hold = false, pointerId = 1 } = options;
+    const at = (index: number) => ({ clientX: from[0] + ((to[0] - from[0]) * index) / steps, clientY: from[1] + ((to[1] - from[1]) * index) / steps });
+    fireEvent.pointerDown(target, { pointerId, pointerType, ...at(0) });
+    for (let index = 1; index <= steps; index += 1) {
+      act(() => void vi.advanceTimersByTime(ms / steps));
+      fireEvent.pointerMove(target, { pointerId, pointerType, ...at(index) });
+    }
+    if (!hold) fireEvent.pointerUp(target, { pointerId, pointerType, ...at(steps) });
+  };
+  const swipeHome = (props: Partial<LayeredOverviewProps> = {}, rendered: string[] = []) => {
+    fakeClock();
+    const home = renderHome({ mode: "swipe", ...props }, rendered);
+    measured(home.root);
+    return { ...home, cards: () => home.root.querySelector<HTMLElement>("[data-layered-overlay]")!, at: () => cellsAt(home.strip(), 3, 3) };
+  };
+  /** 🧭️ The strip's offset in cells, to the precision its percent transform keeps. */
+  const cellsAt = (strip: HTMLElement, columns: number, rows: number) => {
+    const { x, y } = offsetOf(strip.style.transform, columns, rows);
+    return { x: Math.round(x * 1e4) / 1e4 + 0, y: Math.round(y * 1e4) / 1e4 + 0 };
+  };
+
+  it("lays the cards on a layer of the strip's own grid that moves with it, each centred in its page's cell, one glass below them", () => {
+    const { root, strip, cards } = swipeHome();
+    expect(root.dataset.mode).toBe("swipe");
+    expect(root.dataset.pan).toBe("none");
+    expect(root.style.touchAction).toBe("pinch-zoom");
+    expect(root.querySelectorAll(".ui-veil")).toHaveLength(1);
+    expect(cards()).toBe(screen.getByRole("group", { name: "Quizzes" }));
+    expect([cards().style.width, cards().style.height, cards().style.gridTemplateColumns]).toEqual(["300%", "300%", "repeat(3, minmax(0, 1fr))"]);
+    expect(cards().style.transform).toBe(strip().style.transform);
+    const placed = [...cards().querySelectorAll<HTMLElement>("[data-layered-cell]")];
+    expect(placed.map((cell) => [cell.dataset.layeredCell, Number(cell.style.gridColumn) - 1, Number(cell.style.gridRow) - 1])).toEqual(HOME.map((id) => [id, GRID[id]!.column, GRID[id]!.row]));
+    for (const cell of placed) {
+      expect(cell.className.split(" ")).toEqual(expect.arrayContaining(["pointer-events-none", "items-center-safe", "overflow-y-auto", "[:where(&)_*]:touch-pinch-zoom"]));
+      expect(cell.style.touchAction, "a cell that may scroll is a scroll container, so it must refuse the browser's pan itself").toBe("pinch-zoom");
+    }
+    expect(within(cards()).getAllByRole("region").map((region) => region.getAttribute("aria-labelledby"))).toEqual(HOME.map((id) => `card-${id}`));
+  });
+
+  it("carries the strip along the axis a swipe takes first and settles it on the neighbouring cell, cards and all", () => {
+    const { root, strip, cards, at } = swipeHome();
+    swipe(root, [600, 450], [300, 470], 100);
+    frames(400);
+    expect(at()).toEqual({ x: 1, y: 0 });
+    expect(cards().style.transform).toBe(strip().style.transform);
+    swipe(root, [450, 600], [430, 300], 100);
+    frames(400);
+    expect(at()).toEqual({ x: 1, y: 1 });
+    swipe(root, [300, 450], [600, 450], 100);
+    frames(400);
+    expect(at()).toEqual({ x: 0, y: 1 });
+    swipe(root, [450, 300], [450, 600], 100);
+    frames(400);
+    expect(at()).toEqual({ x: 0, y: 0 });
+  });
+
+  it("follows the finger while it swipes, moves on after a quarter of the view however slow, and stays after a short slow swipe", () => {
+    const { root, at } = swipeHome();
+    swipe(root, [600, 450], [420, 450], 2000, { hold: true });
+    expect(at().x).toBeCloseTo(0.2, 6);
+    fireEvent.pointerUp(root, { pointerId: 1, pointerType: "touch", clientX: 420, clientY: 450 });
+    frames(400);
+    expect(at()).toEqual({ x: 0, y: 0 });
+    swipe(root, [600, 450], [360, 450], 2000);
+    frames(400);
+    expect(at()).toEqual({ x: 1, y: 0 });
+  });
+
+  it("wraps across every edge like an endless canvas: the far page comes in right beside the view, and once the strip rests the index has wrapped", () => {
+    const { root, at } = swipeHome();
+    const shifted = (id: string) => [pane(root, id).style.transform, root.querySelector<HTMLElement>(`[data-layered-cell="${id}"]`)!.style.transform];
+    swipe(root, [300, 450], [600, 450], 100, { hold: true });
+    expect(shifted("intro"), "the last page of the row comes in from the left").toEqual(["translate(-300%, 0%)", "translate(-300%, 0%)"]);
+    expect(at()).toEqual({ x: -0.3333, y: 0 });
+    fireEvent.pointerUp(root, { pointerId: 1, pointerType: "touch", clientX: 600, clientY: 450 });
+    frames(400);
+    expect(at(), "the index wrapped to the last column").toEqual({ x: 2, y: 0 });
+    expect(shifted("intro")).toEqual(["", ""]);
+    swipe(root, [450, 300], [450, 600], 100);
+    frames(400);
+    expect(at(), "above the top row lies the bottom row").toEqual({ x: 2, y: 2 });
+    swipe(root, [600, 450], [300, 450], 100);
+    frames(400);
+    expect(at(), "right of the last column lies the first").toEqual({ x: 0, y: 2 });
+    swipe(root, [450, 600], [450, 300], 100);
+    frames(400);
+    expect(at(), "below the bottom row lies the top row").toEqual({ x: 0, y: 0 });
+    for (const id of HOME) expect(shifted(id), id).toEqual(["", ""]);
+  });
+
+  it("completes a wrap at once when a new touch lands during its settle, so the next swipe starts from the wrapped page", () => {
+    const { root, at } = swipeHome();
+    swipe(root, [300, 450], [600, 450], 100);
+    frames(100);
+    fireEvent.pointerDown(root, { pointerId: 9, pointerType: "touch", isPrimary: true, clientX: 450, clientY: 450 });
+    expect(at()).toEqual({ x: 2, y: 0 });
+    expect(pane(root, "intro").style.transform).toBe("");
+    fireEvent.pointerUp(root, { pointerId: 9, pointerType: "touch", isPrimary: true, clientX: 450, clientY: 450 });
+    swipe(root, [300, 450], [600, 450], 100, { pointerId: 10 });
+    frames(400);
+    expect(at()).toEqual({ x: 1, y: 0 });
+  });
+
+  it("pulls the strip on a rubber band only where the row or column holds no other page, and lets it spring back", () => {
+    fakeClock();
+    const ids = ["a", "b"];
+    const { container } = render(<LayeredOverview panes={pages(ids)} cells={{ a: { column: 0, row: 0 }, b: { column: 1, row: 0 } }} renderCard={card} labels={LABELS} lifecycle={LATER} mode="swipe" />);
+    const root = container.querySelector<HTMLElement>("[data-layered-overview]")!;
+    measured(root);
+    const strip = () => cellsAt(root.querySelector<HTMLElement>("[data-layered-strip]")!, 2, 1);
+    swipe(root, [450, 300], [450, 1200], 300, { hold: true });
+    expect(strip().y).toBeLessThan(0);
+    expect(strip().y).toBeGreaterThan(-0.4);
+    fireEvent.pointerUp(root, { pointerId: 1, pointerType: "touch", clientX: 450, clientY: 1200 });
+    frames(400);
+    expect(strip()).toEqual({ x: 0, y: 0 });
+    swipe(root, [300, 450], [600, 450], 100);
+    frames(400);
+    expect(strip(), "two pages side by side: the other one lies on both sides").toEqual({ x: 1, y: 0 });
+  });
+
+  it("lands a swipe into a short row on its occupied columns, as a pan does", () => {
+    fakeClock();
+    const ids = Array.from({ length: 10 }, (_, index) => `app${index}`);
+    const cells = Object.fromEntries(centeredLastRowCells(10).map((cell, index) => [ids[index]!, cell]));
+    const { container } = render(<LayeredOverview panes={pages(ids)} cells={cells} renderCard={card} labels={LABELS} lifecycle={LATER} mode="swipe" />);
+    const root = container.querySelector<HTMLElement>("[data-layered-overview]")!;
+    measured(root);
+    const strip = () => cellsAt(root.querySelector<HTMLElement>("[data-layered-strip]")!, 4, 3);
+    swipe(root, [450, 600], [450, 300], 100);
+    frames(400);
+    expect(strip()).toEqual({ x: 0, y: 1 });
+    swipe(root, [450, 600], [450, 300], 100);
+    frames(400);
+    expect(strip()).toEqual({ x: 1, y: 2 });
+  });
+
+  it("lets a tall card scroll before the strip moves, and the strip move once the card is at its end", () => {
+    const { root, at } = swipeHome();
+    const cell = root.querySelector<HTMLElement>('[data-layered-cell="learner"]')!;
+    cell.style.overflowY = "auto";
+    Object.defineProperty(cell, "scrollHeight", { configurable: true, value: 1500 });
+    Object.defineProperty(cell, "clientHeight", { configurable: true, value: 900 });
+    const button = within(cell).getByRole("button", { name: "Open Learner" });
+    swipe(button, [450, 700], [450, 400], 300);
+    expect(cell.scrollTop).toBe(300);
+    expect(at()).toEqual({ x: 0, y: 0 });
+    frames(2000);
+    cell.scrollTop = 600;
+    swipe(button, [450, 700], [450, 400], 100);
+    frames(400);
+    expect(cell.scrollTop).toBe(600);
+    expect(at()).toEqual({ x: 0, y: 1 });
+  });
+
+  it("swallows the click a swipe ends in, but not a tap", () => {
+    const { root } = swipeHome();
+    const button = within(root.querySelector<HTMLElement>('[data-layered-cell="learner"]')!).getByRole("button", { name: "Open Learner" });
+    swipe(button, [600, 450], [300, 450], 100);
+    fireEvent.click(button);
+    expect(openedPane()).toBeNull();
+    frames(600);
+    fireEvent.pointerDown(button, { pointerId: 2, pointerType: "touch", clientX: 300, clientY: 300 });
+    fireEvent.pointerUp(button, { pointerId: 2, pointerType: "touch", clientX: 302, clientY: 301 });
+    fireEvent.click(button);
+    expect(openedPane()).toBe(pane(root, "learner"));
+  });
+
+  it("leaves mouse drags alone, hands a second finger to the pinch zoom and steps one cell per wheel gesture", () => {
+    const { root, at } = swipeHome();
+    swipe(root, [600, 450], [100, 450], 100, { pointerType: "mouse" });
+    frames(400);
+    expect(at()).toEqual({ x: 0, y: 0 });
+    swipe(root, [600, 450], [400, 450], 100, { hold: true });
+    fireEvent.pointerDown(root, { pointerId: 2, pointerType: "touch", clientX: 200, clientY: 200 });
+    frames(400);
+    expect(at()).toEqual({ x: 0, y: 0 });
+    fireEvent.pointerUp(root, { pointerId: 1, pointerType: "touch", clientX: 400, clientY: 450 });
+    frames(400);
+    expect(at()).toEqual({ x: 0, y: 0 });
+    for (let tick = 0; tick < 6; tick += 1) {
+      fireEvent.wheel(root, { deltaY: 30 });
+      act(() => void vi.advanceTimersByTime(40));
+    }
+    frames(400);
+    expect(at()).toEqual({ x: 0, y: 1 });
+    fireEvent.wheel(root, { deltaY: 100, shiftKey: true });
+    frames(400);
+    expect(at()).toEqual({ x: 1, y: 1 });
+    fireEvent.wheel(root, { deltaY: -100, ctrlKey: true });
+    frames(400);
+    expect(at()).toEqual({ x: 1, y: 1 });
+  });
+
+  it("starts a new gesture with every new primary touch, even when the last one never told it was lifted", () => {
+    const { root, at } = swipeHome();
+    swipe(root, [600, 450], [400, 450], 100, { hold: true });
+    const at0 = { clientX: 600, clientY: 450 };
+    fireEvent.pointerDown(root, { pointerId: 7, pointerType: "touch", isPrimary: true, ...at0 });
+    for (let step = 1; step <= 10; step += 1) {
+      act(() => void vi.advanceTimersByTime(10));
+      fireEvent.pointerMove(root, { pointerId: 7, pointerType: "touch", isPrimary: true, clientX: 600 - step * 30, clientY: 450 });
+    }
+    fireEvent.pointerUp(root, { pointerId: 7, pointerType: "touch", isPrimary: true, clientX: 300, clientY: 450 });
+    frames(400);
+    expect(at()).toEqual({ x: 1, y: 0 });
+  });
+
+  /** 🧭️ The neighbour hints shown: direction, page and accessible name, in DOM order. */
+  const hints = (root: HTMLElement) => [...root.querySelectorAll<HTMLButtonElement>("[data-layered-neighbour]")].map((hint) => [hint.dataset.layeredNeighbour, hint.dataset.pane, hint.getAttribute("aria-label"), hint.textContent?.trim()]);
+
+  it("names the page that lies behind each edge of the view, across an edge the page of the far side", () => {
+    const { root } = swipeHome();
+    expect(hints(root), "on the wrapping strip every edge has a page behind it").toEqual([
+      ["up", "badges", "Go up to Badges", "Badges"],
+      ["left", "intro", "Go left to Intro", "Intro"],
+      ["right", "physics", "Go right to Physics", "Physics"],
+      ["down", "heating", "Go down to Heating", "Heating"],
+    ]);
+    swipe(root, [450, 600], [450, 300], 100);
+    frames(400);
+    swipe(root, [600, 450], [300, 450], 100);
+    frames(400);
+    expect(hints(root).map(([direction, page]) => [direction, page])).toEqual([
+      ["up", "physics"],
+      ["left", "heating"],
+      ["right", "cooling"],
+      ["down", "demand"],
+    ]);
+    for (const hint of root.querySelectorAll<HTMLElement>("[data-layered-neighbour]")) expect(hint.tagName).toBe("BUTTON");
+  });
+
+  it("goes across an edge by a hint too, the far page coming in on the hint's side", () => {
+    const { root, at } = swipeHome();
+    fireEvent.click(screen.getByRole("button", { name: "Go up to Badges" }));
+    frames(100);
+    expect(pane(root, "badges").style.transform).toBe("translate(0%, -300%)");
+    expect(at().y).toBeLessThan(0);
+    frames(400);
+    expect(at()).toEqual({ x: 0, y: 2 });
+    expect(pane(root, "badges").style.transform).toBe("");
+  });
+
+  it("goes to the page a hint names, fades the hints out while the strip moves and names the new neighbours at rest", () => {
+    const { root, at } = swipeHome();
+    fireEvent.click(screen.getByRole("button", { name: "Go down to Heating" }));
+    frames(100);
+    const moving = [...root.querySelectorAll<HTMLElement>("[data-layered-neighbour]")];
+    expect(moving.length).toBeGreaterThan(0);
+    for (const hint of moving) {
+      expect(hint.className.split(" ")).toEqual(expect.arrayContaining(["pointer-events-none", "opacity-0"]));
+      expect([hint.getAttribute("aria-hidden"), hint.tabIndex]).toEqual(["true", -1]);
+    }
+    frames(400);
+    expect(at()).toEqual({ x: 0, y: 1 });
+    expect(hints(root).map(([direction, page]) => [direction, page])).toEqual([
+      ["up", "learner"],
+      ["left", "cooling"],
+      ["right", "board"],
+      ["down", "badges"],
+    ]);
+    for (const hint of root.querySelectorAll<HTMLElement>("[data-layered-neighbour]")) expect([hint.className.includes("opacity-0"), hint.getAttribute("aria-hidden")]).toEqual([false, null]);
+  });
+
+  it("keeps the cards and the hints inside the app's chrome at the top and bottom, and shows no hint over an opened page or in strip mode", () => {
+    const { root, unmount } = swipeHome({ insets: { top: "3.5rem", bottom: "5.5rem" } });
+    const cell = root.querySelector<HTMLElement>('[data-layered-cell="learner"]')!;
+    expect([cell.style.paddingTop, cell.style.paddingBottom]).toEqual(["calc(44px + 3.5rem)", "calc(44px + 5.5rem)"]);
+    expect(root.querySelector<HTMLElement>('[data-layered-neighbour="down"]')!.style.bottom).toBe("calc(5.5rem + var(--spacing-single))");
+    swipe(root, [450, 600], [450, 300], 100);
+    frames(600);
+    expect(root.querySelector<HTMLElement>('[data-layered-neighbour="up"]')!.style.top).toBe("calc(3.5rem + var(--spacing-single))");
+    fireEvent.click(screen.getByRole("button", { name: "Open Heating" }));
+    frames(600);
+    expect(root.querySelectorAll("[data-layered-neighbour]")).toHaveLength(0);
+    unmount();
+    const strip = renderHome();
+    expect(strip.root.querySelectorAll("[data-layered-neighbour]")).toHaveLength(0);
+  });
+
+  it("touches the page it rests on and warms the panes one swipe away within the budget", () => {
+    const rendered: string[] = [];
+    const { root, at } = swipeHome({ lifecycle: { ...LATER, budget: 3 } }, rendered);
+    expect(new Set(rendered), "the neighbours on the wrapping strip, in pane order, within the budget").toEqual(new Set(["learner", "physics", "intro"]));
+    swipe(root, [450, 600], [450, 300], 100);
+    frames(400);
+    expect(at()).toEqual({ x: 0, y: 1 });
+    expect(root.querySelector('[data-layered-pane="heating"] [data-page]')).not.toBeNull();
+    expect(root.querySelectorAll("[data-layered-pane] [data-page]")).toHaveLength(3);
+  });
+
+  it("opens a page full size without cards or glass and lets it scroll natively, and returns to its cell", () => {
+    const { root, at } = swipeHome();
+    swipe(root, [600, 450], [300, 450], 100);
+    frames(600);
+    fireEvent.click(screen.getByRole("button", { name: "Open Physics" }));
+    frames(600);
+    expect(screen.getByRole("region", { name: "Physics" })).toBe(pane(root, "physics"));
+    expect(root.querySelector("[data-layered-overlay]")).toBeNull();
     expect(root.querySelectorAll("[data-layered-veil]")).toHaveLength(0);
-    expect(screen.getByRole("region", { name: "Board" })).toBe(pane(root, "board"));
+    expect(root.style.touchAction).toBe("");
+    swipe(root, [600, 450], [100, 450], 100);
+    frames(400);
+    expect(at()).toEqual({ x: 1, y: 0 });
+    fireEvent.click(screen.getByRole("button", { name: "Overview" }));
+    expect(root.style.touchAction).toBe("pinch-zoom");
+    expect(at()).toEqual({ x: 1, y: 0 });
   });
 });
 // #endregion 🥞️LayeredOverviewBehaviour

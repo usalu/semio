@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { existsSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { basename, join } from "node:path";
 import { getWorkspaceRoot } from "../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
-import { parseVizTaxonomy, vizOptionList, type LocalizedText, type VizCatalog, type VizSchemaDocument } from "../../🧬️schema/🟦️.ts";
+import { parseVizTaxonomy, vizOptionList, type LocalizedText, type VizCatalog, type VizSchemaDocument, type VizFamilyOptions, type VizFamilyOption, type VizOptionSyntaxDescriptor } from "../../🧬️schema/🟦️.ts";
 
 const productRoot = join(getWorkspaceRoot(), "🧰️framework/🛍️products/📓️print");
 const VIZ_GALLERY_DIR = join(productRoot, "🧾️template/📊️viz-gallery");
@@ -151,8 +151,10 @@ export function renderVizGalleryDocument(sectionTitle: LocalizedText, leaves: re
       lines.push(`\\section{\\SemioVizLocalized{${texEscape(leaf.group.en)}}{${texEscape(leaf.group.de)}}}`);
     }
     lines.push(`% viz-covers: ${leaf.leafId}`);
-    lines.push(`\\begin{VizFigure}[title={\\SemioVizKindTitle{${leaf.slug}}}, width=80, height=40]`);
+    lines.push(`\\begin{VizFigure}[title={\\SemioVizKindTitle{${leaf.slug}}}, width=80]`);
+    lines.push(`\\special{pdf:literal direct /SemioVizLeaf${Array.from(new TextEncoder().encode(leaf.leafId), byte => byte.toString(16).padStart(2, "0")).join("")} BMC}`);
     lines.push(`\\SemioVizChart{${leaf.slug}}`);
+    lines.push("\\special{pdf:literal direct EMC}");
     lines.push("\\end{VizFigure}");
   }
   lines.push("\\end{document}", "");
@@ -197,7 +199,8 @@ export function generateVizArtifacts(repoRoot: string): readonly string[] {
   const files = vizGeneratedFiles();
   const written = new Set<string>();
   for (const file of files) {
-    writeFileSync(join(repoRoot, file.path), file.content, "utf8");
+    const path = join(repoRoot, file.path);
+    if (!existsSync(path) || readFileSync(path, "utf8") !== file.content) writeFileSync(path, file.content, "utf8");
     written.add(basename(file.path));
   }
   for (const name of readdirSync(VIZ_GALLERY_DIR)) {
@@ -218,7 +221,7 @@ export type VizApiKey = Readonly<{
 }>;
 
 /** 🗝️ One `%region 🔖️Keys…` block: the l3keys family it documents and the keys it declares. */
-export type VizApiKeyFamily = Readonly<{ readonly region: string; readonly keys: readonly VizApiKey[] }>;
+export type VizApiKeyFamily = Readonly<{ readonly region: string; readonly scope: string; readonly keys: readonly VizApiKey[] }>;
 
 /** 🔤 One public `\SemioViz…` command or `Viz…` environment, with its xparse signature. */
 export type VizApiCommand = Readonly<{
@@ -242,7 +245,7 @@ export type VizApiReference = Readonly<{
   readonly families: readonly Readonly<{
     readonly name: string;
     readonly owner: string;
-    readonly options: readonly VizApiKey[];
+    readonly options: readonly (VizApiKey & Omit<VizOptionSyntaxDescriptor, "type"> & Pick<VizFamilyOption, "minimum" | "exclusiveMinimum" | "maximum" | "enum">)[];
   }>[];
   readonly totals: Readonly<{ readonly packages: number; readonly commands: number; readonly keys: number; readonly families: number }>;
 }>;
@@ -333,57 +336,160 @@ function lastApiTextArguments(line: string): readonly [string, string] | undefin
   return second === undefined ? undefined : [first![0], second[0]];
 }
 
-/** 🌍 The German half of every kernel key, read back from the hand-written reference document.
- *
- * `🔓️viz-api.tex` documents exactly these keys in both languages, so the document is the source of
- * the translation rather than the family option vocabulary, whose names collide across namespaces.
- * A name the document spells differently in two places is left untranslated. */
-function vizDocumentKeyGerman(): ReadonlyMap<string, string> {
+/** 🌍️ Translations are read only from explicitly selected rendered owner scopes. */
+export function vizDocumentKeyGerman(source?: string, scopes: readonly string[] = []): ReadonlyMap<string, string> {
   const path = join(VIZ_API_DIR, VIZ_API_DOCUMENT);
-  if (!existsSync(path)) return new Map();
-  const seen = new Map<string, Set<string>>();
-  for (const line of readFileSync(path, "utf8").split("\n")) {
-    const name = /^\s*\\SemioTableRow\{\\Key\{([A-Za-z0-9]+)\}\s*&/.exec(line);
-    const text = name === null ? undefined : lastApiTextArguments(line);
-    if (name === null || text === undefined || text[1].length === 0) continue;
-    seen.set(name[1]!, (seen.get(name[1]!) ?? new Set<string>()).add(text[1]));
-  }
-  return new Map([...seen].filter(([, texts]) => texts.size === 1).map(([name, texts]) => [name, [...texts][0]!]));
+  if (source === undefined && !existsSync(path)) return new Map();
+  return vizDocumentGermanReader(source ?? readFileSync(path, "utf8"))(scopes);
 }
 
+/** 🗂️️ A reference scan is shared by every package region in one metadata collection. */
+function vizDocumentGermanReader(text: string): (scopes: readonly string[]) => ReadonlyMap<string, string> {
+  const tables = vizPrintedKeyRows(text);
+  const declared = new Map([...vizPrintedSource(text).matchAll(/\\ApiScopeSource\{([a-z0-9-]+)\}\{([^}]+)\}/g)].map(match => [match[1]!, match[2]!.replaceAll("\\_", "_")])), sections = vizPrintedSections(text), model = vizKeysModel();
+  return scopes => {
+  const owners = new Set(scopes.flatMap(scope => {
+    const family = /^semio\s*\/\s*viz\s*\/\s*family\s*\/\s*([a-z0-9-]+)$/.exec(scope);
+    return [scope, ...(family ? [family[1]!] : []), ...[...declared].filter(([, path]) => path === scope).map(([owner]) => owner)];
+  }));
+  const seen = new Map<string, Set<string>>();
+  for (const owner of owners) for (const row of vizPrintedOwnerRows(owner, tables, declared, sections, model)) {
+    if (!row.meaning.de.trim()) continue;
+    for (const name of row.names) seen.set(name, (seen.get(name) ?? new Set()).add(row.meaning.de));
+  }
+  return new Map([...seen].filter(([, meanings]) => meanings.size === 1).map(([name, meanings]) => [name, [...meanings][0]!]));
+  };
+}
+
+/** 🧭️ Resolves a documented Keys region to its actual following l3keys declaration. */
+function vizDocumentRegionScopes(source: string, start: number): readonly string[] {
+  const tail = source.slice(start), next = /\n%region[^\n]*Keys/.exec(tail);
+  const region = tail.slice(0, next?.index ?? tail.length), scopes = new Set<string>();
+  for (const declaration of region.matchAll(/\\keys_define:nn\s*\{([^}]+)\}/g)) {
+    const scope = declaration[1]!.trim();
+    if (!scope.includes("#")) scopes.add(scope);
+    else {
+      const before = source.slice(0, start + declaration.index!);
+      const helper = [...before.matchAll(/\\cs_(?:new|set)[a-z_]*:Npn\s+\\([a-z_]+):/g)].at(-1)?.[1];
+      if (helper) scopes.add("helper:" + helper);
+    }
+  }
+  return [...scopes];
+}
+
+/** 🧭️ Keeps repeated Keys region names bound to their own physical source position. */
+export function vizDocumentKeyRegions(source: string, model: KeysModel = vizKeysModel([source])): readonly { region: string; keys: readonly VizApiKey[]; scopes: readonly string[] }[] {
+  const entries: { region: string; keys: readonly VizApiKey[]; scopes: readonly string[] }[] = [];
+  let region: string | undefined, start = 0, offset = 0, keys: VizApiKey[] = [];
+  for (const line of source.split("\n")) {
+    const trimmed = line.trim();
+    if (trimmed.startsWith("%region") && trimmed.includes("Keys")) {
+      region = trimmed.replace(/^%region\s*/, "");
+      start = offset;
+      keys = [];
+    } else if (trimmed.startsWith("%endregion") && region !== undefined) {
+      if (keys.length) entries.push({ region, keys, scopes: vizDocumentRegionScopes(source, start) });
+      region = undefined;
+    } else if (region !== undefined && trimmed.startsWith("%")) keys.push(...parseVizApiKeyLine(line.trimStart()));
+    offset += line.length + 1;
+  }
+  if (region !== undefined && keys.length) entries.push({ region, keys, scopes: vizDocumentRegionScopes(source, start) });
+  const literal = scanKeys(source).literals;
+  return entries.map(entry => {
+    const accepted = new Set(entry.scopes.flatMap(scope => scope.startsWith("helper:")
+      ? [...helperDeclaredKeyNames(model, scope.slice(7), new Set())]
+      : [...keysOfPath(model, scope, new Set()), ...literal.filter(unit => unit.path === scope).flatMap(unit => unit.keys)]));
+    return { ...entry, keys: entry.keys.filter(key => accepted.has(key.name)) };
+  });
+}
+
+/** 🧭️ Selects complete rendered rows from one actual native owner scope. */
+function vizDocumentKeyReader(reference: string, model: KeysModel): (scope: string) => ReadonlyMap<string, VizApiKey> {
+  const text = vizPrintedSource(reference), tables = vizPrintedKeyRows(text), sections = vizPrintedSections(text);
+  const declared = new Map([...text.matchAll(/\\ApiScopeSource\{([a-z0-9-]+)\}\{([^}]+)\}/g)].map(match => [match[1]!, match[2]!.replaceAll("\\_", "_")]));
+  return scope => {
+    const bound = [...declared].filter(([, path]) => path.replace(/\s*\/\s*/g, "/") === scope.replace(/\s*\/\s*/g, "/")).map(([owner]) => owner);
+    const family = /^semio\s*\/\s*viz\s*\/\s*family\s*\/\s*([a-z0-9-]+)$/.exec(scope)?.[1];
+    const owners = bound.length ? bound : family ? [family] : [scope];
+    const result = new Map<string, VizApiKey>();
+    for (const owner of owners) for (const row of vizPrintedOwnerRows(owner, tables, declared, sections, model)) for (const name of row.names) {
+      if (!row.type.trim() || !row.defaultPresent || !row.meaning.en.trim() || !row.meaning.de.trim()) throw new Error("Incomplete printed key contract: " + scope + ":" + name);
+      const key: VizApiKey = { name, type: row.type, default: row.default, description: row.meaning }, prior = result.get(name);
+      if (prior && JSON.stringify(prior) !== JSON.stringify(key)) throw new Error("Ambiguous printed key contract: " + scope + ":" + name);
+      result.set(name, key);
+    }
+    if (bound.length && family) for (const row of vizPrintedOwnerRows(family, tables, declared, sections, model)) for (const name of row.names) {
+      if (result.has(name)) continue;
+      if (!row.type.trim() || !row.defaultPresent || !row.meaning.en.trim() || !row.meaning.de.trim()) throw new Error("Incomplete printed key contract: " + scope + ":" + name);
+      result.set(name, { name, type: row.type, default: row.default, description: row.meaning });
+    }
+    return result;
+  };
+}
+
+/** 🏷️ Shared helper vocabularies are published only under an explicit printed source binding. */
+function vizDocumentHelperScopes(reference: string): ReadonlySet<string> {
+  return new Set([...vizPrintedSource(reference).matchAll(/\\ApiScopeSource\{[a-z0-9-]+\}\{(helper:[^}]+)\}/g)].map(match => match[1]!));
+}
+/** 📚️ Projects each native declaration scope through its complete rendered row contracts. */
+export function vizDocumentKeyFamilies(implementation: string, reference: string, model: KeysModel = vizKeysModel([implementation])): readonly VizApiKeyFamily[] {
+  return vizDocumentKeyFamilyProjection(implementation, model, vizDocumentKeyReader(reference, model), vizDocumentHelperScopes(reference));
+}
+
+/** 🧾️ Native public scopes include actual installed controls and explicitly documented helpers. */
+function vizDocumentKeyScopes(implementation: string, model: KeysModel, helpers: ReadonlySet<string>): ReadonlyMap<string, { region: string; names: ReadonlySet<string> }> {
+  const entries = new Map<string, { region: string; names: Set<string> }>();
+  const add = (scope: string, region: string, names: readonly string[]): void => {
+    scope = vizKeyPath(scope);
+    const entry = entries.get(scope) ?? { region, names: new Set<string>() };
+    for (const name of names) if (!name.startsWith("@forward:")) entry.names.add(name);
+    entries.set(scope, entry);
+  };
+  for (const entry of vizDocumentKeyRegions(implementation, model)) for (const scope of entry.scopes) {
+    const accepted = scope.startsWith("helper:") ? helperDeclaredKeyNames(model, scope.slice(7), new Set()) : keysOfPath(model, scope, new Set());
+    add(scope, entry.region, entry.keys.map(key => key.name).filter(name => accepted.has(name)));
+  }
+  for (const unit of scanKeys(implementation).literals) add(unit.path, "Keys", [...keysOfPath(model, unit.path, new Set())]);
+  for (const match of implementation.matchAll(/\\cs_(?:new|set)[a-z_]*:Npn\s+\\([a-z_]+):/g)) {
+    const macro = match[1]!;
+    if (helpers.has("helper:" + macro) && model.helpers.get(macro)?.templates.length) add("helper:" + macro, "Keys", [...helperDeclaredKeyNames(model, macro, new Set())]);
+  }
+  return entries;
+}
+
+/** 🗝️ Shares the parsed reference across all physical packages in one collection. */
+function vizDocumentKeyFamilyProjection(implementation: string, model: KeysModel, read: (scope: string) => ReadonlyMap<string, VizApiKey>, helpers: ReadonlySet<string>): readonly VizApiKeyFamily[] {
+  const families: VizApiKeyFamily[] = [];
+  const entries = vizDocumentKeyScopes(implementation, model, helpers);
+  for (const [scope, entry] of entries) {
+    if (!entry.names.size) continue;
+    const rows = read(scope);
+    const keys = [...entry.names].map(name => {
+      const key = rows.get(name);
+      if (!key) throw new Error("Missing printed key contract: " + scope + ":" + name);
+      return key;
+    });
+    families.push({ region: entry.region, scope, keys });
+  }
+  return families;
+}
 /** 📖 The whole public API as data: every package with its commands and its documented key families,
  * plus the schema's family option vocabulary. This is the twin of `🔓️viz-api.tex` that tooling
  * reads; the document is what a person reads. */
 export function vizApiReference(): VizApiReference {
   const schema = loadVizSchema();
-  const german = vizDocumentKeyGerman();
+  const reference = readFileSync(join(VIZ_API_DIR, VIZ_API_DOCUMENT), "utf8");
+
   const packages: VizApiPackage[] = [];
+  const model = vizKeysModel(), readKeys = vizDocumentKeyReader(reference, model), helpers = vizDocumentHelperScopes(reference);
   let commandCount = 0;
   let keyCount = 0;
   for (const file of readdirSync(VIZ_LATEX_DIR).filter((name) => name.startsWith("semio-viz") && name.endsWith(".sty")).sort()) {
-    const lines = readFileSync(join(VIZ_LATEX_DIR, file), "utf8").split("\n");
+    const source = readFileSync(join(VIZ_LATEX_DIR, file), "utf8"), lines = source.split("\n");
     const commands: VizApiCommand[] = [];
-    const keyFamilies: VizApiKeyFamily[] = [];
-    let region: string | undefined;
-    let keys: VizApiKey[] = [];
+    const keyFamilies = vizDocumentKeyFamilyProjection(source, model, readKeys, helpers);
     for (const [index, line] of lines.entries()) {
       const trimmed = line.trim();
-      if (trimmed.startsWith("%region") && trimmed.includes("Keys")) {
-        region = trimmed.replace(/^%region\s*/, "");
-        keys = [];
-        continue;
-      }
-      if (trimmed.startsWith("%endregion") && region !== undefined) {
-        if (keys.length > 0) keyFamilies.push({ region, keys });
-        region = undefined;
-        continue;
-      }
-      if (region !== undefined && trimmed.startsWith("%")) {
-        for (const key of parseVizApiKeyLine(line.trimStart())) {
-          keys.push({ ...key, description: { en: key.description.en, de: german.get(key.name) ?? "" } });
-        }
-        continue;
-      }
       const command = API_COMMAND_PATTERN.exec(line);
       const environment = command === null ? API_ENVIRONMENT_PATTERN.exec(line) : null;
       const match = command ?? environment;
@@ -395,7 +501,6 @@ export function vizApiReference(): VizApiReference {
         note: apiNoteAbove(lines, index),
       });
     }
-    if (region !== undefined && keys.length > 0) keyFamilies.push({ region, keys });
     if (commands.length === 0 && keyFamilies.length === 0) continue;
     commandCount += commands.length;
     for (const family of keyFamilies) keyCount += family.keys.length;
@@ -407,10 +512,17 @@ export function vizApiReference(): VizApiReference {
       name,
       owner: (family as { owner?: string }).owner ?? "",
       options: Object.entries(family.options ?? {}).map(([option, spec]) => {
-        const typed = spec as { type?: string; default?: unknown; description?: LocalizedText };
+        const typed = spec as VizFamilyOption;
         return {
           name: option,
-          type: typed.type ?? "",
+          syntax: typed.syntax,
+          ...(typed.items ? { items: typed.items } : {}),
+          ...(typed.itemCount !== undefined ? { itemCount: typed.itemCount } : {}),
+          ...(typed.minimum !== undefined ? { minimum: typed.minimum } : {}),
+          ...(typed.exclusiveMinimum !== undefined ? { exclusiveMinimum: typed.exclusiveMinimum } : {}),
+          ...(typed.maximum !== undefined ? { maximum: typed.maximum } : {}),
+          ...(typed.enum ? { enum: typed.enum } : {}),
+          type: typeof typed.type === "string" ? typed.type : typed.type?.join(" | ") ?? "",
           default: typed.default === undefined || typed.default === null ? "" : String(typed.default),
           description: { en: typed.description?.en ?? "", de: typed.description?.de ?? "" },
         };
@@ -482,17 +594,25 @@ function texSkipSpace(text: string, from: number): number {
   return index;
 }
 
-/** 🔑 The key names an l3keys body declares; `unknown` is a handler, never a key. Comments are
- * stripped first, because a key documented by the comment line above it is still a key. */
-function l3KeysOf(body: string): string[] {
+/** 🔑️ A stored unknown-result option is a control; forwarding and empty unknown handlers are not. */
+export function vizDeclaredKeyNames(body: string): string[] {
   const names = new Set<string>();
   const code = body.replace(/(^|[^\\])%[^\n]*/g, "$1");
   for (const match of code.matchAll(/(^|,)\s*([A-Za-z][A-Za-z0-9-]*)\s*\./gm)) names.add(match[2]!);
-  names.delete("unknown");
+  const unknown = /(?:^|,)\s*unknown\s*\.([A-Za-z_:]+)\s*=/gm;
+  let stored = false;
+  for (let match = unknown.exec(code); match !== null; match = unknown.exec(code)) {
+    if (match[1] !== "code:n") { stored = true; continue; }
+    const open = texSkipSpace(code, unknown.lastIndex);
+    if (code[open] === "{" && /\\(?:(?:tl|fp|int|bool|clist)_(?:g)?set:N[nxV]\s+\\[A-Za-z_]+\s*\{[^}]*#1|prop_(?:g)?put:Nnn\s+\\[A-Za-z_]+\s*\{\s*unknown\s*\}\s*\{[^}]*#1)/.test(texGroup(code, open).body)) stored = true;
+  }
+  if (!stored) names.delete("unknown");
   return [...names];
 }
 
 type KeyPath = string;
+/** 🧭️ Expl3 ignores whitespace within a key namespace. */
+function vizKeyPath(value: string): KeyPath { return value.trim().replace(/\s*\/\s*/g, " / "); }
 type PathTemplate = { readonly template: string; readonly keys: readonly string[] };
 type KeysUnit = { templates: PathTemplate[]; literals: { path: KeyPath; keys: string[] }[]; setPaths: Set<KeyPath>; calls: { macro: string; argument: string }[] };
 type KeysModel = {
@@ -512,12 +632,15 @@ function scanKeys(text: string): KeysUnit {
   const define = /\\keys_define:nn\s*\{/g;
   for (let match = define.exec(text); match !== null; match = define.exec(text)) {
     const head = texGroup(text, match.index + match[0].length - 1);
-    const argument = head.body.trim();
+    const argument = vizKeyPath(head.body);
     const bodyOpen = texSkipSpace(text, head.end);
     if (text[bodyOpen] !== "{") continue;
     const block = texGroup(text, bodyOpen).body;
-    const keys = l3KeysOf(block);
-    for (const forward of block.matchAll(/unknown\s*\.code:n[\s\S]{0,90}?\\keys_set:nn\s*\{([^}]*)\}/g)) keys.push(`@forward:${forward[1]!.trim()}`);
+    const keys = vizDeclaredKeyNames(block);
+    for (const handler of block.matchAll(/unknown\s*\.code:n\s*=\s*\{/g)) {
+      const body = texGroup(block, handler.index! + handler[0].length - 1).body;
+      for (const forward of body.matchAll(/\\keys_set:nn\s*\{([^}]*)\}/g)) keys.push(`@forward:${vizKeyPath(forward[1]!)}`);
+    }
     if (argument.includes("#1")) found.templates.push({ template: argument, keys });
     else found.literals.push({ path: argument, keys });
     define.lastIndex = bodyOpen;
@@ -528,13 +651,13 @@ function scanKeys(text: string): KeysUnit {
     const head = texGroup(text, match.index + match[0].length - 1);
     const listOpen = texSkipSpace(text, head.end);
     const list = text[listOpen] === "{" ? texGroup(text, listOpen).body : "\\";
-    if (routes || /#\d/.test(list)) found.setPaths.add(head.body.trim());
+    if (routes || /#\d/.test(list)) found.setPaths.add(vizKeyPath(head.body));
     apply.lastIndex = head.end;
   }
   const indirect = /\\exp_args:NV\s*\\keys_define:nn\s*\\[A-Za-z_@]+\s*\{/g;
   for (let match = indirect.exec(text); match !== null; match = indirect.exec(text)) {
     const open = match.index + match[0].length - 1;
-    found.templates.push({ template: "#1", keys: l3KeysOf(texGroup(text, open).body) });
+    found.templates.push({ template: "#1", keys: vizDeclaredKeyNames(texGroup(text, open).body) });
     indirect.lastIndex = open;
   }
   const call = /\\(semio_viz_[a-z0-9_]+):([a-zA-Z]*)/g;
@@ -542,6 +665,19 @@ function scanKeys(text: string): KeysUnit {
     const after = texSkipSpace(text, match.index + match[0].length);
     const takesGroup = match[2] === "n" && text[after] === "{";
     found.calls.push({ macro: match[1]!, argument: takesGroup ? texGroup(text, after).body.trim() : "" });
+  }
+  const lists = new Map<string, readonly string[]>();
+  for (const match of text.matchAll(/\\clist_const:Nn\s*\\([A-Za-z_]+)\s*\{/g)) {
+    const values = texGroup(text, match.index! + match[0].length - 1).body;
+    if (!values.includes("#")) lists.set(match[1]!, values.split(",").map(value => value.trim()).filter(Boolean));
+  }
+  for (const match of text.matchAll(/\\clist_map_inline:Nn\s*\\([A-Za-z_]+)\s*\{/g)) {
+    const body = texGroup(text, match.index! + match[0].length - 1).body;
+    for (const value of lists.get(match[1]!) ?? []) {
+      const installed = scanKeys(body.replace(/(?<!#)#1\b/g, value));
+      found.literals.push(...installed.literals);
+      found.templates.push(...installed.templates);
+    }
   }
   return found;
 }
@@ -555,15 +691,14 @@ function maskRanges(text: string, ranges: readonly { start: number; end: number 
 
 /** 🗺️ The whole l3keys picture of `🖋️latex`: which path carries which keys, which helper installs
  * keys on a path it is handed, and what each `\SemioVizFamily` body does with its option list. */
-function vizKeysModel(): KeysModel {
+function vizKeysModel(sources?: readonly string[]): KeysModel {
   const literal = new Map<KeyPath, Set<string>>();
   const helpers = new Map<string, { templates: PathTemplate[]; forwards: string[] }>();
   const installs: { argument: string; macro: string }[] = [];
   const families = new Map<string, string>();
   const macros = new Map<string, string>();
 
-  for (const name of readdirSync(VIZ_LATEX_DIR).filter((file) => file.endsWith(".sty"))) {
-    const text = readFileSync(join(VIZ_LATEX_DIR, name), "utf8");
+  for (const text of sources ?? readdirSync(VIZ_LATEX_DIR).filter(file => file.endsWith(".sty")).map(file => readFileSync(join(VIZ_LATEX_DIR, file), "utf8"))) {
     const definition = /\\cs_(?:new|set|new_protected|set_protected|generate_variant)[a-z_]*:Npn\s+\\([A-Za-z@_]+:[A-Za-z]*)\s*((?:#\d\s*)*)\{/g;
     const bodies: { name: string; body: string; start: number; end: number }[] = [];
     for (let match = definition.exec(text); match !== null; match = definition.exec(text)) {
@@ -612,16 +747,30 @@ function helperKeysOn(model: KeysModel, macro: string, argument: string, path: K
   const keys = new Set<string>();
   if (helper === undefined) return keys;
   for (const entry of helper.templates) {
-    if (entry.template.replaceAll("#1", argument).trim() !== path) continue;
+    if (vizKeyPath(entry.template.replaceAll("#1", argument)) !== vizKeyPath(path)) continue;
     for (const key of entry.keys) keys.add(key);
   }
   for (const forward of helper.forwards) for (const key of helperKeysOn(model, forward, argument, path, seen)) keys.add(key);
   return keys;
 }
 
+/** 🧾️ A helper's documented vocabulary includes the declarations of helpers it calls. */
+function helperDeclaredKeyNames(model: KeysModel, macro: string, seen: Set<string>): Set<string> {
+  if (seen.has(macro)) return new Set();
+  seen.add(macro);
+  const helper = model.helpers.get(macro), keys = new Set(helper?.templates.flatMap(template => [...template.keys]) ?? []);
+  for (const forward of helper?.forwards ?? []) for (const key of helperDeclaredKeyNames(model, forward, seen)) keys.add(key);
+  for (const key of [...keys]) if (key.startsWith("@forward:")) {
+    keys.delete(key);
+    for (const forwarded of keysOfPath(model, key.slice(9), new Set())) keys.add(forwarded);
+  }
+  return keys;
+}
+
 /** 🔑 Every key one l3keys path accepts: its own declarations, the ones a helper installed on it,
  * and the ones its `unknown` handler forwards to another path. */
 function keysOfPath(model: KeysModel, path: KeyPath, seen: Set<KeyPath>): Set<string> {
+  path = vizKeyPath(path);
   if (seen.has(path)) return new Set();
   seen.add(path);
   const keys = new Set(model.literal.get(path) ?? []);
@@ -634,26 +783,57 @@ function keysOfPath(model: KeysModel, path: KeyPath, seen: Set<KeyPath>): Set<st
   return keys;
 }
 
-/** 🔗️ The l3keys paths a family body hands its own option list to, macro calls followed. */
-function pathsReachedBy(model: KeysModel, body: string, depth: number, seen: Set<string>): Set<KeyPath> {
+/** 🧵️ Follows authored option parameters and residual lists through native calls in execution order. */
+function pathsReachedBy(model: KeysModel, body: string, depth: number, seen: Set<string>, parameters = new Set([1]), aliases = new Set<string>()): Set<KeyPath> {
   const paths = new Set<KeyPath>();
-  if (depth > 6) return paths;
-  for (const path of scanKeys(body).setPaths) paths.add(path);
-  for (const match of body.matchAll(/\\(semio_viz_[a-z0-9_]+:[a-zA-Z]*)/g)) {
-    const name = match[1]!;
-    if (seen.has(name)) continue;
-    seen.add(name);
-    const macro = model.macros.get(name);
-    if (macro === undefined) continue;
-    for (const path of pathsReachedBy(model, macro, depth + 1, seen)) paths.add(path);
+  const authored = (value: string): boolean => [...value.matchAll(/(?<!#)#([1-9])/g)].some(match => parameters.has(Number(match[1]))) || [...aliases].some(alias => value.includes(alias));
+  const argument = (position: number): { value: string; end: number } => {
+    const start = texSkipSpace(body, position);
+    if (body[start] === "{") { const group = texGroup(body, start); return { value: group.body, end: group.end }; }
+    const token = /^\\[A-Za-z_@:]+/.exec(body.slice(start));
+    return { value: token?.[0] ?? body[start] ?? "", end: start + (token?.[0].length ?? 1) };
+  };
+  const events = [...body.matchAll(/\\keys_set(?:_known)?:n[nVx]N?\s*\{|\\tl_(?:g)?(?:set(?:_eq)?|put_(?:left|right)):N[nxNV]\s*\\[A-Za-z_@:]+|\\tl_(?:g)?clear:N\s*\\[A-Za-z_@:]+|\\semio_viz_[a-z0-9_]+:[a-zA-Z]*/g)];
+  for (const event of events) {
+    const position = event.index! + event[0].length;
+    if (event[0].startsWith("\\keys_set")) {
+      const head = texGroup(body, position - 1), list = argument(head.end), origin = authored(list.value);
+      if (origin) paths.add(vizKeyPath(head.body));
+      if (event[0].startsWith("\\keys_set_known:")) {
+        const residual = argument(list.end).value;
+        if (origin) aliases.add(residual); else aliases.delete(residual);
+      }
+    } else if (event[0].startsWith("\\tl_")) {
+      const variable = /\\[A-Za-z_@:]+$/.exec(event[0])![0], append = event[0].includes("put_");
+      if (!event[0].includes("clear:") && authored(argument(position).value)) aliases.add(variable);
+      else if (!append) aliases.delete(variable);
+    } else {
+      const name = event[0].slice(1), [base, signature] = name.split(":") as [string, string], forwarded = new Set<number>();
+      let cursor = position;
+      for (let index = 0; index < signature.length; index++) {
+        const value = argument(cursor);
+        if (authored(value.value)) forwarded.add(index + 1);
+        cursor = value.end;
+      }
+      const definition = model.macros.has(name) ? name : [...model.macros.keys()].find(key => key.startsWith(base + ":") && key.split(":")[1]!.length === signature.length);
+      if (!definition) continue;
+      const macro = model.macros.get(definition)!;
+      if (forwarded.size === 0 && ![...aliases].some(alias => macro.includes(alias))) continue;
+      const identity = definition + "|" + [...forwarded].join(",") + "|" + [...aliases].sort().join(",");
+      if (seen.has(identity)) continue;
+      seen.add(identity);
+      for (const path of pathsReachedBy(model, macro, depth + 1, seen, forwarded, aliases)) paths.add(path);
+    }
   }
   return paths;
 }
 
-/** 🔑 Family name → every option key its `\SemioVizFamily` body actually accepts, whether the key
- * is declared on the family's own l3keys path, installed there by a shared vocabulary helper, or
- * reached because the family forwards its option list to a kernel path. `variant` is always
- * accepted: `\SemioVizFamily` records it for the registry before the family sees the list. */
+/** 🧭️ Resolves one exact native owner path, including its installed and forwarded controls. */
+export function vizImplementedKeyPathNames(path: string): readonly string[] {
+  return [...keysOfPath(vizKeysModel(), path, new Set())].sort();
+}
+
+/** 🔑 Family names retain only their source-reachable controls and the registry variant. */
 export function vizImplementedFamilyKeys(): Readonly<Record<string, readonly string[]>> {
   const model = vizKeysModel();
   const result: Record<string, readonly string[]> = {};
@@ -666,6 +846,32 @@ export function vizImplementedFamilyKeys(): Readonly<Record<string, readonly str
     }
     keys.add("variant");
     result[name] = [...keys].sort();
+  }
+  return result;
+}
+
+/** 🔗️ Only source-reachable key paths and installed helper vocabularies may supply inherited documentation. */
+export function vizImplementedFamilyKeyScopes(sources?: readonly string[]): Readonly<Record<string, Readonly<Record<string, readonly string[]>>>> {
+  const model = vizKeysModel(sources);
+  const result: Record<string, Record<string, readonly string[]>> = {};
+  for (const [name, body] of model.families) {
+    const own = `semio / viz / family / ${name}`;
+    const scopes: Record<string, readonly string[]> = {};
+    const paths = new Set([own, ...pathsReachedBy(model, body, 0, new Set())]);
+    for (const path of paths) {
+      const declared = [...(model.literal.get(path) ?? []), ...model.installs.flatMap(install => [...helperKeysOn(model, install.macro, install.argument, path, new Set())])];
+      for (const key of declared) if (key.startsWith("@forward:")) paths.add(key.slice(9));
+    }
+    for (const path of paths) {
+      if (path.includes("#")) continue;
+      const keys = [...keysOfPath(model, path, new Set())].sort();
+      if (keys.length > 0) scopes[path] = keys;
+    }
+    for (const install of model.installs) {
+      const keys = [...new Set([...paths].flatMap(path => [...helperKeysOn(model, install.macro, install.argument, path, new Set())]))].sort();
+      if (keys.length > 0) scopes[`helper:${install.macro}`] = keys;
+    }
+    result[name] = scopes;
   }
   return result;
 }
@@ -813,6 +1019,198 @@ function assertVizApi(): { readonly missing: readonly string[] } {
   return { missing: VIZ_API_COMMANDS.filter((command) => !source.includes(command)) };
 }
 
+/** 📐️ Splits a table row only at unescaped, unnested TeX column separators. */
+function vizPrintedCells(row: string, separator = "&"): string[] {
+  const cells: string[] = [];
+  let depth = 0, start = 0;
+  for (let index = 0; index < row.length; index++) {
+    if (row[index] === "\\") { index++; continue; }
+    if (row[index] === "{") depth++;
+    else if (row[index] === "}") depth--;
+    else if (row[index] === separator && depth === 0) { cells.push(row.slice(start, index)); start = index + 1; }
+  }
+  cells.push(row.slice(start));
+  return cells;
+}
+
+/** 🧹️ Literal code samples and TeX comments never become rendered documentation evidence. */
+function vizPrintedSource(source: string): string {
+  let text = source.replace(/\\begin\{(verbatim\*?|Verbatim|lstlisting|minted|SemioCode|SemioCodeBlock)\}[\s\S]*?\\end\{\1\}/g, "");
+  text = text.replace(/\\verb\*?([^\sA-Za-z])[\s\S]*?\1/g, "");
+  let result = "", slashes = 0;
+  for (let index = 0; index < text.length; index++) {
+    const char = text[index]!;
+    if (char === "%" && slashes % 2 === 0) {
+      while (index < text.length && text[index] !== "\n") index++;
+      if (index < text.length) result += "\n";
+    } else result += char;
+    slashes = char === "\\" ? slashes + 1 : 0;
+  }
+  return result;
+}
+
+/** 🔤️ One rendered row, retaining its type, default and both localized meanings. */
+export type VizPrintedKeyRow = Readonly<{ names: readonly string[]; type: string; default: string; defaultPresent: boolean; meaning: LocalizedText }>;
+
+/** 🧬️ The neutral expected contract of one documented control. */
+export type VizPrintedKeySpec = Readonly<{ type: string; default?: string; unit?: string }>;
+
+/** 🧭️ Every section boundary ends the preceding documentation owner. */
+function vizPrintedSections(source: string): ReadonlyMap<string, string> {
+  const text = vizPrintedSource(source), headings = [...text.matchAll(/\\(?:subsection|section|chapter)\*?\{(?:\\(?:Key|ApiTitle)\{([a-z0-9-]+)\})?/g)], sections = new Map<string, string>();
+  for (const [index, heading] of headings.entries()) if (heading[1]) sections.set(heading[1], text.slice(heading.index! + heading[0].length, headings[index + 1]?.index ?? text.length));
+  const bindings = [...text.matchAll(/\\ApiScopeSource\{([a-z0-9-]+)\}\{[^}]+\}/g)];
+  for (const [index, binding] of bindings.entries()) {
+    if (sections.has(binding[1]!)) continue;
+    const end = Math.min(bindings[index + 1]?.index ?? text.length, headings.find(heading => heading.index! > binding.index!)?.index ?? text.length);
+    sections.set(binding[1]!, text.slice(binding.index! + binding[0].length, end));
+  }
+  return sections;
+}
+
+/** 🪢️ A printed shared table is inherited only through actual declaration forwards. */
+function vizPrintedOwnerRows(owner: string, tables: Readonly<Record<string, readonly VizPrintedKeyRow[]>>, declared: ReadonlyMap<string, string>, sections: ReadonlyMap<string, string>, model: KeysModel, seen = new Set<string>()): readonly VizPrintedKeyRow[] {
+  if (seen.has(owner)) return [];
+  seen.add(owner);
+  const rows = [...(tables[owner] ?? [])], root = declared.get(owner), scopes = new Set<string>();
+  const visit = (scope: string): void => {
+    scope = vizKeyPath(scope);
+    if (scopes.has(scope)) return;
+    scopes.add(scope);
+    if (scope.startsWith("helper:")) {
+      const helper = model.helpers.get(scope.slice(7));
+      for (const macro of helper?.forwards ?? []) visit("helper:" + macro);
+      for (const marker of helper?.templates.flatMap(template => [...template.keys]) ?? []) if (marker.startsWith("@forward:")) visit(marker.slice(9));
+    } else {
+      for (const marker of model.literal.get(scope) ?? []) if (marker.startsWith("@forward:")) visit(marker.slice(9));
+      for (const install of model.installs) if (helperKeysOn(model, install.macro, install.argument, scope, new Set()).size > 0) visit("helper:" + install.macro);
+    }
+  };
+  if (root) visit(root);
+  const familyName = /^semio\s*\/\s*viz\s*\/\s*family\s*\/\s*([a-z0-9-]+)$/.exec(root ?? "")?.[1] ?? owner;
+  const family = model.families.get(familyName);
+  if (family) {
+    visit(`semio / viz / family / ${familyName}`);
+    scopes.add("registry");
+    for (const scope of pathsReachedBy(model, family, 0, new Set())) if (!scope.includes("#")) visit(scope);
+  }
+  for (const link of (sections.get(owner) ?? "").matchAll(/\\ApiKeyScope\{([a-z0-9-]+)\}/g)) {
+    const target = link[1]!, scope = declared.get(target);
+    if (!scope || !scopes.has(vizKeyPath(scope))) continue;
+    for (const row of vizPrintedOwnerRows(target, tables, declared, sections, model, seen)) {
+      const names = row.names.filter(name => !rows.some(existing => existing.names.includes(name)));
+      if (names.length) rows.push({ ...row, names });
+    }
+  }
+  return rows;
+}
+
+/** ✂️ Extracts visible scalar text from a table's type or default cell. */
+function vizPrintedScalar(cell: string, defaultCell = false): string {
+  if (defaultCell && cell.trim() === "---") return "";
+  const localized = lastApiTextArguments(cell);
+  if (localized) cell = localized[0] === "empty" ? "" : localized[0];
+  return cell.replace(/\\Key\{([^{}]*)\}/g, "$1").replace(/[{}]/g, "").replace(/\\(?:texttt|detokenize)\s*/g, "").trim();
+}
+
+/** 📖️ Reads balanced rendered key-table rows in their explicitly titled owner scope. */
+export function vizPrintedKeyRows(source: string): Readonly<Record<string, readonly VizPrintedKeyRow[]>> {
+  const tables: Record<string, VizPrintedKeyRow[]> = {};
+  const text = vizPrintedSource(source);
+  for (const match of text.matchAll(/\\SemioTableLong(?:\[[^\]]*\])?\s*\{/g)) {
+    let cursor = match.index! + match[0].length - 1;
+    const groups: string[] = [];
+    for (let index = 0; index < 4; index++) {
+      const group = texGroup(text, texSkipSpace(text, cursor));
+      groups.push(group.body);
+      cursor = group.end;
+    }
+    const owner = /^\\(?:Key|ApiTitle)\{([a-z0-9-]+)\}/.exec(groups[0]!);
+    if (!owner || !groups[2]!.includes("\\ApiKey")) continue;
+    const rows: VizPrintedKeyRow[] = [];
+    for (const row of groups[3]!.matchAll(/\\SemioTableRow\s*\{/g)) {
+      const cells = vizPrintedCells(texGroup(groups[3]!, row.index! + row[0].length - 1).body);
+      const names = [...new Set([...cells[0]!.matchAll(/\\Key\{([A-Za-z0-9-]+)\}/g)].map(key => key[1]!))];
+      if (names.length === 0) continue;
+      const meaning = lastApiTextArguments(cells[3] ?? "");
+      const types = vizPrintedCells(cells[1] ?? "", ","), defaults = vizPrintedCells(cells[2] ?? "", ",");
+      for (const [index, name] of names.entries()) rows.push({ names: [name], type: vizPrintedScalar(types.length === names.length ? types[index]! : cells[1] ?? ""), default: vizPrintedScalar(defaults.length === names.length ? defaults[index]! : cells[2] ?? "", true), defaultPresent: Boolean((cells[2] ?? "").trim()), meaning: { en: meaning?.[0] ?? "", de: meaning?.[1] ?? "" } });
+    }
+    tables[owner[1]!] = [...(tables[owner[1]!] ?? []), ...rows];
+  }
+  return tables;
+}
+
+/** 🔑️ Only first-column control names can satisfy a printed owner-table requirement. */
+export function vizPrintedKeyTables(source: string): Readonly<Record<string, readonly string[]>> {
+  return Object.fromEntries(Object.entries(vizPrintedKeyRows(source)).map(([owner, rows]) => [owner, [...new Set(rows.flatMap(row => [...row.names]))].sort()]));
+}
+
+/** 🔑️ Rejects a key documented only in another owner's table, prose or a comment. */
+export function vizPrintedKeyFindings(source: string, required: Readonly<Record<string, readonly string[]>>): readonly string[] {
+  const tables = vizPrintedKeyTables(source);
+  return Object.entries(required).flatMap(([owner, keys]) => keys.filter(key => !tables[owner]?.includes(key)).map(key => owner + ":" + key)).sort();
+}
+
+/** 📚️ Admits inherited rows only through explicit, source-reachable printed references. */
+export function vizPrintedScopeFindings(
+  source: string,
+  required: Readonly<Record<string, Readonly<Record<string, VizPrintedKeySpec>>>>,
+  reachable: Readonly<Record<string, Readonly<Record<string, readonly string[]>>>>,
+  bindings: Readonly<Record<string, string>>,
+): readonly string[] {
+  const text = vizPrintedSource(source), tables = vizPrintedKeyRows(text);
+  const sections = vizPrintedSections(text);
+  const declared = new Map([...text.matchAll(/\\ApiScopeSource\{([a-z0-9-]+)\}\{([^}]+)\}/g)].map(match => [match[1]!, match[2]!.replaceAll("\\_", "_")]));
+  const findings: string[] = [], aliases: Record<string, string> = { fp: "number", int: "integer", bool: "boolean", tl: "string", clist: "string", mm: "number", deg: "number", pt: "number", rad: "number", name: "string", colour: "string", list: "string", choice: "string", column: "string", "TikZ style": "string", text: "string", pattern: "string", path: "string", records: "string", "TeX font": "string", "light|dark": "string", spec: "string", anchor: "string", "x,y": "string", "dx,dy": "string", "lo,hi": "string", dimension: "string", "agg:column": "string", "table:left:right": "string", "key list": "string", "key:value": "string", "kind:column:size": "string", "kind:x:y": "string", "x:series:value": "string", "fp predicate": "string", "id:c1;c2;…": "string", data: "string", rule: "string" };
+  const type = (value: string): string => aliases[value.trim()] ?? value.split("|").map(part => (aliases[part.trim()] ?? part.trim()).toLowerCase()).sort().join("|");
+  const scalar = (value: string): string => value.trim().replace(/\s*,\s*/g, ",").toLowerCase();
+  for (const [family, options] of Object.entries(required)) {
+    const section = sections.get(family);
+    if (section === undefined) { findings.push(family + ":missing-section"); continue; }
+    const rows = [...(vizPrintedKeyRows(section)[family] ?? [])];
+    for (const link of section.matchAll(/\\ApiKeyScope\{([a-z0-9-]+)\}/g)) {
+      const table = link[1]!, scope = bindings[table];
+      const accepted = scope === "registry" ? ["variant"] : reachable[family]?.[scope ?? ""];
+      if (!accepted || !tables[table]) { findings.push(family + ":invalid-scope:" + table); continue; }
+      if (declared.get(table) !== scope) { findings.push(family + ":invalid-binding:" + table); continue; }
+      for (const row of tables[table]!) {
+        for (const key of row.names) if (!accepted.includes(key)) findings.push(family + ":unreachable:" + table + ":" + key);
+        rows.push({ ...row, names: row.names.filter(key => accepted.includes(key)) });
+      }
+    }
+    for (const [key, spec] of Object.entries(options)) {
+      const row = rows.find(candidate => candidate.names.includes(key));
+      if (!row) { findings.push(family + ":" + key); continue; }
+      if (type(row.type) !== type(spec.type)) findings.push(family + ":" + key + ":type");
+      if (spec.default !== undefined && scalar(row.default) !== scalar(spec.default)) findings.push(family + ":" + key + ":default");
+      for (const language of ["en", "de"] as const) {
+        if (!row.meaning[language].trim()) findings.push(family + ":" + key + ":" + language);
+        else if (spec.unit && !row.meaning[language].toLowerCase().includes(spec.unit.toLowerCase())) findings.push(family + ":" + key + ":" + language + ":unit");
+      }
+    }
+  }
+  return [...new Set(findings)].sort();
+}
+
+/** 📚️ Verifies every family option using the authored schema and actual source forwarding graph. */
+export function vizPrintedFamilyFindings(source: string, bindings: Readonly<Record<string, string>>): readonly string[] {
+  const required = Object.fromEntries(vizApiReference().families.map(family => [family.name, Object.fromEntries(family.options.map(option => [option.name, { type: option.type, ...(option.default ? { default: option.default } : {}) }]))]));
+  return vizPrintedScopeFindings(source, required, vizImplementedFamilyKeyScopes(), bindings);
+}
+
+/** 📦️ Every emitted package key requires a rendered row in its actual l3keys owner scope. */
+export function vizPrintedPackageFindings(source: string, implementations?: Readonly<Record<string, string>>): readonly string[] {
+  const packages = implementations ?? Object.fromEntries(readdirSync(VIZ_LATEX_DIR).filter(name => name.startsWith("semio-viz") && name.endsWith(".sty")).sort().map(name => [basename(name, ".sty"), readFileSync(join(VIZ_LATEX_DIR, name), "utf8")]));
+  const model = implementations ? vizKeysModel(Object.values(implementations)) : vizKeysModel(), read = vizDocumentKeyReader(source, model), helpers = vizDocumentHelperScopes(source), findings: string[] = [];
+  for (const [pack, implementation] of Object.entries(packages)) for (const [scope, entry] of vizDocumentKeyScopes(implementation, model, helpers)) {
+    let rows: ReadonlyMap<string, VizApiKey>;
+    try { rows = read(scope); } catch (error) { findings.push(pack + ":" + scope + ":" + String(error)); continue; }
+    for (const name of entry.names) if (!rows.has(name)) findings.push(pack + ":" + scope + ":" + name + ":row");
+  }
+  return [...new Set(findings)].sort();
+}
+
 /** 🧪️ The full structural report of the catalogue against the taxonomy, the schema and the LaTeX packages. */
 export function vizCoverageReport(): {
   readonly leaves: number;
@@ -833,7 +1231,7 @@ export function vizCoverageReport(): {
   const catalog = loadVizCatalog();
   const schema = loadVizSchema();
   const familyOptions = schema["x-semio-family-options"] as Record<string, VizFamilyOptions>;
-  const demoTables = new Set((schema["x-semio-demo-tables"] as { name: string }[]).map((table) => table.name));
+  const demoTables = new Set(schema["x-semio-demo-tables"].map((table) => table.name));
   const registered = registeredVizFamilies();
 
   const coverCount = new Map<string, number>();
@@ -884,7 +1282,6 @@ export function vizCoverageReport(): {
   };
 }
 
-/** 🧪️ Checks the whole visualization catalogue: taxonomy coverage, gallery, schema and public API examples. */
 /** 🔓️ Compares machine API metadata with the current owned generator's exact bytes. */
 export function vizApiReferenceFindings(metadata?: string): readonly string[] {
   const path = "🧰️framework/🛍️products/📓️print/🖼️assets/🔣️viz-api.json";
@@ -894,7 +1291,9 @@ export function vizApiReferenceFindings(metadata?: string): readonly string[] {
   return marksItselfGenerated(path, actual) ? [] : [`unmarked ${path}`];
 }
 
+/** 🧪️ Checks the whole visualization catalogue: taxonomy coverage, gallery, schema and public API examples. */
 export function verifyVisualizationCoverage(metadata?: string): void {
+  assert.deepEqual(vizApiReferenceFindings(metadata), []);
   const report = vizCoverageReport();
   const leaves = parseVizTaxonomyLeaves(readFileSync(VIZ_TAXONOMY_PATH, "utf8"));
   const taxonomy = JSON.parse(readFileSync(join(productRoot, "🖼️assets/🔣️viz-taxonomy.json"), "utf8")) as { readonly id: string; readonly section: string }[];
@@ -910,7 +1309,6 @@ export function verifyVisualizationCoverage(metadata?: string): void {
   assert.deepEqual(report.unknownDemoTables, []);
   assert.deepEqual(leaves.filter((leaf) => !parseVizCovers(VIZ_GALLERY_DIR).has(leaf)), []);
   assert.deepEqual(assertVizApi().missing, []);
-  assert.deepEqual(vizApiReferenceFindings(metadata), []);
   console.log(`[TRACE] print: viz coverage ${report.leaves}/${report.leaves} leaves through ${report.kinds} kinds, API ${VIZ_API_COMMANDS.length}/${VIZ_API_COMMANDS.length}`);
   if (report.unknownFamilies.length > 0) console.log(`[TRACE] print: ${report.unknownFamilies.length} families still awaiting a \\SemioVizFamily registration: ${report.unknownFamilies.slice(0, 8).join(" ")}…`);
 }

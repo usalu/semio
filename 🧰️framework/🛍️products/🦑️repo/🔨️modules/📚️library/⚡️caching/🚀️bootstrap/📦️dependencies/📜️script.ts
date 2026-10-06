@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 import { spawn, spawnSync } from "node:child_process";
-import { readFileSync, writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { Script, ScriptRouter } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { prepareCargoWorkspaceInvocation } from "../../../🗂️workspaces/🦀️cargo/🟦️.ts";
@@ -82,7 +82,9 @@ export class RefreshLockScript extends SyncScript {
 export class ContractCheckScript extends Script {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("Dependency contract check accepts no arguments");
-    await runBun(["test", join(import.meta.dir, "🧪️tests/🟦️.ts")], this.root, new AbortController().signal);
+    const artifacts = process.env.SEMIO_TEST_ARTIFACT_DIR ?? join(this.root, ".🧬semio/🦑️repo/⚡️cache/tests/bootstrap-dependencies");
+    mkdirSync(artifacts, { recursive: true });
+    await runTool(process.execPath, ["test", join(import.meta.dir, "🧪️tests/🟦️.ts")], this.root, new AbortController().signal, false, { ...process.env, SEMIO_TEST_ARTIFACT_DIR: artifacts });
   }
 }
 

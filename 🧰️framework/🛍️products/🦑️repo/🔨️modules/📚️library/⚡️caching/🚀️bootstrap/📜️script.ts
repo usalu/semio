@@ -3,13 +3,26 @@ import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️proces
 import { spawn as spawnNxProcess, spawnSync as stopNxProcessTree } from "node:child_process";
 import { existsSync, readFileSync, rmSync } from "node:fs";
 import { createRequire } from "node:module";
-import { join } from "node:path";
+import { createHash } from "node:crypto";
+import { tmpdir } from "node:os";
+import { join, resolve, win32, posix } from "node:path";
 import { Script, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { orchestratorBudgetOpts, semioShipEnv } from "../../🏃️process/🟦️.ts";
 import { devToolingEnv, semioNxParallelFlag } from "../../🏃️process/🌿️environment/🟦️.ts";
 import { getWorkspaceRoot } from "../../🗂️workspaces/🟦️.ts";
 
 const WORKSPACE_ROOT = getWorkspaceRoot();
+
+/** 🥖️ Carries the acquired Bun identity into every Nx producer and source watcher. */
+export function pinnedNxRuntimeEnvironment(source:NodeJS.ProcessEnv,bun:string,platform:NodeJS.Platform=process.platform):NodeJS.ProcessEnv {
+  const paths=platform==="win32"?win32:posix;
+  if(!paths.isAbsolute(bun))throw new Error("Nx Bun runtime must be absolute");
+  const environment={...source},keys=Object.keys(source).filter(key=>platform==="win32"?key.toUpperCase()==="PATH":key==="PATH"),key=keys.find(value=>value==="PATH")??keys[0]??"PATH",previous=source[key]??"";
+  for(const candidate of keys)delete environment[candidate];
+  const directory=paths.dirname(bun),entries=previous.split(paths.delimiter).filter(entry=>entry && (platform==="win32"?entry.toLowerCase()!==directory.toLowerCase():entry!==directory));
+  environment[key]=[directory,...entries].join(paths.delimiter);
+  return environment;
+}
 
 /** 🧭️ Loads domain selection helpers only for commands that request them. */
 function nxRoutingServices(): typeof import("../../📦️packages/🟦️typescript/🟦️.ts") {
@@ -34,7 +47,15 @@ export function publishBootstrapSources(root: string): void {
 /** 🧮️ Lets each watched build finish its graph while the daemon retains source watching. */
 export function nxChildEnvironment(environment: NodeJS.ProcessEnv, args: readonly string[], watching: boolean): NodeJS.ProcessEnv {
   if (args[0] === "watch") return { ...environment, NX_DAEMON: "true" };
-  return watching || environment.NX_FILE_CHANGES !== undefined ? { ...environment, NX_DAEMON: "false" } : environment;
+  return { ...environment, NX_DAEMON: watching || environment.NX_FILE_CHANGES !== undefined ? "false" : environment.NX_DAEMON ?? "false" };
+}
+
+/** 🧷️ Gives an activation binding its own watcher graph and short portable daemon socket path. */
+export function nxWatcherEnvironment(root: string, environment: Record<string, string | undefined>, activation: string): Record<string, string | undefined> {
+  const binding = Object.entries(environment).filter(([key]) => /^(?:S_|VITE_|PLAYGROUND_|SEMIO_(?:PLUGIN|RENDERER|BUILD_MODE|LOCALE|LOCKED_LOCALE|LOCKED_TERMINOLOGY)$)/.test(key)).sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0);
+  const identity = createHash("sha256").update(JSON.stringify([resolve(root).replaceAll("\\", "/"), activation, binding])).digest("hex").slice(0, 24);
+  const temporary = tmpdir(), socketRoot = process.platform !== "win32" && Buffer.byteLength(temporary) > 50 ? "/tmp" : temporary;
+  return { ...environment, NX_WORKSPACE_DATA_DIRECTORY: join(root, ".nx", "workspace-data", "watchers", identity), NX_SOCKET_DIR: join(socketRoot, `semio-nx-${identity}`), NX_DAEMON_SOCKET_DIR: undefined };
 }
 
 /** ⏳️ Awaits Nx's readiness handshake while cold graph discovery reports progress and remains cancellable. */
@@ -58,6 +79,28 @@ export function waitForNxWatcher(watcher: ReturnType<typeof spawnNxProcess>): Pr
     watcher.once("close", exited);
     watcher.once("error", failed);
     watcher.stdout!.on("data", received);
+  });
+}
+
+/** 🔁️ Reconciles sources after both watcher readiness and the initial prerequisite graph. */
+export function activateWhenNxWatcherReady(watcher: ReturnType<typeof spawnNxProcess>, prepared: Promise<void>, active: () => boolean, activate: () => void, failed: (error: Error) => void): void {
+  void Promise.all([waitForNxWatcher(watcher), prepared]).then(() => { if (active()) activate(); }).catch(error => { if (active()) failed(error); });
+}
+
+/** 🛡️ Registers automatic source callbacks after the initial prerequisite graph has settled. */
+export async function startNxWatcherAfterPreparation(prepared:Promise<void>,active:()=>boolean,start:()=>ReturnType<typeof spawnNxProcess>):Promise<ReturnType<typeof spawnNxProcess>|undefined> {
+  await prepared;return active()?start():undefined;
+}
+
+/** ⏳️ Observes Nx starting the serving target after its prerequisite graph completes. */
+export function waitForNxTargetStart(child: ReturnType<typeof spawnNxProcess>, target: string): Promise<void> {
+  return new Promise((accept,reject) => {
+    let pending="";
+    const finish=(error?:Error):void => { child.stdout!.removeListener("data",received);child.removeListener("close",closed);child.removeListener("error",failed);if(error)reject(error);else accept(); };
+    const received=(chunk:Buffer):void => { pending=(pending+chunk.toString()).replace(/\x1b\[[0-9;?]*[A-Za-z]/g,"").slice(-8192);const marker="> nx run "+target;if([" ","\r","\n"].some(separator=>pending.includes(marker+separator)))finish(); };
+    const closed=(code:number|null):void => finish(new Error("Nx initial preparation ended before serving target "+target+" ("+code+")"));
+    const failed=(error:Error):void => finish(error);
+    child.stdout!.on("data",received);child.once("close",closed);child.once("error",failed);
   });
 }
 
@@ -92,7 +135,7 @@ export class NxScript extends Script {
     return owned.sort((a, b) => a - b);
   }
   async run(segments: string[]): Promise<void> {
-    let tooling: { cli: string; modulePath: string };
+    let tooling: { cli: string; modulePath: string; bun: string };
     {
       const controller = new AbortController();
       let stopped: NodeJS.Signals | undefined;
@@ -108,7 +151,7 @@ export class NxScript extends Script {
     }
     const nxCli = tooling.cli;
     const invocation = resolveNxInvocation(segments), children: ReturnType<typeof spawnNxProcess>[] = [];
-    const env = devToolingEnv({ ...invocation.env, NODE_PATH: tooling.modulePath, NX_WORKSPACE_DATA_DIRECTORY: invocation.env.NX_WORKSPACE_DATA_DIRECTORY || process.env.NX_WORKSPACE_DATA_DIRECTORY || join(this.root, ".nx", "workspace-data"), NX_SOCKET_DIR: undefined, NX_DAEMON_SOCKET_DIR: undefined, npm_lifecycle_event: undefined, npm_lifecycle_script: undefined });
+    const env = pinnedNxRuntimeEnvironment(devToolingEnv({ ...invocation.env, NX_ISOLATE_PLUGINS: process.env.NX_ISOLATE_PLUGINS ?? "false", NODE_PATH: tooling.modulePath, NX_WORKSPACE_DATA_DIRECTORY: invocation.env.NX_WORKSPACE_DATA_DIRECTORY || process.env.NX_WORKSPACE_DATA_DIRECTORY || join(this.root, ".nx", "workspace-data"), NX_SOCKET_DIR: undefined, NX_DAEMON_SOCKET_DIR: undefined, npm_lifecycle_event: undefined, npm_lifecycle_script: undefined }), tooling.bun);
     let cancelled: NodeJS.Signals | undefined, cancellationDeadline = 0, watchFailure = 0, finishing = false;
     let force: ReturnType<typeof setTimeout> | undefined, watcher: ReturnType<typeof spawnNxProcess> | undefined;
     const descendants = new Set<number>();
@@ -143,8 +186,8 @@ export class NxScript extends Script {
       force = setTimeout(() => killAll("SIGKILL"), 5000);
       force.unref();
     };
-    const launch = (args: string[], capture = false): ReturnType<typeof spawnNxProcess> => {
-      const child = spawnNxProcess("node", [nxCli, ...args], { cwd: this.root, env: nxChildEnvironment(env, args, Boolean(invocation.watch)), stdio: capture ? ["inherit", "pipe", "inherit"] : "inherit", detached: process.platform !== "win32" });
+    const launch = (args: string[], capture = false, environment = env): ReturnType<typeof spawnNxProcess> => {
+      const child = spawnNxProcess("node", [nxCli, ...args], { cwd: this.root, env: nxChildEnvironment(environment, args, Boolean(invocation.watch)), stdio: capture ? ["inherit", "pipe", "inherit"] : "inherit", detached: process.platform !== "win32" });
       children.push(child);
       return child;
     };
@@ -159,24 +202,36 @@ export class NxScript extends Script {
         const installed = await new Promise<number>((accept, reject) => { install.once("error", reject); install.once("close", (code) => accept(code ?? 1)); });
         if (installed !== 0 || cancelled) { process.exitCode = cancelled ? cancelled === "SIGINT" ? 130 : 143 : installed; return; }
       }
-      if (invocation.watch) {
-        NxScript.ensureDaemon(nxCli, this.root, env);
-        watcher = launch(["watch", "--all", "--includeGlobalWorkspaceFiles", "--verbose", "--", "bun", "nx", "run", invocation.watch, "--output-style=stream"], true);
-        watcher.stdout!.on("data", (chunk) => process.stdout.write(chunk));
-        await waitForNxWatcher(watcher);
-        watcher.once("close", (code) => { if (!finishing && !cancelled) { watchFailure = code || 1; stop("SIGTERM"); } });
-      }
       if (!cancelled) {
-        const child = launch(invocation.args);
-        const status = await new Promise<number>((accept, reject) => { child.once("error", reject); child.once("close", (code) => accept(code ?? 1)); });
-        process.exitCode = watchFailure || (cancelled ? cancelled === "SIGINT" ? 130 : 143 : status);
-      } else process.exitCode = cancelled === "SIGINT" ? 130 : 143;
+        const child=launch(invocation.args,Boolean(invocation.watch));
+        const status=new Promise<number>((accept,reject) => { child.once("error",reject);child.once("close",code=>accept(code??1)); });void status.catch(()=>{});
+        if(invocation.watch) {
+          const prepared=invocation.watch.includes(":activate-") ? waitForNxTargetStart(child,invocation.args[1]!) : Promise.resolve();
+          child.stdout!.on("data",chunk=>process.stdout.write(chunk));
+          const watchEnvironment=nxWatcherEnvironment(this.root,env,invocation.watch);
+          watcher=await startNxWatcherAfterPreparation(prepared,()=>!finishing&&!cancelled,()=>{
+            NxScript.ensureDaemon(nxCli,this.root,watchEnvironment);
+            const registered=launch(["watch","--all","--includeGlobalWorkspaceFiles","--verbose","--","bun","nx","run",invocation.watch,"--output-style=stream"],true,watchEnvironment);
+            return registered;
+          });
+          if(!watcher){process.exitCode=cancelled?cancelled==="SIGINT"?130:143:await status;return;}
+          watcher.stdout!.on("data",chunk=>process.stdout.write(chunk));
+          watcher.once("close",code=>{if(!finishing&&!cancelled){watchFailure=code||1;stop("SIGTERM");}});
+          activateWhenNxWatcherReady(watcher,Promise.resolve(),()=>!finishing&&!cancelled,()=>{
+            const activation=launch(["run",invocation.watch!,"--output-style=stream"]);
+            activation.once("error",error=>{console.error(error.message);watchFailure=1;stop("SIGTERM");});
+            activation.once("close",code=>{if(code&&!finishing&&!cancelled){watchFailure=code;stop("SIGTERM");}});
+          },error=>{console.error(error.message);watchFailure=1;stop("SIGTERM");});
+        }
+        const code=await status;
+        process.exitCode=watchFailure||(cancelled?cancelled==="SIGINT"?130:143:code);
+      } else process.exitCode=cancelled==="SIGINT"?130:143;
     } catch (error) {
       if (cancelled) process.exitCode = cancelled === "SIGINT" ? 130 : 143;
       else throw error;
     } finally {
       finishing = true;
-      if (watcher && !cancelled) stop("SIGTERM");
+      if (invocation.watch && children.length && !cancelled) stop("SIGTERM");
       if (cancelled && process.platform !== "win32") {
         const alive = (child: ReturnType<typeof spawnNxProcess>): boolean => { try { if (child.pid) { process.kill(-child.pid, 0); return true; } } catch {} return false; };
         const descendantAlive = (pid: number): boolean => { try { process.kill(pid, 0); return true; } catch { return false; } };
@@ -311,6 +366,8 @@ export function resolveNxInvocation(segments: string[]): { args: string[]; env: 
 //#endregion 🔖️NxScript
 
 if (import.meta.main) {
-  publishBootstrapSources(WORKSPACE_ROOT);
-  await new ScriptRouter(WORKSPACE_ROOT).register("nx", NxScript).run(process.argv.slice(2));
+  const args=process.argv.slice(2);
+  const native=await import("../../../⌨️cli/📦️installation/🟦️.ts"),invocation=args[0]==="nx"?native.dashboardInvocation(args.slice(1)):undefined;
+  if(invocation){try{process.exitCode=await native.launchDashboard(WORKSPACE_ROOT,invocation);}catch(error){console.error(error instanceof Error?error.message:String(error));process.exitCode=1;}}
+  else{publishBootstrapSources(WORKSPACE_ROOT);await new ScriptRouter(WORKSPACE_ROOT).register("nx", NxScript).run(args);}
 }

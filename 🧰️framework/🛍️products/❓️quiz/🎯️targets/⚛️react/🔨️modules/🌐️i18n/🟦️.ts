@@ -10,7 +10,7 @@
  * @see ../../../../../../🔨️modules/🖱️ui/🎯️targets/⚛️react/🌐️i18n/🟦️.ts — `@semio-tech/ui-react/i18n`: `registerUiTranslationBundles`, `uiI18n`
  */
 
-import { LANGUAGES, type Rejection, type TaskKind, type Text } from "@semio-tech/quiz";
+import { LANGUAGES, type Rejection, type ShortText, type TaskKind, type Text } from "@semio-tech/quiz";
 import { registerUiTranslationBundles, resolveUiLabel, setUiLocale, uiI18n, type DeepUiTranslationKeys, type UiLabelValue } from "@semio-tech/ui-react/i18n";
 
 //#region 🗣️Locale
@@ -38,6 +38,12 @@ export function preferredLocale(languages: readonly string[]): QuizLocale | unde
 /** 🌍️ The learner-visible text of `text` in `locale`. */
 export function localized(text: Text, locale: QuizLocale): string {
   return text[locale];
+}
+
+/** 🏷️ The full and short learner-visible names of something that carries both. */
+export function titled(source: { readonly title: Text; readonly short?: ShortText }, locale: QuizLocale): { readonly full: string; readonly short: string } {
+  const full = localized(source.title, locale);
+  return { full, short: source.short === undefined ? full : localized(source.short, locale) };
 }
 
 /** 🔁️ Makes `locale` the language of the shared i18n port and of the document; without a locale the document names no
@@ -98,6 +104,7 @@ export const QUIZ_BUNDLE_EN = {
     },
     preferences: {
       title: phrase("Settings"),
+      titleShort: phrase("Prefs"),
       language: phrase("Language"),
       choose: phrase("Choose your language."),
       theme: phrase("Theme"),
@@ -203,12 +210,17 @@ export const QUIZ_BUNDLE_EN = {
       earnedAt: phrase("Earned on {{date}}"),
       earnedHere: phrase("Earned here: {{badges}}"),
       howItWorks: phrase("How it works"),
+      howItWorksShort: phrase("How"),
       readMore: phrase("Read more"),
       allBadges: phrase("All badges"),
       openPage: phrase("Open"),
       cards: phrase("Quizzes and pages"),
       pageWaiting: phrase("{{page}} is loading"),
       pageFailed: phrase("{{page}} could not be shown."),
+      neighbourUp: phrase("Go up to {{page}}"),
+      neighbourLeft: phrase("Go left to {{page}}"),
+      neighbourRight: phrase("Go right to {{page}}"),
+      neighbourDown: phrase("Go down to {{page}}"),
     },
     learner: {
       runs: phrase("Your runs"),
@@ -407,6 +419,7 @@ export const QUIZ_BUNDLE_EN = {
     },
     leaderboard: {
       title: phrase("Leaderboard"),
+      titleShort: phrase("Board"),
       caption: phrase("Learners with a submitted quiz, ranked by total points. Select a column heading to sort."),
       learners: phrase("Learners in total: {{count}}"),
       shown: phrase("Shown: the top {{count}}"),
@@ -564,6 +577,7 @@ export const QUIZ_BUNDLE_DE: typeof QUIZ_BUNDLE_EN = {
     },
     preferences: {
       title: phrase("Einstellungen"),
+      titleShort: phrase("Einst."),
       language: phrase("Sprache"),
       choose: phrase("Wähle deine Sprache."),
       theme: phrase("Farbschema"),
@@ -669,12 +683,17 @@ export const QUIZ_BUNDLE_DE: typeof QUIZ_BUNDLE_EN = {
       earnedAt: phrase("Erhalten am {{date}}"),
       earnedHere: phrase("Hier erhalten: {{badges}}"),
       howItWorks: phrase("So funktioniert’s"),
+      howItWorksShort: phrase("So"),
       readMore: phrase("Weiterlesen"),
       allBadges: phrase("Alle Abzeichen"),
       openPage: phrase("Öffnen"),
       cards: phrase("Quizze und Seiten"),
       pageWaiting: phrase("{{page}} wird geladen"),
       pageFailed: phrase("{{page}} konnte nicht angezeigt werden."),
+      neighbourUp: phrase("Nach oben zu {{page}}"),
+      neighbourLeft: phrase("Nach links zu {{page}}"),
+      neighbourRight: phrase("Nach rechts zu {{page}}"),
+      neighbourDown: phrase("Nach unten zu {{page}}"),
     },
     learner: {
       runs: phrase("Deine Durchgänge"),
@@ -873,6 +892,7 @@ export const QUIZ_BUNDLE_DE: typeof QUIZ_BUNDLE_EN = {
     },
     leaderboard: {
       title: phrase("Rangliste"),
+      titleShort: phrase("Liste"),
       caption: phrase("Lernende mit einem abgegebenen Quiz, nach Gesamtpunkten geordnet. Wähle eine Spaltenüberschrift zum Sortieren."),
       learners: phrase("Lernende insgesamt: {{count}}"),
       shown: phrase("Angezeigt: die besten {{count}}"),

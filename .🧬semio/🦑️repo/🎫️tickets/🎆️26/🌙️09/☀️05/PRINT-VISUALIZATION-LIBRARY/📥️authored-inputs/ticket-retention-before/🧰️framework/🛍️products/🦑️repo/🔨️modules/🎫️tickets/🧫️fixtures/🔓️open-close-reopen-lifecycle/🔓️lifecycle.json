@@ -1,0 +1,41 @@
+{
+  "repoMetaDir": "/repo/.🧬semio/🦑️repo",
+  "clock": { "year": 26, "month": 9, "day": 6, "stamp": "2026-09-06 12:00:00" },
+  "open": {
+    "emoji": "🎫️",
+    "title": "Repo Rust Implementation and Taxonomy Tree",
+    "prompt": "Port the ticket domain to Rust and cover it with language-agnostic tests.",
+    "llm": "Opus 4.5",
+    "effort": "high",
+    "client": "claude-code",
+    "goal": "🎯️aioptimizedrepo🎯️repoclient",
+    "session": "⚪5b49befa-cd0c-465f-af94-3d28e7c9ed64",
+    "noIssue": true,
+    "noManagement": true
+  },
+  "close": {
+    "id": "26/09/06/REPO-RUST-IMPLEMENTATION-AND-TAXONOMY-TREE",
+    "summary": "Ported the ticket domain, the document codec and the important-document transaction.",
+    "files": ["🧰️framework/🛍️products/🦑️repo/🔨️modules/🎫️tickets/📦️packages/🦀️rust/🦀️.rs", "./🧰️framework/🛍️products/🦑️repo/🔨️modules/🎫️tickets/📦️packages/🦀️rust/🦀️.rs", "file://🧰️framework/🛍️products/🦑️repo/🔨️modules/🎫️tickets/🧬️schema/🔣️.json", "node_modules/left-pad/index.js", "   "],
+    "noManagement": true,
+    "bulk": false
+  },
+  "reopen": {
+    "id": "26/09/06/REPO-RUST-IMPLEMENTATION-AND-TAXONOMY-TREE",
+    "prompt": "CONTINUE with the language-agnostic cases.",
+    "llm": "Opus 4.5",
+    "client": "claude-code",
+    "session": "⚪5b49befa-cd0c-465f-af94-3d28e7c9ed64",
+    "noManagement": true
+  },
+  "change": {
+    "id": "26/09/06/REPO-RUST-IMPLEMENTATION-AND-TAXONOMY-TREE",
+    "title": "Repo Rust Tickets Module",
+    "goal": "🎯️aioptimizedrepo🎯️repoclient🎯️repobinary",
+    "noManagement": true
+  },
+  "purge": {
+    "oversizedFile": "🗑️generated/huge.log",
+    "smallFile": "📓️report.md"
+  }
+}

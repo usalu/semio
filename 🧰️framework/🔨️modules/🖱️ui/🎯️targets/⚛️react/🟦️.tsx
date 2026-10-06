@@ -5230,6 +5230,18 @@ export const modeDockTabLabelClassName = "flex min-w-0 flex-1 items-center gap-s
 /** @emoji 🪧️ Static shell title (navbar app label, pane headings) — element gray at rest. */
 export const shellChromeTitleClassName = "truncate text-sm font-medium text-element";
 
+/** @emoji 📱️ A label that shows its short form below the tablet breakpoint and its full form from tablet width up — both stay available to assistive technology. */
+export function ResponsiveLabel(props: { readonly full: string; readonly short?: string; readonly className?: string; readonly title?: string }): React.ReactElement {
+  const short = props.short ?? props.full;
+  if (short === props.full) return <span className={props.className} title={props.title ?? props.full}>{props.full}</span>;
+  return (
+    <span className={props.className} title={props.title ?? props.full}>
+      <span aria-hidden="true" className="md:hidden">{short}</span>
+      <span className="max-md:sr-only">{props.full}</span>
+    </span>
+  );
+}
+
 /** @emoji 🪧️ Uppercase shell section title — element gray at rest. */
 export const shellChromeSectionTitleClassName = "text-2xs font-semibold uppercase tracking-wide text-element";
 
@@ -5282,7 +5294,7 @@ export { OverviewCard, OverviewCardAction, OverviewCardOpenChip, overviewCardChi
 // #endregion 🃏️OverviewCard
 
 // #region 🥞️LayeredOverview
-export { LayeredOverview, capturePosterFromCanvases, type LayeredCardState, type LayeredChromeState, type LayeredLabels, type LayeredMode, type LayeredOverviewProps, type LayeredPane, type LayeredPaneState } from "../../🧱️elements/🥞️LayeredOverview/🟦️.tsx";
+export { LayeredOverview, capturePosterFromCanvases, type LayeredCardState, type LayeredChromeState, type LayeredDirection, type LayeredInsets, type LayeredLabels, type LayeredMode, type LayeredOverviewProps, type LayeredPane, type LayeredPaneState } from "../../🧱️elements/🥞️LayeredOverview/🟦️.tsx";
 export {
   LAYERED_DEFAULT_LIFECYCLE,
   LAYERED_FOLLOW_EPSILON,

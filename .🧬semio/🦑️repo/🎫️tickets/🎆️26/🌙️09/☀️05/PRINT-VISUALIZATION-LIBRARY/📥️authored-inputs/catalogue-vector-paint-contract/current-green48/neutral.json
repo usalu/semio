@@ -1,0 +1,86 @@
+{
+  "schema": {
+    "type": "object",
+    "required": [
+      "renders",
+      "opacities",
+      "languages",
+      "stroke",
+      "lineWidth",
+      "canvas"
+    ],
+    "additionalProperties": false,
+    "properties": {
+      "renders": {
+        "type": "array",
+        "items": {
+          "enum": [
+            "quiver",
+            "direction",
+            "streamline",
+            "streakline",
+            "lic",
+            "particle"
+          ]
+        }
+      },
+      "opacities": {
+        "type": "array",
+        "items": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "languages": {
+        "type": "array",
+        "items": {
+          "enum": [
+            "en",
+            "de"
+          ]
+        }
+      },
+      "stroke": {
+        "type": "string"
+      },
+      "lineWidth": {
+        "type": "number",
+        "exclusiveMinimum": 0
+      },
+      "canvas": {
+        "type": "array",
+        "minItems": 2,
+        "maxItems": 2,
+        "items": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    }
+  },
+  "vectors": {
+    "renders": [
+      "quiver",
+      "direction",
+      "streamline",
+      "streakline",
+      "lic",
+      "particle"
+    ],
+    "opacities": [
+      0.4,
+      0
+    ],
+    "languages": [
+      "en",
+      "de"
+    ],
+    "stroke": "#e83b22",
+    "lineWidth": 0.6,
+    "canvas": [
+      80,
+      40
+    ]
+  }
+}

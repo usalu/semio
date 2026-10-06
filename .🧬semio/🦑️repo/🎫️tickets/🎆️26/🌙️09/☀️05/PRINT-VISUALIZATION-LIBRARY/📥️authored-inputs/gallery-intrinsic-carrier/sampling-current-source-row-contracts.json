@@ -1,0 +1,80 @@
+{
+  "id": "geo-hexbin",
+  "scope": "semio / viz / family / geo-hexbin",
+  "source": {
+    "file": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-geo-symbols.sty",
+    "sha256": "329a8e8e9695f2b594b35d605a94155b1a417d4823de1a1aae32c3c7893591ac"
+  },
+  "keys": [
+    {
+      "key": "gridWidth",
+      "type": "integer",
+      "default": "16",
+      "setter": "int",
+      "description": {
+        "en": "Positive number of Gaussian sampling grid columns.",
+        "de": "Positive Anzahl der Spalten des Gaußschen Abtastgitters."
+      }
+    },
+    {
+      "key": "gridHeight",
+      "type": "integer",
+      "default": "11",
+      "setter": "int",
+      "description": {
+        "en": "Positive number of Gaussian sampling grid rows.",
+        "de": "Positive Anzahl der Zeilen des Gaußschen Abtastgitters."
+      }
+    },
+    {
+      "key": "gridOrigin",
+      "type": "string",
+      "default": "0,0",
+      "setter": "clist",
+      "description": {
+        "en": "Two raw planar coordinates of the Gaussian sampling grid origin.",
+        "de": "Zwei rohe planare Koordinaten des Ursprungs des Gaußschen Abtastgitters."
+      }
+    },
+    {
+      "key": "gridCell",
+      "type": "number",
+      "default": "5",
+      "setter": "fp",
+      "description": {
+        "en": "Positive sampling cell spacing in raw planar units; contour positions use the same spacing.",
+        "de": "Positiver Abstand der Abtastzellen in rohen planaren Einheiten; Höhenlinienpositionen nutzen denselben Abstand."
+      }
+    },
+    {
+      "key": "hexScale",
+      "type": "number",
+      "default": "0.92",
+      "setter": "fp",
+      "description": {
+        "en": "Positive visible hexagon radius factor relative to the raw binning radius; bin membership is unchanged.",
+        "de": "Positiver Faktor des sichtbaren Sechseckradius relativ zum rohen Bündelungsradius; die Zellzuordnung bleibt unverändert."
+      }
+    },
+    {
+      "key": "heatOpacity",
+      "type": "number",
+      "default": "0.3",
+      "setter": "fp",
+      "description": {
+        "en": "Heat fill opacity factor from zero to one, multiplied by the authored drawing opacity.",
+        "de": "Deckkraftfaktor der Wärmefüllung von null bis eins, multipliziert mit der verfassten Zeichendeckkraft."
+      }
+    },
+    {
+      "key": "thresholds",
+      "type": "string",
+      "default": "",
+      "setter": "clist",
+      "description": {
+        "en": "Optional finite raw density thresholds, sorted numerically; an empty list uses the requested level count.",
+        "de": "Optionale endliche rohe Dichteschwellen, numerisch sortiert; eine leere Liste nutzt die angeforderte Niveauanzahl."
+      }
+    }
+  ]
+}

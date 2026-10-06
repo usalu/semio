@@ -1,0 +1,11 @@
+[
+  {
+    "path": "dashboard/🧪️tests/🌀️control-plane/🟦️.ts",
+    "replace": [
+      {
+        "from": "key:key.name==='space'?' ':key.name",
+        "to": "key:key.sequence==='\\\\u0000'&&key.ctrl?' ':key.name==='space'?' ':key.name"
+      }
+    ]
+  }
+]

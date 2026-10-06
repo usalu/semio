@@ -5,7 +5,7 @@ import { verifyVizChartInferences } from "../../🧬️schema/💡️inferences/
 import { BundleScript } from "../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { verifyVisualizationCoverage } from "../../🔨️modules/📊️visualization-gallery/🟦️.ts";
 import { writePrintGalleryEvidence } from "../../🔨️modules/📊️visualization-gallery/🧪️testing/📏️measurement/🟦️.ts";
-import { verifyPrintMacroStagingNative, verifyPrintPipelineLong, verifyPrintPipelineQuick, verifyPrintVisualizationBuild } from "./🧪️tests/🖨️pipeline/🟦️.ts";
+import { verifyPrintKindPaintFixtures, verifyPrintGalleryCarrier, verifyPrintApiTitleRendering, verifyPrintApiPublication, verifyPrintCommandBoundaries, verifyPrintMacroStagingNative, verifyPrintPipelineLong, verifyPrintPipelineQuick, verifyPrintVisualizationBuild } from "./🧪️tests/🖨️pipeline/🟦️.ts";
 
 //#region 🧪️PrintPipelineVerification
 /** 🧪️ Verifies pure print transformations and, from `long` upward, every template PDF; `viz` adds the
@@ -13,6 +13,16 @@ import { verifyPrintMacroStagingNative, verifyPrintPipelineLong, verifyPrintPipe
  * `🖼️gallery-render` evidence. */
 export class PrintPipelineVerificationCommand extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    if (segments[0] === "api-publication") {
+      if (segments.length !== 1) throw new Error("print API publication test accepts no additional segments");
+      await verifyPrintApiPublication();
+      return;
+    }
+    if (segments[0] === "command-boundaries") {
+      if (segments.length !== 1) throw new Error("print command boundaries test accepts no additional segments");
+      await verifyPrintCommandBoundaries();
+      return;
+    }
     if (segments[0] === "macro") {
       if (segments.length !== 1) throw new Error("print macro staging test accepts no additional segments");
       await verifyPrintMacroStagingNative();
@@ -27,6 +37,9 @@ export class PrintPipelineVerificationCommand extends BundleScript {
       const mode = segments[1] ?? "coverage";
       if (!["quick", "coverage", "full"].includes(mode)) throw new Error(`unknown viz test mode: ${mode}`);
       await verifyPrintPipelineQuick();
+      await verifyPrintGalleryCarrier();
+      await verifyPrintKindPaintFixtures();
+      await verifyPrintApiTitleRendering();
       await verifyVizChartInferences(["quick"]);
       verifyVisualizationCoverage();
       if (mode === "full") await verifyPrintVisualizationBuild();

@@ -526,7 +526,7 @@ export function stack<T>(data: readonly T[], keys: readonly string[], options: {
 //#endregion 🔖️Stack
 
 //#region 🔖️LayerInference
-type LayerOptions = Readonly<Record<string, VizOptionValue | readonly VizOptionValue[]>>;
+type LayerOptions = Readonly<Record<string, VizOptionValue | null | readonly (VizOptionValue | null)[]>>;
 /** ⏳️ Nonpersisted progress and cancellation controls for expensive inferred layouts. */
 export type VizLayerInferenceControl = { readonly signal?: AbortSignal; readonly onProgress?: (completed: number, total: number) => void };
 

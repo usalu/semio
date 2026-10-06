@@ -1,0 +1,28 @@
+[
+  {
+    "path": "dashboard/🌀️daemon/🧪️tests/🔬️unit/🦀️.rs",
+    "replace": [
+      {
+        "from": "contains(\"Language\")",
+        "to": "contains(\"New task\")",
+        "all": true
+      },
+      {
+        "from": "native UI must render language picker",
+        "to": "native UI must render task controls without questions"
+      },
+      {
+        "from": "let mut connection = client::Connection::connect(&root).unwrap();\n    let daemon_pid = connection.daemon_pid();",
+        "to": "let deadline = Instant::now() + Duration::from_secs(5);\n    let mut connection = loop { match client::Connection::connect(&root) { Ok(connection) => break connection, Err(_) if Instant::now() < deadline => std::thread::sleep(Duration::from_millis(10)), Err(error) => panic!(\"native daemon connection: {error}\") } };\n    let daemon_pid = connection.daemon_pid();"
+      },
+      {
+        "from": "    view.write_all(b\"\\r\").unwrap();\n    std::thread::sleep(Duration::from_millis(150));",
+        "to": "    std::thread::sleep(Duration::from_millis(150));"
+      },
+      {
+        "from": "actual native CLI rendered language picker",
+        "to": "actual native CLI rendered task controls"
+      }
+    ]
+  }
+]

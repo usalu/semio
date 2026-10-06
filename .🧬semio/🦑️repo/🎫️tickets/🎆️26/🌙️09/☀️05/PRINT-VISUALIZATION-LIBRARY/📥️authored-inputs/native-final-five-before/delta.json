@@ -1,0 +1,108 @@
+[
+  {
+    "family": "geo-terrain",
+    "key": "labels",
+    "before": {
+      "syntax": "scalar",
+      "type": "string",
+      "description": {
+        "en": "Draw the captions.",
+        "de": "Die Beschriftungen zeichnen."
+      }
+    },
+    "after": {
+      "syntax": "scalar",
+      "type": "boolean",
+      "description": {
+        "en": "Draw the captions.",
+        "de": "Die Beschriftungen zeichnen."
+      },
+      "default": false
+    }
+  },
+  {
+    "family": "geo-weather",
+    "key": "cell",
+    "before": {
+      "syntax": "identifier",
+      "type": "string",
+      "description": {
+        "en": "Cell size in millimetres, or the column that carries it.",
+        "de": "Zellgröße in Millimetern oder die Spalte, die sie trägt."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Raster cell size in millimetres.",
+        "de": "Rasterzellgröße in Millimetern."
+      },
+      "default": 12
+    }
+  },
+  {
+    "family": "geo-basemap",
+    "key": "places",
+    "before": {
+      "syntax": "scalar",
+      "type": "string",
+      "description": {
+        "en": "Draw the place labels.",
+        "de": "Die Ortsbeschriftungen zeichnen."
+      }
+    },
+    "after": {
+      "syntax": "identifier",
+      "type": "string",
+      "description": {
+        "en": "Named geographic point collection used by the settlement layer; settlements enables that layer.",
+        "de": "Benannte geografische Punktsammlung für die Siedlungsebene; settlements aktiviert diese Ebene."
+      },
+      "default": "demo-geo-cities"
+    }
+  },
+  {
+    "family": "composition-bar",
+    "key": "data",
+    "before": {
+      "syntax": "identifier",
+      "type": "string",
+      "default": "demo-cartesian",
+      "description": {
+        "en": "Table the family reads.",
+        "de": "Tabelle, die die Familie liest."
+      }
+    },
+    "after": {
+      "syntax": "identifier",
+      "type": "string",
+      "default": "demo-parts",
+      "description": {
+        "en": "Table the family reads.",
+        "de": "Tabelle, die die Familie liest."
+      }
+    }
+  },
+  {
+    "family": "swimlane",
+    "key": "bend",
+    "before": {
+      "syntax": "identifier",
+      "type": "string",
+      "description": {
+        "en": "Bend style of the flow connectors.",
+        "de": "Krümmungsstil der Ablaufverbinder."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Bend angle in degrees for curved flow connectors; orthogonal routing does not use it.",
+        "de": "Krümmungswinkel in Grad für gekrümmte Ablaufverbinder; orthogonales Routing nutzt ihn nicht."
+      },
+      "default": 22
+    }
+  }
+]

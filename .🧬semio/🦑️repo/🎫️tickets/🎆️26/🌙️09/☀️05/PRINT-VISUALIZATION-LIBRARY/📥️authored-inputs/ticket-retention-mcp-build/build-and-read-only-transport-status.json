@@ -1,0 +1,104 @@
+{
+  "capturedAt": "2026-10-05T06:49:40.2354146Z",
+  "purpose": "Retained checker/deployment receipt for current source-bound MCP closing selector, prior to actual lifecycle action; raw executable/logs remain disposable generated output.",
+  "binaryPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/tools/repo-ticket-retention.exe",
+  "binarySha256": "A6CCE807D844097BCFFC3B6B5D1BE9E6039B6DD619D786D355EE7737BC3803D6",
+  "binaryBytes": 14057472,
+  "newGeneratedRootDiagnosticLinked": true,
+  "selector": "REPO_MCP_BIN",
+  "buildSession": 93829,
+  "buildTerminal": 0,
+  "buildRoute": "bun nx exec --projects=repo-mcp --excludeTaskDependencies -- bun --cwd repo/client/mcp ./📜️script.ts build",
+  "buildLogSha256": "985789C25AF40FC7480C6A21ACB7B47EE0458376D4DD8AC8CC8D411D55B4C30F",
+  "sourceCapsuleSha256": "F64460526C6009949DCA5B82879CCA1712A96875F4111A716F5CAF7CAD7490B8",
+  "projectedSourceAndControlCount": 18,
+  "postBuildSourceDrift": [],
+  "ownedRepairPaths": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🧩️component/🐹️.go",
+      "sha256": "A5A2717B3FC2D061CE143A80F601081088A3CAB1284F735E9AB3ACC9C63B17C3"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🧪️tests/🔬️component/🐹️.go",
+      "sha256": "46E33A1ABF23CA3F45C17348E103EA6D594F7E00E95A90D0A746D48D86B76711"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🧪️tests/🃏️glob/🟦️.ts",
+      "sha256": "74605640BC33D581DD5079D33A439A31F57046623734DC1E5C4FA9E53A38319C"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/📦️packages/🟦️typescript/📜️script.ts",
+      "sha256": "08347662042DE7BA686F7CC68DB13B409F51FAE278A7E270A8855C95FCD1AF71"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎫️tickets/🧬️schema/🔣️.json",
+      "sha256": "B0B557806C7B5FEF9B2EA1FDC33C70C6A9053C40320C37479E0FCD079E8A5F62"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎫️tickets/🧫️fixtures/🔓️open-close-reopen-lifecycle/🔓️lifecycle.json",
+      "sha256": "2A2B92C7664348B15EF39BC9DBDBB3FB2130E3AB7AA3A1F46FBDDE7C59C24D06"
+    }
+  ],
+  "testSession": 79205,
+  "testTerminal": 0,
+  "testScope": "16 independent glob/AJV filesystem vectors and5 meaningful canonical Go top-level lifecycle controls; symlink subtest skipped due unavailable host privilege.",
+  "testLogSha256": "66980955FBC24125E43A9D5ABADE858CC2DFD2FF1FD31FAA2676613FD121EA7C",
+  "transportSession": 54537,
+  "transportTerminal": 0,
+  "transportRootRoute": "bun ./📜️script.ts dev mcp stdio codex",
+  "transportBinaryBefore": "a6cce807d844097bcffc3b6b5d1be9e6039b6dd619d786d355ee7737bc3803d6",
+  "transportBinaryAfter": "a6cce807d844097bcffc3b6b5d1be9e6039b6dd619d786d355ee7737bc3803d6",
+  "transportBinaryStable": true,
+  "initialized": {
+    "protocolVersion": "2024-11-05",
+    "capabilities": {
+      "prompts": {},
+      "resources": {},
+      "tools": {}
+    },
+    "serverInfo": {
+      "name": "repo",
+      "version": "1.0.0"
+    },
+    "instructions": "Use repository tools and resources through their owned schemas."
+  },
+  "toolCount": 6,
+  "closeSchema": {
+    "type": "object",
+    "properties": {
+      "files": {
+        "type": "array",
+        "description": "Changed files.",
+        "items": {
+          "type": "string"
+        }
+      },
+      "no_management": {
+        "type": "boolean",
+        "description": "Skip management integration."
+      },
+      "path": {
+        "type": "string",
+        "description": "YY/MM/DD/SLUG path."
+      },
+      "summary": {
+        "type": "string",
+        "description": "Completion summary."
+      },
+      "title": {
+        "type": "string",
+        "description": "Updated title."
+      }
+    },
+    "required": [
+      "summary"
+    ],
+    "additionalProperties": false
+  },
+  "goalsContents": 1,
+  "goalsUtf8Bytes": 28852,
+  "goalsSha256": "fea6485cb6125d7e446db24c5f05a44c443db17083d891b1d3d4317d32ee2873",
+  "mutations": 0,
+  "transportLogSha256": "21C8760898FC490789643BBCC569F99174A94D5868C2339CFE06033619E6DBE3",
+  "closureOrder": "Root only: all gates/durable audits, source-bound close, EOF/helper exit, immediately remove generated and verify retained files/closed state."
+}

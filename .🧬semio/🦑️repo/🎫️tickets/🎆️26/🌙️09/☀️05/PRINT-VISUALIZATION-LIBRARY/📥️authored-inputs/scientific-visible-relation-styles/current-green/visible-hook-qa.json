@@ -1,0 +1,24 @@
+{
+  "receipt": {
+    "completedUtc": "2026-10-05T23:39:20.0988233Z",
+    "phase": "scientific-styles",
+    "exitCode": 0
+  },
+  "cases": 16,
+  "pagesPerTheme": 12,
+  "emptyClosedPaint": false,
+  "images": [
+    {
+      "theme": "light",
+      "actualPage": 3,
+      "sha256": "c6725ca155c879043885e038ffacab0b70192118ee18ab9604ed8446bc1757d2",
+      "visuallyInspected": true
+    },
+    {
+      "theme": "dark",
+      "actualPage": 3,
+      "sha256": "1d2684f2b8e1e100ea1892a73c4a3bf578bae217fc5044bca887675a8bd780de",
+      "visuallyInspected": true
+    }
+  ]
+}

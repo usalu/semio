@@ -1,0 +1,7 @@
+\ApiScopeSource{api-path-graph-walk}{semio / viz / graph / walk}
+\SemioTableLong[text-size=8pt]{\Key{api-path-graph-walk} \ApiText{Graph traversal options}{Optionen des Graphdurchlaufs}}{0.20,0.14,0.16,0.50}{\ApiKey & \ApiType & \ApiDefault & \ApiMeaning}{%
+  \SemioTableRow{\Key{mode} & \Key{choice} & \Key{bfs} & \ApiText{Breadth-first \Key{bfs}, depth-first \Key{dfs}, or \Key{topological} node order.}{Knotenreihenfolge: Breitensuche \Key{bfs}, Tiefensuche \Key{dfs} oder \Key{topological}.}}
+  \SemioTableRow{\Key{root} & \Key{integer} & \Key{1} & \ApiText{Starting node index for a traversal; remaining components follow in cyclic index order.}{Startknotenindex eines Durchlaufs; die verbleibenden Komponenten folgen in zyklischer Indexreihenfolge.}}
+  \SemioTableRow{\Key{direction} & \Key{choice} & \Key{adj} & \ApiText{Undirected \Key{adj}, outgoing \Key{outadj}, or incoming \Key{inadj} adjacency used by the traversal.}{Vom Durchlauf verwendete Nachbarschaft: ungerichtet \Key{adj}, ausgehend \Key{outadj} oder eingehend \Key{inadj}.}}
+}
+

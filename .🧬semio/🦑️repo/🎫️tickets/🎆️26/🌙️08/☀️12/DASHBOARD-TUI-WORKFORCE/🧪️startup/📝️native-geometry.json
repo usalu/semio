@@ -1,0 +1,6 @@
+[
+  {"path":"dashboard/🌀️daemon/🧪️tests/🔬️unit/🦀️.rs","replace":[{"from":"ui_tui::tui::geom::Size","to":"ui_tui::tui::geometry::Size"}]},
+  {"path":"dashboard/🌳️command-tree/🦀️.rs","replace":[{"from":"//! 🌳️ The wizard command tree: the runtime repo walk that turns every nx target into a wizard","to":"//! 🌳️ The workspace command tree: background discovery of executable Nx targets and repo actions."}]},
+  {"path":"dashboard/⌨️usage/🦀️.rs","replace":[{"from":"interactive TUI dashboard wizard (requires a TTY)","to":"native developer dashboard (requires a TTY)"},{"from":"  semio dev <variant…>","to":"  semio dashboard       dashboard with optional settings (--help)\\n  semio preferences …   show|set local or workspace preferences\\n  semio dev <variant…>"},{"from":"print the wizard command tree","to":"print the workspace command tree"}]},
+  {"path":"dashboard/⌨️usage/🧪️tests/🔬️unit/🦀️.rs","replace":[{"from":"interactive TUI dashboard wizard (requires a TTY)","to":"native developer dashboard (requires a TTY)"},{"from":"  semio dev <variant…>","to":"  semio dashboard       dashboard with optional settings (--help)\\n  semio preferences …   show|set local or workspace preferences\\n  semio dev <variant…>"},{"from":"print the wizard command tree","to":"print the workspace command tree"}]}
+]

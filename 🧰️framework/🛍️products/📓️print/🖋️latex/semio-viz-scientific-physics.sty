@@ -93,6 +93,7 @@
         frames={ 0/0/t0 , 12/4/t1 , 26/10/t2 , 42/18/t3 , 60/28/t4 }
       }
       {#1}
+    \semio_viz_sci_physical_begin:
     \semio_viz_phys_fit_reset:
     \semio_viz_sci_fit_point:nn {-\l_semio_viz_phys_bodysize_fp/2}{-\l_semio_viz_phys_bodysize_fp/2}
     \semio_viz_sci_fit_point:nn {\l_semio_viz_phys_bodysize_fp/2}{\l_semio_viz_phys_bodysize_fp/2}
@@ -120,6 +121,7 @@
           { \semio_viz_phys_forces: }
       }
     \end{scope}
+    \semio_viz_sci_physical_end:
   }
 % 🧊 Draws the body the forces act on at the origin: a filled dot, a circle, or a square as the fallback.
 \cs_new_protected:Npn \semio_viz_phys_body:
@@ -236,7 +238,7 @@
       {
         mode=position , expr={ 3 * \SemioT - 0.5 * 9.81 * \SemioT * \SemioT / 4 } ,
         speed=22 , angle=52 , gravity=9.81 , radius=1 , eccentricity=0.6 ,
-        steps=240 , step=0.02 , domain={0,3} , range={}
+        steps=240 , step=0.02 , domain={} , range={}
       }
       {#1}
     \str_case:VnF \l_semio_viz_phys_mode_tl
@@ -252,6 +254,8 @@
 % 🚀 The `#1`-th time derivative of the position law by a central difference, sampled over the domain.
 \cs_new_protected:Npn \semio_viz_phys_derivative:n #1
   {
+    \clist_if_empty:NT \l_semio_viz_sci_domain_clist
+      { \clist_set:Nn \l_semio_viz_sci_domain_clist { 0 , 3 } }
     \seq_clear:N \l_semio_viz_sci_pts_seq
     \int_step_inline:nnnn { 0 } { 1 } { 120 }
       {
@@ -282,10 +286,9 @@
     \semio_viz_sci_zero_lines:
     \semio_viz_sci_polyline:Nn \l_semio_viz_sci_pts_seq { semio~sci~curve }
   }
-% 🚀 Projectile arc integrated with the shared Runge–Kutta stepper, not a closed-form parabola.
+% 🚀 Constant-gravity projectile with exact velocity and position stepping.
 \cs_new_protected:Npn \semio_viz_phys_projectile:
   {
-    \clist_clear:N \l_semio_viz_sci_domain_clist
     \seq_clear:N \l_semio_viz_sci_pts_seq
     \fp_set:Nn \l_semio_viz_sci_c_fp { 0 }
     \fp_set:Nn \l_semio_viz_sci_d_fp { 0 }
@@ -313,7 +316,6 @@
 % 🚀 Kepler orbit from the conic r = a(1−e²)/(1+e·cos θ), with the focus marked.
 \cs_new_protected:Npn \semio_viz_phys_orbit:
   {
-    \clist_clear:N \l_semio_viz_sci_domain_clist
     \seq_clear:N \l_semio_viz_sci_pts_seq
     \int_step_inline:nnnn { 0 } { 1 } { 240 }
       {
@@ -335,7 +337,6 @@
 % 🌀 Integrates the damped-oscillator field with the shared Runge–Kutta stepper and plots the resulting phase-space spiral.
 \cs_new_protected:Npn \semio_viz_phys_phase:
   {
-    \clist_clear:N \l_semio_viz_sci_domain_clist
     \semio_viz_sci_rkfour:nnnnnnN { \SemioY } { - \SemioX - 0.12 * \SemioY }
       { 1.6 } { 0 } { \l_semio_viz_phys_step_fp * 4 } { \l_semio_viz_phys_steps_int } \l_semio_viz_sci_pts_seq
     \semio_viz_sci_window_from:Nn \l_semio_viz_sci_pts_seq { 0.1 }
@@ -381,7 +382,8 @@
     \semio_viz_sci_frame:
     \semio_viz_sci_zero_lines:
     \semio_viz_phys_lightcone:
-    \str_if_eq:VnT \l_semio_viz_phys_mode_tl { minkowski } { \semio_viz_phys_boosted_axes: }
+    \str_if_eq:VnT \l_semio_viz_phys_mode_tl { minkowski }
+      { \semio_viz_phys_primed_grid: \semio_viz_phys_boosted_axes: }
     \str_if_eq:VnF \l_semio_viz_phys_mode_tl { light-cone } { \semio_viz_phys_worldlines: }
     \clist_map_inline:Nn \l_semio_viz_phys_events_clist
       {
@@ -391,6 +393,59 @@
           at ( \semio_viz_sci_mx:n { \semio_viz_phys_field:n { 1 } } ,
                \semio_viz_sci_my:n { \semio_viz_phys_field:n { 2 } } )
           { \semio_viz_phys_field:n { 3 } } ;
+      }
+  }
+% 🛰️ Draws equally spaced interior levels along both primed Lorentz axes.
+\cs_new_protected:Npn \semio_viz_phys_primed_grid:
+  {
+    \int_step_inline:nnnn { 0 } { 1 } { 1 }
+      {
+        \int_step_inline:nnnn { 1 } { 1 } { \l_semio_viz_phys_gridlines_int }
+          { \semio_viz_phys_primed_line:nn {##1} {####1} }
+      }
+  }
+% 📐 Clips one constant primed coordinate to the authored spacetime window.
+\cs_new_protected:Npn \semio_viz_phys_primed_line:nn #1#2
+  {
+    \int_compare:nNnTF {#1} = { 0 }
+      {
+        \fp_set:Nn \l_semio_viz_sci_a_fp
+          { min ( \l_semio_viz_sci_dxmin_fp - \l_semio_viz_phys_beta_fp * \l_semio_viz_sci_dymin_fp , \l_semio_viz_sci_dxmin_fp - \l_semio_viz_phys_beta_fp * \l_semio_viz_sci_dymax_fp ) }
+        \fp_set:Nn \l_semio_viz_sci_b_fp
+          { max ( \l_semio_viz_sci_dxmax_fp - \l_semio_viz_phys_beta_fp * \l_semio_viz_sci_dymin_fp , \l_semio_viz_sci_dxmax_fp - \l_semio_viz_phys_beta_fp * \l_semio_viz_sci_dymax_fp ) }
+      }
+      {
+        \fp_set:Nn \l_semio_viz_sci_a_fp
+          { min ( \l_semio_viz_sci_dymin_fp - \l_semio_viz_phys_beta_fp * \l_semio_viz_sci_dxmin_fp , \l_semio_viz_sci_dymin_fp - \l_semio_viz_phys_beta_fp * \l_semio_viz_sci_dxmax_fp ) }
+        \fp_set:Nn \l_semio_viz_sci_b_fp
+          { max ( \l_semio_viz_sci_dymax_fp - \l_semio_viz_phys_beta_fp * \l_semio_viz_sci_dxmin_fp , \l_semio_viz_sci_dymax_fp - \l_semio_viz_phys_beta_fp * \l_semio_viz_sci_dxmax_fp ) }
+      }
+    \fp_set:Nn \l_semio_viz_sci_c_fp
+      { \l_semio_viz_sci_a_fp + #2 * ( \l_semio_viz_sci_b_fp - \l_semio_viz_sci_a_fp ) / ( \l_semio_viz_phys_gridlines_int + 1 ) }
+    \int_compare:nNnTF {#1} = { 0 }
+      {
+        \fp_set_eq:NN \l_semio_viz_sci_d_fp \l_semio_viz_sci_dymin_fp
+        \fp_set_eq:NN \l_semio_viz_sci_e_fp \l_semio_viz_sci_dymax_fp
+        \fp_compare:nNnF { \l_semio_viz_phys_beta_fp } = { 0 }
+          {
+            \fp_set:Nn \l_semio_viz_sci_d_fp { max ( \l_semio_viz_sci_d_fp , min ( ( \l_semio_viz_sci_dxmin_fp - \l_semio_viz_sci_c_fp ) / \l_semio_viz_phys_beta_fp , ( \l_semio_viz_sci_dxmax_fp - \l_semio_viz_sci_c_fp ) / \l_semio_viz_phys_beta_fp ) ) }
+            \fp_set:Nn \l_semio_viz_sci_e_fp { min ( \l_semio_viz_sci_e_fp , max ( ( \l_semio_viz_sci_dxmin_fp - \l_semio_viz_sci_c_fp ) / \l_semio_viz_phys_beta_fp , ( \l_semio_viz_sci_dxmax_fp - \l_semio_viz_sci_c_fp ) / \l_semio_viz_phys_beta_fp ) ) }
+          }
+        \draw [ semio~sci~grid ]
+          ( \semio_viz_sci_mx:n { \l_semio_viz_sci_c_fp + \l_semio_viz_phys_beta_fp * \l_semio_viz_sci_d_fp } , \semio_viz_sci_my:n { \l_semio_viz_sci_d_fp } ) --
+          ( \semio_viz_sci_mx:n { \l_semio_viz_sci_c_fp + \l_semio_viz_phys_beta_fp * \l_semio_viz_sci_e_fp } , \semio_viz_sci_my:n { \l_semio_viz_sci_e_fp } ) ;
+      }
+      {
+        \fp_set_eq:NN \l_semio_viz_sci_d_fp \l_semio_viz_sci_dxmin_fp
+        \fp_set_eq:NN \l_semio_viz_sci_e_fp \l_semio_viz_sci_dxmax_fp
+        \fp_compare:nNnF { \l_semio_viz_phys_beta_fp } = { 0 }
+          {
+            \fp_set:Nn \l_semio_viz_sci_d_fp { max ( \l_semio_viz_sci_d_fp , min ( ( \l_semio_viz_sci_dymin_fp - \l_semio_viz_sci_c_fp ) / \l_semio_viz_phys_beta_fp , ( \l_semio_viz_sci_dymax_fp - \l_semio_viz_sci_c_fp ) / \l_semio_viz_phys_beta_fp ) ) }
+            \fp_set:Nn \l_semio_viz_sci_e_fp { min ( \l_semio_viz_sci_e_fp , max ( ( \l_semio_viz_sci_dymin_fp - \l_semio_viz_sci_c_fp ) / \l_semio_viz_phys_beta_fp , ( \l_semio_viz_sci_dymax_fp - \l_semio_viz_sci_c_fp ) / \l_semio_viz_phys_beta_fp ) ) }
+          }
+        \draw [ semio~sci~grid ]
+          ( \semio_viz_sci_mx:n { \l_semio_viz_sci_d_fp } , \semio_viz_sci_my:n { \l_semio_viz_sci_c_fp + \l_semio_viz_phys_beta_fp * \l_semio_viz_sci_d_fp } ) --
+          ( \semio_viz_sci_mx:n { \l_semio_viz_sci_e_fp } , \semio_viz_sci_my:n { \l_semio_viz_sci_c_fp + \l_semio_viz_phys_beta_fp * \l_semio_viz_sci_e_fp } ) ;
       }
   }
 % 🔦 Shades the future and past light cones as two translucent triangles and strokes the two null rays through the origin.
@@ -479,6 +534,7 @@
                       v2/o1/fermion/ , v2/o2/antifermion/ }
       }
       {#1}
+    \semio_viz_sci_physical_begin:
     \prop_clear:N \l_semio_viz_phys_vx_prop
     \prop_clear:N \l_semio_viz_phys_vy_prop
     \semio_viz_sci_fit_reset:
@@ -510,6 +566,7 @@
           }
       }
     \end{scope}
+    \semio_viz_sci_physical_end:
   }
 % 🎽 Looks up the two endpoint vertices of the pending propagator record and strokes it in its own style: wavy photon, coiled gluon, dashed scalar, dotted ghost, or a fermion arrow that reverses for an antifermion.
 \cs_new_protected:Npn \semio_viz_phys_propagator:
@@ -1184,6 +1241,7 @@
         axes=false , grid=false
       }
       {#1}
+    \semio_viz_sci_physical_begin:
     \fp_set:Nn \l_semio_viz_sci_a_fp
       {
         \l_semio_viz_phys_objdist_fp * \l_semio_viz_phys_focal_fp
@@ -1220,6 +1278,7 @@
     \semio_viz_sci_report_values:nn { optics/image }
       { \fp_to_decimal:N \l_semio_viz_sci_a_fp , \fp_to_decimal:N \l_semio_viz_sci_b_fp }
     \end{scope}
+    \semio_viz_sci_physical_end:
   }
 % 🪞 Draws the optical element on the axis: one curved arc for a mirror, or a two-arc lens outline otherwise.
 \cs_new_protected:Npn \semio_viz_phys_element:
@@ -1279,6 +1338,7 @@
         states={ 1/0/0/H , 0/1/0/D , 0/0/1/R , 0.5/0.5/0.7/E }
       }
       {#1}
+    \semio_viz_sci_physical_begin:
     \semio_viz_phys_fit_reset:
     \semio_viz_sci_fit_point:nn {-\l_semio_viz_phys_sphere_fp}{-\l_semio_viz_phys_sphere_fp}
     \semio_viz_sci_fit_point:nn {\l_semio_viz_phys_sphere_fp}{\l_semio_viz_phys_sphere_fp}
@@ -1312,6 +1372,7 @@
         \semio_viz_phys_stokes:
       }
     \end{scope}
+    \semio_viz_sci_physical_end:
   }
 % 🧭 Normalises a Stokes vector and projects it through the authored camera angles.
 \cs_new_protected:Npn \semio_viz_phys_stokes_position:

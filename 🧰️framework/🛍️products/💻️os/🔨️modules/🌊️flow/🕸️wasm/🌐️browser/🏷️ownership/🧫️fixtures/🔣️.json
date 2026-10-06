@@ -48,6 +48,7 @@
       "id": "browser-publication",
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/📦️publication/🟦️.ts",
       "exports": [
+        "bootstrapFlowCorePackage",
         "bundleFlowBrowserModule",
         "previewFlowBrowserPackage",
         "publishFlowBrowserDeclarations",

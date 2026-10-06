@@ -526,7 +526,8 @@
       "note",
       "s"
     ],
-    "prerequisite": "generate"
+    "prerequisite": "generate",
+    "descriptorPrerequisiteSuffix": ":describe"
   },
   "playgroundSelections": {
     "manifest": "owner/📦️packages/🦀️rust/Cargo.toml",

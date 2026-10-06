@@ -1,0 +1,39 @@
+{
+  "baseline": {
+    "session": 52724,
+    "terminal": 1,
+    "targetDurationSeconds": 150,
+    "log": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\geo-palette-native-red.log",
+    "logSha256": "48673F84C59037A8ED7FDB268C459F266571AB0ED87611DD0D94808882525C16",
+    "firstFailure": "default-en D3 ramp actual38 expected39"
+  },
+  "native": {
+    "file": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🖋️latex\\semio-viz-geo.sty",
+    "before": "C50E1030BCC2A4F0C9CBE9F27BB187B34947B5BEA3B8D4D85097EDFC3E0589E5",
+    "priorCandidate": "80FFCF35E4555C33967ED35C16D7ED243BD9D14BC720D6E876CCD75DFA1DFED9",
+    "after": "735EE60A114BFC98CFFD173C20457EF048ADE4AD322903F68CDE96056EB9DE92",
+    "keyOld": "steps",
+    "keyNew": "paletteSteps",
+    "minimum": 1,
+    "default": 5,
+    "singleLevelPercentage": 59,
+    "rounding": "floor(nonnegativeValue+0.5)"
+  },
+  "fixture": {
+    "file": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧪️tests\\🧬️native-chart-grammar\\🔣️.json",
+    "before": "D9B204B5D2B2DF299206D817E4FFA253C6312F746CC5E2E76DE049FB3560D91A",
+    "after": "D854B4E5581AA62F000BEA1C03D4AA5C7F91E72E73470652A4B400CEBC796E42",
+    "cases": 10,
+    "inputs": 10,
+    "unrelatedSemanticEquality": true
+  },
+  "api": {
+    "file": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧾️template\\📊️viz-api\\🔓️viz-api.tex",
+    "before": "6AF3902A05B8FD3233139EEE074465318A4614CF06C714181CC8EFF636018D01",
+    "after": "40FE5470DF5454741933C47D44DC32467C1CFB1AEA606E9571D041905F923B91",
+    "rows": 1
+  },
+  "helper": "9E493AF377230C8474D752F06123B50337BC72597024BC6E473A25135EF08C96",
+  "schema": "855CDD6B98CBBA96308C3184A32AF39E011779546ABCA1F38B75DEA518DEDCE1",
+  "status": "Actual native RED observed; source and neutral controls repaired; GREEN pending"
+}

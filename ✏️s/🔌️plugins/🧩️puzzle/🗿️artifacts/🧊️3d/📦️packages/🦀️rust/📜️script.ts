@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-import { GenerateScript as GraphGenerateScript, OwnerGraphWireCheckScript } from "../../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🏃️execution/🟦️.ts";
+import { GenerateScript as GraphGenerateScript, PreviewGeneratedScript as GraphPreviewScript, OwnerGraphWireCheckScript } from "../../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🏃️execution/🟦️.ts";
 /** 📦️ puzzle-3d Rust artifact package router. */
 import { runArtifactRustPackageMain } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts";
 
@@ -42,4 +42,4 @@ process.env.RUST_MIN_STACK ??= "134217728";
  * a whole wave (📓️2026-09-09-wave-X-test-suite.md §6). Declared here so `nx test`, `bun ./📜️script.ts
  * test` and the launch.json entries that call them all measure the same suite.
  */
-await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-puzzle-3d", { testFeatures: ["component-app-assembly"],commands:{"graph-generate":GraphGenerateScript,"graph-wire-check":OwnerGraphWireCheckScript,verify:OwnedVerifyScript},snapshotSqliteTestFeatures:["component-app-assembly"],snapshotSqliteTests:["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"] });
+await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-puzzle-3d", { testFeatures: ["component-app-assembly"],commands:{"graph-generate":GraphGenerateScript,"preview-generated":GraphPreviewScript,"graph-wire-check":OwnerGraphWireCheckScript,verify:OwnedVerifyScript},snapshotSqliteTestFeatures:["component-app-assembly"],snapshotSqliteTests:["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"] });

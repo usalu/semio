@@ -1,0 +1,116 @@
+{
+  "nativeMismatchCount": 3,
+  "caseBindings": [
+    {
+      "logPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/canonical-scalar-native/string-null-root/🧪️probe-out/string-null-root.log",
+      "dataWholeSha256": "6551EAE29D19C287A975073A638D8C0047C3DFF97F831B8B03FA3BA066FBBA3A",
+      "domainPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/canonical-scalar-native/string-null-root/🧪️probe-source/.semio-library/semio-latex/semio-viz-domain.sty",
+      "id": "string-null-root",
+      "domainWholeSha256": "0C926F2E248DE44EA1AC0290A86AAF794F6E2194164FAF91193E1E671726C8A1",
+      "dataMatchesPinnedBaseline": true,
+      "ownedPartitionMatchesPinnedBaseline": true,
+      "logSha256": "6F28E2E3DEE3947B128E2A0F5633405F5405E343EAD5CE442E96394DD4A64E46",
+      "dataPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/canonical-scalar-native/string-null-root/🧪️probe-source/.semio-library/semio-latex/semio-viz-data.sty",
+      "ownedPartitionSha256": "7C69BFCD4C3BE5FBDDEE3FADFF92B455EF92EFA9719E6EAE812A20C9B7EBFFA6"
+    },
+    {
+      "logPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/canonical-scalar-native/string-undefined-root/🧪️probe-out/string-undefined-root.log",
+      "dataWholeSha256": "6551EAE29D19C287A975073A638D8C0047C3DFF97F831B8B03FA3BA066FBBA3A",
+      "domainPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/canonical-scalar-native/string-undefined-root/🧪️probe-source/.semio-library/semio-latex/semio-viz-domain.sty",
+      "id": "string-undefined-root",
+      "domainWholeSha256": "0C926F2E248DE44EA1AC0290A86AAF794F6E2194164FAF91193E1E671726C8A1",
+      "dataMatchesPinnedBaseline": true,
+      "ownedPartitionMatchesPinnedBaseline": true,
+      "logSha256": "61822BE5889AD12DD2665254895BCB21B56090E4C7A4E11645C0BA61DB709BEC",
+      "dataPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/canonical-scalar-native/string-undefined-root/🧪️probe-source/.semio-library/semio-latex/semio-viz-data.sty",
+      "ownedPartitionSha256": "7C69BFCD4C3BE5FBDDEE3FADFF92B455EF92EFA9719E6EAE812A20C9B7EBFFA6"
+    },
+    {
+      "logPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/canonical-scalar-native/string-true-root/🧪️probe-out/string-true-root.log",
+      "dataWholeSha256": "6551EAE29D19C287A975073A638D8C0047C3DFF97F831B8B03FA3BA066FBBA3A",
+      "domainPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/canonical-scalar-native/string-true-root/🧪️probe-source/.semio-library/semio-latex/semio-viz-domain.sty",
+      "id": "string-true-root",
+      "domainWholeSha256": "0C926F2E248DE44EA1AC0290A86AAF794F6E2194164FAF91193E1E671726C8A1",
+      "dataMatchesPinnedBaseline": true,
+      "ownedPartitionMatchesPinnedBaseline": true,
+      "logSha256": "6296D65E8657504A4AF838796983F613B8955E2E8DAF5BC8CDC7B8720FC59818",
+      "dataPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/canonical-scalar-native/string-true-root/🧪️probe-source/.semio-library/semio-latex/semio-viz-data.sty",
+      "ownedPartitionSha256": "7C69BFCD4C3BE5FBDDEE3FADFF92B455EF92EFA9719E6EAE812A20C9B7EBFFA6"
+    },
+    {
+      "logPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/canonical-scalar-native/literal-null-parent/🧪️probe-out/literal-null-parent.log",
+      "dataWholeSha256": "6551EAE29D19C287A975073A638D8C0047C3DFF97F831B8B03FA3BA066FBBA3A",
+      "domainPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/canonical-scalar-native/literal-null-parent/🧪️probe-source/.semio-library/semio-latex/semio-viz-domain.sty",
+      "id": "literal-null-parent",
+      "domainWholeSha256": "0C926F2E248DE44EA1AC0290A86AAF794F6E2194164FAF91193E1E671726C8A1",
+      "dataMatchesPinnedBaseline": true,
+      "ownedPartitionMatchesPinnedBaseline": true,
+      "logSha256": "9B4A15E288C6C926B0EA50A69959B7D447A259324E50500D03625A45E9D5BFB5",
+      "dataPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/canonical-scalar-native/literal-null-parent/🧪️probe-source/.semio-library/semio-latex/semio-viz-data.sty",
+      "ownedPartitionSha256": "7C69BFCD4C3BE5FBDDEE3FADFF92B455EF92EFA9719E6EAE812A20C9B7EBFFA6"
+    },
+    {
+      "logPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/canonical-scalar-native/actual-null-id/🧪️probe-out/actual-null-id.log",
+      "dataWholeSha256": "6551EAE29D19C287A975073A638D8C0047C3DFF97F831B8B03FA3BA066FBBA3A",
+      "domainPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/canonical-scalar-native/actual-null-id/🧪️probe-source/.semio-library/semio-latex/semio-viz-domain.sty",
+      "id": "actual-null-id",
+      "domainWholeSha256": "0C926F2E248DE44EA1AC0290A86AAF794F6E2194164FAF91193E1E671726C8A1",
+      "dataMatchesPinnedBaseline": true,
+      "ownedPartitionMatchesPinnedBaseline": true,
+      "logSha256": "46C1AFA35DA248FFB30D3A347D661395CAAE5FCAFAA3A18970BE3E5C86D6B681",
+      "dataPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/canonical-scalar-native/actual-null-id/🧪️probe-source/.semio-library/semio-latex/semio-viz-data.sty",
+      "ownedPartitionSha256": "7C69BFCD4C3BE5FBDDEE3FADFF92B455EF92EFA9719E6EAE812A20C9B7EBFFA6"
+    },
+    {
+      "logPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/canonical-scalar-native/missing-id/🧪️probe-out/missing-id.log",
+      "dataWholeSha256": "6551EAE29D19C287A975073A638D8C0047C3DFF97F831B8B03FA3BA066FBBA3A",
+      "domainPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/canonical-scalar-native/missing-id/🧪️probe-source/.semio-library/semio-latex/semio-viz-domain.sty",
+      "id": "missing-id",
+      "domainWholeSha256": "0C926F2E248DE44EA1AC0290A86AAF794F6E2194164FAF91193E1E671726C8A1",
+      "dataMatchesPinnedBaseline": true,
+      "ownedPartitionMatchesPinnedBaseline": true,
+      "logSha256": "A62DAEE85C60C3C0364197E6E6E82C6E47EB8F4D638D260FF51AA576263BF136",
+      "dataPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/canonical-scalar-native/missing-id/🧪️probe-source/.semio-library/semio-latex/semio-viz-data.sty",
+      "ownedPartitionSha256": "7C69BFCD4C3BE5FBDDEE3FADFF92B455EF92EFA9719E6EAE812A20C9B7EBFFA6"
+    },
+    {
+      "logPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/canonical-scalar-native/boolean-id/🧪️probe-out/boolean-id.log",
+      "dataWholeSha256": "6551EAE29D19C287A975073A638D8C0047C3DFF97F831B8B03FA3BA066FBBA3A",
+      "domainPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/canonical-scalar-native/boolean-id/🧪️probe-source/.semio-library/semio-latex/semio-viz-domain.sty",
+      "id": "boolean-id",
+      "domainWholeSha256": "0C926F2E248DE44EA1AC0290A86AAF794F6E2194164FAF91193E1E671726C8A1",
+      "dataMatchesPinnedBaseline": true,
+      "ownedPartitionMatchesPinnedBaseline": true,
+      "logSha256": "1D26BF998563170C7F3DB48CFF2DB6BC00EEDD4C38AC8916AB1D778891793DEA",
+      "dataPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/canonical-scalar-native/boolean-id/🧪️probe-source/.semio-library/semio-latex/semio-viz-data.sty",
+      "ownedPartitionSha256": "7C69BFCD4C3BE5FBDDEE3FADFF92B455EF92EFA9719E6EAE812A20C9B7EBFFA6"
+    },
+    {
+      "logPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/canonical-scalar-native/null-parent/🧪️probe-out/null-parent.log",
+      "dataWholeSha256": "6551EAE29D19C287A975073A638D8C0047C3DFF97F831B8B03FA3BA066FBBA3A",
+      "domainPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/canonical-scalar-native/null-parent/🧪️probe-source/.semio-library/semio-latex/semio-viz-domain.sty",
+      "id": "null-parent",
+      "domainWholeSha256": "0C926F2E248DE44EA1AC0290A86AAF794F6E2194164FAF91193E1E671726C8A1",
+      "dataMatchesPinnedBaseline": true,
+      "ownedPartitionMatchesPinnedBaseline": true,
+      "logSha256": "8FAA69D55DB629BA5390C4D1BF1F3904B3AC6B092B6F77F52E592B07A22EFA44",
+      "dataPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/canonical-scalar-native/null-parent/🧪️probe-source/.semio-library/semio-latex/semio-viz-data.sty",
+      "ownedPartitionSha256": "7C69BFCD4C3BE5FBDDEE3FADFF92B455EF92EFA9719E6EAE812A20C9B7EBFFA6"
+    },
+    {
+      "logPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/canonical-scalar-native/missing-parent/🧪️probe-out/missing-parent.log",
+      "dataWholeSha256": "6551EAE29D19C287A975073A638D8C0047C3DFF97F831B8B03FA3BA066FBBA3A",
+      "domainPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/canonical-scalar-native/missing-parent/🧪️probe-source/.semio-library/semio-latex/semio-viz-domain.sty",
+      "id": "missing-parent",
+      "domainWholeSha256": "0C926F2E248DE44EA1AC0290A86AAF794F6E2194164FAF91193E1E671726C8A1",
+      "dataMatchesPinnedBaseline": true,
+      "ownedPartitionMatchesPinnedBaseline": true,
+      "logSha256": "E38A1DBF11F1616F539C4A63A63AD6347FD96AEAAB26223569B24545DF5B5BB7",
+      "dataPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/canonical-scalar-native/missing-parent/🧪️probe-source/.semio-library/semio-latex/semio-viz-data.sty",
+      "ownedPartitionSha256": "7C69BFCD4C3BE5FBDDEE3FADFF92B455EF92EFA9719E6EAE812A20C9B7EBFFA6"
+    }
+  ],
+  "outerTerminalSession": 68699,
+  "observedAt": "2026-10-06T03:10:34.5999744+02:00",
+  "outerExitCode": 0
+}

@@ -43,40 +43,51 @@
   margin-inline-end: 0.4em;
 }
 
-/* 🎞️ Icons play their motion as a slow loop with long rests only where the client says so (`data-icon-motion="on"`):
-   the learner's own choice in the preferences, and until they choose, every device but one that asks for reduced
-   motion; everywhere else they stand still. Icons in a list carry their place (`--quiz-icon-order`) and start that
-   many steps into the loop, so neighbours never move in step. */
-.quiz-app[data-icon-motion="on"] .quiz-glyph[data-motion] {
+/* 🎞️ Icons stand still until someone reaches for what they stand in — their host, an element marked `data-icon-host`
+   or the title chip of a card (hosts never nest). Hovering a host (desktop) or a keyboard focus on or inside it loops its
+   icons from the start; a tap on it (tablet, phone) marks it `data-icon-tapped` for one loop. All of it only where
+   the client says so (`data-icon-motion="on"`): the learner's choice in the preferences, and until they choose, every
+   device but one that asks for reduced motion. Each glyph names its keyframes in `--quiz-icon-animation`. */
+.quiz-glyph[data-motion] {
   display: inline-block;
-  animation-duration: 3.2s;
-  animation-delay: calc(var(--quiz-icon-order, 0) * -0.7s);
-  animation-iteration-count: infinite;
-  animation-timing-function: ease-in-out;
 }
 
-.quiz-app[data-icon-motion="on"] .quiz-glyph[data-motion="bounce"] {
-  animation-name: quiz-icon-bounce;
+.quiz-glyph[data-motion="bounce"] {
+  --quiz-icon-animation: quiz-icon-bounce;
 }
 
-.quiz-app[data-icon-motion="on"] .quiz-glyph[data-motion="pulse"] {
-  animation-name: quiz-icon-pulse;
+.quiz-glyph[data-motion="pulse"] {
+  --quiz-icon-animation: quiz-icon-pulse;
 }
 
-.quiz-app[data-icon-motion="on"] .quiz-glyph[data-motion="spin"] {
-  animation-name: quiz-icon-spin;
+.quiz-glyph[data-motion="spin"] {
+  --quiz-icon-animation: quiz-icon-spin;
 }
 
-.quiz-app[data-icon-motion="on"] .quiz-glyph[data-motion="sway"] {
-  animation-name: quiz-icon-sway;
+.quiz-glyph[data-motion="sway"] {
+  --quiz-icon-animation: quiz-icon-sway;
 }
 
-.quiz-app[data-icon-motion="on"] .quiz-glyph[data-motion="float"] {
-  animation-name: quiz-icon-float;
+.quiz-glyph[data-motion="float"] {
+  --quiz-icon-animation: quiz-icon-float;
 }
 
-.quiz-app[data-icon-motion="on"] .quiz-glyph[data-motion="flip"] {
-  animation-name: quiz-icon-flip;
+.quiz-glyph[data-motion="flip"] {
+  --quiz-icon-animation: quiz-icon-flip;
+}
+
+@media (hover: hover) {
+  .quiz-app[data-icon-motion="on"] :is([data-icon-host], [data-slot="quiz-card-title-chip"]):hover .quiz-glyph[data-motion] {
+    animation: var(--quiz-icon-animation) 3.2s ease-in-out infinite;
+  }
+}
+
+.quiz-app[data-icon-motion="on"] :is([data-icon-host], [data-slot="quiz-card-title-chip"]):is(:focus-visible, :has(:focus-visible)) .quiz-glyph[data-motion] {
+  animation: var(--quiz-icon-animation) 3.2s ease-in-out infinite;
+}
+
+.quiz-app[data-icon-motion="on"] [data-icon-tapped] .quiz-glyph[data-motion] {
+  animation: var(--quiz-icon-animation) 3.2s ease-in-out 1;
 }
 
 @keyframes quiz-icon-bounce {
@@ -216,18 +227,12 @@
    track lists from home (`--quiz-home-columns`, `--quiz-home-rows`) with no gaps (the spacing lies inside the cells),
    and each card is compact and centred in its cell. The grid is only laid out where every card fits its cell; a card
    that is taller after all starts at the top of its cell (never above it, under the navbar) and scrolls inside it,
-   so it never lies over the card below. Below 768 px the overview is a list of sections and places the cards itself.
-   DOM order is reading order at every width. */
+   so it never lies over the card below. Where the learner swipes through the grid instead (below 768 px, short
+   windows) the overview places every card on its page itself. DOM order is reading order at every width. */
 .quiz-home-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
-}
-
-@media (min-width: 768px) {
-  .quiz-home-grid {
-    grid-template-columns: var(--quiz-home-columns);
-    grid-template-rows: var(--quiz-home-rows);
-  }
+  grid-template-columns: var(--quiz-home-columns);
+  grid-template-rows: var(--quiz-home-rows);
 }
 
 .quiz-home-cell {
@@ -247,7 +252,7 @@
   inline-size: 100%;
 }
 
-/* 📜️ A card of the overview's list (phones, short windows, large text) is as wide as the screen leaves it, up to a
+/* 👆️ A card the learner swipes to (phones, short windows, large text) is as wide as the screen leaves it, up to a
    width that keeps its lines readable on a wide one; its width never follows its content, which its card lays out for
    the width it gets. */
 .quiz-home-entry {

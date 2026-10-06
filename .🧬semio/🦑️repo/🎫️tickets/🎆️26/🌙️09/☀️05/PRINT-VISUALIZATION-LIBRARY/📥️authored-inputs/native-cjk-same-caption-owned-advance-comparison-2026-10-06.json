@@ -1,0 +1,34 @@
+{
+  "metricSha256": "0D875F69C3449129E6512DB553F9E383ADB52B1FF2D859902C23DA5B5F6BEE05",
+  "fontSha256": "2c76254f6fc379fddfce0a7e84fb5385bb135d3e399294f6eeb6680d0365b74b",
+  "actualCompilerSession": 70779,
+  "comparison": [
+    {
+      "nativeMm": 8.435035,
+      "ownedAdvanceMm": 8.435035284350352,
+      "key": "en/8/pure-cjk",
+      "absoluteDifferenceMm": 2.843503530414182E-07
+    },
+    {
+      "nativeMm": 12.652553,
+      "ownedAdvanceMm": 12.65255292652553,
+      "key": "en/12/pure-cjk",
+      "absoluteDifferenceMm": 7.347446917549405E-08
+    },
+    {
+      "nativeMm": 8.435035,
+      "ownedAdvanceMm": 8.435035284350352,
+      "key": "de/8/pure-cjk",
+      "absoluteDifferenceMm": 2.843503530414182E-07
+    },
+    {
+      "nativeMm": 12.652553,
+      "ownedAdvanceMm": 12.65255292652553,
+      "key": "de/12/pure-cjk",
+      "absoluteDifferenceMm": 7.347446917549405E-08
+    }
+  ],
+  "actualCompilerExitCode": 0,
+  "metricPath": "C:/git/semio/🧰️framework/🛍️products/📓️print/🔨️modules/🔤print-font-catalog/📏️metrics/🌏️.json",
+  "capturedAt": "2026-10-06T02:47:14.1841361+02:00"
+}

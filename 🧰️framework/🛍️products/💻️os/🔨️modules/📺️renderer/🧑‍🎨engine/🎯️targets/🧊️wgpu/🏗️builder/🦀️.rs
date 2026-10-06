@@ -25,6 +25,10 @@ fn catalog_sources(root: &Path, directory: &Path, sources: &mut BTreeMap<String,
 }
 
 fn main() {
+    if env::var("CARGO_CFG_TARGET_OS").as_deref() == Ok("windows") {
+        let stack = if env::var("CARGO_CFG_TARGET_ENV").as_deref() == Ok("msvc") { "/STACK:8388608" } else { "-Wl,--stack,8388608" };
+        println!("cargo:rustc-link-arg-bin=semio-wgpu-native={stack}");
+    }
     let manifest_dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR"));
     let icons_dir = manifest_dir.join("../../../../../../../../../🔨️modules/🖼️assets/🔣️icons");
     let out_dir = PathBuf::from(env::var("OUT_DIR").expect("OUT_DIR"));

@@ -1,0 +1,3923 @@
+{
+  "snapshot": {
+    "chart": {
+      "width": 100,
+      "height": 90,
+      "margin": {
+        "top": 0,
+        "right": 0,
+        "bottom": 0,
+        "left": 0
+      },
+      "language": "en",
+      "layers": []
+    }
+  },
+  "table": {
+    "name": "planar-points",
+    "columns": [
+      "x",
+      "y"
+    ],
+    "rows": [
+      {
+        "x": 25,
+        "y": 20
+      },
+      {
+        "x": 30,
+        "y": 20
+      },
+      {
+        "x": 35,
+        "y": 20
+      },
+      {
+        "x": 30,
+        "y": 25
+      },
+      {
+        "x": 35,
+        "y": 25
+      },
+      {
+        "x": 40,
+        "y": 25
+      },
+      {
+        "x": 35,
+        "y": 30
+      },
+      {
+        "x": 40,
+        "y": 30
+      },
+      {
+        "x": 45,
+        "y": 30
+      },
+      {
+        "x": 35,
+        "y": 25
+      }
+    ],
+    "structure": {
+      "kind": "points",
+      "x": "x",
+      "y": "y"
+    }
+  },
+  "points": [
+    [
+      25,
+      20
+    ],
+    [
+      30,
+      20
+    ],
+    [
+      35,
+      20
+    ],
+    [
+      30,
+      25
+    ],
+    [
+      35,
+      25
+    ],
+    [
+      40,
+      25
+    ],
+    [
+      35,
+      30
+    ],
+    [
+      40,
+      30
+    ],
+    [
+      45,
+      30
+    ],
+    [
+      35,
+      25
+    ]
+  ],
+  "radius": 5,
+  "bandwidth": 5,
+  "fit": "uniform centred fit of all visible path vertices; raw bins and density grid unchanged",
+  "cases": [
+    {
+      "render": "hex",
+      "kind": "hexbin-map",
+      "language": "en",
+      "width": 60,
+      "height": 30,
+      "id": "hex-en-0",
+      "opacity": 0.35,
+      "lineWidth": ".3mm",
+      "points": [
+        [
+          25,
+          20
+        ],
+        [
+          30,
+          20
+        ],
+        [
+          35,
+          20
+        ],
+        [
+          30,
+          25
+        ],
+        [
+          35,
+          25
+        ],
+        [
+          40,
+          25
+        ],
+        [
+          35,
+          30
+        ],
+        [
+          40,
+          30
+        ],
+        [
+          45,
+          30
+        ],
+        [
+          35,
+          25
+        ]
+      ],
+      "radius": 5,
+      "bandwidth": 5,
+      "gridWidth": 16,
+      "gridHeight": 11,
+      "gridOrigin": [
+        0,
+        0
+      ],
+      "gridCell": 5,
+      "hexScale": 0.92,
+      "heatOpacity": 0.3,
+      "thresholds": []
+    },
+    {
+      "render": "hex",
+      "kind": "hexbin-map",
+      "language": "en",
+      "width": 30,
+      "height": 60,
+      "id": "hex-en-1",
+      "opacity": 0.8,
+      "lineWidth": ".6mm",
+      "points": [
+        [
+          25,
+          20
+        ],
+        [
+          30,
+          20
+        ],
+        [
+          35,
+          20
+        ],
+        [
+          30,
+          25
+        ],
+        [
+          35,
+          25
+        ],
+        [
+          40,
+          25
+        ],
+        [
+          35,
+          30
+        ],
+        [
+          40,
+          30
+        ],
+        [
+          45,
+          30
+        ],
+        [
+          35,
+          25
+        ]
+      ],
+      "radius": 5,
+      "bandwidth": 5,
+      "gridWidth": 16,
+      "gridHeight": 11,
+      "gridOrigin": [
+        0,
+        0
+      ],
+      "gridCell": 5,
+      "hexScale": 0.92,
+      "heatOpacity": 0.3,
+      "thresholds": []
+    },
+    {
+      "render": "hex",
+      "kind": "hexbin-map",
+      "language": "de",
+      "width": 60,
+      "height": 30,
+      "id": "hex-de-0",
+      "opacity": 0.35,
+      "lineWidth": ".3mm",
+      "points": [
+        [
+          25,
+          20
+        ],
+        [
+          30,
+          20
+        ],
+        [
+          35,
+          20
+        ],
+        [
+          30,
+          25
+        ],
+        [
+          35,
+          25
+        ],
+        [
+          40,
+          25
+        ],
+        [
+          35,
+          30
+        ],
+        [
+          40,
+          30
+        ],
+        [
+          45,
+          30
+        ],
+        [
+          35,
+          25
+        ]
+      ],
+      "radius": 5,
+      "bandwidth": 5,
+      "gridWidth": 16,
+      "gridHeight": 11,
+      "gridOrigin": [
+        0,
+        0
+      ],
+      "gridCell": 5,
+      "hexScale": 0.92,
+      "heatOpacity": 0.3,
+      "thresholds": []
+    },
+    {
+      "render": "hex",
+      "kind": "hexbin-map",
+      "language": "de",
+      "width": 30,
+      "height": 60,
+      "id": "hex-de-1",
+      "opacity": 0.8,
+      "lineWidth": ".6mm",
+      "points": [
+        [
+          25,
+          20
+        ],
+        [
+          30,
+          20
+        ],
+        [
+          35,
+          20
+        ],
+        [
+          30,
+          25
+        ],
+        [
+          35,
+          25
+        ],
+        [
+          40,
+          25
+        ],
+        [
+          35,
+          30
+        ],
+        [
+          40,
+          30
+        ],
+        [
+          45,
+          30
+        ],
+        [
+          35,
+          25
+        ]
+      ],
+      "radius": 5,
+      "bandwidth": 5,
+      "gridWidth": 16,
+      "gridHeight": 11,
+      "gridOrigin": [
+        0,
+        0
+      ],
+      "gridCell": 5,
+      "hexScale": 0.92,
+      "heatOpacity": 0.3,
+      "thresholds": []
+    },
+    {
+      "render": "density",
+      "kind": "spatial-density-map",
+      "language": "en",
+      "width": 60,
+      "height": 30,
+      "id": "density-en-0",
+      "opacity": 0.35,
+      "lineWidth": ".3mm",
+      "points": [
+        [
+          25,
+          20
+        ],
+        [
+          30,
+          20
+        ],
+        [
+          35,
+          20
+        ],
+        [
+          30,
+          25
+        ],
+        [
+          35,
+          25
+        ],
+        [
+          40,
+          25
+        ],
+        [
+          35,
+          30
+        ],
+        [
+          40,
+          30
+        ],
+        [
+          45,
+          30
+        ],
+        [
+          35,
+          25
+        ]
+      ],
+      "radius": 5,
+      "bandwidth": 5,
+      "gridWidth": 16,
+      "gridHeight": 11,
+      "gridOrigin": [
+        0,
+        0
+      ],
+      "gridCell": 5,
+      "hexScale": 0.92,
+      "heatOpacity": 0.3,
+      "thresholds": []
+    },
+    {
+      "render": "density",
+      "kind": "spatial-density-map",
+      "language": "en",
+      "width": 30,
+      "height": 60,
+      "id": "density-en-1",
+      "opacity": 0.8,
+      "lineWidth": ".6mm",
+      "points": [
+        [
+          25,
+          20
+        ],
+        [
+          30,
+          20
+        ],
+        [
+          35,
+          20
+        ],
+        [
+          30,
+          25
+        ],
+        [
+          35,
+          25
+        ],
+        [
+          40,
+          25
+        ],
+        [
+          35,
+          30
+        ],
+        [
+          40,
+          30
+        ],
+        [
+          45,
+          30
+        ],
+        [
+          35,
+          25
+        ]
+      ],
+      "radius": 5,
+      "bandwidth": 5,
+      "gridWidth": 16,
+      "gridHeight": 11,
+      "gridOrigin": [
+        0,
+        0
+      ],
+      "gridCell": 5,
+      "hexScale": 0.92,
+      "heatOpacity": 0.3,
+      "thresholds": []
+    },
+    {
+      "render": "density",
+      "kind": "spatial-density-map",
+      "language": "de",
+      "width": 60,
+      "height": 30,
+      "id": "density-de-0",
+      "opacity": 0.35,
+      "lineWidth": ".3mm",
+      "points": [
+        [
+          25,
+          20
+        ],
+        [
+          30,
+          20
+        ],
+        [
+          35,
+          20
+        ],
+        [
+          30,
+          25
+        ],
+        [
+          35,
+          25
+        ],
+        [
+          40,
+          25
+        ],
+        [
+          35,
+          30
+        ],
+        [
+          40,
+          30
+        ],
+        [
+          45,
+          30
+        ],
+        [
+          35,
+          25
+        ]
+      ],
+      "radius": 5,
+      "bandwidth": 5,
+      "gridWidth": 16,
+      "gridHeight": 11,
+      "gridOrigin": [
+        0,
+        0
+      ],
+      "gridCell": 5,
+      "hexScale": 0.92,
+      "heatOpacity": 0.3,
+      "thresholds": []
+    },
+    {
+      "render": "density",
+      "kind": "spatial-density-map",
+      "language": "de",
+      "width": 30,
+      "height": 60,
+      "id": "density-de-1",
+      "opacity": 0.8,
+      "lineWidth": ".6mm",
+      "points": [
+        [
+          25,
+          20
+        ],
+        [
+          30,
+          20
+        ],
+        [
+          35,
+          20
+        ],
+        [
+          30,
+          25
+        ],
+        [
+          35,
+          25
+        ],
+        [
+          40,
+          25
+        ],
+        [
+          35,
+          30
+        ],
+        [
+          40,
+          30
+        ],
+        [
+          45,
+          30
+        ],
+        [
+          35,
+          25
+        ]
+      ],
+      "radius": 5,
+      "bandwidth": 5,
+      "gridWidth": 16,
+      "gridHeight": 11,
+      "gridOrigin": [
+        0,
+        0
+      ],
+      "gridCell": 5,
+      "hexScale": 0.92,
+      "heatOpacity": 0.3,
+      "thresholds": []
+    },
+    {
+      "render": "heat",
+      "kind": "heat-map",
+      "language": "en",
+      "width": 60,
+      "height": 30,
+      "id": "heat-en-0",
+      "opacity": 0.35,
+      "lineWidth": ".3mm",
+      "points": [
+        [
+          25,
+          20
+        ],
+        [
+          30,
+          20
+        ],
+        [
+          35,
+          20
+        ],
+        [
+          30,
+          25
+        ],
+        [
+          35,
+          25
+        ],
+        [
+          40,
+          25
+        ],
+        [
+          35,
+          30
+        ],
+        [
+          40,
+          30
+        ],
+        [
+          45,
+          30
+        ],
+        [
+          35,
+          25
+        ]
+      ],
+      "radius": 5,
+      "bandwidth": 5,
+      "gridWidth": 16,
+      "gridHeight": 11,
+      "gridOrigin": [
+        0,
+        0
+      ],
+      "gridCell": 5,
+      "hexScale": 0.92,
+      "heatOpacity": 0.3,
+      "thresholds": []
+    },
+    {
+      "render": "heat",
+      "kind": "heat-map",
+      "language": "en",
+      "width": 30,
+      "height": 60,
+      "id": "heat-en-1",
+      "opacity": 0.8,
+      "lineWidth": ".6mm",
+      "points": [
+        [
+          25,
+          20
+        ],
+        [
+          30,
+          20
+        ],
+        [
+          35,
+          20
+        ],
+        [
+          30,
+          25
+        ],
+        [
+          35,
+          25
+        ],
+        [
+          40,
+          25
+        ],
+        [
+          35,
+          30
+        ],
+        [
+          40,
+          30
+        ],
+        [
+          45,
+          30
+        ],
+        [
+          35,
+          25
+        ]
+      ],
+      "radius": 5,
+      "bandwidth": 5,
+      "gridWidth": 16,
+      "gridHeight": 11,
+      "gridOrigin": [
+        0,
+        0
+      ],
+      "gridCell": 5,
+      "hexScale": 0.92,
+      "heatOpacity": 0.3,
+      "thresholds": []
+    },
+    {
+      "render": "heat",
+      "kind": "heat-map",
+      "language": "de",
+      "width": 60,
+      "height": 30,
+      "id": "heat-de-0",
+      "opacity": 0.35,
+      "lineWidth": ".3mm",
+      "points": [
+        [
+          25,
+          20
+        ],
+        [
+          30,
+          20
+        ],
+        [
+          35,
+          20
+        ],
+        [
+          30,
+          25
+        ],
+        [
+          35,
+          25
+        ],
+        [
+          40,
+          25
+        ],
+        [
+          35,
+          30
+        ],
+        [
+          40,
+          30
+        ],
+        [
+          45,
+          30
+        ],
+        [
+          35,
+          25
+        ]
+      ],
+      "radius": 5,
+      "bandwidth": 5,
+      "gridWidth": 16,
+      "gridHeight": 11,
+      "gridOrigin": [
+        0,
+        0
+      ],
+      "gridCell": 5,
+      "hexScale": 0.92,
+      "heatOpacity": 0.3,
+      "thresholds": []
+    },
+    {
+      "render": "heat",
+      "kind": "heat-map",
+      "language": "de",
+      "width": 30,
+      "height": 60,
+      "id": "heat-de-1",
+      "opacity": 0.8,
+      "lineWidth": ".6mm",
+      "points": [
+        [
+          25,
+          20
+        ],
+        [
+          30,
+          20
+        ],
+        [
+          35,
+          20
+        ],
+        [
+          30,
+          25
+        ],
+        [
+          35,
+          25
+        ],
+        [
+          40,
+          25
+        ],
+        [
+          35,
+          30
+        ],
+        [
+          40,
+          30
+        ],
+        [
+          45,
+          30
+        ],
+        [
+          35,
+          25
+        ]
+      ],
+      "radius": 5,
+      "bandwidth": 5,
+      "gridWidth": 16,
+      "gridHeight": 11,
+      "gridOrigin": [
+        0,
+        0
+      ],
+      "gridCell": 5,
+      "hexScale": 0.92,
+      "heatOpacity": 0.3,
+      "thresholds": []
+    },
+    {
+      "render": "density",
+      "kind": "spatial-density-map",
+      "language": "en",
+      "width": 60,
+      "height": 30,
+      "id": "sampling-density-en",
+      "opacity": 0.8,
+      "lineWidth": ".3mm",
+      "points": [
+        [
+          1025,
+          -780
+        ],
+        [
+          1030,
+          -780
+        ],
+        [
+          1035,
+          -780
+        ],
+        [
+          1030,
+          -775
+        ],
+        [
+          1035,
+          -775
+        ],
+        [
+          1040,
+          -775
+        ],
+        [
+          1035,
+          -770
+        ],
+        [
+          1040,
+          -770
+        ],
+        [
+          1045,
+          -770
+        ],
+        [
+          1035,
+          -775
+        ]
+      ],
+      "radius": 5,
+      "bandwidth": 3,
+      "gridWidth": 24,
+      "gridHeight": 22,
+      "gridOrigin": [
+        1000,
+        -805
+      ],
+      "gridCell": 2,
+      "hexScale": 0.92,
+      "heatOpacity": 0.65,
+      "thresholds": [
+        0.004,
+        0.0005,
+        0.002
+      ]
+    },
+    {
+      "render": "heat",
+      "kind": "heat-map",
+      "language": "en",
+      "width": 60,
+      "height": 30,
+      "id": "sampling-heat-en",
+      "opacity": 0.8,
+      "lineWidth": ".3mm",
+      "points": [
+        [
+          1025,
+          -780
+        ],
+        [
+          1030,
+          -780
+        ],
+        [
+          1035,
+          -780
+        ],
+        [
+          1030,
+          -775
+        ],
+        [
+          1035,
+          -775
+        ],
+        [
+          1040,
+          -775
+        ],
+        [
+          1035,
+          -770
+        ],
+        [
+          1040,
+          -770
+        ],
+        [
+          1045,
+          -770
+        ],
+        [
+          1035,
+          -775
+        ]
+      ],
+      "radius": 5,
+      "bandwidth": 3,
+      "gridWidth": 24,
+      "gridHeight": 22,
+      "gridOrigin": [
+        1000,
+        -805
+      ],
+      "gridCell": 2,
+      "hexScale": 0.92,
+      "heatOpacity": 0.65,
+      "thresholds": [
+        0.004,
+        0.0005,
+        0.002
+      ]
+    },
+    {
+      "render": "hex",
+      "kind": "hexbin-map",
+      "language": "en",
+      "width": 60,
+      "height": 30,
+      "id": "hexscale-0.5-en",
+      "opacity": 0.35,
+      "lineWidth": ".3mm",
+      "points": [
+        [
+          25,
+          20
+        ],
+        [
+          30,
+          20
+        ],
+        [
+          35,
+          20
+        ],
+        [
+          30,
+          25
+        ],
+        [
+          35,
+          25
+        ],
+        [
+          40,
+          25
+        ],
+        [
+          35,
+          30
+        ],
+        [
+          40,
+          30
+        ],
+        [
+          45,
+          30
+        ],
+        [
+          35,
+          25
+        ]
+      ],
+      "radius": 5,
+      "bandwidth": 5,
+      "gridWidth": 16,
+      "gridHeight": 11,
+      "gridOrigin": [
+        0,
+        0
+      ],
+      "gridCell": 5,
+      "hexScale": 0.5,
+      "heatOpacity": 0.3,
+      "thresholds": []
+    },
+    {
+      "render": "hex",
+      "kind": "hexbin-map",
+      "language": "en",
+      "width": 60,
+      "height": 30,
+      "id": "hexscale-1.25-en",
+      "opacity": 0.35,
+      "lineWidth": ".3mm",
+      "points": [
+        [
+          25,
+          20
+        ],
+        [
+          30,
+          20
+        ],
+        [
+          35,
+          20
+        ],
+        [
+          30,
+          25
+        ],
+        [
+          35,
+          25
+        ],
+        [
+          40,
+          25
+        ],
+        [
+          35,
+          30
+        ],
+        [
+          40,
+          30
+        ],
+        [
+          45,
+          30
+        ],
+        [
+          35,
+          25
+        ]
+      ],
+      "radius": 5,
+      "bandwidth": 5,
+      "gridWidth": 16,
+      "gridHeight": 11,
+      "gridOrigin": [
+        0,
+        0
+      ],
+      "gridCell": 5,
+      "hexScale": 1.25,
+      "heatOpacity": 0.3,
+      "thresholds": []
+    },
+    {
+      "render": "density",
+      "kind": "spatial-density-map",
+      "language": "de",
+      "width": 60,
+      "height": 30,
+      "id": "sampling-density-de",
+      "opacity": 0.8,
+      "lineWidth": ".3mm",
+      "points": [
+        [
+          1025,
+          -780
+        ],
+        [
+          1030,
+          -780
+        ],
+        [
+          1035,
+          -780
+        ],
+        [
+          1030,
+          -775
+        ],
+        [
+          1035,
+          -775
+        ],
+        [
+          1040,
+          -775
+        ],
+        [
+          1035,
+          -770
+        ],
+        [
+          1040,
+          -770
+        ],
+        [
+          1045,
+          -770
+        ],
+        [
+          1035,
+          -775
+        ]
+      ],
+      "radius": 5,
+      "bandwidth": 3,
+      "gridWidth": 24,
+      "gridHeight": 22,
+      "gridOrigin": [
+        1000,
+        -805
+      ],
+      "gridCell": 2,
+      "hexScale": 0.92,
+      "heatOpacity": 0.65,
+      "thresholds": [
+        0.004,
+        0.0005,
+        0.002
+      ]
+    },
+    {
+      "render": "heat",
+      "kind": "heat-map",
+      "language": "de",
+      "width": 60,
+      "height": 30,
+      "id": "sampling-heat-de",
+      "opacity": 0.8,
+      "lineWidth": ".3mm",
+      "points": [
+        [
+          1025,
+          -780
+        ],
+        [
+          1030,
+          -780
+        ],
+        [
+          1035,
+          -780
+        ],
+        [
+          1030,
+          -775
+        ],
+        [
+          1035,
+          -775
+        ],
+        [
+          1040,
+          -775
+        ],
+        [
+          1035,
+          -770
+        ],
+        [
+          1040,
+          -770
+        ],
+        [
+          1045,
+          -770
+        ],
+        [
+          1035,
+          -775
+        ]
+      ],
+      "radius": 5,
+      "bandwidth": 3,
+      "gridWidth": 24,
+      "gridHeight": 22,
+      "gridOrigin": [
+        1000,
+        -805
+      ],
+      "gridCell": 2,
+      "hexScale": 0.92,
+      "heatOpacity": 0.65,
+      "thresholds": [
+        0.004,
+        0.0005,
+        0.002
+      ]
+    },
+    {
+      "render": "hex",
+      "kind": "hexbin-map",
+      "language": "de",
+      "width": 60,
+      "height": 30,
+      "id": "hexscale-0.5-de",
+      "opacity": 0.35,
+      "lineWidth": ".3mm",
+      "points": [
+        [
+          25,
+          20
+        ],
+        [
+          30,
+          20
+        ],
+        [
+          35,
+          20
+        ],
+        [
+          30,
+          25
+        ],
+        [
+          35,
+          25
+        ],
+        [
+          40,
+          25
+        ],
+        [
+          35,
+          30
+        ],
+        [
+          40,
+          30
+        ],
+        [
+          45,
+          30
+        ],
+        [
+          35,
+          25
+        ]
+      ],
+      "radius": 5,
+      "bandwidth": 5,
+      "gridWidth": 16,
+      "gridHeight": 11,
+      "gridOrigin": [
+        0,
+        0
+      ],
+      "gridCell": 5,
+      "hexScale": 0.5,
+      "heatOpacity": 0.3,
+      "thresholds": []
+    },
+    {
+      "render": "hex",
+      "kind": "hexbin-map",
+      "language": "de",
+      "width": 60,
+      "height": 30,
+      "id": "hexscale-1.25-de",
+      "opacity": 0.35,
+      "lineWidth": ".3mm",
+      "points": [
+        [
+          25,
+          20
+        ],
+        [
+          30,
+          20
+        ],
+        [
+          35,
+          20
+        ],
+        [
+          30,
+          25
+        ],
+        [
+          35,
+          25
+        ],
+        [
+          40,
+          25
+        ],
+        [
+          35,
+          30
+        ],
+        [
+          40,
+          30
+        ],
+        [
+          45,
+          30
+        ],
+        [
+          35,
+          25
+        ]
+      ],
+      "radius": 5,
+      "bandwidth": 5,
+      "gridWidth": 16,
+      "gridHeight": 11,
+      "gridOrigin": [
+        0,
+        0
+      ],
+      "gridCell": 5,
+      "hexScale": 1.25,
+      "heatOpacity": 0.3,
+      "thresholds": []
+    },
+    {
+      "render": "density",
+      "kind": "spatial-density-map",
+      "language": "en",
+      "width": 60,
+      "height": 30,
+      "id": "sampling-single-en",
+      "opacity": 0.8,
+      "lineWidth": ".3mm",
+      "points": [
+        [
+          1025,
+          -780
+        ],
+        [
+          1030,
+          -780
+        ],
+        [
+          1035,
+          -780
+        ],
+        [
+          1030,
+          -775
+        ],
+        [
+          1035,
+          -775
+        ],
+        [
+          1040,
+          -775
+        ],
+        [
+          1035,
+          -770
+        ],
+        [
+          1040,
+          -770
+        ],
+        [
+          1045,
+          -770
+        ],
+        [
+          1035,
+          -775
+        ]
+      ],
+      "radius": 5,
+      "bandwidth": 3,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "gridOrigin": [
+        1035,
+        -775
+      ],
+      "gridCell": 2,
+      "hexScale": 0.92,
+      "heatOpacity": 0.65,
+      "thresholds": [
+        0.001
+      ]
+    },
+    {
+      "render": "density",
+      "kind": "spatial-density-map",
+      "language": "de",
+      "width": 60,
+      "height": 30,
+      "id": "sampling-single-de",
+      "opacity": 0.8,
+      "lineWidth": ".3mm",
+      "points": [
+        [
+          1025,
+          -780
+        ],
+        [
+          1030,
+          -780
+        ],
+        [
+          1035,
+          -780
+        ],
+        [
+          1030,
+          -775
+        ],
+        [
+          1035,
+          -775
+        ],
+        [
+          1040,
+          -775
+        ],
+        [
+          1035,
+          -770
+        ],
+        [
+          1040,
+          -770
+        ],
+        [
+          1045,
+          -770
+        ],
+        [
+          1035,
+          -775
+        ]
+      ],
+      "radius": 5,
+      "bandwidth": 3,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "gridOrigin": [
+        1035,
+        -775
+      ],
+      "gridCell": 2,
+      "hexScale": 0.92,
+      "heatOpacity": 0.65,
+      "thresholds": [
+        0.001
+      ]
+    }
+  ],
+  "admissionCases": [
+    {
+      "id": "unsupported-projection-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "projection"
+        ],
+        "value": "mercator"
+      },
+      "valid": false
+    },
+    {
+      "id": "unsupported-rotate-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "rotate"
+        ],
+        "value": "10,0,0"
+      },
+      "valid": false
+    },
+    {
+      "id": "unsupported-parallels-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "parallels"
+        ],
+        "value": "0,45"
+      },
+      "valid": false
+    },
+    {
+      "id": "unsupported-geometry-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "geometry"
+        ],
+        "value": "demo-geo-regions"
+      },
+      "valid": false
+    },
+    {
+      "id": "unsupported-fit-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "fit"
+        ],
+        "value": "world"
+      },
+      "valid": false
+    },
+    {
+      "id": "positive-width-number-0-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "width"
+        ],
+        "value": 0
+      },
+      "valid": false
+    },
+    {
+      "id": "positive-width-number--1-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "width"
+        ],
+        "value": -1
+      },
+      "valid": false
+    },
+    {
+      "id": "positive-width-string-0-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "width"
+        ],
+        "value": "0"
+      },
+      "valid": false
+    },
+    {
+      "id": "positive-width-string--1-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "width"
+        ],
+        "value": "-1"
+      },
+      "valid": false
+    },
+    {
+      "id": "positive-width-number-0.5-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "width"
+        ],
+        "value": 0.5
+      },
+      "valid": true
+    },
+    {
+      "id": "positive-width-string-.5-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "width"
+        ],
+        "value": ".5"
+      },
+      "valid": true
+    },
+    {
+      "id": "positive-width-string-2plus3-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "width"
+        ],
+        "value": "2+3"
+      },
+      "valid": true
+    },
+    {
+      "id": "positive-height-number-0-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "height"
+        ],
+        "value": 0
+      },
+      "valid": false
+    },
+    {
+      "id": "positive-height-number--1-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "height"
+        ],
+        "value": -1
+      },
+      "valid": false
+    },
+    {
+      "id": "positive-height-string-0-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "height"
+        ],
+        "value": "0"
+      },
+      "valid": false
+    },
+    {
+      "id": "positive-height-string--1-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "height"
+        ],
+        "value": "-1"
+      },
+      "valid": false
+    },
+    {
+      "id": "positive-height-number-0.5-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "height"
+        ],
+        "value": 0.5
+      },
+      "valid": true
+    },
+    {
+      "id": "positive-height-string-.5-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "height"
+        ],
+        "value": ".5"
+      },
+      "valid": true
+    },
+    {
+      "id": "positive-height-string-2plus3-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "height"
+        ],
+        "value": "2+3"
+      },
+      "valid": true
+    },
+    {
+      "id": "positive-radius-number-0-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "radius"
+        ],
+        "value": 0
+      },
+      "valid": false
+    },
+    {
+      "id": "positive-radius-number--1-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "radius"
+        ],
+        "value": -1
+      },
+      "valid": false
+    },
+    {
+      "id": "positive-radius-string-0-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "radius"
+        ],
+        "value": "0"
+      },
+      "valid": false
+    },
+    {
+      "id": "positive-radius-string--1-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "radius"
+        ],
+        "value": "-1"
+      },
+      "valid": false
+    },
+    {
+      "id": "positive-radius-number-0.5-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "radius"
+        ],
+        "value": 0.5
+      },
+      "valid": true
+    },
+    {
+      "id": "positive-radius-string-.5-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "radius"
+        ],
+        "value": ".5"
+      },
+      "valid": true
+    },
+    {
+      "id": "positive-radius-string-2plus3-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "radius"
+        ],
+        "value": "2+3"
+      },
+      "valid": true
+    },
+    {
+      "id": "positive-bandwidth-number-0-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "bandwidth"
+        ],
+        "value": 0
+      },
+      "valid": false
+    },
+    {
+      "id": "positive-bandwidth-number--1-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "bandwidth"
+        ],
+        "value": -1
+      },
+      "valid": false
+    },
+    {
+      "id": "positive-bandwidth-string-0-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "bandwidth"
+        ],
+        "value": "0"
+      },
+      "valid": false
+    },
+    {
+      "id": "positive-bandwidth-string--1-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "bandwidth"
+        ],
+        "value": "-1"
+      },
+      "valid": false
+    },
+    {
+      "id": "positive-bandwidth-number-0.5-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "bandwidth"
+        ],
+        "value": 0.5
+      },
+      "valid": true
+    },
+    {
+      "id": "positive-bandwidth-string-.5-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "bandwidth"
+        ],
+        "value": ".5"
+      },
+      "valid": true
+    },
+    {
+      "id": "positive-bandwidth-string-2plus3-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "bandwidth"
+        ],
+        "value": "2+3"
+      },
+      "valid": true
+    },
+    {
+      "id": "unsupported-projection-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "projection"
+        ],
+        "value": "mercator"
+      },
+      "valid": false
+    },
+    {
+      "id": "unsupported-rotate-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "rotate"
+        ],
+        "value": "10,0,0"
+      },
+      "valid": false
+    },
+    {
+      "id": "unsupported-parallels-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "parallels"
+        ],
+        "value": "0,45"
+      },
+      "valid": false
+    },
+    {
+      "id": "unsupported-geometry-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "geometry"
+        ],
+        "value": "demo-geo-regions"
+      },
+      "valid": false
+    },
+    {
+      "id": "unsupported-fit-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "fit"
+        ],
+        "value": "world"
+      },
+      "valid": false
+    },
+    {
+      "id": "positive-width-number-0-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "width"
+        ],
+        "value": 0
+      },
+      "valid": false
+    },
+    {
+      "id": "positive-width-number--1-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "width"
+        ],
+        "value": -1
+      },
+      "valid": false
+    },
+    {
+      "id": "positive-width-string-0-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "width"
+        ],
+        "value": "0"
+      },
+      "valid": false
+    },
+    {
+      "id": "positive-width-string--1-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "width"
+        ],
+        "value": "-1"
+      },
+      "valid": false
+    },
+    {
+      "id": "positive-width-number-0.5-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "width"
+        ],
+        "value": 0.5
+      },
+      "valid": true
+    },
+    {
+      "id": "positive-width-string-.5-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "width"
+        ],
+        "value": ".5"
+      },
+      "valid": true
+    },
+    {
+      "id": "positive-width-string-2plus3-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "width"
+        ],
+        "value": "2+3"
+      },
+      "valid": true
+    },
+    {
+      "id": "positive-height-number-0-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "height"
+        ],
+        "value": 0
+      },
+      "valid": false
+    },
+    {
+      "id": "positive-height-number--1-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "height"
+        ],
+        "value": -1
+      },
+      "valid": false
+    },
+    {
+      "id": "positive-height-string-0-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "height"
+        ],
+        "value": "0"
+      },
+      "valid": false
+    },
+    {
+      "id": "positive-height-string--1-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "height"
+        ],
+        "value": "-1"
+      },
+      "valid": false
+    },
+    {
+      "id": "positive-height-number-0.5-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "height"
+        ],
+        "value": 0.5
+      },
+      "valid": true
+    },
+    {
+      "id": "positive-height-string-.5-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "height"
+        ],
+        "value": ".5"
+      },
+      "valid": true
+    },
+    {
+      "id": "positive-height-string-2plus3-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "height"
+        ],
+        "value": "2+3"
+      },
+      "valid": true
+    },
+    {
+      "id": "positive-radius-number-0-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "radius"
+        ],
+        "value": 0
+      },
+      "valid": false
+    },
+    {
+      "id": "positive-radius-number--1-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "radius"
+        ],
+        "value": -1
+      },
+      "valid": false
+    },
+    {
+      "id": "positive-radius-string-0-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "radius"
+        ],
+        "value": "0"
+      },
+      "valid": false
+    },
+    {
+      "id": "positive-radius-string--1-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "radius"
+        ],
+        "value": "-1"
+      },
+      "valid": false
+    },
+    {
+      "id": "positive-radius-number-0.5-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "radius"
+        ],
+        "value": 0.5
+      },
+      "valid": true
+    },
+    {
+      "id": "positive-radius-string-.5-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "radius"
+        ],
+        "value": ".5"
+      },
+      "valid": true
+    },
+    {
+      "id": "positive-radius-string-2plus3-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "radius"
+        ],
+        "value": "2+3"
+      },
+      "valid": true
+    },
+    {
+      "id": "positive-bandwidth-number-0-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "bandwidth"
+        ],
+        "value": 0
+      },
+      "valid": false
+    },
+    {
+      "id": "positive-bandwidth-number--1-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "bandwidth"
+        ],
+        "value": -1
+      },
+      "valid": false
+    },
+    {
+      "id": "positive-bandwidth-string-0-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "bandwidth"
+        ],
+        "value": "0"
+      },
+      "valid": false
+    },
+    {
+      "id": "positive-bandwidth-string--1-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "bandwidth"
+        ],
+        "value": "-1"
+      },
+      "valid": false
+    },
+    {
+      "id": "positive-bandwidth-number-0.5-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "bandwidth"
+        ],
+        "value": 0.5
+      },
+      "valid": true
+    },
+    {
+      "id": "positive-bandwidth-string-.5-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "bandwidth"
+        ],
+        "value": ".5"
+      },
+      "valid": true
+    },
+    {
+      "id": "positive-bandwidth-string-2plus3-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "bandwidth"
+        ],
+        "value": "2+3"
+      },
+      "valid": true
+    },
+    {
+      "id": "new-control-gridWidth-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "gridWidth"
+        ],
+        "value": 24
+      },
+      "valid": true
+    },
+    {
+      "id": "new-control-gridHeight-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "gridHeight"
+        ],
+        "value": 22
+      },
+      "valid": true
+    },
+    {
+      "id": "new-control-gridOrigin-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "gridOrigin"
+        ],
+        "value": "1000,-805"
+      },
+      "valid": true
+    },
+    {
+      "id": "new-control-gridCell-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "gridCell"
+        ],
+        "value": 2
+      },
+      "valid": true
+    },
+    {
+      "id": "new-control-hexScale-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "hexScale"
+        ],
+        "value": 1.25
+      },
+      "valid": true
+    },
+    {
+      "id": "new-control-heatOpacity-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "heatOpacity"
+        ],
+        "value": 0.65
+      },
+      "valid": true
+    },
+    {
+      "id": "new-control-thresholds-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "thresholds"
+        ],
+        "value": ".004,.0005,.002"
+      },
+      "valid": true
+    },
+    {
+      "id": "new-control-gridWidth-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "gridWidth"
+        ],
+        "value": 24
+      },
+      "valid": true
+    },
+    {
+      "id": "new-control-gridHeight-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "gridHeight"
+        ],
+        "value": 22
+      },
+      "valid": true
+    },
+    {
+      "id": "new-control-gridOrigin-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "gridOrigin"
+        ],
+        "value": "1000,-805"
+      },
+      "valid": true
+    },
+    {
+      "id": "new-control-gridCell-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "gridCell"
+        ],
+        "value": 2
+      },
+      "valid": true
+    },
+    {
+      "id": "new-control-hexScale-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "hexScale"
+        ],
+        "value": 1.25
+      },
+      "valid": true
+    },
+    {
+      "id": "new-control-heatOpacity-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "heatOpacity"
+        ],
+        "value": 0.65
+      },
+      "valid": true
+    },
+    {
+      "id": "new-control-thresholds-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "thresholds"
+        ],
+        "value": ".004,.0005,.002"
+      },
+      "valid": true
+    },
+    {
+      "id": "bounded-gridWidth-0-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "gridWidth"
+        ],
+        "value": 0
+      },
+      "valid": false
+    },
+    {
+      "id": "bounded-gridWidth--1-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "gridWidth"
+        ],
+        "value": -1
+      },
+      "valid": false
+    },
+    {
+      "id": "bounded-gridWidth-0.5-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "gridWidth"
+        ],
+        "value": 0.5
+      },
+      "valid": false
+    },
+    {
+      "id": "bounded-gridWidth-0-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "gridWidth"
+        ],
+        "value": "0"
+      },
+      "valid": false
+    },
+    {
+      "id": "bounded-gridWidth--1-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "gridWidth"
+        ],
+        "value": "-1"
+      },
+      "valid": false
+    },
+    {
+      "id": "bounded-gridWidth-1-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "gridWidth"
+        ],
+        "value": 1
+      },
+      "valid": true
+    },
+    {
+      "id": "bounded-gridWidth-1-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "gridWidth"
+        ],
+        "value": "1"
+      },
+      "valid": true
+    },
+    {
+      "id": "bounded-gridWidth-2plus2-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "gridWidth"
+        ],
+        "value": "2+2"
+      },
+      "valid": true
+    },
+    {
+      "id": "bounded-gridHeight-0-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "gridHeight"
+        ],
+        "value": 0
+      },
+      "valid": false
+    },
+    {
+      "id": "bounded-gridHeight--1-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "gridHeight"
+        ],
+        "value": -1
+      },
+      "valid": false
+    },
+    {
+      "id": "bounded-gridHeight-0.5-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "gridHeight"
+        ],
+        "value": 0.5
+      },
+      "valid": false
+    },
+    {
+      "id": "bounded-gridHeight-0-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "gridHeight"
+        ],
+        "value": "0"
+      },
+      "valid": false
+    },
+    {
+      "id": "bounded-gridHeight--1-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "gridHeight"
+        ],
+        "value": "-1"
+      },
+      "valid": false
+    },
+    {
+      "id": "bounded-gridHeight-1-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "gridHeight"
+        ],
+        "value": 1
+      },
+      "valid": true
+    },
+    {
+      "id": "bounded-gridHeight-1-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "gridHeight"
+        ],
+        "value": "1"
+      },
+      "valid": true
+    },
+    {
+      "id": "bounded-gridHeight-2plus2-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "gridHeight"
+        ],
+        "value": "2+2"
+      },
+      "valid": true
+    },
+    {
+      "id": "bounded-gridCell-0-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "gridCell"
+        ],
+        "value": 0
+      },
+      "valid": false
+    },
+    {
+      "id": "bounded-gridCell--1-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "gridCell"
+        ],
+        "value": -1
+      },
+      "valid": false
+    },
+    {
+      "id": "bounded-gridCell-0-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "gridCell"
+        ],
+        "value": "0"
+      },
+      "valid": false
+    },
+    {
+      "id": "bounded-gridCell--1-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "gridCell"
+        ],
+        "value": "-1"
+      },
+      "valid": false
+    },
+    {
+      "id": "bounded-gridCell-0.5-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "gridCell"
+        ],
+        "value": 0.5
+      },
+      "valid": true
+    },
+    {
+      "id": "bounded-gridCell-2plus2-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "gridCell"
+        ],
+        "value": "2+2"
+      },
+      "valid": true
+    },
+    {
+      "id": "bounded-hexScale-0-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "hexScale"
+        ],
+        "value": 0
+      },
+      "valid": false
+    },
+    {
+      "id": "bounded-hexScale--1-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "hexScale"
+        ],
+        "value": -1
+      },
+      "valid": false
+    },
+    {
+      "id": "bounded-hexScale-0-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "hexScale"
+        ],
+        "value": "0"
+      },
+      "valid": false
+    },
+    {
+      "id": "bounded-hexScale--1-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "hexScale"
+        ],
+        "value": "-1"
+      },
+      "valid": false
+    },
+    {
+      "id": "bounded-hexScale-0.5-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "hexScale"
+        ],
+        "value": 0.5
+      },
+      "valid": true
+    },
+    {
+      "id": "bounded-hexScale-2plus2-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "hexScale"
+        ],
+        "value": "2+2"
+      },
+      "valid": true
+    },
+    {
+      "id": "bounded-heatOpacity--1-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "heatOpacity"
+        ],
+        "value": -1
+      },
+      "valid": false
+    },
+    {
+      "id": "bounded-heatOpacity-2-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "heatOpacity"
+        ],
+        "value": 2
+      },
+      "valid": false
+    },
+    {
+      "id": "bounded-heatOpacity--1-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "heatOpacity"
+        ],
+        "value": "-1"
+      },
+      "valid": false
+    },
+    {
+      "id": "bounded-heatOpacity-2-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "heatOpacity"
+        ],
+        "value": "2"
+      },
+      "valid": false
+    },
+    {
+      "id": "bounded-heatOpacity-0-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "heatOpacity"
+        ],
+        "value": 0
+      },
+      "valid": true
+    },
+    {
+      "id": "bounded-heatOpacity-1-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "heatOpacity"
+        ],
+        "value": 1
+      },
+      "valid": true
+    },
+    {
+      "id": "bounded-heatOpacity-0-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "heatOpacity"
+        ],
+        "value": "0"
+      },
+      "valid": true
+    },
+    {
+      "id": "bounded-heatOpacity-1-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "heatOpacity"
+        ],
+        "value": "1"
+      },
+      "valid": true
+    },
+    {
+      "id": "bounded-heatOpacity-.5-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "heatOpacity"
+        ],
+        "value": ".5"
+      },
+      "valid": true
+    },
+    {
+      "id": "bounded-heatOpacity-1div2-en",
+      "language": "en",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "heatOpacity"
+        ],
+        "value": "1/2"
+      },
+      "valid": true
+    },
+    {
+      "id": "bounded-gridWidth-0-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "gridWidth"
+        ],
+        "value": 0
+      },
+      "valid": false
+    },
+    {
+      "id": "bounded-gridWidth--1-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "gridWidth"
+        ],
+        "value": -1
+      },
+      "valid": false
+    },
+    {
+      "id": "bounded-gridWidth-0.5-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "gridWidth"
+        ],
+        "value": 0.5
+      },
+      "valid": false
+    },
+    {
+      "id": "bounded-gridWidth-0-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "gridWidth"
+        ],
+        "value": "0"
+      },
+      "valid": false
+    },
+    {
+      "id": "bounded-gridWidth--1-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "gridWidth"
+        ],
+        "value": "-1"
+      },
+      "valid": false
+    },
+    {
+      "id": "bounded-gridWidth-1-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "gridWidth"
+        ],
+        "value": 1
+      },
+      "valid": true
+    },
+    {
+      "id": "bounded-gridWidth-1-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "gridWidth"
+        ],
+        "value": "1"
+      },
+      "valid": true
+    },
+    {
+      "id": "bounded-gridWidth-2plus2-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "gridWidth"
+        ],
+        "value": "2+2"
+      },
+      "valid": true
+    },
+    {
+      "id": "bounded-gridHeight-0-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "gridHeight"
+        ],
+        "value": 0
+      },
+      "valid": false
+    },
+    {
+      "id": "bounded-gridHeight--1-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "gridHeight"
+        ],
+        "value": -1
+      },
+      "valid": false
+    },
+    {
+      "id": "bounded-gridHeight-0.5-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "gridHeight"
+        ],
+        "value": 0.5
+      },
+      "valid": false
+    },
+    {
+      "id": "bounded-gridHeight-0-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "gridHeight"
+        ],
+        "value": "0"
+      },
+      "valid": false
+    },
+    {
+      "id": "bounded-gridHeight--1-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "gridHeight"
+        ],
+        "value": "-1"
+      },
+      "valid": false
+    },
+    {
+      "id": "bounded-gridHeight-1-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "gridHeight"
+        ],
+        "value": 1
+      },
+      "valid": true
+    },
+    {
+      "id": "bounded-gridHeight-1-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "gridHeight"
+        ],
+        "value": "1"
+      },
+      "valid": true
+    },
+    {
+      "id": "bounded-gridHeight-2plus2-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "gridHeight"
+        ],
+        "value": "2+2"
+      },
+      "valid": true
+    },
+    {
+      "id": "bounded-gridCell-0-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "gridCell"
+        ],
+        "value": 0
+      },
+      "valid": false
+    },
+    {
+      "id": "bounded-gridCell--1-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "gridCell"
+        ],
+        "value": -1
+      },
+      "valid": false
+    },
+    {
+      "id": "bounded-gridCell-0-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "gridCell"
+        ],
+        "value": "0"
+      },
+      "valid": false
+    },
+    {
+      "id": "bounded-gridCell--1-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "gridCell"
+        ],
+        "value": "-1"
+      },
+      "valid": false
+    },
+    {
+      "id": "bounded-gridCell-0.5-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "gridCell"
+        ],
+        "value": 0.5
+      },
+      "valid": true
+    },
+    {
+      "id": "bounded-gridCell-2plus2-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "gridCell"
+        ],
+        "value": "2+2"
+      },
+      "valid": true
+    },
+    {
+      "id": "bounded-hexScale-0-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "hexScale"
+        ],
+        "value": 0
+      },
+      "valid": false
+    },
+    {
+      "id": "bounded-hexScale--1-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "hexScale"
+        ],
+        "value": -1
+      },
+      "valid": false
+    },
+    {
+      "id": "bounded-hexScale-0-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "hexScale"
+        ],
+        "value": "0"
+      },
+      "valid": false
+    },
+    {
+      "id": "bounded-hexScale--1-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "hexScale"
+        ],
+        "value": "-1"
+      },
+      "valid": false
+    },
+    {
+      "id": "bounded-hexScale-0.5-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "hexScale"
+        ],
+        "value": 0.5
+      },
+      "valid": true
+    },
+    {
+      "id": "bounded-hexScale-2plus2-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "hexScale"
+        ],
+        "value": "2+2"
+      },
+      "valid": true
+    },
+    {
+      "id": "bounded-heatOpacity--1-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "heatOpacity"
+        ],
+        "value": -1
+      },
+      "valid": false
+    },
+    {
+      "id": "bounded-heatOpacity-2-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "heatOpacity"
+        ],
+        "value": 2
+      },
+      "valid": false
+    },
+    {
+      "id": "bounded-heatOpacity--1-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "heatOpacity"
+        ],
+        "value": "-1"
+      },
+      "valid": false
+    },
+    {
+      "id": "bounded-heatOpacity-2-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "heatOpacity"
+        ],
+        "value": "2"
+      },
+      "valid": false
+    },
+    {
+      "id": "bounded-heatOpacity-0-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "heatOpacity"
+        ],
+        "value": 0
+      },
+      "valid": true
+    },
+    {
+      "id": "bounded-heatOpacity-1-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "heatOpacity"
+        ],
+        "value": 1
+      },
+      "valid": true
+    },
+    {
+      "id": "bounded-heatOpacity-0-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "heatOpacity"
+        ],
+        "value": "0"
+      },
+      "valid": true
+    },
+    {
+      "id": "bounded-heatOpacity-1-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "heatOpacity"
+        ],
+        "value": "1"
+      },
+      "valid": true
+    },
+    {
+      "id": "bounded-heatOpacity-.5-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "heatOpacity"
+        ],
+        "value": ".5"
+      },
+      "valid": true
+    },
+    {
+      "id": "bounded-heatOpacity-1div2-de",
+      "language": "de",
+      "mutation": {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "heatOpacity"
+        ],
+        "value": "1/2"
+      },
+      "valid": true
+    }
+  ],
+  "evaluatedCases": [
+    {
+      "id": "width-1minus1",
+      "options": "width={1-1}",
+      "valid": false
+    },
+    {
+      "id": "width-minus2",
+      "options": "width={-2}",
+      "valid": false
+    },
+    {
+      "id": "width-inf",
+      "options": "width={inf}",
+      "valid": false
+    },
+    {
+      "id": "width-nan",
+      "options": "width={nan}",
+      "valid": false
+    },
+    {
+      "id": "height-1minus1",
+      "options": "height={1-1}",
+      "valid": false
+    },
+    {
+      "id": "height-minus2",
+      "options": "height={-2}",
+      "valid": false
+    },
+    {
+      "id": "height-inf",
+      "options": "height={inf}",
+      "valid": false
+    },
+    {
+      "id": "height-nan",
+      "options": "height={nan}",
+      "valid": false
+    },
+    {
+      "id": "radius-1minus1",
+      "options": "radius={1-1}",
+      "valid": false
+    },
+    {
+      "id": "radius-minus2",
+      "options": "radius={-2}",
+      "valid": false
+    },
+    {
+      "id": "radius-inf",
+      "options": "radius={inf}",
+      "valid": false
+    },
+    {
+      "id": "radius-nan",
+      "options": "radius={nan}",
+      "valid": false
+    },
+    {
+      "id": "bandwidth-1minus1",
+      "options": "bandwidth={1-1}",
+      "valid": false
+    },
+    {
+      "id": "bandwidth-minus2",
+      "options": "bandwidth={-2}",
+      "valid": false
+    },
+    {
+      "id": "bandwidth-inf",
+      "options": "bandwidth={inf}",
+      "valid": false
+    },
+    {
+      "id": "bandwidth-nan",
+      "options": "bandwidth={nan}",
+      "valid": false
+    },
+    {
+      "id": "stroke-0",
+      "options": "lineWidth=-1mm",
+      "valid": false
+    },
+    {
+      "id": "stroke-1",
+      "options": "lineWidth=30mm",
+      "valid": false
+    },
+    {
+      "id": "stroke-2",
+      "options": "lineWidth=31mm",
+      "valid": false
+    },
+    {
+      "id": "stroke-3",
+      "options": "lineWidth=60mm",
+      "valid": false
+    },
+    {
+      "id": "arithmetic-positive",
+      "options": "width={2+3},height={3*2},radius={1/2},bandwidth={2+2},lineWidth=.1cm",
+      "valid": true
+    },
+    {
+      "id": "zero-stroke",
+      "options": "lineWidth=0pt",
+      "valid": true
+    },
+    {
+      "id": "small-frame",
+      "options": "width=.5,height=.5,lineWidth=.3mm",
+      "valid": true
+    },
+    {
+      "id": "gridWidth-zero",
+      "options": "gridWidth={1-1}",
+      "valid": false
+    },
+    {
+      "id": "gridWidth-negative",
+      "options": "gridWidth={-1}",
+      "valid": false
+    },
+    {
+      "id": "gridHeight-zero",
+      "options": "gridHeight={1-1}",
+      "valid": false
+    },
+    {
+      "id": "gridHeight-negative",
+      "options": "gridHeight={-1}",
+      "valid": false
+    },
+    {
+      "id": "gridCell-zero",
+      "options": "gridCell={1-1}",
+      "valid": false
+    },
+    {
+      "id": "gridCell-negative",
+      "options": "gridCell={-1}",
+      "valid": false
+    },
+    {
+      "id": "hexScale-zero",
+      "options": "hexScale={1-1}",
+      "valid": false
+    },
+    {
+      "id": "hexScale-negative",
+      "options": "hexScale={-1}",
+      "valid": false
+    },
+    {
+      "id": "origin-short",
+      "options": "gridOrigin={0}",
+      "valid": false
+    },
+    {
+      "id": "origin-long",
+      "options": "gridOrigin={0,0,0}",
+      "valid": false
+    },
+    {
+      "id": "origin-inf",
+      "options": "gridOrigin={inf,0}",
+      "valid": false
+    },
+    {
+      "id": "threshold-nan",
+      "options": "thresholds={nan}",
+      "valid": false
+    },
+    {
+      "id": "heat-negative",
+      "options": "heatOpacity={-1/2}",
+      "valid": false
+    },
+    {
+      "id": "heat-excess",
+      "options": "heatOpacity={1+1}",
+      "valid": false
+    },
+    {
+      "id": "sampling-one",
+      "options": "gridWidth=1,gridHeight=1,gridCell=.5,hexScale=.5,heatOpacity=0",
+      "valid": true
+    }
+  ]
+}

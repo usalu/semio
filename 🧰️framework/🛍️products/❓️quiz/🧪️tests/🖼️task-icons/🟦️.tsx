@@ -1,8 +1,9 @@
 /** 🖼️ Every task, item, category and dimension can carry an icon — one emoji and one of the looping microanimations (shared
  * vectors: the sheets of `icon-demo`): the glyph is hidden from assistive
- * technology, a task without an icon keeps the icon of its kind, every motion has its keyframes and plays only where the
- * client switched the icons on — the learner's choice, kept on the device, and until they choose every device but one
- * that asks for reduced motion.
+ * technology, a task without an icon keeps the icon of its kind, every icon stands in a host of its own, and every motion
+ * has its keyframes and plays only on a hovered (desktop), focused or tapped (tablet, phone) host where the client
+ * switched the icons on — the learner's choice, kept on the device, and until they choose every device but one that
+ * asks for reduced motion.
  *
  * @see ../../🎯️targets/⚛️react/🎨️.css
  * @see https://www.w3.org/WAI/WCAG22/Understanding/animation-from-interactions.html
@@ -14,7 +15,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it, vi } from "vitest";
 import { MOTIONS, type Sheet } from "@semio-tech/quiz";
-import { PreferencesPanel, TaskGlyph, TaskView, effectiveIconMotion, localStore, memoryStorageOrigin, quizText, readPreferences, textPresentation, withIcons } from "@semio-tech/quiz-react";
+import { ICON_HOSTS, ICON_LOOP_MS, IconLabel, PreferencesPanel, TaskGlyph, TaskView, effectiveIconMotion, playTappedIcons, localStore, memoryStorageOrigin, quizText, readPreferences, textPresentation, withIcons } from "@semio-tech/quiz-react";
 import sheets from "../../🧫️fixtures/🃏️sheet-assembly/🔣️.json";
 
 const css = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../🎯️targets/⚛️react/🎨️.css"), "utf8");
@@ -43,16 +44,25 @@ describe("task icons", () => {
     expect(container.querySelector("svg")).not.toBeNull();
   });
 
-  it("has keyframes and one rule for every motion, each only where the client switched the icons on", () => {
+  it("names keyframes for every motion and plays them only on a hovered, focused or tapped host where the client switched the icons on", () => {
     for (const motion of MOTIONS) {
       expect(css).toContain(`@keyframes quiz-icon-${motion} {`);
-      expect(css).toContain(`.quiz-app[data-icon-motion="on"] .quiz-glyph[data-motion="${motion}"] {
-  animation-name: quiz-icon-${motion};`);
+      expect(css).toContain(`.quiz-glyph[data-motion="${motion}"] {\n  --quiz-icon-animation: quiz-icon-${motion};`);
     }
-    expect(css.match(/animation-name:/g)).toHaveLength(MOTIONS.length);
+    const hosts = ':is([data-icon-host], [data-slot="quiz-card-title-chip"])';
+    const plays = [...css.matchAll(/^\s*([^{}\n]+) \{\n\s*animation: var\(--quiz-icon-animation\) 3\.2s ease-in-out (infinite|1);/gmu)].map(([, selector, count]) => `${selector!.trim()} ${count}`);
+    expect(plays).toEqual([
+      `.quiz-app[data-icon-motion="on"] ${hosts}:hover .quiz-glyph[data-motion] infinite`,
+      `.quiz-app[data-icon-motion="on"] ${hosts}:is(:focus-visible, :has(:focus-visible)) .quiz-glyph[data-motion] infinite`,
+      '.quiz-app[data-icon-motion="on"] [data-icon-tapped] .quiz-glyph[data-motion] 1',
+    ]);
+    expect(css.match(/animation: var\(--quiz-icon-animation\)/g)).toHaveLength(plays.length);
+    expect(css).not.toMatch(/(?<![-\w])animation(-name)?:\s*quiz-icon-/u);
+    expect(css).toMatch(/@media \(hover: hover\) \{\n\s*\.quiz-app\[data-icon-motion="on"\] :is\(\[data-icon-host\], \[data-slot="quiz-card-title-chip"\]\):hover /u);
+    expect(ICON_HOSTS).toBe('[data-icon-host], [data-slot="quiz-card-title-chip"]');
   });
 
-  it("shows the icon of every item, category and value card before its label, each a step apart, and keeps the labels as they are, with the keys shown and hidden", () => {
+  it("shows the icon of every item, category and value card before its label, each in a host of its own, and keeps the labels as they are, with the keys shown and hidden", () => {
     const tasks = ["icons-1", "icons-1-hard"].flatMap((id) => (sheets.sheets.find((vector) => vector.id === id)!.sheet as unknown as Sheet).tasks);
     for (const task of tasks) {
       const { container, unmount } = render(<TaskView task={task} answer={undefined} onAnswer={() => undefined} text={quizText("en")} locale="en" />);
@@ -64,14 +74,44 @@ describe("task icons", () => {
       expect(expected.length).toBeGreaterThan(0);
       expect(shown.map((icon) => `${icon.textContent} ${icon.dataset.motion}`).sort()).toEqual(expected);
       for (const icon of shown) expect(icon.getAttribute("aria-hidden")).toBe("true");
-      expect(new Set(shown.map((icon) => icon.style.getPropertyValue("--quiz-icon-order"))).size).toBeGreaterThan(1);
+      for (const icon of shown) expect(icon.closest(ICON_HOSTS), icon.textContent ?? "").not.toBeNull();
+      expect([...container.querySelectorAll(ICON_HOSTS)].filter((host) => host.parentElement?.closest(ICON_HOSTS) !== null)).toEqual([]);
       for (const item of task.items) expect(screen.getAllByText(item.label.en).length).toBeGreaterThan(0);
       unmount();
     }
   });
 
-  it("starts neighbouring icons apart", () => {
-    expect(css).toContain("animation-delay: calc(var(--quiz-icon-order, 0) * -0.7s);");
+  it("plays the icons of a tapped host once, from the start on every tap, and leaves the mouse to hovering", () => {
+    vi.useFakeTimers();
+    try {
+      const { container } = render(
+        <ul>
+          <li data-icon-host="">
+            <IconLabel icon={{ emoji: "🔋", motion: "bounce" }}>
+              <b>Battery</b>
+            </IconLabel>
+          </li>
+          <li data-icon-host="">
+            <b>No icon</b>
+          </li>
+        </ul>,
+      );
+      const [host, bare] = [...container.querySelectorAll("li")];
+      playTappedIcons(screen.getByText("Battery"), "mouse");
+      expect(host!.hasAttribute("data-icon-tapped")).toBe(false);
+      playTappedIcons(screen.getByText("No icon"), "touch");
+      expect(bare!.hasAttribute("data-icon-tapped")).toBe(false);
+      playTappedIcons(screen.getByText("Battery"), "touch");
+      expect(host!.hasAttribute("data-icon-tapped")).toBe(true);
+      vi.advanceTimersByTime(ICON_LOOP_MS - 1);
+      playTappedIcons(screen.getByText("Battery"), "pen");
+      vi.advanceTimersByTime(ICON_LOOP_MS - 1);
+      expect(host!.hasAttribute("data-icon-tapped")).toBe(true);
+      vi.advanceTimersByTime(1);
+      expect(host!.hasAttribute("data-icon-tapped")).toBe(false);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("follows the device until the learner chooses, and the learner's choice after that", () => {

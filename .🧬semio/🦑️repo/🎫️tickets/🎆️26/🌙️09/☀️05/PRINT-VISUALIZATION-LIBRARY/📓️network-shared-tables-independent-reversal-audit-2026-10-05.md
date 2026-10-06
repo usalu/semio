@@ -1,0 +1,3 @@
+# Network Shared Tables Independent Reversal Audit — 2026-10-05
+
+Actual objectrecipe newForce→oldForce and inserted section→empty independently reverses fullafterFD5B toSHA279DE7E96AE440D86D6F94EAA10214A3028CEF54DA9C40A6B3166ED65FF97449, exactbefore equality=True. This proves outsidebytes preserved. Initial assumptions aboutdeltaarray/insertmarker yieldedno proof and were corrected against actualobjectfields. Root106rows/eightscopes anomalous placementseed lacksconsumer/default, matrixsplit unused and sizeByweight degreesurrogate remain limitations. No runtime/customizationPASS inferred. Directunion/sourcebinding review remains separate; no product/test/job edits.

@@ -1,0 +1,113 @@
+{
+  "path": "C:/git/semio/🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-api/🔓️viz-api.tex",
+  "before": "C25E3660CFDF62F9F9B73649C6D785A62CDCC953BDACF9614F5E51F40FBAEC10",
+  "after": "23E9E50848EEF182DFF3E77C087ED177B7F9E9EFF6A89CECA26768A393096157",
+  "sources": [
+    {
+      "file": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-guide.sty",
+      "sha256": "623D4F9EE92C09983F784E484978D01776EC4FF8CF4C4A55712FBE3C93A053ED",
+      "scope": "semio / viz / grid",
+      "declaration": 825,
+      "reset": 833,
+      "consumer": 837,
+      "rows": [
+        [
+          "x",
+          "tl",
+          ""
+        ],
+        [
+          "y",
+          "tl",
+          ""
+        ],
+        [
+          "minor",
+          "bool",
+          false
+        ],
+        [
+          "ticks",
+          "int",
+          5
+        ]
+      ]
+    },
+    {
+      "file": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-network.sty",
+      "sha256": "75B03BE67391F39304F5AB1DEE06013B9B6C23D49F9ECECC5DA11B0E8A82697A",
+      "scope": "semio / viz / graph / walk",
+      "declaration": 1978,
+      "reset": 1983,
+      "consumer": 2035,
+      "rows": [
+        [
+          "mode",
+          "tl",
+          "bfs"
+        ],
+        [
+          "root",
+          "int",
+          1
+        ],
+        [
+          "direction",
+          "tl",
+          "adj"
+        ]
+      ]
+    },
+    {
+      "file": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz.sty",
+      "sha256": "F2277314E69747B06F8FECE032CA71AF7CD1A3C0765BDDE6A9A52489F80C852C",
+      "scope": "semio / viz / section",
+      "declaration": 182,
+      "reset": 189,
+      "consumer": 213,
+      "rows": [
+        [
+          "title",
+          "tl",
+          ""
+        ],
+        [
+          "aside",
+          "tl",
+          ""
+        ],
+        [
+          "rule",
+          "bool",
+          true
+        ]
+      ]
+    },
+    {
+      "file": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz.sty",
+      "sha256": "F2277314E69747B06F8FECE032CA71AF7CD1A3C0765BDDE6A9A52489F80C852C",
+      "scope": "semio / viz / column",
+      "declaration": 258,
+      "reset": 277,
+      "consumer": 279,
+      "rows": [
+        [
+          "width",
+          "fp",
+          "active figure width"
+        ],
+        [
+          "title",
+          "tl",
+          ""
+        ],
+        [
+          "note",
+          "tl",
+          ""
+        ]
+      ]
+    }
+  ],
+  "removedUnsupportedSignature": "standalone grid style key absent from actual grid scope"
+}

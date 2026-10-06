@@ -1,0 +1,7 @@
+[
+ {"path":"dashboard/🌀️daemon/🧪️tests/🔬️unit/🦀️.rs","replace":[
+ {"from":"view.write_all(b\"\\0p\").unwrap();","to":"write_controls(&mut view, b\"\\0p\").unwrap();","all":true},
+ {"from":"view.write_all(b\"\\0eq\").unwrap();","to":"write_controls(&mut view, b\"\\0eq\").unwrap();"},
+ {"from":"fn terminal_text(screen: &ui_tui::tui::vt::VtScreen) -> String {","to":"fn write_controls(view: &mut ui_tui::tui::pty::Pty, bytes: &[u8]) -> std::io::Result<()> {\n    #[cfg(windows)]\n    for byte in bytes {\n        if *byte == 0 { view.write_all(b\"\\x1b[32;57;0;1;8;1_\\x1b[32;57;0;0;8;1_\")?; } else { view.write_all(&[*byte])?; }\n    }\n    #[cfg(unix)]\n    view.write_all(bytes)?;\n    Ok(())\n}\n\nfn terminal_text(screen: &ui_tui::tui::vt::VtScreen) -> String {"}
+ ]}
+]

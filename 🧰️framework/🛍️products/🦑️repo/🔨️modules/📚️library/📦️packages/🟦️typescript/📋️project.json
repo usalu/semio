@@ -141,8 +141,22 @@
     ]
   },
   "targets": {
-    "test-general-execution-ownership": {"executor":"nx:run-commands","cache":false,"options":{"cwd":"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript","command":"bun ./📜️script.ts test-general-execution-ownership"}},
-    "test-fixture-ownership": {"executor":"nx:run-commands","cache":false,"options":{"cwd":"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript","command":"bun ./📜️script.ts test-fixture-ownership"}},
+    "test-general-execution-ownership": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test-general-execution-ownership"
+      }
+    },
+    "test-fixture-ownership": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test-fixture-ownership"
+      }
+    },
     "test-locale-law-ownership": {
       "executor": "nx:run-commands",
       "cache": false,
@@ -1875,6 +1889,16 @@
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test rust-runtime-path-direction",
         "forwardAllArgs": true
+      }
+    },
+    "test-cargo-library-search-path": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test cargo-library-search-path"
       }
     }
   }

@@ -1,0 +1,13 @@
+# Empty Node Actual Failure And Strict Owner Audit — 2026-10-06
+
+Read-only audit, no compiler/product/helper mutation. Exact current helper/native owner, both staged mathematics owners, owned paint JSON and failure logs are bound in `📥️authored-inputs/empty-node-actual-failure-audit-2026-10-06.json`.
+
+Actual scientific-empty-node-green terminal status is exit1 at2026-10-05T23:28:27Z. Both actual TeX logs finish12 pages; numerical observer fails all16 bilingual/style instances with Empty unshaped nodes paint opaque covers or glyphs. Every owned style has exactly one closed path and zero glyphs. Hook's remaining closed rectangle spans x19.600149..20.400144 and y19.600149..20.400144, opaque base fill. This is the .8mm empty edge-label box at the line midpoint, not endpoint node paint.
+
+Current None node fallback correctly guards blank field4 and eliminates the two empty .6mm endpoint backgrounds. Diagram_edges still unconditionally emits a midpoint node with inner sep=.4mm and fill=semio-chrome-base for empty edge field4. It overpaints the central shaft. The observer's zero-closed-path predicate is therefore a meaningful native RED. Do not exempt this rectangle or weaken the predicate. Guard blank edge labels at the existing drawing owner while retaining intentional masking for nonblank labels. Keep interior origin, exact shafts/heads/hooks and bounds checks.
+
+Minimal genuine follow-up controls: empty node+empty edge labels yield no opaque background rectangles/glyphs; nonblank edge label `f` yields one expected glyph run and deliberate midpoint mask; blank whitespace-only labels follow the established blank policy; nodeShape circle/box with empty label still paints its deliberately requested shape. Test visible hook/shaft segments with final paint order. Scope closed masks by actual label/shape identity when adding nonempty cases, rather than globally forbidding legitimate filled nodes.
+
+Actual root-current-strict status exit1 at2026-10-05T23:27:51Z. Typecheck diagnostic was native-chart-grammar.ts1851:375 TS2345 string|undefined to string. Current source moved the same GraphReference identity oracle to1856. It maps IDs through identity returning string|undefined, then calls includes(from)/includes(to); TypeScript cannot infer array element narrowing from prior every checks when includes parameter is string. Repair by explicit proven string-array narrowing or some(id=>id===from) and some(id=>id===to) after nonempty membership checks. Preserve all ID uniqueness/finite scalar/dangling rejection checks. This is helper type admission failure, not native product RED.
+
+No repaired runtime GREEN or universal completion claimed.

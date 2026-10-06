@@ -1,0 +1,16 @@
+[
+  {
+    "id": "single-en",
+    "language": "en",
+    "paletteSteps": 1,
+    "expectedPaletteSteps": 1,
+    "expectedSteps": 24
+  },
+  {
+    "id": "single-de",
+    "language": "de",
+    "paletteSteps": 1,
+    "expectedPaletteSteps": 1,
+    "expectedSteps": 24
+  }
+]

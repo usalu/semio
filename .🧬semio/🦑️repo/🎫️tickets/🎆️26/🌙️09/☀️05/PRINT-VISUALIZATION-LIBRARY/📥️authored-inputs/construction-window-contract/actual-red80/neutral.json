@@ -1,0 +1,345 @@
+{
+  "schema": {
+    "type": "object",
+    "required": [
+      "canvas",
+      "familyFrame",
+      "domain",
+      "range",
+      "tickDivisions",
+      "cases",
+      "variants"
+    ],
+    "additionalProperties": false,
+    "properties": {
+      "canvas": {
+        "type": "array",
+        "minItems": 2,
+        "maxItems": 2,
+        "items": {
+          "type": "number"
+        }
+      },
+      "familyFrame": {
+        "type": "array",
+        "minItems": 2,
+        "maxItems": 2,
+        "items": {
+          "type": "number"
+        }
+      },
+      "domain": {
+        "type": "array",
+        "minItems": 2,
+        "maxItems": 2,
+        "items": {
+          "type": "number"
+        }
+      },
+      "range": {
+        "type": "array",
+        "minItems": 2,
+        "maxItems": 2,
+        "items": {
+          "type": "number"
+        }
+      },
+      "tickDivisions": {
+        "type": "array",
+        "minItems": 2,
+        "maxItems": 2,
+        "items": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "cases": {
+        "type": "array",
+        "minItems": 10,
+        "maxItems": 10,
+        "items": {
+          "type": "object",
+          "required": [
+            "family",
+            "kind",
+            "options"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "family": {
+              "type": "string"
+            },
+            "kind": {
+              "type": "string"
+            },
+            "options": {
+              "type": "object"
+            },
+            "intrinsicGrid": {
+              "type": "object",
+              "required": [
+                "kind",
+                "radius",
+                "labels"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "radial"
+                  ]
+                },
+                "radius": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "labels": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            },
+            "physicalOutline": {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 3,
+              "items": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2,
+                "items": {
+                  "type": "number"
+                }
+              }
+            }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "kind": {
+                    "enum": [
+                      "coordinate-geometry",
+                      "euclidean-construction"
+                    ]
+                  }
+                },
+                "required": [
+                  "kind"
+                ]
+              },
+              "then": {
+                "required": [
+                  "physicalOutline"
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "variants": {
+        "type": "array",
+        "minItems": 7,
+        "maxItems": 7,
+        "uniqueItems": true,
+        "items": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 6
+        }
+      }
+    }
+  },
+  "vectors": {
+    "canvas": [
+      100,
+      80
+    ],
+    "familyFrame": [
+      80,
+      40
+    ],
+    "domain": [
+      0,
+      88
+    ],
+    "range": [
+      0,
+      60
+    ],
+    "tickDivisions": [
+      2,
+      5
+    ],
+    "variants": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    "cases": [
+      {
+        "family": "sci-construction",
+        "kind": "coordinate-geometry",
+        "options": {
+          "mode": "coordinate",
+          "points": "A/0/0,B/44/0,C/13/30",
+          "marks": false,
+          "labels": true
+        },
+        "physicalOutline": [
+          [
+            0,
+            0
+          ],
+          [
+            44,
+            0
+          ],
+          [
+            13,
+            30
+          ]
+        ]
+      },
+      {
+        "family": "sci-construction",
+        "kind": "angle-diagram",
+        "options": {
+          "mode": "polygon",
+          "points": "A/0/0,B/44/0,C/13/30",
+          "centre": "22,15",
+          "through": "52,34",
+          "radius": 18,
+          "marks": false,
+          "labels": true
+        }
+      },
+      {
+        "family": "sci-construction",
+        "kind": "circle-geometry",
+        "options": {
+          "mode": "circle",
+          "points": "A/0/0,B/44/0,C/13/30",
+          "centre": "22,15",
+          "through": "52,34",
+          "radius": 18,
+          "marks": false,
+          "labels": true
+        }
+      },
+      {
+        "family": "sci-construction",
+        "kind": "congruence-diagram",
+        "options": {
+          "mode": "congruence",
+          "points": "A/0/0,B/44/0,C/13/30",
+          "centre": "22,15",
+          "through": "52,34",
+          "radius": 18,
+          "marks": false,
+          "labels": true
+        }
+      },
+      {
+        "family": "sci-construction",
+        "kind": "euclidean-construction",
+        "options": {
+          "mode": "coordinate",
+          "points": "A/0/0,B/44/0,C/13/30",
+          "centre": "22,15",
+          "through": "52,34",
+          "radius": 18,
+          "marks": false,
+          "labels": true
+        },
+        "physicalOutline": [
+          [
+            0,
+            0
+          ],
+          [
+            44,
+            0
+          ],
+          [
+            13,
+            30
+          ]
+        ]
+      },
+      {
+        "family": "sci-construction",
+        "kind": "polygon-diagram",
+        "options": {
+          "mode": "polygon",
+          "points": "A/0/0,B/44/0,C/13/30",
+          "centre": "22,15",
+          "through": "52,34",
+          "radius": 18,
+          "marks": false,
+          "labels": true
+        }
+      },
+      {
+        "family": "sci-construction",
+        "kind": "secant-construction",
+        "options": {
+          "mode": "secant",
+          "points": "A/0/0,B/44/0,C/13/30",
+          "centre": "22,15",
+          "through": "52,34",
+          "radius": 18,
+          "marks": false,
+          "labels": true
+        }
+      },
+      {
+        "family": "sci-construction",
+        "kind": "similarity-diagram",
+        "options": {
+          "mode": "similarity",
+          "points": "A/0/0,B/44/0,C/13/30",
+          "centre": "22,15",
+          "through": "52,34",
+          "radius": 18,
+          "marks": false,
+          "labels": true
+        }
+      },
+      {
+        "family": "sci-construction",
+        "kind": "tangent-construction",
+        "options": {
+          "mode": "tangent",
+          "points": "A/0/0,B/44/0,C/13/30",
+          "centre": "22,15",
+          "through": "52,34",
+          "radius": 18,
+          "marks": false,
+          "labels": true
+        }
+      },
+      {
+        "family": "sci-construction",
+        "kind": "triangle-diagram",
+        "options": {
+          "mode": "polygon",
+          "points": "A/0/0,B/44/0,C/13/30",
+          "centre": "22,15",
+          "through": "52,34",
+          "radius": 18,
+          "marks": false,
+          "labels": true
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,105 @@
+{
+  "session": 32001,
+  "exitCode": 1,
+  "duration": "2m21s",
+  "failure": "light.tex23 undefined old palette-step variable in actual choropleth standard probe",
+  "beforeSource": "6D557467CF71FAD08B09D9E7ADA2CE9DEDA3C75D54E444F7C31368D3D965BA56",
+  "afterSource": "B27BFFF38A8910BB0516818C09262C57B52D4C960EFED47849400933CDACE949",
+  "artifacts": [
+    {
+      "path": "🗑️generated/spatial-structure-native-renderer-ts/spatial-data/light/🧪️probe-input/light.tex",
+      "bytes": 13701,
+      "sha256": "0B7A332C009C95B3EA7A43B590A52B53A2766118EC0D1E6F3D3302905E4EB68B"
+    },
+    {
+      "path": "🗑️generated/spatial-structure-native-renderer-ts/spatial-data/light/🧪️probe-out/light.log",
+      "bytes": 82409,
+      "sha256": "56FF4BCBEA1F778E7D72AD4E1E9FC795520638F5CD62EFFEF763239420C8DB2D"
+    },
+    {
+      "path": "🗑️generated/spatial-structure-native-renderer-ts/spatial-data/light/🧪️probe-source/.semio-library/modules/graph/_.tex",
+      "bytes": 18630,
+      "sha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88"
+    },
+    {
+      "path": "🗑️generated/spatial-structure-native-renderer-ts/spatial-data/light/🧪️probe-source/.semio-library/semio-latex/texput.log",
+      "bytes": 697,
+      "sha256": "AC726A100BDF9B7AA8907E50BFC7288AC420D92235B4C516B6DDACF22651E091"
+    },
+    {
+      "path": "🗑️generated/spatial-structure-native-renderer-ts/spatial-data/light/🧪️probe-source/light.tex",
+      "bytes": 13701,
+      "sha256": "0B7A332C009C95B3EA7A43B590A52B53A2766118EC0D1E6F3D3302905E4EB68B"
+    },
+    {
+      "path": "🗑️generated/spatial-structure-native-renderer-ts/spatial-data/zero-dark/🧪️probe-input/dark.tex",
+      "bytes": 963,
+      "sha256": "70B62D72425E6F91A73AE64FCBAD88FA00DA18361F6E6E0DBF5815837C5A92DF"
+    },
+    {
+      "path": "🗑️generated/spatial-structure-native-renderer-ts/spatial-data/zero-dark/🧪️probe-out/dark.log",
+      "bytes": 82801,
+      "sha256": "B7A0D71C43362087EAB8E248D7D8BE09B882E63268BAADA350F43AAF4F255318"
+    },
+    {
+      "path": "🗑️generated/spatial-structure-native-renderer-ts/spatial-data/zero-dark/🧪️probe-out/dark.pdf",
+      "bytes": 12298,
+      "sha256": "7FBC20DAFE3CB60305C3DC7CCA11813B62620BA124075F8E949140AC1768CD4A"
+    },
+    {
+      "path": "🗑️generated/spatial-structure-native-renderer-ts/spatial-data/zero-dark/🧪️probe-out/dark.probe.jsonl",
+      "bytes": 92,
+      "sha256": "D2AB92494C5F9F884708CEA3DB0B881FF1F385EEC877DBB2AF492021A37E5D85"
+    },
+    {
+      "path": "🗑️generated/spatial-structure-native-renderer-ts/spatial-data/zero-dark/🧪️probe-source/.semio-library/modules/graph/_.tex",
+      "bytes": 18630,
+      "sha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88"
+    },
+    {
+      "path": "🗑️generated/spatial-structure-native-renderer-ts/spatial-data/zero-dark/🧪️probe-source/.semio-library/semio-latex/texput.log",
+      "bytes": 697,
+      "sha256": "AC726A100BDF9B7AA8907E50BFC7288AC420D92235B4C516B6DDACF22651E091"
+    },
+    {
+      "path": "🗑️generated/spatial-structure-native-renderer-ts/spatial-data/zero-dark/🧪️probe-source/dark.tex",
+      "bytes": 963,
+      "sha256": "70B62D72425E6F91A73AE64FCBAD88FA00DA18361F6E6E0DBF5815837C5A92DF"
+    },
+    {
+      "path": "🗑️generated/spatial-structure-native-renderer-ts/spatial-data/zero-light/🧪️probe-input/light.tex",
+      "bytes": 966,
+      "sha256": "091B27CFA3BCB427EB1DDB3636A10BC9A3C5F073F41E5F3E87332DC88068F229"
+    },
+    {
+      "path": "🗑️generated/spatial-structure-native-renderer-ts/spatial-data/zero-light/🧪️probe-out/light.log",
+      "bytes": 82818,
+      "sha256": "7CC2FD0ADC2755AF40F527E67CBE2C74F66F2FA175939FE8AA17F431D6810124"
+    },
+    {
+      "path": "🗑️generated/spatial-structure-native-renderer-ts/spatial-data/zero-light/🧪️probe-out/light.pdf",
+      "bytes": 12219,
+      "sha256": "EEDCC4072A9320EFA4CA2F0009B95E1ADF0D6DC732A6EEF476AA01E376561E53"
+    },
+    {
+      "path": "🗑️generated/spatial-structure-native-renderer-ts/spatial-data/zero-light/🧪️probe-out/light.probe.jsonl",
+      "bytes": 92,
+      "sha256": "D2AB92494C5F9F884708CEA3DB0B881FF1F385EEC877DBB2AF492021A37E5D85"
+    },
+    {
+      "path": "🗑️generated/spatial-structure-native-renderer-ts/spatial-data/zero-light/🧪️probe-source/.semio-library/modules/graph/_.tex",
+      "bytes": 18630,
+      "sha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88"
+    },
+    {
+      "path": "🗑️generated/spatial-structure-native-renderer-ts/spatial-data/zero-light/🧪️probe-source/.semio-library/semio-latex/texput.log",
+      "bytes": 697,
+      "sha256": "AC726A100BDF9B7AA8907E50BFC7288AC420D92235B4C516B6DDACF22651E091"
+    },
+    {
+      "path": "🗑️generated/spatial-structure-native-renderer-ts/spatial-data/zero-light/🧪️probe-source/light.tex",
+      "bytes": 966,
+      "sha256": "091B27CFA3BCB427EB1DDB3636A10BC9A3C5F073F41E5F3E87332DC88068F229"
+    }
+  ]
+}

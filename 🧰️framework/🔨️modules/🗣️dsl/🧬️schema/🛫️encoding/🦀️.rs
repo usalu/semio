@@ -333,11 +333,14 @@ impl Emitter {
         (FieldValue::Wire(value),Shape::Wire)=>self.wire(value,control),
         _=>Err(ValueError::new(ValueRefusalKind::InvalidValue,"native field value disagrees with declared shape"))
     }})}
+    fn intrinsic_number(&mut self,value:Number,control:&mut NativeEncodeControl<'_>)->Result<(),ValueError>{match value{
+        Number::Int(value) if value>=0=>{self.begin_atom(control)?;self.raw("int64(",control)?;self.number(&value,control)?;self.raw(")",control)},
+        Number::Int(value)=>{self.begin_atom(control)?;self.number(&value,control)},Number::UInt(value)=>{self.begin_atom(control)?;self.number(&value,control)},
+        Number::Float(value)=>{self.begin_atom(control)?;let start=self.bytes;self.float(value,control)?;if value.is_finite(){let mut buffer=StackText{bytes:[0;1088],length:0};std::fmt::write(&mut buffer,format_args!("{value}")).map_err(|_|ValueError::new(ValueRefusalKind::InvariantViolated,"native float formatting failed"))?;if !buffer.text().contains(['.','e','E'])&&self.bytes>start{self.raw(".0",control)?;}}Ok(())},
+    }}
     fn intrinsic(&mut self,value:&DslValue,control:&mut NativeEncodeControl<'_>)->Result<(),ValueError>{control.scoped_depth(64,|control|->Result<_,ValueError>{control.checkpoint()?;match value{
         DslValue::Null=>self.atom("null",control),DslValue::Bool(value)=>self.atom(if *value{"true"}else{"false"},control),
-        DslValue::Number(Number::Int(value)) if *value>=0=>{self.begin_atom(control)?;self.raw("int64(",control)?;self.number(value,control)?;self.raw(")",control)},
-        DslValue::Number(Number::Int(value))=>{self.begin_atom(control)?;self.number(value,control)},DslValue::Number(Number::UInt(value))=>{self.begin_atom(control)?;self.number(value,control)},
-        DslValue::Number(Number::Float(value))=>{self.begin_atom(control)?;let start=self.bytes;self.float(*value,control)?;if value.is_finite(){let mut buffer=StackText{bytes:[0;1088],length:0};std::fmt::write(&mut buffer,format_args!("{value}")).map_err(|_|ValueError::new(ValueRefusalKind::InvariantViolated,"native float formatting failed"))?;if !buffer.text().contains(['.','e','E'])&&self.bytes>start{self.raw(".0",control)?;}}Ok(())},
+        DslValue::Number(value)=>self.intrinsic_number(*value,control),
         DslValue::String(value)=>{self.begin_atom(control)?;self.quoted(value,control)},
         DslValue::Bytes(value)=>{self.begin_atom(control)?;self.raw("bytes64(",control)?;self.octets(value,control)?;self.raw(")",control)},
         DslValue::Array(items)=>{self.atom("[",control)?;control.scoped_stage(|control|->Result<_,ValueError>{control.begin_stage(items.len())?;for value in items{control.scoped_stage(|control|self.intrinsic(value,control))?;control.step()?;}Ok(())})?;self.atom("]",control)},

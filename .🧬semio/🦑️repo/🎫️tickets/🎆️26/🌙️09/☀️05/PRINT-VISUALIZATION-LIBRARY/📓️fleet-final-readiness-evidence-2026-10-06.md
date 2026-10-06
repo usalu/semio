@@ -1,0 +1,7 @@
+# Final Readiness Evidence — 2026-10-06
+
+The authored absentDescriptors3 fixture and pipeline freshness261–266 now assert actual family owners exist in canonical schema and generated API, then compare both descriptor-presence booleans against independently authored false/false with AJV. This is the intended owner-semantic correction. Valid geo-route samples positive coverage remains separate.
+
+Latest observed fleet-coverage-final log: actual package findings[], scoped family findings0 and translation failures0; then elapsed progress40s. No terminal success or failure yet. Latest fleet-launch-final log similarly reaches40s progress only; registry generation66482 pending. Current fleet-lock-current log records Cargo locking46packages, wit-bindgen0.57.1, and DEBUG exact standalone guest lock restored with authored manifest preserved. Root owns terminal receipt88146; this supersedes older failed attempt.
+
+Rust Construction: native-construction-rust-emission contains140 named Cv0..9 M0..6 light/dark .tex producer assets. fleet-construction-rust-current runner records140canonicalcases and1302actualbodypaths matching independentD3 affine paint+isolatedchrome, followed by Nx success4m37s. This proves observed native paint acceptance of that run; producer asset inventory alone would not. Complete producer→stage byte binding is not yet independently established here and should retain root executor49542 source receipts. Final Surface24 and current core/Physics source-current executions remain required, not implied by earlier terminals.

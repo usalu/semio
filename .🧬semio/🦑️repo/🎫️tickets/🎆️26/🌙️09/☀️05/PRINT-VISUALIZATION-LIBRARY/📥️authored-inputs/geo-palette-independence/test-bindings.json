@@ -1,0 +1,20 @@
+{
+  "helper": {
+    "file": "C:/git/semio/🧰️framework/🛍️products/📓️print/🧪️tests/🧬️native-chart-grammar/🟦️.ts",
+    "before": "64BE6BE267E55D2CCC2D2130B2EFB7F1A0B83491071704AB72998613F0947F65",
+    "after": "9E493AF377230C8474D752F06123B50337BC72597024BC6E473A25135EF08C96"
+  },
+  "fixture": {
+    "file": "C:/git/semio/🧰️framework/🛍️products/📓️print/🧪️tests/🧬️native-chart-grammar/🔣️.json",
+    "before": "9B68115BB2A9877E28C6A74CE8791A4284E6A68257D7346FEEBEB879521D949D",
+    "after": "D9B204B5D2B2DF299206D817E4FFA253C6312F746CC5E2E76DE049FB3560D91A"
+  },
+  "cases": 8,
+  "inputs": [
+    0.2,
+    0.4,
+    0.7
+  ],
+  "scope": "Existing schema mutation/diff/inference and native consumer; real integrated paths plus independent D3 threshold/linear ramp.",
+  "phase": "geo-palette"
+}

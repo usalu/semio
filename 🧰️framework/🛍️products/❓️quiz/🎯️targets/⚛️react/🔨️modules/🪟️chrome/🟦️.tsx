@@ -128,12 +128,38 @@ export function textPresentation(emoji: string): string {
 }
 
 /** 😀️ An emoji shown as a glyph of the monochrome emoji face (text presentation, `font-variant-emoji: text`), playing
- * `motion` as a looping microanimation where the learner allows it. */
-export function Glyph(props: { readonly emoji: string; readonly className?: string; readonly motion?: Motion; readonly order?: number }): ReactElement {
+ * `motion` as a microanimation when its host is hovered or tapped and the learner allows it ({@link ICON_HOSTS}). */
+export function Glyph(props: { readonly emoji: string; readonly className?: string; readonly motion?: Motion }): ReactElement {
   return (
-    <span aria-hidden="true" className={cn("quiz-glyph shrink-0", props.className)} data-motion={props.motion} style={props.order === undefined ? undefined : { ["--quiz-icon-order" as string]: props.order }}>
+    <span aria-hidden="true" className={cn("quiz-glyph shrink-0", props.className)} data-motion={props.motion}>
       {textPresentation(props.emoji)}
     </span>
+  );
+}
+
+/** 🎯️ What an icon plays for: its host — the element it stands in (marked `data-icon-host`: a chip, a row, a value
+ * card, a bin's heading, a task button) or the title chip of its card. Hosts never nest. A pointer that hovers a host
+ * (desktop) or a keyboard focus on or inside it loops its icons; a tap on it (tablet, phone) plays them once. */
+export const ICON_HOSTS = '[data-icon-host], [data-slot="quiz-card-title-chip"]';
+
+/** ⏱️ One loop of an icon's microanimation, the length of a tap's play. */
+export const ICON_LOOP_MS = 3200;
+
+const tapped = new WeakMap<Element, ReturnType<typeof setTimeout>>();
+
+/** 👆️ Plays the icons of the host a touch or pen pointer went down on once, from the start even when they still play;
+ * a mouse plays them by hovering instead. */
+export function playTappedIcons(target: EventTarget | null, pointerType: string): void {
+  if (pointerType === "mouse" || !(target instanceof Element)) return;
+  const host = target.closest(ICON_HOSTS);
+  if (host === null || host.querySelector(".quiz-glyph[data-motion]") === null) return;
+  clearTimeout(tapped.get(host));
+  host.removeAttribute("data-icon-tapped");
+  void host.getBoundingClientRect();
+  host.setAttribute("data-icon-tapped", "");
+  tapped.set(
+    host,
+    setTimeout(() => host.removeAttribute("data-icon-tapped"), ICON_LOOP_MS),
   );
 }
 
@@ -182,13 +208,13 @@ export function LiveRegion(props: { readonly announcement: Announcement }): Reac
 }
 
 /** 🏷️ A label with the icon of what it names before it: an item, a category, a value card of a dimension or a task.
- * Without an icon it is the label alone. `order` is its place among its neighbours, which sets their loops apart so a
- * list of icons never moves in step. The glyph is not spoken; the label keeps naming the element. */
-export function IconLabel(props: { readonly icon: QuizIcon | undefined; readonly order?: number; readonly children: ReactNode }): ReactElement {
+ * Without an icon it is the label alone. The element it stands in is its host ({@link ICON_HOSTS}). The glyph is not
+ * spoken; the label keeps naming the element. */
+export function IconLabel(props: { readonly icon: QuizIcon | undefined; readonly children: ReactNode }): ReactElement {
   const { icon } = props;
   return (
     <>
-      {icon === undefined ? null : <Glyph emoji={icon.emoji} motion={icon.motion} order={props.order} className="quiz-label-icon" />}
+      {icon === undefined ? null : <Glyph emoji={icon.emoji} motion={icon.motion} className="quiz-label-icon" />}
       {props.children}
     </>
   );

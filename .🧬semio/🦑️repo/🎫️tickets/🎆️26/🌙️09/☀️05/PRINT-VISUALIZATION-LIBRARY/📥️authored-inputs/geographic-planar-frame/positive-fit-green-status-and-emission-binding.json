@@ -1,0 +1,266 @@
+{
+  "capturedAt": "2026-10-05T08:44:15.608Z",
+  "actualTerminal": 0,
+  "session": 95745,
+  "duration": "6m25s",
+  "dependencyCache": "1of4",
+  "cases": 24,
+  "actualClosedPaths": 72,
+  "claim": "Raw D3 bin/KDE semantics, fitted unique-vertex multiset/pathcounts/physicalbounds, draw/fill opacity,lineWidth,roundjoins; no per-ring ordered-connectivity claim; no preset ScenePlan claim",
+  "helper": {
+    "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧪️tests\\🧬️native-chart-grammar\\🟦️.ts",
+    "sha256": "5156F1B1BC93717EFF8F6F54623637A46B2A092725B40D34BFD3C8D5BFCB6626"
+  },
+  "fixture": {
+    "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧪️tests\\🧬️native-chart-grammar\\🔣️.json",
+    "sha256": "A3F470B6A72E6265A3CB9F953D6130E3E67C26EDDE0089D905A8432473C8BEE9"
+  },
+  "native": {
+    "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🖋️latex\\semio-viz-geo-symbols.sty",
+    "sha256": "4A786C211D4476302C1CB905399414A4AAF956716A53C6C6CCF109D3923223F1"
+  },
+  "log": {
+    "path": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\geo-planar-frame-green.log",
+    "sha256": "3F553CDCD23DC3C90C9F86E340FD7D05A58DE811445E2A8E05A7C30B8D1006EB"
+  },
+  "files": [
+    {
+      "path": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\geo-planar-frame\\green\\geo-planar\\light\\🧪️probe-out\\light.pdf",
+      "sha256": "979578525E7B093140DA349740D0EC9D6FDD7846C5C1B6FC284FFBE3268D1B10",
+      "bytes": 25765
+    },
+    {
+      "path": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\geo-planar-frame\\green\\geo-planar\\light\\🧪️probe-out\\light.probe.jsonl",
+      "sha256": "956AC04651FD54FE719DC181A18190C00110B48A7DAC907541450EBA54CB8BFC",
+      "bytes": 36824
+    },
+    {
+      "path": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\geo-planar-frame\\green\\geo-planar\\light\\🧪️probe-input\\light.tex",
+      "sha256": "DBB7DC60723D80026814236A43259B61F4D142419724CD1D7D64F5015474E5F6"
+    },
+    {
+      "path": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\geo-planar-frame\\green\\geo-planar\\light\\🧪️probe-source\\light.tex",
+      "sha256": "DBB7DC60723D80026814236A43259B61F4D142419724CD1D7D64F5015474E5F6"
+    },
+    {
+      "path": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\geo-planar-frame\\green\\geo-planar\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-geo-symbols.sty",
+      "sha256": "4A786C211D4476302C1CB905399414A4AAF956716A53C6C6CCF109D3923223F1"
+    },
+    {
+      "path": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\geo-planar-frame\\green\\geo-planar\\dark\\🧪️probe-out\\dark.pdf",
+      "sha256": "A75242AEF149FCA0CF9B76A2640A2406E5E4084CB91F33D4A6BC820D04188E3C",
+      "bytes": 25725
+    },
+    {
+      "path": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\geo-planar-frame\\green\\geo-planar\\dark\\🧪️probe-out\\dark.probe.jsonl",
+      "sha256": "956AC04651FD54FE719DC181A18190C00110B48A7DAC907541450EBA54CB8BFC",
+      "bytes": 36824
+    },
+    {
+      "path": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\geo-planar-frame\\green\\geo-planar\\dark\\🧪️probe-input\\dark.tex",
+      "sha256": "EC2D52A8AF806B8EE9030CFDFE1521DF705266C9F14B3310FAB40676DB955764"
+    },
+    {
+      "path": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\geo-planar-frame\\green\\geo-planar\\dark\\🧪️probe-source\\dark.tex",
+      "sha256": "EC2D52A8AF806B8EE9030CFDFE1521DF705266C9F14B3310FAB40676DB955764"
+    },
+    {
+      "path": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\geo-planar-frame\\green\\geo-planar\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-geo-symbols.sty",
+      "sha256": "4A786C211D4476302C1CB905399414A4AAF956716A53C6C6CCF109D3923223F1"
+    }
+  ],
+  "emissions": [
+    {
+      "case": "hex-en-0",
+      "appearance": "light",
+      "path": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\geo-planar-frame\\green\\geo-planar\\emitted\\geo-planar-hex-en-0-light.tex",
+      "sha256": "14B64EBD995CC742041C3222E6E8E880CD26303E1DA03A3DC9784F935E966635",
+      "bytes": 885,
+      "actualCompilerSourceContainsExactEmission": true
+    },
+    {
+      "case": "hex-en-1",
+      "appearance": "light",
+      "path": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\geo-planar-frame\\green\\geo-planar\\emitted\\geo-planar-hex-en-1-light.tex",
+      "sha256": "5D99D0CEC9782507C3E2D5D1F8F96746984180035A195B326B964BA4DA2CBFC0",
+      "bytes": 884,
+      "actualCompilerSourceContainsExactEmission": true
+    },
+    {
+      "case": "hex-de-0",
+      "appearance": "light",
+      "path": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\geo-planar-frame\\green\\geo-planar\\emitted\\geo-planar-hex-de-0-light.tex",
+      "sha256": "931323155FCB1976BFAEE7350BD63B408276B6C5E1A5CFE31A396E8DECC36500",
+      "bytes": 885,
+      "actualCompilerSourceContainsExactEmission": true
+    },
+    {
+      "case": "hex-de-1",
+      "appearance": "light",
+      "path": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\geo-planar-frame\\green\\geo-planar\\emitted\\geo-planar-hex-de-1-light.tex",
+      "sha256": "D17BB0CD219C040E37C53EA913573E0A4D4E2E4C317BFA29B9F2C69491A3A41E",
+      "bytes": 884,
+      "actualCompilerSourceContainsExactEmission": true
+    },
+    {
+      "case": "density-en-0",
+      "appearance": "light",
+      "path": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\geo-planar-frame\\green\\geo-planar\\emitted\\geo-planar-density-en-0-light.tex",
+      "sha256": "6C3BB2D0CFDF216C3F914B94C9B695F5DFD95B66CB710703E5FBE4C03FE08FC8",
+      "bytes": 894,
+      "actualCompilerSourceContainsExactEmission": true
+    },
+    {
+      "case": "density-en-1",
+      "appearance": "light",
+      "path": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\geo-planar-frame\\green\\geo-planar\\emitted\\geo-planar-density-en-1-light.tex",
+      "sha256": "8A235DDF1EFBB7CCA4C36684CB996515CCA6EADC7E7F65539CB9EBFBB62A3825",
+      "bytes": 893,
+      "actualCompilerSourceContainsExactEmission": true
+    },
+    {
+      "case": "density-de-0",
+      "appearance": "light",
+      "path": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\geo-planar-frame\\green\\geo-planar\\emitted\\geo-planar-density-de-0-light.tex",
+      "sha256": "8FFBE7C917BDB0E3E4DD5499CC55A0F7A8ED40696380E981E84E9A54A9CCEBDC",
+      "bytes": 894,
+      "actualCompilerSourceContainsExactEmission": true
+    },
+    {
+      "case": "density-de-1",
+      "appearance": "light",
+      "path": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\geo-planar-frame\\green\\geo-planar\\emitted\\geo-planar-density-de-1-light.tex",
+      "sha256": "185954581D77E173E735417EBA93DD6702FBAF29439E80559347ECE026AA122E",
+      "bytes": 893,
+      "actualCompilerSourceContainsExactEmission": true
+    },
+    {
+      "case": "heat-en-0",
+      "appearance": "light",
+      "path": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\geo-planar-frame\\green\\geo-planar\\emitted\\geo-planar-heat-en-0-light.tex",
+      "sha256": "B976E8D3EE54D100A0106DA3B7ACA733F2D13B034A9562A0869E3107301A624C",
+      "bytes": 883,
+      "actualCompilerSourceContainsExactEmission": true
+    },
+    {
+      "case": "heat-en-1",
+      "appearance": "light",
+      "path": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\geo-planar-frame\\green\\geo-planar\\emitted\\geo-planar-heat-en-1-light.tex",
+      "sha256": "5130D8D0190B846079932FE7C5041F7CF20CF9264454175EC8BFCD14D1D355FF",
+      "bytes": 882,
+      "actualCompilerSourceContainsExactEmission": true
+    },
+    {
+      "case": "heat-de-0",
+      "appearance": "light",
+      "path": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\geo-planar-frame\\green\\geo-planar\\emitted\\geo-planar-heat-de-0-light.tex",
+      "sha256": "98640A60CC6955D60463CEDB2E5AD2C0248A990870E2F29F62D4901764481EF3",
+      "bytes": 883,
+      "actualCompilerSourceContainsExactEmission": true
+    },
+    {
+      "case": "heat-de-1",
+      "appearance": "light",
+      "path": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\geo-planar-frame\\green\\geo-planar\\emitted\\geo-planar-heat-de-1-light.tex",
+      "sha256": "D4B16DFCA38B31663A87BFEA684917FB6884D7A532DB21A4017A21242D8F9DE8",
+      "bytes": 882,
+      "actualCompilerSourceContainsExactEmission": true
+    },
+    {
+      "case": "hex-en-0",
+      "appearance": "dark",
+      "path": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\geo-planar-frame\\green\\geo-planar\\emitted\\geo-planar-hex-en-0-dark.tex",
+      "sha256": "9C31DC8C24B41627A4383BEA997F5DDD13800A64CC229BA4870B2D6F51F49404",
+      "bytes": 883,
+      "actualCompilerSourceContainsExactEmission": true
+    },
+    {
+      "case": "hex-en-1",
+      "appearance": "dark",
+      "path": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\geo-planar-frame\\green\\geo-planar\\emitted\\geo-planar-hex-en-1-dark.tex",
+      "sha256": "580457FDB0C328EA220E52C3DAF85C748473A576DDDDB36662B5361A783549E7",
+      "bytes": 882,
+      "actualCompilerSourceContainsExactEmission": true
+    },
+    {
+      "case": "hex-de-0",
+      "appearance": "dark",
+      "path": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\geo-planar-frame\\green\\geo-planar\\emitted\\geo-planar-hex-de-0-dark.tex",
+      "sha256": "CCBF1544FD1425CD7EF78AB9638043E7B0C81DA595AC645DE9A02FF3A549EFFF",
+      "bytes": 883,
+      "actualCompilerSourceContainsExactEmission": true
+    },
+    {
+      "case": "hex-de-1",
+      "appearance": "dark",
+      "path": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\geo-planar-frame\\green\\geo-planar\\emitted\\geo-planar-hex-de-1-dark.tex",
+      "sha256": "DDFA718E9DBA41BFABDDF0B64E315B4C82394146C42BF5CDC16FDE50B957E39B",
+      "bytes": 882,
+      "actualCompilerSourceContainsExactEmission": true
+    },
+    {
+      "case": "density-en-0",
+      "appearance": "dark",
+      "path": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\geo-planar-frame\\green\\geo-planar\\emitted\\geo-planar-density-en-0-dark.tex",
+      "sha256": "C19875BBCAEFBF72AB69366E79EF2CA9AB25E00C1BB9C4E27374C0EBEDEAF296",
+      "bytes": 892,
+      "actualCompilerSourceContainsExactEmission": true
+    },
+    {
+      "case": "density-en-1",
+      "appearance": "dark",
+      "path": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\geo-planar-frame\\green\\geo-planar\\emitted\\geo-planar-density-en-1-dark.tex",
+      "sha256": "54928FD3F96D84D335584E8828AC1DF92ABF170298C6B3987F4C59C518339D4E",
+      "bytes": 891,
+      "actualCompilerSourceContainsExactEmission": true
+    },
+    {
+      "case": "density-de-0",
+      "appearance": "dark",
+      "path": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\geo-planar-frame\\green\\geo-planar\\emitted\\geo-planar-density-de-0-dark.tex",
+      "sha256": "AEB4E3E0F1CDBD622095E6764AA266AC5F2027882D4FD57C884C4A99732644B1",
+      "bytes": 892,
+      "actualCompilerSourceContainsExactEmission": true
+    },
+    {
+      "case": "density-de-1",
+      "appearance": "dark",
+      "path": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\geo-planar-frame\\green\\geo-planar\\emitted\\geo-planar-density-de-1-dark.tex",
+      "sha256": "D8EFA854838EBDE2518FA5A017CEEFBB76E8317426C51E74AD9CF198F7BD722A",
+      "bytes": 891,
+      "actualCompilerSourceContainsExactEmission": true
+    },
+    {
+      "case": "heat-en-0",
+      "appearance": "dark",
+      "path": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\geo-planar-frame\\green\\geo-planar\\emitted\\geo-planar-heat-en-0-dark.tex",
+      "sha256": "7E99539478AA193B55B5D508201DA9BA88398C18A80789D61617CB48A4C6DDEC",
+      "bytes": 881,
+      "actualCompilerSourceContainsExactEmission": true
+    },
+    {
+      "case": "heat-en-1",
+      "appearance": "dark",
+      "path": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\geo-planar-frame\\green\\geo-planar\\emitted\\geo-planar-heat-en-1-dark.tex",
+      "sha256": "242AF38B3D1D128F5CA2154853DA865B665759442A13A6C03FC849A2D4917B1D",
+      "bytes": 880,
+      "actualCompilerSourceContainsExactEmission": true
+    },
+    {
+      "case": "heat-de-0",
+      "appearance": "dark",
+      "path": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\geo-planar-frame\\green\\geo-planar\\emitted\\geo-planar-heat-de-0-dark.tex",
+      "sha256": "389548639C0AE040278717C6456A5DDCD7879F047F67B4AEAF02B2F395ADBD06",
+      "bytes": 881,
+      "actualCompilerSourceContainsExactEmission": true
+    },
+    {
+      "case": "heat-de-1",
+      "appearance": "dark",
+      "path": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\geo-planar-frame\\green\\geo-planar\\emitted\\geo-planar-heat-de-1-dark.tex",
+      "sha256": "B349C09455E6641033C4DFAA58FB764DA5D39B89343F4845E9853DC7D3287660",
+      "bytes": 880,
+      "actualCompilerSourceContainsExactEmission": true
+    }
+  ]
+}

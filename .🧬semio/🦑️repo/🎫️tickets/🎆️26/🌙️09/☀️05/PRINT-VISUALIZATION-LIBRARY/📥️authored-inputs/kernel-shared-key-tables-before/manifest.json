@@ -1,0 +1,31 @@
+{
+  "source": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-api/🔓️viz-api.tex",
+  "beforeSha256": "AF11421FF426B6B2C476428B12F0203A933993834DE24A9F9E60440B2AFBB154",
+  "scopes": [
+    {
+      "id": "api-path-transform",
+      "scope": "semio / viz / transform"
+    },
+    {
+      "id": "api-path-scale",
+      "scope": "semio / viz / scale"
+    },
+    {
+      "id": "api-path-mark",
+      "scope": "semio / viz / mark"
+    },
+    {
+      "id": "api-path-axis",
+      "scope": "semio / viz / axis"
+    },
+    {
+      "id": "api-path-legend",
+      "scope": "semio / viz / legend"
+    },
+    {
+      "id": "api-path-annotation",
+      "scope": "semio / viz / annotation"
+    }
+  ],
+  "textInsertionMarker": "\\begin{VizFigure}[title={\\ApiText{Every text kind}"
+}

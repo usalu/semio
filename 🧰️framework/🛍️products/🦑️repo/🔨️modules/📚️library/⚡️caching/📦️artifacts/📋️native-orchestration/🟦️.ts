@@ -55,7 +55,7 @@ export class NativeScript extends BundleScript {
       if(new Set(policies.map(policy=>policy.manifestPath)).size!==policies.length)throw Error("Duplicate native test manifest authority");
       env.SEMIO_CARGO_TEST_POLICIES=JSON.stringify(policies);
       if (process.env.SEMIO_WASM_BUILD_REQUIRED === "1") Object.assign(env,{SEMIO_WASM_BUILD_POLICY:JSON.stringify(repositoryWasmBuildPolicyV1(cwd))});
-      await runOwnedCommand(request.command,[...request.args],cwd,"native:owner-command",0,{env,onProgress:line=>process.stderr.write(`${line}\n`)});
+      await runOwnedCommand(request.command,[...request.args],cwd,"native:owner-command",0,{env,onProgress:env.SEMIO_NATIVE_OWNER_PROGRESS==="delegated"?()=>{}:line=>process.stderr.write(`${line}\n`)});
       return;
     }
     if (tool === "cargo" && operation === "metadata") {

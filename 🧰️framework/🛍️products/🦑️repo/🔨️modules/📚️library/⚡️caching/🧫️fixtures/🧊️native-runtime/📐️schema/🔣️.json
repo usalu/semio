@@ -1,0 +1,29 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["variant", "profiles", "pluginId", "componentHex", "asset", "cycles", "paths", "manifestLimitBytes"],
+  "properties": {
+    "variant": {"const": "fixture"},
+    "profiles": {"const": ["dev", "release"]},
+    "pluginId": {"const": "sample"},
+    "componentHex": {"const": "0061736d0d000100"},
+    "asset": {"type": "string", "minLength": 1},
+    "manifestLimitBytes": {"const": 1048576},
+    "paths": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object", "additionalProperties": false, "required": ["value", "valid"],
+        "properties": {"value": {"type": "string"}, "valid": {"type": "boolean"}}
+      }
+    },
+    "cycles": {
+      "type": "array", "minItems": 3, "maxItems": 3,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["name", "remove", "publications"],
+        "properties": {"name": {"type": "string"}, "remove": {"type": "boolean"}, "publications": {"const": 1}}
+      }
+    }
+  }
+}

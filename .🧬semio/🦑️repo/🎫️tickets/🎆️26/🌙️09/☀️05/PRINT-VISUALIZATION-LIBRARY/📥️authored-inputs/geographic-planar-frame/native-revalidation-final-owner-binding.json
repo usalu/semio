@@ -1,0 +1,30 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/📓️print/🧬️schema/💡️inferences/📚️catalogue/🟦️.ts",
+    "sha256": "5127DEA1DE7C923C3DC61FAFC1ECE7789441732FEA3D16C65EF904287D20022A"
+  },
+  {
+    "path": "🧰️framework/🛍️products/📓️print/🧬️schema/💡️inferences/🦀️.rs",
+    "sha256": "D03E707F165781273CE56327B92395970A818EE9A642FE0F7D9C11A70B63DC6B"
+  },
+  {
+    "path": "🧰️framework/🛍️products/📓️print/🧬️schema/🔣️.json",
+    "sha256": "EAC7C86E37BE89CB78BEAA406974289B585D08F11BB54711928950C923D9D446"
+  },
+  {
+    "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-geo-symbols.sty",
+    "sha256": "329A8E8E9695F2B594B35D605A94155B1A417D4823DE1A1AAE32C3C7893591AC"
+  },
+  {
+    "path": "🧰️framework/🛍️products/📓️print/🧪️tests/🧬️native-chart-grammar/🟦️.ts",
+    "sha256": "988F48E51E3D7FC18F000A0672A541F7814057D2B2D2C02FA8CAD7F4A1250740"
+  },
+  {
+    "path": "🧰️framework/🛍️products/📓️print/🧪️tests/🧬️native-chart-grammar/🔣️.json",
+    "sha256": "BDCF08630DD1F6077B27600B2C05CB9ED84EDD1A0F19C14DD7F40E47658B3300"
+  },
+  {
+    "path": "🧰️framework/🛍️products/📓️print/🧪️tests/🧬️chart-mutations/🦀️.rs",
+    "sha256": "925F3A72CD565A199399CA063259778229B022AF40B59F5F6FBCFD664FC563C4"
+  }
+]

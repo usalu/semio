@@ -1,0 +1,37 @@
+{
+  "session": 84872,
+  "exitCode": 0,
+  "actualCases": 38,
+  "assertions": [
+    "AJV neutral schema",
+    "canonical mutation/replay/inverse/purity/inference",
+    "independent D3 actual body scales",
+    "both actual PDF themes/languages",
+    "all18 pileup vertical row origins, mapped interval widths and physical rectangle heights"
+  ],
+  "sources": {
+    "light.tex": "3269241d7c363830fec011a2a06014760441cdf1ee5fb14763f806739cfa769d",
+    "light-semio-viz-scientific-biology.sty": "bd4235ddf8fad03d62ca899797a31be0dd5816487dd1aeeace93146bdac8ff3c",
+    "light-semio-viz-scientific-field.sty": "745cf1244ecde64a3da82d5d653a4a1d042029a817b7e785b1258b69e0a07ee8",
+    "dark.tex": "3e49e3dbfe805411ae517897d66b608f936560a98a27475601d73b032da27551",
+    "dark-semio-viz-scientific-biology.sty": "bd4235ddf8fad03d62ca899797a31be0dd5816487dd1aeeace93146bdac8ff3c",
+    "dark-semio-viz-scientific-field.sty": "745cf1244ecde64a3da82d5d653a4a1d042029a817b7e785b1258b69e0a07ee8",
+    "neutral.json": "c43c77679d915f91d01e3e8c37372d193bfc81bfb8eb74ff3fc3774fb59bd0dd",
+    "helper.txt": "23dd981e18806e6763b834bd9a05c356ca0fd890b511622c457a721f1e1eb783",
+    "metadata-after.json": "8f8bb6d6ade8e18c952fb0d33a24d8eb57d9ef348d37a901e5cced1e0442b0bd"
+  },
+  "themes": {
+    "light": {
+      "pdf": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\gn4\\genome-window-controls\\light\\🧪️probe-out\\light.pdf",
+      "sha256": "2895bbde4debdc04e0257b4c2bea17a04032b365ab8f1aa8dd4ce0f009f55138"
+    },
+    "dark": {
+      "pdf": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\gn4\\genome-window-controls\\dark\\🧪️probe-out\\dark.pdf",
+      "sha256": "ab1e178fae1bddd1259eedd657e9813d860f2540a916e8adf816576c03407165"
+    }
+  },
+  "log": {
+    "path": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\catalogue-genome-window-native-green2.log",
+    "sha256": "1b052f66988639040bcde4befe2eced1f98549876cc45e9bfa51e4453d101c8e"
+  }
+}

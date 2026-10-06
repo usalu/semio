@@ -1,0 +1,158 @@
+{
+  "schema": {
+    "type": "object",
+    "required": [
+      "canvas",
+      "familyFrame",
+      "domain",
+      "range",
+      "tickDivisions",
+      "cases"
+    ],
+    "additionalProperties": false,
+    "properties": {
+      "canvas": {
+        "type": "array",
+        "minItems": 2,
+        "maxItems": 2,
+        "items": {
+          "type": "number"
+        }
+      },
+      "familyFrame": {
+        "type": "array",
+        "minItems": 2,
+        "maxItems": 2,
+        "items": {
+          "type": "number"
+        }
+      },
+      "domain": {
+        "type": "array",
+        "minItems": 2,
+        "maxItems": 2,
+        "items": {
+          "type": "number"
+        }
+      },
+      "range": {
+        "type": "array",
+        "minItems": 2,
+        "maxItems": 2,
+        "items": {
+          "type": "number"
+        }
+      },
+      "tickDivisions": {
+        "type": "array",
+        "minItems": 2,
+        "maxItems": 2,
+        "items": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "cases": {
+        "type": "array",
+        "minItems": 7,
+        "maxItems": 7,
+        "items": {
+          "type": "object",
+          "required": [
+            "family",
+            "kind",
+            "options"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "family": {
+              "type": "string"
+            },
+            "kind": {
+              "type": "string"
+            },
+            "options": {
+              "type": "object"
+            }
+          }
+        }
+      }
+    }
+  },
+  "vectors": {
+    "canvas": [
+      140,
+      120
+    ],
+    "familyFrame": [
+      80,
+      48
+    ],
+    "domain": [
+      -20,
+      100
+    ],
+    "range": [
+      -20,
+      68
+    ],
+    "tickDivisions": [
+      2,
+      5
+    ],
+    "cases": [
+      {
+        "family": "sci-orbital",
+        "kind": "electron-configuration-diagram",
+        "options": {
+          "mode": "configuration"
+        }
+      },
+      {
+        "family": "sci-orbital",
+        "kind": "orbital-visualization",
+        "options": {
+          "mode": "orbital",
+          "lobes": 4
+        }
+      },
+      {
+        "family": "sci-phase-diagram",
+        "kind": "ternary-phase-diagram",
+        "options": {
+          "mode": "ternary",
+          "points": "0.2/0.5/x,0.6/0.2/y,0.3/0.3/z"
+        }
+      },
+      {
+        "family": "sci-electrochem",
+        "kind": "latimer-diagram",
+        "options": {
+          "mode": "latimer"
+        }
+      },
+      {
+        "family": "sci-optimization",
+        "kind": "queueing-network-diagram",
+        "options": {
+          "mode": "queueing"
+        }
+      },
+      {
+        "family": "sci-sports-series",
+        "kind": "spider-player-profile",
+        "options": {
+          "mode": "radar",
+          "series": "A/1:4+2:3+3:5+4:2+5:4+6:3,B/1:2+2:5+3:3+4:4+5:2+6:5"
+        }
+      },
+      {
+        "family": "sci-optimization",
+        "kind": "decision-lattice",
+        "options": {
+          "mode": "decision-lattice"
+        }
+      }
+    ]
+  }
+}

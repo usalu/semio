@@ -1,0 +1,34 @@
+{
+  "capturedAt": "2026-10-05T07:30:57.4436180Z",
+  "purpose": "Final API delivery/source identity checker input after successful title-local repair; explicit actual stage versus unchanged library-input transfer boundary",
+  "compilerSession": 97552,
+  "compilerTerminal": 0,
+  "compilerAuthority": "Catalogue authoritative actual paired publisher97552 terminal0/3m49",
+  "source": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧾️template\\📊️viz-api\\🔓️viz-api.tex",
+  "sourceSha256": "0C5A2690BCF60D465B4FD436A96375CB3ACA0EF53FF0B7D37D312B4A0B857B6B",
+  "receiptOwner": "@semio-tech/print:build-viz-api",
+  "receiptSha256": "2094A63BB197C5905F6CCDBB3C7660D18292696B53C8EA411C38EB9D0502A93F",
+  "selected": [
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\📦️packages\\🟦️typescript\\dist\\documents\\viz-api\\🔓️viz-api-dark.pdf",
+      "sha256": "E2E2FBDAA529D38178667CF718AA0182C60A0330FEE0B6B7FD66402733A7E732",
+      "bytes": 1469446,
+      "pages": 240
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\📦️packages\\🟦️typescript\\dist\\documents\\viz-api\\🔓️viz-api.pdf",
+      "sha256": "5F89201170CDAE0CEE3240DE4C0628533BED2940A0F291ED956644697077C60F",
+      "bytes": 1471560,
+      "pages": 240
+    }
+  ],
+  "sourceLibraryBinding": "Historical actual Q5VDCD ADE4F stage verified173 library inputs; all unchanged current173 library inputs transferred via compiler294 closure, sole currentAPI TEX delta.97552 actual transient stage ak57Gc auto-cleaned before audit capture; no new actual stage-byte capture is claimed.",
+  "currentApiDocLanguage": "German rendered publication; bilingual source/metadata semantics and focused EN/de native title contract proven separately",
+  "metadataAndTitleGateSession": 84754,
+  "metadataAndTitleGateTerminal": 0,
+  "typeGateSession": 34328,
+  "typeGateTerminal": 0,
+  "currentFullSession": 13588,
+  "currentFullApiSelection": "Normal cache selected current97552 receipt and PDF bytes; no new API compiler stage",
+  "full162ConsumerTerminal": "pending"
+}

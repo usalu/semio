@@ -1,0 +1,3 @@
+# Joint Current Generation — 2026-10-06
+
+Registered generation63124 actually terminated1 before coverage ran: the printed geo-flow owner contained two contradictory routes rows, the stale table row and the new origin–destination collection row. This is a printed contract duplication, not a numeric/paint runtime failure. Catalogue removes the stale row within its own family span; the existing ambiguity diagnostic remains intact. Exact observed span and terminal status are retained in authored-inputs/joint-current-generation-2026-10-06. A fresh generation and coverage receipt is required after the correction.

@@ -1,0 +1,196 @@
+{
+  "owner": "GEO-SPATIAL",
+  "options": {
+    "bandwidth": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Positive Gaussian kernel standard deviation in raw planar units.",
+        "de": "Positive Standardabweichung des Gaußschen Kerns in rohen planaren Einheiten."
+      },
+      "exclusiveMinimum": 0,
+      "default": 7
+    },
+    "height": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Positive maximum fitted display height in millimetres. Raw planar coordinates are scaled uniformly.",
+        "de": "Positive maximale angepasste Darstellungshöhe in Millimetern. Rohe planare Koordinaten werden gleichmäßig skaliert."
+      },
+      "default": 44,
+      "exclusiveMinimum": 0
+    },
+    "levels": {
+      "syntax": "expression",
+      "type": "integer",
+      "description": {
+        "en": "Nonnegative contour level count; zero draws no contours with the default schedule. Explicit thresholds take precedence.",
+        "de": "Nichtnegative Anzahl der Höhenlinienniveaus; null zeichnet keine Höhenlinien mit dem Standardschema. Explizite Schwellen haben Vorrang."
+      },
+      "default": 4,
+      "minimum": 0
+    },
+    "lineWidth": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Hexagon and density outline width as a TeX dimension from the theme hairline token.",
+        "de": "Umrissbreite der Sechsecke und Dichteflächen als TeX-Dimension aus dem Haarlinienwert des Themas."
+      }
+    },
+    "opacity": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Drawing opacity; hex fill uses the same value, heat fill multiplies it by heatOpacity (default 0.3).",
+        "de": "Zeichendeckkraft; Sechseckfüllungen nutzen denselben Wert, Wärmefüllungen multiplizieren ihn mit heatOpacity (Standard 0,3)."
+      },
+      "default": 1
+    },
+    "palette": {
+      "syntax": "identifier",
+      "type": "string",
+      "description": {
+        "en": "Colour ramp used for binned values or density levels.",
+        "de": "Farbverlauf für gebündelte Werte oder Dichteniveaus."
+      },
+      "default": "sequential"
+    },
+    "paletteSteps": {
+      "syntax": "expression",
+      "type": "integer",
+      "minimum": 1,
+      "default": 5,
+      "description": {
+        "en": "Positive number of final colour-ramp levels. One level uses the palette midpoint.",
+        "de": "Positive Anzahl endgültiger Farbverlaufsstufen. Eine Stufe nutzt die Palettenmitte."
+      }
+    },
+    "points": {
+      "syntax": "identifier",
+      "type": "string",
+      "description": {
+        "en": "Named planar point collection for hexagonal bins or Gaussian density estimates.",
+        "de": "Benannte planare Punktsammlung für sechseckige Zellen oder Gaußsche Dichteschätzungen."
+      },
+      "default": "demo-points-dense"
+    },
+    "radius": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Positive numeric binning radius in raw planar units. Uniform display fitting scales the visible hexagons.",
+        "de": "Positiver numerischer Bündelungsradius in rohen planaren Einheiten. Gleichmäßige Darstellungsanpassung skaliert die sichtbaren Sechsecke."
+      },
+      "exclusiveMinimum": 0,
+      "default": 5
+    },
+    "render": {
+      "syntax": "identifier",
+      "type": "string",
+      "description": {
+        "en": "Rendering mode: hex draws bins; density and heat draw Gaussian density levels.",
+        "de": "Darstellungsmodus: hex zeichnet Zellen; density und heat zeichnen Gaußsche Dichteniveaus."
+      },
+      "default": "hex"
+    },
+    "stroke": {
+      "syntax": "paint",
+      "type": "string",
+      "default": "semio-chrome-border-emphasized",
+      "description": {
+        "en": "Hexagon outline colour as a native colour expression. Density and heat outlines use their palette colour.",
+        "de": "Umrissfarbe der Sechsecke als nativer Farbausdruck. Dichte- und Wärmeumrisse nutzen ihre Palettenfarbe."
+      }
+    },
+    "variant": {
+      "syntax": "identifier",
+      "type": "string",
+      "description": {
+        "en": "Sub-kind the family renders; the catalogue slug of the chart kind. The family must draw a different geometry for every variant it declares.",
+        "de": "Untertyp, den die Familie zeichnet; der Katalog-Slug der Diagrammart. Die Familie muss für jede deklarierte Variante eine andere Geometrie zeichnen."
+      }
+    },
+    "width": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Positive maximum fitted display width in millimetres. Raw planar coordinates are scaled uniformly.",
+        "de": "Positive maximale angepasste Darstellungsbreite in Millimetern. Rohe planare Koordinaten werden gleichmäßig skaliert."
+      },
+      "default": 76,
+      "exclusiveMinimum": 0
+    },
+    "gridWidth": {
+      "type": "integer",
+      "syntax": "expression",
+      "default": 16,
+      "minimum": 1,
+      "description": {
+        "en": "Positive number of Gaussian sampling grid columns.",
+        "de": "Positive Anzahl der Spalten des Gaußschen Abtastgitters."
+      }
+    },
+    "gridHeight": {
+      "type": "integer",
+      "syntax": "expression",
+      "default": 11,
+      "minimum": 1,
+      "description": {
+        "en": "Positive number of Gaussian sampling grid rows.",
+        "de": "Positive Anzahl der Zeilen des Gaußschen Abtastgitters."
+      }
+    },
+    "gridOrigin": {
+      "type": "string",
+      "syntax": "number-list",
+      "default": "0,0",
+      "description": {
+        "en": "Two raw planar coordinates of the Gaussian sampling grid origin.",
+        "de": "Zwei rohe planare Koordinaten des Ursprungs des Gaußschen Abtastgitters."
+      },
+      "itemCount": 2
+    },
+    "gridCell": {
+      "type": "number",
+      "syntax": "expression",
+      "default": 5,
+      "exclusiveMinimum": 0,
+      "description": {
+        "en": "Positive sampling cell spacing in raw planar units; contour positions use the same spacing.",
+        "de": "Positiver Abstand der Abtastzellen in rohen planaren Einheiten; Höhenlinienpositionen nutzen denselben Abstand."
+      }
+    },
+    "hexScale": {
+      "type": "number",
+      "syntax": "expression",
+      "default": 0.92,
+      "exclusiveMinimum": 0,
+      "description": {
+        "en": "Positive visible hexagon radius factor relative to the raw binning radius; bin membership is unchanged.",
+        "de": "Positiver Faktor des sichtbaren Sechseckradius relativ zum rohen Bündelungsradius; die Zellzuordnung bleibt unverändert."
+      }
+    },
+    "heatOpacity": {
+      "type": "number",
+      "syntax": "expression",
+      "default": 0.3,
+      "minimum": 0,
+      "maximum": 1,
+      "description": {
+        "en": "Heat fill opacity factor from zero to one, multiplied by the authored drawing opacity.",
+        "de": "Deckkraftfaktor der Wärmefüllung von null bis eins, multipliziert mit der verfassten Zeichendeckkraft."
+      }
+    },
+    "thresholds": {
+      "type": "string",
+      "syntax": "number-list",
+      "default": "",
+      "description": {
+        "en": "Optional finite raw density thresholds, sorted numerically; an empty list uses the requested level count.",
+        "de": "Optionale endliche rohe Dichteschwellen, numerisch sortiert; eine leere Liste nutzt die angeforderte Niveauanzahl."
+      }
+    }
+  }
+}

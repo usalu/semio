@@ -1,0 +1,3 @@
+import { readFileSync } from "node:fs";
+const root="C:/git/semio/🧰️framework/🛍️products/📓️print",{vizPrintedKeyRows}=await import(root+"/🔨️modules/📊️visualization-gallery/🟦️.ts"),fixture=JSON.parse(readFileSync(root+"/🎮️commands/🧪️print-pipeline-verification/🧫️fixtures/🔓️api-freshness.json","utf8")).printed.sharedSourceContracts.scopes.find((scope:any)=>scope.id==='geo-hexbin'),actual=vizPrintedKeyRows(readFileSync(root+"/🧾️template/📊️viz-api/🔓️viz-api.tex","utf8"));
+for(const row of fixture.keys){const seen=actual['geo-hexbin']?.find((entry:any)=>entry.names.includes(row.key));console.log('[DEBUG] '+JSON.stringify({expected:row,actual:seen}));}

@@ -1,0 +1,15 @@
+{
+  "file": "C:/git/semio/.vscode/🧩️launch.seed.jsonc",
+  "before": "7AFBB4EECC9196927A81AA9D22729FF21322BD82C839807463A0272D8F2949E2",
+  "after": "7663F61936BDF8CB09B538C7084B92419193F890BA7681B9A963ABF3C0C1D5CA",
+  "launch": {
+    "file": "C:/git/semio/.vscode/launch.json",
+    "hash": "69B496D1FB60620E823D27BDFBA28DC3518C1A1AEBAA532F643695379AF009F5"
+  },
+  "names": [
+    "⚖️test📓️print🎛️family-customization",
+    "⚖️test📓️print✨️scale-options"
+  ],
+  "anchor": "    {\n      \"name\": \"⚖️test📓️print🖼️family-containment\"",
+  "parity": "Both complete configuration objects equal existing launch output; no global launch generation or unrelated row change."
+}

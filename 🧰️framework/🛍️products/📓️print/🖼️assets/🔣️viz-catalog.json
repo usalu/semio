@@ -8477,7 +8477,7 @@
         "geometry": "demo-geo-regions",
         "relief": true,
         "palette": "bathymetric",
-        "steps": 6
+        "paletteSteps": 6
       },
       "data": "demo-geo-regions",
       "covers": [
@@ -8500,7 +8500,7 @@
         "scale": "quantile",
         "bivariate": true,
         "palette": "diverging",
-        "steps": 3
+        "paletteSteps": 3
       },
       "data": "demo-geo-regions",
       "covers": [
@@ -8588,7 +8588,7 @@
         "variant": "choropleth-map",
         "geometry": "demo-geo-regions",
         "scale": "quantize",
-        "steps": 5
+        "paletteSteps": 5
       },
       "data": "demo-geo-regions",
       "covers": [
@@ -8695,7 +8695,7 @@
         "scale": "quantize",
         "dasymetric": true,
         "weight": 0.65,
-        "steps": 4
+        "paletteSteps": 4
       },
       "data": "demo-geo-regions",
       "covers": [
@@ -8868,7 +8868,7 @@
         "geometry": "demo-geo-regions",
         "relief": true,
         "palette": "terrain",
-        "steps": 3,
+        "paletteSteps": 3,
         "opacity": 0.5
       },
       "data": "demo-geo-regions",
@@ -8891,7 +8891,7 @@
         "geometry": "demo-geo-regions",
         "palette": "diverging",
         "labels": true,
-        "steps": 3
+        "paletteSteps": 3
       },
       "data": "demo-geo-regions",
       "covers": [
@@ -8956,7 +8956,7 @@
         "geometry": "demo-geo-regions",
         "relief": true,
         "palette": "sequential",
-        "steps": 6,
+        "paletteSteps": 6,
         "settlements": true
       },
       "data": "demo-geo-regions",
@@ -9092,7 +9092,7 @@
         "relief": true,
         "palette": "diverging",
         "labels": true,
-        "steps": 5
+        "paletteSteps": 5
       },
       "data": "demo-geo-regions",
       "covers": [
@@ -9413,7 +9413,7 @@
         "geometry": "demo-geo-regions",
         "relief": true,
         "palette": "diverging",
-        "steps": 4,
+        "paletteSteps": 4,
         "opacity": 0.7
       },
       "data": "demo-geo-regions",
@@ -9504,7 +9504,7 @@
         "scale": "threshold",
         "breaks": "15,30,45",
         "bivariate": true,
-        "steps": 4
+        "paletteSteps": 4
       },
       "data": "demo-geo-regions",
       "covers": [
@@ -9698,7 +9698,7 @@
         "relief": true,
         "palette": "terrain",
         "opacity": 0.85,
-        "steps": 9
+        "paletteSteps": 9
       },
       "data": "demo-geo-regions",
       "covers": [
@@ -9944,7 +9944,7 @@
         "relief": true,
         "hydrology": true,
         "palette": "terrain",
-        "steps": 5
+        "paletteSteps": 5
       },
       "data": "demo-geo-regions",
       "covers": [
@@ -10010,7 +10010,7 @@
         "relief": true,
         "grid": true,
         "palette": "terrain",
-        "steps": 7
+        "paletteSteps": 7
       },
       "data": "demo-geo-regions",
       "covers": [
@@ -14782,7 +14782,10 @@
       "options": {
         "variant": "phylogenetic-network",
         "mode": "interaction",
-        "nodeShape": "box"
+        "nodeShape": "box",
+        "nodes": "r/0/28/ancestor,a/22/14/lineageA,b/22/42/lineageB,c/44/7/taxonA,d/44/21/taxonB,e/44/42/taxonC",
+        "edges": "r/a/plain/,r/b/plain/,a/c/plain/,a/d/plain/,b/e/plain/",
+        "unit": 1
       },
       "data": "demo-science",
       "covers": [
@@ -15110,7 +15113,10 @@
       "options": {
         "variant": "metabolic-network-diagram",
         "mode": "metabolic",
-        "nodeShape": "circle"
+        "nodeShape": "circle",
+        "nodes": "g/0/0/glucose,p/22/0/pyruvate,a/44/0/acetyl-CoA,l/22/-18/lactate,t/44/18/TCA",
+        "edges": "g/p/flux/glycolysis,p/a/flux/,p/l/flux/,a/t/flux/",
+        "unit": 1
       },
       "data": "demo-science",
       "covers": [
@@ -16513,7 +16519,7 @@
       "options": {
         "variant": "piecewise-function",
         "mode": "piecewise",
-        "pieces": "-3/0/-\\SemioX,0/3/\\SemioX*\\SemioX/3",
+        "pieces": "-3/0/{-\\SemioX},0/3/{\\SemioX*\\SemioX/3}",
         "domain": "-3,3",
         "range": "-1,4"
       },
@@ -17939,7 +17945,7 @@
         "grid": "demo-grid",
         "surface": "heatmap",
         "cell": 9,
-        "steps": 4
+        "paletteSteps": 4
       },
       "data": "demo-grid",
       "covers": [
@@ -19025,7 +19031,7 @@
       "options": {
         "variant": "block-diagram",
         "mode": "block",
-        "elements": "block/0/0/16/0/in,wire/16/0/24/0/,block/24/0/44/0/G,wire/44/0/52/0/,block/52/0/68/0/out"
+        "elements": "block/0/0/16/0/in,signal/16/0/24/0/,block/24/0/44/0/G,signal/44/0/52/0/,block/52/0/68/0/out"
       },
       "data": "demo-science",
       "covers": [
@@ -19160,7 +19166,7 @@
       "options": {
         "variant": "ladder-diagram",
         "mode": "ladder",
-        "elements": "wire/0/0/0/30/,wire/40/0/40/30/,resistor/0/24/40/24/K1,resistor/0/12/40/12/K2"
+        "elements": "wire/0/0/0/30/,wire/40/0/40/30/,contact/0/24/16/24/K1,wire/16/24/24/24/,coil/24/24/40/24/Q1,contact/0/12/16/12/K2,wire/16/12/24/12/,coil/24/12/40/12/Q2"
       },
       "data": "demo-science",
       "covers": [
@@ -19357,7 +19363,7 @@
       "options": {
         "variant": "signal-flow-graph",
         "mode": "signal-flow",
-        "elements": "node/0/0/0/0/x,wire/0/0/20/0/a,node/20/0/20/0/y,wire/20/0/40/0/b,node/40/0/40/0/z"
+        "elements": "node/0/0/0/0/x,signal/0/0/20/0/a,node/20/0/20/0/y,signal/20/0/40/0/b,node/40/0/40/0/z"
       },
       "data": "demo-science",
       "covers": [
@@ -20407,7 +20413,10 @@
       "options": {
         "variant": "food-chain",
         "mode": "food-web",
-        "nodeShape": "box"
+        "nodeShape": "box",
+        "nodes": "p/0/0/producer,h/22/0/herbivore,c/44/0/carnivore",
+        "edges": "p/h/flux/,h/c/flux/",
+        "unit": 1
       },
       "data": "demo-science",
       "covers": [
@@ -20918,7 +20927,7 @@
         "geometry": "demo-geo-regions",
         "relief": true,
         "palette": "diverging",
-        "steps": 5,
+        "paletteSteps": 5,
         "labels": true,
         "grid": true
       },
@@ -21034,25 +21043,24 @@
       ]
     },
     {
-      "id": "36/assembly-diagram",
-      "slug": "assembly-diagram",
-      "title": {
-        "en": "Assembly diagram",
-        "de": "Baugruppendiagramm"
-      },
-      "kind": "chart",
-      "namespace": "diagram/architecture",
-      "family": "engineering-diagram",
-      "options": {
-        "variant": "assembly-diagram",
-        "mode": "assembly",
-        "explode": 0
-      },
-      "data": "demo-machine",
-      "covers": [
-        "36/assembly-diagram"
-      ]
-    },
+  "id": "36/assembly-diagram",
+  "slug": "assembly-diagram",
+  "title": {
+    "en": "Assembly diagram",
+    "de": "Baugruppendiagramm"
+  },
+  "kind": "chart",
+  "namespace": "diagram/architecture",
+  "family": "engineering-diagram",
+  "options": {
+    "variant": "assembly-diagram",
+    "mode": "assembly"
+  },
+  "data": "demo-machine",
+  "covers": [
+    "36/assembly-diagram"
+  ]
+},
     {
       "id": "36/beam-diagram",
       "slug": "beam-diagram",
@@ -21192,26 +21200,26 @@
       ]
     },
     {
-      "id": "36/exploded-view",
-      "slug": "exploded-view",
-      "title": {
-        "en": "Exploded view",
-        "de": "Aufgefächerte Ansicht"
-      },
-      "kind": "chart",
-      "namespace": "diagram/architecture",
-      "family": "engineering-diagram",
-      "options": {
-        "variant": "exploded-view",
-        "mode": "assembly",
-        "explode": 7,
-        "leaders": true
-      },
-      "data": "demo-machine",
-      "covers": [
-        "36/exploded-view"
-      ]
-    },
+  "id": "36/exploded-view",
+  "slug": "exploded-view",
+  "title": {
+    "en": "Exploded view",
+    "de": "Aufgefächerte Ansicht"
+  },
+  "kind": "chart",
+  "namespace": "diagram/architecture",
+  "family": "engineering-diagram",
+  "options": {
+    "variant": "exploded-view",
+    "mode": "exploded",
+    "explode": 7,
+    "leaders": true
+  },
+  "data": "demo-machine",
+  "covers": [
+    "36/exploded-view"
+  ]
+},
     {
       "id": "36/finite-element-mesh",
       "slug": "finite-element-mesh",
@@ -21852,7 +21860,9 @@
         "variant": "cayley-graph",
         "mode": "cayley",
         "nodeShape": "circle",
-        "edges": "a/b/arrow/r,b/d/arrow/r,d/c/arrow/r,c/a/arrow/r"
+        "edges": "a/b/arrow/r,b/c/arrow/r,c/d/arrow/r,d/a/arrow/r",
+        "nodes": "a/0/0/e,b/1/0/r,c/1/1/r2,d/0/1/r3",
+        "unit": 18
       },
       "data": "demo-science",
       "covers": [
@@ -22004,7 +22014,9 @@
         "variant": "inference-tree",
         "mode": "proof",
         "nodeShape": "box",
-        "edges": "c/a/order/,d/a/order/,a/b/order/"
+        "edges": "a/c/order/,b/c/order/",
+        "nodes": "a/-0.7/1/P,b/0.7/1/Q,c/0/0/R",
+        "unit": 18
       },
       "data": "demo-science",
       "covers": [
@@ -22130,7 +22142,9 @@
         "variant": "proof-tree",
         "mode": "proof",
         "nodeShape": "none",
-        "edges": "c/a/order/,d/a/order/,a/b/order/"
+        "edges": "a/c/order/,b/c/order/",
+        "nodes": "a/-0.7/1/P,b/0.7/1/Q,c/0/0/R",
+        "unit": 18
       },
       "data": "demo-science",
       "covers": [
@@ -29340,10 +29354,15 @@
         "variant": "attention-block",
         "mode": "transformer",
         "render": "blocks",
-        "connections": "full",
-        "maxUnits": 3
+        "connections": "none",
+        "links": "1/1/4/1,2/1/4/1,3/1/4/2",
+        "directed": true,
+        "maxUnits": 10,
+        "padding": 3,
+        "unitSize": 1.1,
+        "curvature": 0.3
       },
-      "data": "demo-layers",
+      "data": "demo-neural-attention-block",
       "covers": [
         "67/attention-block"
       ]
@@ -29384,11 +29403,15 @@
       "options": {
         "variant": "autoencoder",
         "mode": "autoencoder",
-        "render": "units",
-        "connections": "full",
-        "maxUnits": 8
+        "render": "blocks",
+        "connections": "none",
+        "links": "1/1/2/1,2/1/3/1,3/1/4/1,4/1/5/1",
+        "directed": true,
+        "maxUnits": 10,
+        "padding": 3,
+        "unitSize": 1.1
       },
-      "data": "demo-layers",
+      "data": "demo-neural-autoencoder",
       "covers": [
         "67/autoencoder"
       ]
@@ -29407,9 +29430,14 @@
         "variant": "cnn-architecture",
         "mode": "cnn",
         "render": "blocks",
-        "connections": "adjacent"
+        "connections": "none",
+        "links": "1/1/2/1,2/1/3/1,3/1/4/1",
+        "directed": true,
+        "maxUnits": 10,
+        "padding": 3,
+        "unitSize": 1.1
       },
-      "data": "demo-layers",
+      "data": "demo-neural-cnn-architecture",
       "covers": [
         "67/cnn-architecture"
       ]
@@ -29428,10 +29456,14 @@
         "variant": "computational-graph",
         "mode": "computational-graph",
         "render": "units",
-        "connections": "full",
-        "maxUnits": 5
+        "connections": "none",
+        "links": "1/1/2/1,1/2/2/2,2/1/3/1,2/2/3/1",
+        "directed": true,
+        "maxUnits": 10,
+        "padding": 3,
+        "unitSize": 1.1
       },
-      "data": "demo-layers",
+      "data": "demo-neural-computational-graph",
       "covers": [
         "24/computational-graph",
         "67/computational-graph"
@@ -29451,10 +29483,15 @@
         "variant": "diffusion-process-diagram",
         "mode": "diffusion",
         "render": "blocks",
-        "connections": "adjacent",
-        "maxUnits": 12
+        "connections": "none",
+        "links": "1/1/2/1,2/1/3/1,3/1/4/1,3/3/2/3",
+        "directed": true,
+        "maxUnits": 10,
+        "padding": 3,
+        "unitSize": 1.1,
+        "curvature": -0.65
       },
-      "data": "demo-layers",
+      "data": "demo-neural-diffusion-process-diagram",
       "covers": [
         "67/diffusion-process-diagram"
       ]
@@ -29473,10 +29510,14 @@
         "variant": "encoder-decoder-diagram",
         "mode": "encoder-decoder",
         "render": "blocks",
-        "connections": "adjacent",
-        "unitSize": 1.6
+        "connections": "none",
+        "links": "1/1/2/1,2/1/3/1,3/1/4/1,4/1/5/1",
+        "directed": true,
+        "maxUnits": 10,
+        "padding": 3,
+        "unitSize": 1.1
       },
-      "data": "demo-layers",
+      "data": "demo-neural-encoder-decoder-diagram",
       "covers": [
         "67/encoder-decoder-diagram"
       ]
@@ -29517,9 +29558,14 @@
         "variant": "feed-forward-neural-network",
         "mode": "feedforward",
         "render": "units",
-        "connections": "full"
+        "connections": "none",
+        "links": "1/1/2/1,1/1/2/2,1/1/2/3,1/1/2/4,1/2/2/1,1/2/2/2,1/2/2/3,1/2/2/4,1/3/2/1,1/3/2/2,1/3/2/3,1/3/2/4,2/1/3/1,2/1/3/2,2/2/3/1,2/2/3/2,2/3/3/1,2/3/3/2,2/4/3/1,2/4/3/2",
+        "directed": true,
+        "maxUnits": 10,
+        "padding": 3,
+        "unitSize": 1.1
       },
-      "data": "demo-layers",
+      "data": "demo-neural-feed-forward-neural-network",
       "covers": [
         "67/feed-forward-neural-network"
       ]
@@ -29538,10 +29584,15 @@
         "variant": "gan-architecture",
         "mode": "gan",
         "render": "blocks",
-        "connections": "adjacent",
-        "maxUnits": 5
+        "connections": "none",
+        "links": "1/1/2/1,2/1/3/1,3/1/5/1,4/1/5/2",
+        "directed": true,
+        "maxUnits": 10,
+        "padding": 3,
+        "unitSize": 1.1,
+        "curvature": -0.35
       },
-      "data": "demo-layers",
+      "data": "demo-neural-gan-architecture",
       "covers": [
         "67/gan-architecture"
       ]
@@ -29555,15 +29606,19 @@
       },
       "kind": "chart",
       "namespace": "network/graph",
-      "family": "graph",
+      "family": "neural-network",
       "options": {
         "variant": "graph-neural-network",
-        "layout": "force",
-        "iterations": 60,
-        "colorBy": "group",
-        "sizeBy": "degree"
+        "mode": "gnn",
+        "render": "units",
+        "connections": "none",
+        "links": "1/1/2/1,1/2/2/2,1/3/2/3,1/1/2/2,1/2/2/3,1/3/2/1,2/1/3/1,2/2/3/2,2/3/3/3",
+        "directed": true,
+        "maxUnits": 10,
+        "padding": 3,
+        "unitSize": 1.1
       },
-      "data": "demo-graph-community",
+      "data": "demo-neural-graph-neural-network",
       "covers": [
         "67/graph-neural-network"
       ]
@@ -29582,10 +29637,15 @@
         "variant": "lstm-architecture",
         "mode": "lstm",
         "render": "blocks",
-        "connections": "adjacent",
-        "maxUnits": 4
+        "connections": "none",
+        "links": "1/1/2/1,2/1/3/1,2/3/2/1",
+        "directed": true,
+        "maxUnits": 10,
+        "padding": 3,
+        "unitSize": 1.1,
+        "curvature": 3
       },
-      "data": "demo-layers",
+      "data": "demo-neural-lstm-architecture",
       "covers": [
         "67/lstm-architecture"
       ]
@@ -29604,10 +29664,14 @@
         "variant": "model-pipeline",
         "mode": "pipeline",
         "render": "blocks",
-        "connections": "adjacent",
-        "unitSize": 1.4
+        "connections": "none",
+        "links": "1/1/2/1,2/1/3/1,3/1/4/1",
+        "directed": true,
+        "maxUnits": 10,
+        "padding": 3,
+        "unitSize": 1.1
       },
-      "data": "demo-layers",
+      "data": "demo-neural-model-pipeline",
       "covers": [
         "67/model-pipeline"
       ]
@@ -29626,9 +29690,15 @@
         "variant": "residual-network",
         "mode": "residual",
         "render": "units",
-        "connections": "residual"
+        "connections": "none",
+        "links": "1/1/2/1,1/2/2/2,1/3/2/3,2/1/3/1,2/2/3/2,2/3/3/3,1/1/3/1,1/2/3/2,1/3/3/3,3/1/4/1,3/2/4/2",
+        "directed": true,
+        "maxUnits": 10,
+        "padding": 3,
+        "unitSize": 1.1,
+        "curvature": 0.35
       },
-      "data": "demo-layers",
+      "data": "demo-neural-residual-network",
       "covers": [
         "67/residual-network"
       ]
@@ -29647,9 +29717,15 @@
         "variant": "rnn-architecture",
         "mode": "rnn",
         "render": "units",
-        "connections": "adjacent"
+        "connections": "none",
+        "links": "1/1/2/1,1/2/2/2,2/1/3/1,2/2/3/2,2/3/2/1",
+        "directed": true,
+        "maxUnits": 10,
+        "padding": 3,
+        "unitSize": 1.1,
+        "curvature": 0.7
       },
-      "data": "demo-layers",
+      "data": "demo-neural-rnn-architecture",
       "covers": [
         "67/rnn-architecture"
       ]
@@ -29691,9 +29767,14 @@
         "variant": "tensor-shape-diagram",
         "mode": "tensor",
         "render": "blocks",
-        "connections": "none"
+        "connections": "none",
+        "links": "",
+        "directed": true,
+        "maxUnits": 10,
+        "padding": 3,
+        "unitSize": 1.1
       },
-      "data": "demo-layers",
+      "data": "demo-neural-tensor-shape-diagram",
       "covers": [
         "67/tensor-shape-diagram"
       ]
@@ -29712,9 +29793,15 @@
         "variant": "training-loop",
         "mode": "training-loop",
         "render": "blocks",
-        "connections": "residual"
+        "connections": "none",
+        "links": "1/1/2/1,2/1/3/1,3/1/4/1,4/1/5/1,5/1/2/3",
+        "directed": true,
+        "maxUnits": 10,
+        "padding": 3,
+        "unitSize": 1.1,
+        "curvature": -0.35
       },
-      "data": "demo-layers",
+      "data": "demo-neural-training-loop",
       "covers": [
         "67/training-loop"
       ]
@@ -29733,10 +29820,15 @@
         "variant": "transformer-architecture",
         "mode": "transformer",
         "render": "blocks",
-        "connections": "adjacent",
-        "maxUnits": 8
+        "connections": "none",
+        "links": "1/1/2/1,2/1/3/1,3/1/4/1,1/1/3/4",
+        "directed": true,
+        "maxUnits": 10,
+        "padding": 3,
+        "unitSize": 1.1,
+        "curvature": 0.35
       },
-      "data": "demo-layers",
+      "data": "demo-neural-transformer-architecture",
       "covers": [
         "67/transformer-architecture"
       ]

@@ -1,0 +1,1 @@
+{"version":1,"locales":["en","de"],"terminologies":["native","reuse"],"renderers":[{"id":"react","target":"dev-demo-react-dev","port":"3100"},{"id":"wgpu-wasm","target":"dev-demo-wgpu-dev","port":"3200"},{"id":"wgpu-native","target":"run-demo-native-dev","port":"3200"}],"example":"🎬️second"}

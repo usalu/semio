@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Dashboard Preference Change",
+  "type": "object",
+  "minProperties": 1,
+  "additionalProperties": false,
+  "properties": {
+    "language": { "enum": ["en", "de"] },
+    "appearance": { "enum": ["dark", "light"] },
+    "terminology": { "enum": ["native", "reuse"] },
+    "renderer": { "enum": ["react", "wgpu-wasm", "wgpu-native"] },
+    "layout": { "enum": ["tabs", "columns", "rows"] }
+  }
+}

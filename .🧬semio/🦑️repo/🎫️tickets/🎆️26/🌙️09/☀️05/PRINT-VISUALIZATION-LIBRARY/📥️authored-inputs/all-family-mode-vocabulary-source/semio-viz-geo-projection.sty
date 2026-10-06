@@ -1,0 +1,222 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-viz-geo-projection}[2026/09/05 v0.3.0 semio viz namespace geo-projection families: graticules, projection diagrams, geodesics]
+
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+\RequirePackage{semio-tokens}
+\RequirePackage{semio-viz-geo}
+\RequirePackage{semio-viz-family}
+
+\ExplSyntaxOn
+
+%region 🔖️Keys
+% 🔑 semio / viz / family / geo-graticule — inherits semio / viz / geo / base, plus
+% 🔑 step      (dx,dy)  minor graticule step in degrees; default 10,10.
+% 🔑 stepMajor (dx,dy)  major graticule step in degrees; default 90,360.
+% 🔑 outline   (bool)   draw the land geometry over the graticule; default true.
+% 🔑 sphere    (bool)   draw the projected sphere outline as a small circle of radius 90 deg; default false.
+% 🔑 labels    (bool)   annotate the extreme meridians and parallels; default false.
+\clist_new:N \l_semio_viz_geoproj_step_clist
+\clist_new:N \l_semio_viz_geoproj_major_clist
+\bool_new:N \l_semio_viz_geoproj_outline_bool
+\bool_new:N \l_semio_viz_geoproj_sphere_bool
+\bool_new:N \l_semio_viz_geoproj_labels_bool
+
+\keys_define:nn { semio / viz / family / geo-graticule }
+  {
+    step .clist_set:N = \l_semio_viz_geoproj_step_clist ,
+    stepMajor .clist_set:N = \l_semio_viz_geoproj_major_clist ,
+    outline .bool_set:N = \l_semio_viz_geoproj_outline_bool ,
+    sphere .bool_set:N = \l_semio_viz_geoproj_sphere_bool ,
+    labels .bool_set:N = \l_semio_viz_geoproj_labels_bool ,
+    unknown .code:n = { } ,
+  }
+
+% 🔑 semio / viz / family / geo-geodesic — inherits semio / viz / geo / base, plus
+% 🔑 arcs      (name)   line geometry whose parts become great-circle arcs; default demo-geo-routes.
+% 🔑 samples   (int)    interpolation samples per arc; default 24.
+% 🔑 tissot    (bool)   draw indicatrix circles at the arc endpoints; default false.
+% 🔑 radius    (deg)    indicatrix radius in degrees; default 6.
+\tl_new:N \l_semio_viz_geoproj_arcs_tl
+\int_new:N \l_semio_viz_geoproj_samples_int
+\bool_new:N \l_semio_viz_geoproj_tissot_bool
+\fp_new:N \l_semio_viz_geoproj_radius_fp
+
+\keys_define:nn { semio / viz / family / geo-geodesic }
+  {
+    arcs .tl_set:N = \l_semio_viz_geoproj_arcs_tl ,
+    samples .int_set:N = \l_semio_viz_geoproj_samples_int ,
+    tissot .bool_set:N = \l_semio_viz_geoproj_tissot_bool ,
+    radius .fp_set:N = \l_semio_viz_geoproj_radius_fp ,
+    unknown .code:n = { } ,
+  }
+%endregion 🔖️Keys
+
+%region 🔖️Families
+% ♻️ Puts every projection-figure key back to its documented default before an option list is read.
+\cs_new_protected:Npn \semio_viz_geoproj_reset:
+  {
+    \semio_viz_geo_base_reset:
+    \clist_set:Nn \l_semio_viz_geoproj_step_clist { 10, 10 }
+    \clist_set:Nn \l_semio_viz_geoproj_major_clist { 90, 360 }
+    \bool_set_true:N \l_semio_viz_geoproj_outline_bool
+    \bool_set_false:N \l_semio_viz_geoproj_sphere_bool
+    \bool_set_false:N \l_semio_viz_geoproj_labels_bool
+    \tl_set:Nn \l_semio_viz_geoproj_arcs_tl { demo-geo-routes }
+    \int_set:Nn \l_semio_viz_geoproj_samples_int { 24 }
+    \bool_set_false:N \l_semio_viz_geoproj_tissot_bool
+    \fp_set:Nn \l_semio_viz_geoproj_radius_fp { 6 }
+  }
+
+% 🕸️ Graticule family: the meridian/parallel net of the chosen projection, optionally over the land outline.
+\SemioVizFamily { geo-graticule }
+  {
+    \semio_viz_geoproj_reset:
+    \tl_set:Nn \l_semio_viz_geo_f_fit_tl { world }
+    \keys_set:nn { semio / viz / geo / base } {#1}
+    \keys_set:nn { semio / viz / family / geo-graticule } {#1}
+    \exp_args:NV \semio_viz_geo_base_frame:n \l_semio_viz_geo_f_geometry_tl
+    \use:x
+      {
+        \exp_not:N \SemioVizGraticule { semio-family }
+          [
+            stepMinor = { \exp_not:V \l_semio_viz_geoproj_step_clist } ,
+            stepMajor = { \exp_not:V \l_semio_viz_geoproj_major_clist }
+          ]
+          [
+            draw= \exp_not:V \l_semio_viz_geo_f_stroke_tl ,
+            line~width= \exp_not:V \l_semio_viz_geo_f_linewidth_tl ,
+            draw~opacity=0.55
+          ]
+      }
+    \bool_if:NT \l_semio_viz_geoproj_sphere_bool
+      { \semio_viz_geoproj_sphere: }
+    \bool_if:NT \l_semio_viz_geoproj_outline_bool
+      {
+        \semio_viz_geo_draw_geometry:nnn { semio-family }
+          { \l_semio_viz_geo_f_geometry_tl }
+          {
+            draw=semio-chrome-foreground,
+            line~width=\semio@stroke@default,
+            fill=semio-chrome-panel, fill~opacity=0.45
+          }
+      }
+    \bool_if:NT \l_semio_viz_geoproj_labels_bool
+      { \semio_viz_geoproj_labels: }
+  }
+
+% 🌐 The outline of the whole sphere under the current projection, as a near-polar circle.
+\cs_new_protected:Npn \semio_viz_geoproj_sphere:
+  {
+    \SemioVizGeoCircle { 0 } { 0 } { 89.9 } { 3 }
+    \semio_viz_geom_new:n { semio-family-sphere }
+    \use:x
+      {
+        \exp_not:N \semio_viz_geom_part:nnnn { semio-family-sphere } { polygon }
+          { } { \exp_not:V \l_semio_viz_geo_circle_tl }
+      }
+    \semio_viz_geo_path:nn { semio-family } { semio-family-sphere }
+    \semio_viz_geo_draw:n
+      { draw=semio-chrome-border-emphasized, line~width=\semio@stroke@default }
+  }
+
+% 🏷️ Latitude readings on the central meridian, so the projection's north-south stretch is legible.
+\cs_new_protected:Npn \semio_viz_geoproj_labels:
+  {
+    \semio_viz_geo_use:n { semio-family }
+    \clist_map_inline:nn { -60, 0, 60 }
+      {
+        \semio_viz_geo_forward:nn {##1} { 0 }
+        \node [ font=\c_semio_viz_theme_font_label_tl, text=semio-chrome-text-normal,
+                anchor=south ]
+          at ( \fp_eval:n { \l_semio_viz_geo_x_fp } ,
+               \fp_eval:n { \l_semio_viz_geo_y_fp } ) { ##1 \textdegree } ;
+      }
+  }
+
+% 🌐 Geodesic family: great-circle arcs between the endpoints of a line geometry, optionally with Tissot circles.
+\SemioVizFamily { geo-geodesic }
+  {
+    \semio_viz_geoproj_reset:
+    \keys_set:nn { semio / viz / geo / base } {#1}
+    \keys_set:nn { semio / viz / family / geo-geodesic } {#1}
+    \exp_args:NV \semio_viz_geo_base_frame:n \l_semio_viz_geo_f_geometry_tl
+    \semio_viz_geo_draw_geometry:nnn { semio-family }
+      { \l_semio_viz_geo_f_geometry_tl }
+      {
+        draw=semio-chrome-border-normal, line~width=\semio@stroke@hairline,
+        fill=semio-chrome-panel, fill~opacity=0.35
+      }
+    \semio_viz_geoproj_arcs:
+  }
+
+% 🛫 The great-circle arcs of the `arcs` geometry, and the Tissot indicatrices when asked for.
+\cs_new_protected:Npn \semio_viz_geoproj_arcs:
+  {
+    \semio_viz_geom_new:n { semio-family-arcs }
+    \exp_args:NV \semio_viz_geom_map_inline:nn \l_semio_viz_geoproj_arcs_tl
+      { \semio_viz_geoproj_arc:nnnn ##1 }
+    \semio_viz_geo_path:nn { semio-family } { semio-family-arcs }
+    \semio_viz_geo_draw:n
+      { draw=\semio_viz_theme_color:n { 0 }, line~width=\semio@stroke@default }
+    \bool_if:NT \l_semio_viz_geoproj_tissot_bool
+      { \semio_viz_geoproj_tissot: }
+  }
+
+% ➰ One arc part: `samples` great-circle interpolations between its two endpoints.
+\cs_new_protected:Npn \semio_viz_geoproj_arc:nnnn #1#2#3#4
+  {
+    \semio_viz_geo_endpoints:n {#4}
+    \tl_clear:N \l_tmpa_tl
+    \int_step_inline:nnn { 0 } { \l_semio_viz_geoproj_samples_int }
+      {
+        \semio_viz_geo_interpolate:nnnnn
+          { \clist_item:Nn \l_semio_viz_geo_pta_clist { 1 } }
+          { \clist_item:Nn \l_semio_viz_geo_pta_clist { 2 } }
+          { \clist_item:Nn \l_semio_viz_geo_ptb_clist { 1 } }
+          { \clist_item:Nn \l_semio_viz_geo_ptb_clist { 2 } }
+          { ##1 / \l_semio_viz_geoproj_samples_int }
+        \tl_put_right:Nx \l_tmpa_tl
+          {
+            \fp_eval:n { \l_semio_viz_geo_lon_fp } ,
+            \fp_eval:n { \l_semio_viz_geo_lat_fp } ;
+          }
+      }
+    \use:x
+      {
+        \exp_not:N \semio_viz_geom_part:nnnn { semio-family-arcs } { line }
+          { id = #2, value = #3 } { \exp_not:V \l_tmpa_tl }
+      }
+  }
+
+% ⭕ Tissot's indicatrix at every arc start: equal circles on the sphere, so the projection's own
+% distortion is what the reader sees in their projected shapes.
+\cs_new_protected:Npn \semio_viz_geoproj_tissot:
+  {
+    \semio_viz_geom_new:n { semio-family-tissot }
+    \exp_args:NV \semio_viz_geom_map_inline:nn \l_semio_viz_geoproj_arcs_tl
+      { \semio_viz_geoproj_tissot_part:nnnn ##1 }
+    \semio_viz_geo_path:nn { semio-family } { semio-family-tissot }
+    \semio_viz_geo_draw:n
+      {
+        draw=\semio_viz_theme_color:n { 1 }, line~width=\semio@stroke@hairline,
+        fill=\semio_viz_theme_color:n { 1 }, fill~opacity=0.18
+      }
+  }
+
+% ⚪ One indicatrix: a `radius` degree circle on the sphere at the arc part's first endpoint.
+\cs_new_protected:Npn \semio_viz_geoproj_tissot_part:nnnn #1#2#3#4
+  {
+    \semio_viz_geo_endpoints:n {#4}
+    \semio_viz_geo_circle:nnnn
+      { \clist_item:Nn \l_semio_viz_geo_pta_clist { 1 } } { \clist_item:Nn \l_semio_viz_geo_pta_clist { 2 } }
+      { \l_semio_viz_geoproj_radius_fp } { 20 }
+    \use:x
+      {
+        \exp_not:N \semio_viz_geom_part:nnnn { semio-family-tissot } { polygon }
+          { id = #2 } { \exp_not:V \l_semio_viz_geo_circle_tl }
+      }
+  }
+%endregion 🔖️Families
+
+\ExplSyntaxOff

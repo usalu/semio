@@ -1,0 +1,594 @@
+[
+  {
+    "family": "namespace",
+    "key": "variant",
+    "authoredType": "string",
+    "authoredDefault": "charts",
+    "metadataType": "string",
+    "metadataDefault": ""
+  },
+  {
+    "family": "namespace",
+    "key": "data",
+    "authoredType": "string",
+    "authoredDefault": "demo",
+    "metadataType": "string",
+    "metadataDefault": ""
+  },
+  {
+    "family": "namespace",
+    "key": "caption",
+    "authoredType": "boolean",
+    "authoredDefault": "true",
+    "metadataType": "string",
+    "metadataDefault": ""
+  },
+  {
+    "family": "namespace",
+    "key": "locator",
+    "authoredType": "boolean",
+    "authoredDefault": "true",
+    "metadataType": "string",
+    "metadataDefault": ""
+  },
+  {
+    "family": "namespace",
+    "key": "order",
+    "authoredType": "string",
+    "authoredDefault": "adjacency,alluvial,annotation,arc,architecture,area,axis,bar,biology,bundling,charts,chemistry,chord,choropleth,concept,contours,correlation,diagram,distribution,engineering,field,financial,flow,geo,graph,hierarchy,infographic,interactionstate,layout,legend,line,map,matrix,network,network-matrix,pack,parallelsets,partition,physics,polar,process,projection,routes,scale,scatter,scientific,signal,statistical,surface,symbols,table,theme,tree,uml",
+    "metadataType": "string",
+    "metadataDefault": ""
+  },
+  {
+    "family": "namespace",
+    "key": "swatch",
+    "authoredType": "number",
+    "authoredDefault": "2.4",
+    "metadataType": "string",
+    "metadataDefault": ""
+  },
+  {
+    "family": "figure",
+    "key": "variant",
+    "authoredType": "string",
+    "authoredDefault": "themes",
+    "metadataType": "string",
+    "metadataDefault": ""
+  },
+  {
+    "family": "figure",
+    "key": "data",
+    "authoredType": "string",
+    "authoredDefault": "demo",
+    "metadataType": "string",
+    "metadataDefault": ""
+  },
+  {
+    "family": "figure",
+    "key": "x",
+    "authoredType": "string",
+    "authoredDefault": "cat",
+    "metadataType": "string",
+    "metadataDefault": ""
+  },
+  {
+    "family": "figure",
+    "key": "y",
+    "authoredType": "string",
+    "authoredDefault": "val",
+    "metadataType": "string",
+    "metadataDefault": ""
+  },
+  {
+    "family": "figure",
+    "key": "category",
+    "authoredType": "string",
+    "authoredDefault": "grp",
+    "metadataType": "string",
+    "metadataDefault": ""
+  },
+  {
+    "family": "figure",
+    "key": "label",
+    "authoredType": "string",
+    "authoredDefault": "label",
+    "metadataType": "string",
+    "metadataDefault": ""
+  },
+  {
+    "family": "figure",
+    "key": "cut",
+    "authoredType": "number",
+    "authoredDefault": "6",
+    "metadataType": "string",
+    "metadataDefault": ""
+  },
+  {
+    "family": "figure",
+    "key": "panels",
+    "authoredType": "integer",
+    "authoredDefault": "3",
+    "metadataType": "string",
+    "metadataDefault": ""
+  },
+  {
+    "family": "figure",
+    "key": "gap",
+    "authoredType": "number",
+    "authoredDefault": "3",
+    "metadataType": "string",
+    "metadataDefault": ""
+  },
+  {
+    "family": "figure",
+    "key": "swatch",
+    "authoredType": "number",
+    "authoredDefault": "6",
+    "metadataType": "string",
+    "metadataDefault": ""
+  },
+  {
+    "family": "figure",
+    "key": "patterns",
+    "authoredType": "string",
+    "authoredDefault": "hatch,crosshatch,dots,grid",
+    "metadataType": "string",
+    "metadataDefault": ""
+  },
+  {
+    "family": "figure",
+    "key": "textKinds",
+    "authoredType": "string",
+    "authoredDefault": "title,label,value,chip",
+    "metadataType": "string",
+    "metadataDefault": ""
+  },
+  {
+    "family": "grammar",
+    "key": "variant",
+    "authoredType": "string",
+    "authoredDefault": "point",
+    "metadataType": "string",
+    "metadataDefault": ""
+  },
+  {
+    "family": "grammar",
+    "key": "data",
+    "authoredType": "string",
+    "authoredDefault": "demo",
+    "metadataType": "string",
+    "metadataDefault": ""
+  },
+  {
+    "family": "grammar",
+    "key": "x",
+    "authoredType": "string",
+    "authoredDefault": "cat",
+    "metadataType": "string",
+    "metadataDefault": ""
+  },
+  {
+    "family": "grammar",
+    "key": "y",
+    "authoredType": "string",
+    "authoredDefault": "val",
+    "metadataType": "string",
+    "metadataDefault": ""
+  },
+  {
+    "family": "grammar",
+    "key": "y2",
+    "authoredType": "string",
+    "authoredDefault": "val2",
+    "metadataType": "string",
+    "metadataDefault": ""
+  },
+  {
+    "family": "grammar",
+    "key": "category",
+    "authoredType": "string",
+    "authoredDefault": "grp",
+    "metadataType": "string",
+    "metadataDefault": ""
+  },
+  {
+    "family": "grammar",
+    "key": "label",
+    "authoredType": "string",
+    "authoredDefault": "label",
+    "metadataType": "string",
+    "metadataDefault": ""
+  },
+  {
+    "family": "grammar",
+    "key": "bins",
+    "authoredType": "integer",
+    "authoredDefault": "4",
+    "metadataType": "string",
+    "metadataDefault": ""
+  },
+  {
+    "family": "grammar",
+    "key": "samples",
+    "authoredType": "integer",
+    "authoredDefault": "24",
+    "metadataType": "string",
+    "metadataDefault": ""
+  },
+  {
+    "family": "grammar",
+    "key": "corners",
+    "authoredType": "integer",
+    "authoredDefault": "3",
+    "metadataType": "string",
+    "metadataDefault": ""
+  },
+  {
+    "family": "grammar",
+    "key": "swatch",
+    "authoredType": "number",
+    "authoredDefault": "6",
+    "metadataType": "string",
+    "metadataDefault": ""
+  },
+  {
+    "family": "grammar",
+    "key": "marks",
+    "authoredType": "string",
+    "authoredDefault": "dot,straight-line,band,sector,straight-connector,rectangular-region,label",
+    "metadataType": "string",
+    "metadataDefault": ""
+  },
+  {
+    "family": "encoding",
+    "key": "variant",
+    "authoredType": "string",
+    "authoredDefault": "cartesian-x-y",
+    "metadataType": "string",
+    "metadataDefault": ""
+  },
+  {
+    "family": "encoding",
+    "key": "data",
+    "authoredType": "string",
+    "authoredDefault": "demo",
+    "metadataType": "string",
+    "metadataDefault": ""
+  },
+  {
+    "family": "encoding",
+    "key": "column",
+    "authoredType": "string",
+    "authoredDefault": "val",
+    "metadataType": "string",
+    "metadataDefault": ""
+  },
+  {
+    "family": "encoding",
+    "key": "column2",
+    "authoredType": "string",
+    "authoredDefault": "val2",
+    "metadataType": "string",
+    "metadataDefault": ""
+  },
+  {
+    "family": "encoding",
+    "key": "text",
+    "authoredType": "string",
+    "authoredDefault": "cat",
+    "metadataType": "string",
+    "metadataDefault": ""
+  },
+  {
+    "family": "encoding",
+    "key": "samples",
+    "authoredType": "integer",
+    "authoredDefault": "0",
+    "metadataType": "string",
+    "metadataDefault": ""
+  },
+  {
+    "family": "encoding",
+    "key": "low",
+    "authoredType": "number",
+    "authoredDefault": "1.6",
+    "metadataType": "string",
+    "metadataDefault": ""
+  },
+  {
+    "family": "encoding",
+    "key": "high",
+    "authoredType": "number",
+    "authoredDefault": "7",
+    "metadataType": "string",
+    "metadataDefault": ""
+  },
+  {
+    "family": "encoding",
+    "key": "span",
+    "authoredType": "number",
+    "authoredDefault": "120",
+    "metadataType": "string",
+    "metadataDefault": ""
+  },
+  {
+    "family": "encoding",
+    "key": "swatch",
+    "authoredType": "number",
+    "authoredDefault": "7",
+    "metadataType": "string",
+    "metadataDefault": ""
+  },
+  {
+    "family": "encoding",
+    "key": "strands",
+    "authoredType": "integer",
+    "authoredDefault": "4",
+    "metadataType": "string",
+    "metadataDefault": ""
+  },
+  {
+    "family": "encoding",
+    "key": "symbols",
+    "authoredType": "string",
+    "authoredDefault": "dot,square,triangle,diamond,cross",
+    "metadataType": "string",
+    "metadataDefault": ""
+  },
+  {
+    "family": "encoding",
+    "key": "dashes",
+    "authoredType": "string",
+    "authoredDefault": "none,dashed,dotted,dash-dot",
+    "metadataType": "string",
+    "metadataDefault": ""
+  },
+  {
+    "family": "encoding",
+    "key": "patterns",
+    "authoredType": "string",
+    "authoredDefault": "hatch,crosshatch,dots,grid",
+    "metadataType": "string",
+    "metadataDefault": ""
+  },
+  {
+    "family": "encoding",
+    "key": "arrows",
+    "authoredType": "string",
+    "authoredDefault": "none,end,start,both",
+    "metadataType": "string",
+    "metadataDefault": ""
+  },
+  {
+    "family": "encoding",
+    "key": "fonts",
+    "authoredType": "string",
+    "authoredDefault": "scriptsize,footnotesize,small,normalsize,large",
+    "metadataType": "string",
+    "metadataDefault": ""
+  },
+  {
+    "family": "encoding",
+    "key": "weights",
+    "authoredType": "string",
+    "authoredDefault": "mdseries,bfseries",
+    "metadataType": "string",
+    "metadataDefault": ""
+  },
+  {
+    "family": "scale",
+    "key": "variant",
+    "authoredType": "string",
+    "authoredDefault": "linear",
+    "metadataType": "string",
+    "metadataDefault": ""
+  },
+  {
+    "family": "scale",
+    "key": "domain",
+    "authoredType": "string",
+    "authoredDefault": "0,10",
+    "metadataType": "string",
+    "metadataDefault": ""
+  },
+  {
+    "family": "scale",
+    "key": "range",
+    "authoredType": "string",
+    "authoredDefault": "0,60",
+    "metadataType": "string",
+    "metadataDefault": ""
+  },
+  {
+    "family": "scale",
+    "key": "nice",
+    "authoredType": "boolean",
+    "authoredDefault": "false",
+    "metadataType": "string",
+    "metadataDefault": ""
+  },
+  {
+    "family": "shape",
+    "key": "variant",
+    "authoredType": "string",
+    "authoredDefault": "lines",
+    "metadataType": "string",
+    "metadataDefault": ""
+  },
+  {
+    "family": "shape",
+    "key": "curves",
+    "authoredType": "string",
+    "authoredDefault": "linear,cardinal,natural,step",
+    "metadataType": "string",
+    "metadataDefault": ""
+  },
+  {
+    "family": "layout-algorithm",
+    "key": "variant",
+    "authoredType": "string",
+    "authoredDefault": "stack",
+    "metadataType": "string",
+    "metadataDefault": ""
+  },
+  {
+    "family": "layout-algorithm",
+    "key": "x",
+    "authoredType": "string",
+    "authoredDefault": "t",
+    "metadataType": "string",
+    "metadataDefault": ""
+  },
+  {
+    "family": "layout-algorithm",
+    "key": "series",
+    "authoredType": "string",
+    "authoredDefault": "series",
+    "metadataType": "string",
+    "metadataDefault": ""
+  },
+  {
+    "family": "layout-algorithm",
+    "key": "value",
+    "authoredType": "string",
+    "authoredDefault": "value",
+    "metadataType": "string",
+    "metadataDefault": ""
+  },
+  {
+    "family": "layout-algorithm",
+    "key": "binColumn",
+    "authoredType": "string",
+    "authoredDefault": "value",
+    "metadataType": "string",
+    "metadataDefault": ""
+  },
+  {
+    "family": "layout-algorithm",
+    "key": "pieColumn",
+    "authoredType": "string",
+    "authoredDefault": "val",
+    "metadataType": "string",
+    "metadataDefault": ""
+  },
+  {
+    "family": "layout-algorithm",
+    "key": "order",
+    "authoredType": "string",
+    "authoredDefault": "auto",
+    "metadataType": "string",
+    "metadataDefault": ""
+  },
+  {
+    "family": "layout-algorithm",
+    "key": "bins",
+    "authoredType": "integer",
+    "authoredDefault": "8",
+    "metadataType": "string",
+    "metadataDefault": ""
+  },
+  {
+    "family": "layout-algorithm",
+    "key": "amount",
+    "authoredType": "number",
+    "authoredDefault": "3",
+    "metadataType": "string",
+    "metadataDefault": ""
+  },
+  {
+    "family": "layout-algorithm",
+    "key": "innerRadius",
+    "authoredType": "number",
+    "authoredDefault": "0",
+    "metadataType": "string",
+    "metadataDefault": ""
+  },
+  {
+    "family": "transform-data",
+    "key": "variant",
+    "authoredType": "string",
+    "authoredDefault": "filter",
+    "metadataType": "string",
+    "metadataDefault": ""
+  },
+  {
+    "family": "transform-data",
+    "key": "data",
+    "authoredType": "string",
+    "authoredDefault": "demo",
+    "metadataType": "string",
+    "metadataDefault": ""
+  },
+  {
+    "family": "transform-data",
+    "key": "group",
+    "authoredType": "string",
+    "authoredDefault": "grp",
+    "metadataType": "string",
+    "metadataDefault": ""
+  },
+  {
+    "family": "transform-data",
+    "key": "value",
+    "authoredType": "string",
+    "authoredDefault": "val",
+    "metadataType": "string",
+    "metadataDefault": ""
+  },
+  {
+    "family": "transform-data",
+    "key": "key",
+    "authoredType": "string",
+    "authoredDefault": "cat",
+    "metadataType": "string",
+    "metadataDefault": ""
+  },
+  {
+    "family": "transform-data",
+    "key": "second",
+    "authoredType": "string",
+    "authoredDefault": "val2",
+    "metadataType": "string",
+    "metadataDefault": ""
+  },
+  {
+    "family": "transform-data",
+    "key": "predicate",
+    "authoredType": "string",
+    "authoredDefault": "val > 4",
+    "metadataType": "string",
+    "metadataDefault": ""
+  },
+  {
+    "family": "transform-data",
+    "key": "sortBy",
+    "authoredType": "string",
+    "authoredDefault": "val",
+    "metadataType": "string",
+    "metadataDefault": ""
+  },
+  {
+    "family": "transform-data",
+    "key": "descending",
+    "authoredType": "boolean",
+    "authoredDefault": "true",
+    "metadataType": "string",
+    "metadataDefault": ""
+  },
+  {
+    "family": "transform-data",
+    "key": "windowSize",
+    "authoredType": "integer",
+    "authoredDefault": "3",
+    "metadataType": "string",
+    "metadataDefault": ""
+  },
+  {
+    "family": "transform-data",
+    "key": "windowKind",
+    "authoredType": "string",
+    "authoredDefault": "movingAverage",
+    "metadataType": "string",
+    "metadataDefault": ""
+  }
+]

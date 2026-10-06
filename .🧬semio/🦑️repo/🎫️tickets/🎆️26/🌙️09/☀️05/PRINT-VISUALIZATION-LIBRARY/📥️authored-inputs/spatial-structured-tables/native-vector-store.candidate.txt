@@ -1,0 +1,115 @@
+%region 🔖️VectorFields
+% 🧭 A rectangular vector lattice shares scalar-grid row-major addressing and keeps its physical domain.
+\seq_new:N \g_semio_viz_vector_names_seq
+\tl_new:N \l_semio_viz_vector_name_tl
+\clist_new:N \l_semio_viz_vector_domain_clist
+\int_new:N \l_semio_viz_vector_w_int
+\int_new:N \l_semio_viz_vector_h_int
+\int_new:N \l_semio_viz_vector_x_int
+\int_new:N \l_semio_viz_vector_y_int
+\fp_new:N \l_semio_viz_vector_xmin_fp
+\fp_new:N \l_semio_viz_vector_xmax_fp
+\fp_new:N \l_semio_viz_vector_ymin_fp
+\fp_new:N \l_semio_viz_vector_ymax_fp
+\fp_new:N \l_semio_viz_vector_x_fp
+\fp_new:N \l_semio_viz_vector_y_fp
+\fp_new:N \l_semio_viz_vector_fx_fp
+\fp_new:N \l_semio_viz_vector_fy_fp
+\fp_new:N \l_semio_viz_vector_u_fp
+\fp_new:N \l_semio_viz_vector_v_fp
+\msg_new:nnn { semio-viz } { unknown-vectorfield } { Unknown~viz~vector~field~'#1'. }
+\msg_new:nnn { semio-viz } { invalid-vectorfield } { Invalid~rectangular~vector~field~'#1'. }
+
+% 🧮 Declares the named width by height lattice, its x/y bounds and both row-major components.
+\cs_new_protected:Npn \semio_viz_vector_new:nnnnnn #1#2#3#4#5#6
+  {
+    \tl_set:Nx \l_semio_viz_vector_name_tl {#1}
+    \tl_set:Nx \l_semio_viz_vector_name_tl { \tl_to_str:N \l_semio_viz_vector_name_tl }
+    \seq_if_in:NVF \g_semio_viz_vector_names_seq \l_semio_viz_vector_name_tl
+      {
+        \seq_gput_right:NV \g_semio_viz_vector_names_seq \l_semio_viz_vector_name_tl
+        \seq_new:c { g_semio_viz_vector_ \l_semio_viz_vector_name_tl _u_seq }
+        \seq_new:c { g_semio_viz_vector_ \l_semio_viz_vector_name_tl _v_seq }
+        \int_new:c { g_semio_viz_vector_ \l_semio_viz_vector_name_tl _w_int }
+        \int_new:c { g_semio_viz_vector_ \l_semio_viz_vector_name_tl _h_int }
+        \clist_new:c { g_semio_viz_vector_ \l_semio_viz_vector_name_tl _domain_clist }
+      }
+    \int_gset:cn { g_semio_viz_vector_ \l_semio_viz_vector_name_tl _w_int } {#2}
+    \int_gset:cn { g_semio_viz_vector_ \l_semio_viz_vector_name_tl _h_int } {#3}
+    \clist_gset:cn { g_semio_viz_vector_ \l_semio_viz_vector_name_tl _domain_clist } {#4}
+    \seq_gset_from_clist:cn { g_semio_viz_vector_ \l_semio_viz_vector_name_tl _u_seq } {#5}
+    \seq_gset_from_clist:cn { g_semio_viz_vector_ \l_semio_viz_vector_name_tl _v_seq } {#6}
+    \bool_if:nF
+      {
+        \int_compare_p:n { #2 > 1 } && \int_compare_p:n { #3 > 1 }
+        && \int_compare_p:n { \clist_count:n {#4} = 4 }
+        && \int_compare_p:n { \seq_count:c { g_semio_viz_vector_ \l_semio_viz_vector_name_tl _u_seq } = (#2) * (#3) }
+        && \int_compare_p:n { \seq_count:c { g_semio_viz_vector_ \l_semio_viz_vector_name_tl _v_seq } = (#2) * (#3) }
+      }
+      { \msg_error:nnn { semio-viz } { invalid-vectorfield } {#1} }
+    \semio_viz_vector_use:n {#1}
+    \bool_if:nF
+      {
+        \fp_compare_p:n { \l_semio_viz_vector_xmax_fp > \l_semio_viz_vector_xmin_fp }
+        && \fp_compare_p:n { \l_semio_viz_vector_ymax_fp > \l_semio_viz_vector_ymin_fp }
+      }
+      { \msg_error:nnn { semio-viz } { invalid-vectorfield } {#1} }
+  }
+
+% 📥 Selects a declared vector lattice and its immutable sampling domain.
+\cs_new_protected:Npn \semio_viz_vector_use:n #1
+  {
+    \tl_set:Nx \l_semio_viz_vector_name_tl {#1}
+    \tl_set:Nx \l_semio_viz_vector_name_tl { \tl_to_str:N \l_semio_viz_vector_name_tl }
+    \seq_if_in:NVF \g_semio_viz_vector_names_seq \l_semio_viz_vector_name_tl
+      { \msg_error:nnn { semio-viz } { unknown-vectorfield } {#1} }
+    \int_set:Nn \l_semio_viz_vector_w_int { \use:c { g_semio_viz_vector_ \l_semio_viz_vector_name_tl _w_int } }
+    \int_set:Nn \l_semio_viz_vector_h_int { \use:c { g_semio_viz_vector_ \l_semio_viz_vector_name_tl _h_int } }
+    \clist_set_eq:Nc \l_semio_viz_vector_domain_clist { g_semio_viz_vector_ \l_semio_viz_vector_name_tl _domain_clist }
+    \fp_set:Nn \l_semio_viz_vector_xmin_fp { \clist_item:Nn \l_semio_viz_vector_domain_clist {1} }
+    \fp_set:Nn \l_semio_viz_vector_xmax_fp { \clist_item:Nn \l_semio_viz_vector_domain_clist {2} }
+    \fp_set:Nn \l_semio_viz_vector_ymin_fp { \clist_item:Nn \l_semio_viz_vector_domain_clist {3} }
+    \fp_set:Nn \l_semio_viz_vector_ymax_fp { \clist_item:Nn \l_semio_viz_vector_domain_clist {4} }
+  }
+
+% 🧵 Bilinearly interpolates one row-major component within the selected cell.
+\cs_new:Npn \semio_viz_vector_component:n #1
+  {
+    \fp_eval:n
+      {
+        (1 - \l_semio_viz_vector_fx_fp) * (1 - \l_semio_viz_vector_fy_fp)
+        * \seq_item:cn { g_semio_viz_vector_ \l_semio_viz_vector_name_tl _#1_seq }
+            { \l_semio_viz_vector_y_int * \l_semio_viz_vector_w_int + \l_semio_viz_vector_x_int + 1 }
+        + \l_semio_viz_vector_fx_fp * (1 - \l_semio_viz_vector_fy_fp)
+        * \seq_item:cn { g_semio_viz_vector_ \l_semio_viz_vector_name_tl _#1_seq }
+            { \l_semio_viz_vector_y_int * \l_semio_viz_vector_w_int + \l_semio_viz_vector_x_int + 2 }
+        + (1 - \l_semio_viz_vector_fx_fp) * \l_semio_viz_vector_fy_fp
+        * \seq_item:cn { g_semio_viz_vector_ \l_semio_viz_vector_name_tl _#1_seq }
+            { (\l_semio_viz_vector_y_int + 1) * \l_semio_viz_vector_w_int + \l_semio_viz_vector_x_int + 1 }
+        + \l_semio_viz_vector_fx_fp * \l_semio_viz_vector_fy_fp
+        * \seq_item:cn { g_semio_viz_vector_ \l_semio_viz_vector_name_tl _#1_seq }
+            { (\l_semio_viz_vector_y_int + 1) * \l_semio_viz_vector_w_int + \l_semio_viz_vector_x_int + 2 }
+      }
+  }
+
+% 🧊 Samples both vector components with constant-time bilinear interpolation and domain clamping.
+\cs_new_protected:Npn \semio_viz_vector_sample:nnn #1#2#3
+  {
+    \semio_viz_vector_use:n {#1}
+    \fp_set:Nn \l_semio_viz_vector_x_fp
+      { min ( \l_semio_viz_vector_w_int - 1, max (0, ((#2) - \l_semio_viz_vector_xmin_fp) / (\l_semio_viz_vector_xmax_fp - \l_semio_viz_vector_xmin_fp) * (\l_semio_viz_vector_w_int - 1))) }
+    \fp_set:Nn \l_semio_viz_vector_y_fp
+      { min ( \l_semio_viz_vector_h_int - 1, max (0, ((#3) - \l_semio_viz_vector_ymin_fp) / (\l_semio_viz_vector_ymax_fp - \l_semio_viz_vector_ymin_fp) * (\l_semio_viz_vector_h_int - 1))) }
+    \int_set:Nn \l_semio_viz_vector_x_int { \fp_eval:n { min (\l_semio_viz_vector_w_int - 2, floor (\l_semio_viz_vector_x_fp)) } }
+    \int_set:Nn \l_semio_viz_vector_y_int { \fp_eval:n { min (\l_semio_viz_vector_h_int - 2, floor (\l_semio_viz_vector_y_fp)) } }
+    \fp_set:Nn \l_semio_viz_vector_fx_fp { \l_semio_viz_vector_x_fp - \l_semio_viz_vector_x_int }
+    \fp_set:Nn \l_semio_viz_vector_fy_fp { \l_semio_viz_vector_y_fp - \l_semio_viz_vector_y_int }
+    \fp_set:Nn \l_semio_viz_vector_u_fp { \semio_viz_vector_component:n {u} }
+    \fp_set:Nn \l_semio_viz_vector_v_fp { \semio_viz_vector_component:n {v} }
+  }
+
+% 🗺️ Declares a rectangular sampled vector field: name, width, height, x/y bounds, and row-major u/v values.
+\NewDocumentCommand \SemioVizVectorField { m m m m m m }
+  { \semio_viz_vector_new:nnnnnn {#1}{#2}{#3}{#4}{#5}{#6} }
+%endregion 🔖️VectorFields
+

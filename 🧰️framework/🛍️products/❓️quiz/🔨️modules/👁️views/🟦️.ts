@@ -57,8 +57,9 @@ export function catalogView(catalog: Catalog, quizzes: readonly Quiz[]): Catalog
   return {
     id: catalog.id,
     title: catalog.title,
+    short: catalog.short,
     introduction: catalog.introduction,
-    quizzes: quizzes.map((quiz) => ({ id: quiz.id, emoji: quiz.emoji, title: quiz.title, description: quiz.description, tasks: quiz.tasks.map((task) => ({ id: task.id, kind: task.kind, title: task.title, ...iconOf(task) })) })),
+    quizzes: quizzes.map((quiz) => ({ id: quiz.id, emoji: quiz.emoji, title: quiz.title, short: quiz.short, description: quiz.description, tasks: quiz.tasks.map((task) => ({ id: task.id, kind: task.kind, title: task.title, ...iconOf(task) })) })),
     badges: catalog.badges.map((badge) => ({ id: badge.id, emoji: badge.emoji, label: badge.label, description: badge.description })),
   };
 }

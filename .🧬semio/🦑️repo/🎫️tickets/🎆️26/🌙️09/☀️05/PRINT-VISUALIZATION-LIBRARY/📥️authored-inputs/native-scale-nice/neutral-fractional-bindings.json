@@ -1,0 +1,20 @@
+{
+  "path": "C:/git/semio/🧰️framework/🛍️products/📓️print/🧪️tests/🧬️native-chart-grammar/🔣️.json",
+  "before": "102347A00611DB832FB52954E2ABC02DF342C131FBC8C54F3B4B4526B888B347",
+  "after": "9B68115BB2A9877E28C6A74CE8791A4284E6A68257D7346FEEBEB879521D949D",
+  "schemaBoundary": {
+    "definition": "ChartScaleOptions",
+    "nice": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      ]
+    }
+  },
+  "added": "Two positive fractional2.5 cases; no schema edit"
+}

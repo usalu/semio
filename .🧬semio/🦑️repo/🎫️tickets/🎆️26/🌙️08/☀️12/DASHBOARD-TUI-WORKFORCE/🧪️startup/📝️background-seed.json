@@ -1,0 +1,22 @@
+[
+ {"path":"dashboard/📚️inventory/🦀️.rs","replace":[
+ {"from":"Ready(CommandNode, String)","to":"Ready(Vec<(String, crate::command_tree::CommandLeaf)>, String)"},
+ {"from":"        if !refresh { if let Some(tree) = cached(&root) { if sender.send(Update::Ready(tree, \"cached commands\".into())).is_err() { return; } } }","to":"        let seed = crate::command_tree::seed(&root);\n        if signal.load(Ordering::Relaxed) || sender.send(Update::Ready(commands(&seed), \"quick commands\".into())).is_err() { return; }\n        if !refresh { if let Some(tree) = cached(&root) { if sender.send(Update::Ready(commands(&tree), \"cached commands\".into())).is_err() { return; } } }"},
+ {"from":"        let path = cache_path(&root);","to":"        let commands = commands(&tree);\n        let path = cache_path(&root);"},
+ {"from":"root: root.clone(), tree: tree.clone()","to":"root: root.clone(), tree"},
+ {"from":"Update::Ready(tree, \"commands ready\".into())","to":"Update::Ready(commands, \"commands ready\".into())"}
+ ]},
+ {"path":"dashboard/🖥️terminal/🦀️.rs","replace":[
+ {"from":"CommandLeaf, CommandNode, CommandSpec","to":"CommandLeaf, CommandSpec"},
+ {"from":"    tree: CommandNode,\n","to":""},
+ {"from":"crate::inventory::Update::Ready(tree, status)","to":"crate::inventory::Update::Ready(commands, status)"},
+ {"from":"self.commands = crate::inventory::commands(&tree); self.tree = tree;","to":"self.commands = commands;"},
+ {"from":"    let tree = crate::command_tree::seed(&root);\n    let commands = crate::inventory::commands(&tree);\n","to":""},
+ {"from":"root: root.clone(), tree, commands,","to":"root: root.clone(), commands: Vec::new(),"}
+ ]},
+ {"path":"dashboard/🖥️terminal/🧪️tests/🔬️unit/🦀️.rs","replace":[{"from":"    let tree = CommandNode { key: \"root\".into(), label: \"commands\".into(), children: Vec::new(), leaf: None };\n","to":""},{"from":"root: \".\".into(), tree, layout","to":"root: \".\".into(), layout"}]},
+ {"path":"dashboard/🌀️daemon/🧪️tests/🔬️unit/🦀️.rs","replace":[
+ {"from":"!terminal_text(&screen).contains(\"commands ready\")","to":"!root.join(\".🧬semio/🦑️repo/⚡️cache/🎛️dashboard/commands.json\").is_file()"},
+ {"from":"assert!(terminal_text(&screen).contains(\"commands ready\"), \"fixture inventory must finish\");\n    view.write_all(b\"\\x02nbuild dashboard-fixture\\r\").unwrap();","to":"assert!(root.join(\".🧬semio/🦑️repo/⚡️cache/🎛️dashboard/commands.json\").is_file(), \"fixture inventory must finish: {}\", terminal_text(&screen));\n    view.write_all(b\"\\x02nbuild dashboard-fixture\").unwrap();\n    let deadline = Instant::now() + Duration::from_secs(5);\n    while Instant::now() < deadline && (!terminal_text(&screen).contains(\"/ build dashboard-fixture\") || terminal_text(&screen).contains(\"no matches\")) { let count = view.try_read(&mut page).unwrap_or(0); screen.feed(&page[..count]); std::thread::sleep(Duration::from_millis(5)); }\n    assert!(terminal_text(&screen).contains(\"/ build dashboard-fixture\") && !terminal_text(&screen).contains(\"no matches\"), \"search must select a current command: {}\", terminal_text(&screen));\n    view.write_all(b\"\\r\").unwrap();"}
+ ]}
+]

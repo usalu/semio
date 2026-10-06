@@ -1,0 +1,72 @@
+[
+  {
+    "file": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-network-graph.sty",
+    "from": "% 📏 Extremes of |weight| and of the degrees, used by `weightWidth`, `sizeBy` and `colorBy=degree`.\n\\cs_new_protected:Npn \\semio_viz_net_extremes: {\n  \\fp_set:Nn \\l_semio_viz_net_wmin_fp { inf }\n  \\fp_set:Nn \\l_semio_viz_net_wmax_fp { 0 }\n  \\int_step_inline:nn { \\l_semio_viz_network_m_int } {\n    \\fp_set:Nn \\l_semio_viz_net_wmin_fp\n      { min( \\l_semio_viz_net_wmin_fp , abs( \\semio_viz_network_f:nn { ew } {##1} ) ) }\n    \\fp_set:Nn \\l_semio_viz_net_wmax_fp\n      { max( \\l_semio_viz_net_wmax_fp , abs( \\semio_viz_network_f:nn { ew } {##1} ) ) }\n  }\n  \\fp_compare:nNnT \\l_semio_viz_net_wmin_fp = { inf } { \\fp_zero:N \\l_semio_viz_net_wmin_fp }\n  \\fp_set:Nn \\l_semio_viz_net_dmax_fp { 1 }\n  \\int_step_inline:nn { \\l_semio_viz_network_n_int } {\n    \\fp_set:Nn \\l_semio_viz_net_dmax_fp\n      { max( \\l_semio_viz_net_dmax_fp , \\semio_viz_network_n:nn { deg } {##1} ) }\n  }\n}\n\\fp_new:N \\l_semio_viz_net_dmax_fp",
+    "to": "% 📏 Absolute edge-weight, degree and incident-strength extrema for network encodings.\n\\cs_new_protected:Npn \\semio_viz_net_extremes: {\n  \\semio_viz_network_fp_ensure:nn { strength } { \\l_semio_viz_network_n_int }\n  \\int_step_inline:nn { \\l_semio_viz_network_n_int }\n    { \\semio_viz_network_fset:nnn { strength } {##1} { 0 } }\n  \\fp_set:Nn \\l_semio_viz_net_wmin_fp { inf }\n  \\fp_zero:N \\l_semio_viz_net_wmax_fp\n  \\int_step_inline:nn { \\l_semio_viz_network_m_int } {\n    \\fp_set:Nn \\l_semio_viz_net_a_fp { abs( \\semio_viz_network_f:nn { ew } {##1} ) }\n    \\fp_set:Nn \\l_semio_viz_net_wmin_fp { min( \\l_semio_viz_net_wmin_fp , \\l_semio_viz_net_a_fp ) }\n    \\fp_set:Nn \\l_semio_viz_net_wmax_fp { max( \\l_semio_viz_net_wmax_fp , \\l_semio_viz_net_a_fp ) }\n    \\semio_viz_network_fadd:nnn { strength } { \\semio_viz_network_n:nn { es } {##1} } { \\l_semio_viz_net_a_fp }\n    \\semio_viz_network_fadd:nnn { strength } { \\semio_viz_network_n:nn { et } {##1} } { \\l_semio_viz_net_a_fp }\n  }\n  \\fp_compare:nNnT \\l_semio_viz_net_wmin_fp = { inf } { \\fp_zero:N \\l_semio_viz_net_wmin_fp }\n  \\fp_set:Nn \\l_semio_viz_net_dmax_fp { 1 }\n  \\fp_zero:N \\l_semio_viz_net_strength_max_fp\n  \\int_step_inline:nn { \\l_semio_viz_network_n_int } {\n    \\fp_set:Nn \\l_semio_viz_net_dmax_fp\n      { max( \\l_semio_viz_net_dmax_fp , \\semio_viz_network_n:nn { deg } {##1} ) }\n    \\fp_set:Nn \\l_semio_viz_net_strength_max_fp\n      { max( \\l_semio_viz_net_strength_max_fp , \\semio_viz_network_f:nn { strength } {##1} ) }\n  }\n  \\fp_compare:nNnT \\l_semio_viz_net_strength_max_fp = { 0 }\n    { \\fp_set:Nn \\l_semio_viz_net_strength_max_fp { 1 } }\n}\n\\fp_new:N \\l_semio_viz_net_dmax_fp\n\\fp_new:N \\l_semio_viz_net_strength_max_fp"
+  },
+  {
+    "file": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-network-graph.sty",
+    "from": "* ( 0.55 + 0.75 * sqrt( max( 1 , \\semio_viz_network_n:nn { deg } {#1} )\n                / \\l_semio_viz_net_dmax_fp ) )",
+    "to": "* ( 0.55 + 0.75 * sqrt( \\semio_viz_network_f:nn { strength } {#1}\n                / \\l_semio_viz_net_strength_max_fp ) )"
+  },
+  {
+    "file": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-network-matrix.sty",
+    "from": "\\bool_new:N \\l_semio_viz_mat_split_bool",
+    "to": "\\bool_new:N \\l_semio_viz_mat_split_bool\n\\fp_new:N \\l_semio_viz_mat_right_fp"
+  },
+  {
+    "file": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-network-matrix.sty",
+    "from": "% 🔲 adjacency-matrix — the ordered dense view; `order` is the whole story of the chart.",
+    "to": "% 🌓 Draws the full matrix or shares its ordered canvas with the node-link view.\n\\cs_new_protected:Npn \\semio_viz_mat_draw: {\n  \\bool_if:NTF \\l_semio_viz_mat_split_bool\n    {\n      \\fp_set_eq:NN \\l_semio_viz_mat_right_fp \\l_semio_viz_net_xhi_fp\n      \\fp_set:Nn \\l_semio_viz_net_xhi_fp\n        { \\l_semio_viz_net_xlo_fp + 0.52 * ( \\l_semio_viz_mat_right_fp - \\l_semio_viz_net_xlo_fp ) }\n      \\semio_viz_mat_grid_draw:\n      \\fp_set:Nn \\l_semio_viz_net_xlo_fp { \\l_semio_viz_net_xhi_fp + 2 }\n      \\fp_set_eq:NN \\l_semio_viz_net_xhi_fp \\l_semio_viz_mat_right_fp\n      \\semio_viz_mat_line_draw:\n    }\n    { \\semio_viz_mat_grid_draw: }\n}\n\n% 🔲 adjacency-matrix — the ordered dense view; `order` controls both supported readings."
+  },
+  {
+    "file": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-network-matrix.sty",
+    "from": "  \\semio_viz_mat_extent:\n  \\semio_viz_net_canvas:\n  \\semio_viz_mat_grid_draw:\n}",
+    "to": "  \\semio_viz_mat_extent:\n  \\semio_viz_net_extremes:\n  \\semio_viz_net_canvas:\n  \\semio_viz_mat_draw:\n}"
+  },
+  {
+    "file": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-network-matrix.sty",
+    "from": "  \\fp_set:Nn \\l_semio_viz_net_e_fp { \\l_semio_viz_net_xhi_fp }\n  \\fp_set:Nn \\l_semio_viz_net_xhi_fp\n    { \\l_semio_viz_net_xlo_fp + 0.52 * ( \\l_semio_viz_net_e_fp - \\l_semio_viz_net_xlo_fp ) }\n  \\semio_viz_mat_grid_draw:\n  \\fp_set:Nn \\l_semio_viz_net_xlo_fp { \\l_semio_viz_net_xhi_fp + 2 }\n  \\fp_set_eq:NN \\l_semio_viz_net_xhi_fp \\l_semio_viz_net_e_fp\n  \\semio_viz_mat_line_draw:",
+    "to": "  \\semio_viz_mat_draw:"
+  },
+  {
+    "file": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-diagram-flowchart.sty",
+    "from": "\\msg_new:nnn { semio-viz } { diagram-empty }\n  { Diagram~node~table~'#1'~has~no~rows. }",
+    "to": "\\msg_new:nnn { semio-viz } { diagram-empty }\n  { Diagram~node~table~'#1'~has~no~rows. }\n\\msg_new:nnn { semio-viz } { diagram-language }\n  { Diagram~lane~heading~requires~explicit~language~en~or~de,~received~'#1'. }\n\\msg_new:nnn { semio-viz } { diagram-lane-title }\n  { Diagram~lane-title~requires~a~literal~caption~or~exactly~two~captions~separated~by~'//'. }"
+  },
+  {
+    "file": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-diagram-flowchart.sty",
+    "from": "\\bool_new:N \\l_semio_viz_dg_autosize_bool",
+    "to": "\\bool_new:N \\l_semio_viz_dg_auto_width_bool\n\\bool_new:N \\l_semio_viz_dg_auto_height_bool\n\\seq_new:N \\l_semio_viz_dg_title_parts_seq"
+  },
+  {
+    "file": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-diagram-flowchart.sty",
+    "from": "  node-width   .code:n = { \\str_if_eq:nnTF {#1} { auto } { \\bool_set_true:N \\l_semio_viz_dg_autosize_bool } { \\bool_set_false:N \\l_semio_viz_dg_autosize_bool \\fp_set:Nn \\l_semio_viz_dg_nw_fp {#1} } },\n  node-height  .code:n = { \\str_if_eq:nnF {#1} { auto } { \\fp_set:Nn \\l_semio_viz_dg_nh_fp {#1} } },",
+    "to": "  node-width   .code:n = { \\str_if_eq:nnTF {#1} { auto } { \\bool_set_true:N \\l_semio_viz_dg_auto_width_bool } { \\bool_set_false:N \\l_semio_viz_dg_auto_width_bool \\fp_set:Nn \\l_semio_viz_dg_nw_fp {#1} } },\n  node-height  .code:n = { \\str_if_eq:nnTF {#1} { auto } { \\bool_set_true:N \\l_semio_viz_dg_auto_height_bool } { \\bool_set_false:N \\l_semio_viz_dg_auto_height_bool \\fp_set:Nn \\l_semio_viz_dg_nh_fp {#1} } },"
+  },
+  {
+    "file": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-diagram-flowchart.sty",
+    "from": "  \\bool_set_true:N \\l_semio_viz_dg_autosize_bool",
+    "to": "  \\bool_set_true:N \\l_semio_viz_dg_auto_width_bool\n  \\bool_set_true:N \\l_semio_viz_dg_auto_height_bool"
+  },
+  {
+    "file": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-diagram-flowchart.sty",
+    "from": "  \\bool_if:NT \\l_semio_viz_dg_autosize_bool {\n    \\fp_set:Nn \\l_semio_viz_dg_nw_fp\n      { ( \\l_semio_viz_dg_w_fp - 2 * \\l_semio_viz_dg_pad_fp - ( \\l_semio_viz_dg_cols_int - 1 ) * \\l_semio_viz_dg_colgap_fp ) / \\l_semio_viz_dg_cols_int }\n    \\fp_set:Nn \\l_semio_viz_dg_nh_fp\n      { ( \\l_semio_viz_dg_h_fp - 2 * \\l_semio_viz_dg_pad_fp - ( \\l_semio_viz_dg_rows_int - 1 ) * \\l_semio_viz_dg_rowgap_fp ) / \\l_semio_viz_dg_rows_int }\n    \\fp_compare:nNnT { \\l_semio_viz_dg_nw_fp } < { 4 } { \\fp_set:Nn \\l_semio_viz_dg_nw_fp { 4 } }\n    \\fp_compare:nNnT { \\l_semio_viz_dg_nh_fp } < { 3 } { \\fp_set:Nn \\l_semio_viz_dg_nh_fp { 3 } }\n  }",
+    "to": "  \\bool_if:NT \\l_semio_viz_dg_auto_width_bool {\n    \\fp_set:Nn \\l_semio_viz_dg_nw_fp\n      { max( 4 , ( \\l_semio_viz_dg_w_fp - 2 * \\l_semio_viz_dg_pad_fp - ( \\l_semio_viz_dg_cols_int - 1 ) * \\l_semio_viz_dg_colgap_fp ) / \\l_semio_viz_dg_cols_int ) }\n  }\n  \\bool_if:NT \\l_semio_viz_dg_auto_height_bool {\n    \\fp_set:Nn \\l_semio_viz_dg_nh_fp\n      { max( 3 , ( \\l_semio_viz_dg_h_fp - 2 * \\l_semio_viz_dg_pad_fp - ( \\l_semio_viz_dg_rows_int - 1 ) * \\l_semio_viz_dg_rowgap_fp ) / \\l_semio_viz_dg_rows_int ) }\n  }"
+  },
+  {
+    "file": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-diagram-flowchart.sty",
+    "from": "%region 🔖️Pipeline",
+    "to": "% 📝 Draws the diagram caption and explicitly localized lane heading above their frame.\n\\cs_new_protected:Npn \\semio_viz_dg_titles: {\n  \\tl_if_empty:NF \\l_semio_viz_dg_title_tl {\n    \\node [ font=\\c_semio_viz_theme_font_title_tl , text=semio-chrome-text-normal , anchor=south , inner~sep=0mm ]\n      at ( \\fp_eval:n { \\l_semio_viz_dg_w_fp / 2 } , \\fp_eval:n { \\l_semio_viz_dg_h_fp + 5 } )\n      { \\tl_use:N \\l_semio_viz_dg_title_tl } ;\n  }\n  \\str_if_eq:VnF \\l_semio_viz_dg_lanemode_tl { none } {\n    \\tl_if_empty:NF \\l_semio_viz_dg_lanetitle_tl {\n      \\seq_set_split:NnV \\l_semio_viz_dg_title_parts_seq { // } \\l_semio_viz_dg_lanetitle_tl\n      \\int_case:nnF { \\seq_count:N \\l_semio_viz_dg_title_parts_seq } {\n        { 1 } { \\tl_set_eq:NN \\l_semio_viz_dg_ta_tl \\l_semio_viz_dg_lanetitle_tl }\n        { 2 } {\n          \\str_case:VnF \\l_semio_language_tl {\n            { en } { \\tl_set:Nx \\l_semio_viz_dg_ta_tl { \\seq_item:Nn \\l_semio_viz_dg_title_parts_seq { 1 } } }\n            { de } { \\tl_set:Nx \\l_semio_viz_dg_ta_tl { \\seq_item:Nn \\l_semio_viz_dg_title_parts_seq { 2 } } }\n          } { \\msg_error:nnx { semio-viz } { diagram-language } { \\l_semio_language_tl } }\n        }\n      } { \\msg_error:nn { semio-viz } { diagram-lane-title } }\n      \\node [ font=\\c_semio_viz_theme_font_chip_tl , text=semio-chrome-text-normal , anchor=south~west , inner~sep=0mm ]\n        at ( 0 , \\fp_eval:n { \\l_semio_viz_dg_h_fp + 0.8 } ) { \\tl_use:N \\l_semio_viz_dg_ta_tl } ;\n    }\n  }\n}\n\n%region 🔖️Pipeline"
+  },
+  {
+    "file": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-diagram-flowchart.sty",
+    "from": "  \\semio_viz_dg_legend:\n}",
+    "to": "  \\semio_viz_dg_legend:\n  \\semio_viz_dg_titles:\n}"
+  },
+  {
+    "file": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-mark.sty",
+    "from": "  \\fp_set:Nn \\l_semio_viz_fam_w_fp { 80 }\n  \\fp_set:Nn \\l_semio_viz_fam_h_fp { 40 }\n  \\fp_set:Nn \\l_semio_viz_fam_pad_fp { 6 }",
+    "to": "  \\fp_set_eq:NN \\l_semio_viz_fam_w_fp \\l_semio_viz_width_fp\n  \\fp_set_eq:NN \\l_semio_viz_fam_h_fp \\l_semio_viz_height_fp\n  \\fp_set_eq:NN \\l_semio_viz_fam_pad_fp \\l_semio_viz_pad_fp"
+  }
+]

@@ -8,18 +8,27 @@ use crate::tui::theme::{Role, Surface, Theme};
 use crate::tui::widget::{WidgetSignal, WizardState};
 
 fn visible_indices(w: &WizardState) -> Vec<usize> {
-    if w.filter.is_empty() {
-        return (0..w.options.len()).collect();
-    }
-    let f = w.filter.to_ascii_lowercase();
-    w.options.iter().enumerate().filter(|(_, o)| o.to_ascii_lowercase().contains(&f)).map(|(i, _)| i).collect()
+    w.visible_indices()
+}
+
+fn viewport(w: &WizardState, rect: Rect) -> (u16, usize) {
+    let header = if w.steps.is_empty() { 1 } else { 2 };
+    let height = usize::from(rect.height.saturating_sub(header));
+    (header, w.offset.max(w.selected.saturating_sub(height.saturating_sub(1))).min(w.selected))
+}
+
+pub(crate) fn wizard_hit(w: &mut WizardState, rect: Rect, pos: Pos) -> Option<WidgetSignal> {
+    let (header, offset) = viewport(w, rect);
+    let row = pos.y.checked_sub(rect.y)?.checked_sub(header)?;
+    if row >= rect.height.saturating_sub(header) || pos.x < rect.x || pos.x >= rect.x.saturating_add(rect.width) { return None; }
+    let selected = offset + usize::from(row);
+    let index = *visible_indices(w).get(selected)?;
+    w.selected = selected;
+    Some(WidgetSignal::Activated(index))
 }
 
 pub(crate) fn wizard_on_key(w: &mut WizardState, ev: &KeyEvent) -> Option<WidgetSignal> {
     let vis = visible_indices(w);
-    if vis.is_empty() && !matches!(ev.key, crate::tui::event::Key::Backspace | crate::tui::event::Key::Esc) {
-        return None;
-    }
     match ev.key {
         crate::tui::event::Key::Up => {
             if w.selected > 0 {
@@ -73,10 +82,18 @@ pub(crate) fn paint_wizard(w: &WizardState, theme: &Theme, rect: Rect, buf: &mut
         buf.put_str(Pos { x: rect.x, y }, text, fg, bg, 0, Rect::new(rect.x, y, rect.width, 1));
         y += 1;
     }
+    if y < rect.y.saturating_add(rect.height) {
+        let text = format!("/ {}", w.filter);
+        let fg = theme.role(Role::MutedForeground);
+        let (text, _) = truncate_to(&text, rect.width);
+        buf.put_str(Pos { x: rect.x, y }, text, fg, bg, 0, Rect::new(rect.x, y, rect.width, 1));
+        y += 1;
+    }
     let list_top = y;
     let list_height = rect.height.saturating_sub(y.saturating_sub(rect.y));
+    let (_, offset) = viewport(w, rect);
     for row in 0..list_height {
-        let idx = w.offset + usize::from(row);
+        let idx = offset + usize::from(row);
         let Some(&opt_i) = vis.get(idx) else { break };
         let item = &w.options[opt_i];
         let selected = idx == w.selected;

@@ -1,0 +1,414 @@
+{
+  "capturedAt": "2026-10-05T13:30:46.7502348Z",
+  "actualProducerSession": 55768,
+  "actualTerminal": 0,
+  "capsuleCount": 766,
+  "driftCount": 81,
+  "drift": [
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🖼️assets/🔣️viz-api.json",
+      "before": "F348BCE2DE35ACFA9B53BA1DA95B9210B0D03B2737FF2D20643C7A08025D332E",
+      "after": "EB55C038E43F025D577FF6DF0041F103D97C21E3E14F6C97D40840331C5528F4"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/⏱️viz-2.tex",
+      "before": "8BB3F9E899E32BE14BA096CD7E29A2F2B8D63DAFE3ACA2FB9BDB518B095CCC66",
+      "after": "D9F4AAA984FC31B3A5B62980B48B172415FA3F19448D8FCD2EEC7D62193B0C81"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/♟️viz-56.tex",
+      "before": "8AE47B51F5CFAF0391F7F6561F35D2466C809A648DF58E7568158E3D0F26A8FC",
+      "after": "317B113C57230D90A4B88FF47BC0A35B11A061F41BBF401B52DF87EB5723E033"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/♾️viz-38.tex",
+      "before": "55A3C4C743B0A6E33DE5FD0D61014E2A4420C2042DBE7948D7BFAF70BFDE8E13",
+      "after": "7ADAF03CF8501B74BD1E6BEB919FA46558C523060F06CCB69F7E6489CE42558B"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/⚗️viz-33.tex",
+      "before": "4850D70320AE984D1D78C9E18F0054D1D8EA012999A33F9480D0E82B496E93A9",
+      "after": "34339757B70BF0325B8075EF5D7515C259DDC42AC58495C9FF877555EABF5A6F"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/⚙️viz-14.tex",
+      "before": "8F39BEB6E6A0A16A6F1B5C0400EB07F6FCD6022CC4E275BE042BE7258EA1684F",
+      "after": "EEC228CB0941A35F36CED147582C8E5A2B562674E04BEB5F4ACCA1FCFDA8EACE"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/⚛️viz-30.tex",
+      "before": "CE8C0139B6F3DBE95B903BECD29B0A892B9C3072B22194A2453600C894B96F4E",
+      "after": "1601A8A6F77EE2B61A3894EF9EACCBCFCE953926EC1E012B0907F900FCCEAB90"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/⚽️viz-43.tex",
+      "before": "51932DB85C045963803A8705572C431FDA7CCFEAA57BA34C9F1F904DFC927799",
+      "after": "3862365F027E4F16051CE8D6DDF64C2E2793A1457771DDCF1E6777E21E9EFCFB"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/⛓️viz-64.tex",
+      "before": "5D36633B65FC0138704DC373BD4A0A2C6B98A6194BFBC3005CEC9F3C85A4FEE4",
+      "after": "0833DDEC05A77EC6B137212851DE7EE067EF81293B143B137247641A2B5CED8D"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/❓️viz-23.tex",
+      "before": "B8513FA1CEE73AB46C5F30364E21D91A97B3311AC6ABE17E82383D6C91AA6DBC",
+      "after": "DAC73C4CDE723E8AFABD6594340932D28F08D75419E772FEBDA7A62A05ACB2C3"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/➡️viz-27.tex",
+      "before": "DC1D3C9EC324647A0107223F5909D1E9F0C00D211729607F3568181A264B7CCA",
+      "after": "B3553DD0FDF9358E4254D71CC8E5751797CC613D4D31D3852FED96370E0B2779"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/🌀️viz-61.tex",
+      "before": "A349EF7C05E2B9188CBB8BF1C8973992D022FB8E98C7A0A8089D0126572D44C8",
+      "after": "695596EFCA30E6BA7685E055A94E159750ED5716EAC0F3127B950A13048591CD"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/🌊️viz-9.tex",
+      "before": "7669E6D33F68A01F3DA12E4D3B273098EC03A6114FE396BCE9C1A8043395C94F",
+      "after": "2C45ED256EBF59F71DEAF397ED80D6CFA8743F7ABF8ACA8FB69A26C660179042"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/🌦️viz-35.tex",
+      "before": "3D7876D813720BEAED37BE61A4755F2B41F617F8BDB1BD6001A8066BE1FAAC01",
+      "after": "E7F928F01F586C8FA95487EBF4115882A6FEE1AF6D5994FC2BFB90268B1C9C82"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/🌳️viz-7.tex",
+      "before": "0207ABECEFD2EDECA4F4E11B1D6A75D538F60371EF919AEDE1DB0EEC0C783902",
+      "after": "2654B43686B53FFD4BE838DC5616182012D020A6693104C446C258D48FD35955"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/🌿️viz-34.tex",
+      "before": "888EDD38FEE629742C2DE0D4BCD7DDABA4B2D69C632E022FA13DD8F8DC20A5D5",
+      "after": "DDC256CEC35A00DAA3918DE9B8332DF29584688A7E71277D47D92B9A0C3ECD9E"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/🍰️viz-6.tex",
+      "before": "AF7B1981D3C39AC942309CC35380F0E21563BFBB0943B5026A425DFDFAC19CBC",
+      "after": "4653FEACB4FB47B4941AF83B671AC2AA5E610224F5FF6719BE497D2A9E88F438"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/🎓️viz-45.tex",
+      "before": "88FDF0092E6A864910CBBE8D74AC4514220D40D8EF1371699162F724603691CB",
+      "after": "570D79F9AF37B44FFDA79A5B300476FDA5767F2EC25855F6C7D345E382FBA09F"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/🎚️viz-18.tex",
+      "before": "B010A58CE01E9A186C8140BECEEC416DB8F7E83247B782961D05C2234F42A255",
+      "after": "9C0B33B75A087FDEA12105D6A57B3861BC20C89AA3AD7435D7F19501585D2A5A"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/🎛️viz-5.tex",
+      "before": "9AC2F49D3A707B1DC839686B163B7902A9E34D81222FA46B2CB8D3CAD044479C",
+      "after": "0D64A17D0B3D8A1950DAE7D20131593C2027AD72E868F74BB2EB7EDD742E9636"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/🎞️viz-73.tex",
+      "before": "83DC5BAD9BA64957676556E020FBAA5B4F8F4971A403C62EE6AED0072D2E3F5B",
+      "after": "1FE50C5437AEE157963A574B46F5EE661C1076F48588F86B5BB4D75138A93271"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/🎨️viz-74.tex",
+      "before": "5FAF76A46AFEA345C4D885D9D51682847D26C1A8EF854DD7A10F5FB58852AEF9",
+      "after": "3935CC069B2CE9D6D4A8F897F7C94FACDA3ECA9BD5009CD1490375266C21E2EC"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/🎯️viz-24.tex",
+      "before": "940B85E1DCD1EE284D4D1CB35136279B31DBC303ACB417F117E9CB2F10833522",
+      "after": "6776EC800BDD0B65930CF851B098A499D724FA72B25115AD16AA7DB602832FC8"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/🎲️viz-41.tex",
+      "before": "530BDA9B9490402860E003858C20B429CF21CB509E2A00C34195A7014F936617",
+      "after": "719BAA6CCA37FF91E50D823857296CA8404CFB428D8035F58FE287D740A4C4F3"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/🎻️viz-3.tex",
+      "before": "089BD1E60A8CF6A9EEC98349DB8F4ADDFA8A3AD7C9083B77541A1DD291AF4D6A",
+      "after": "88205080D2EAD8665637A86D019B707DA4F93CBA869A181AD9EBFCC0796ABFCB"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/🎼️viz-44.tex",
+      "before": "6511361D4A09DF6E484FDEAF4DB4C6A2D8985C50A0523FA167B8BF7DE20407AE",
+      "after": "C33C98886F2D2813CCFA1E5A9D6D1D4A3CE7AC85683061C2883F736E22E8292C"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/🏁️viz-53.tex",
+      "before": "7C83D989776E75BE496B35E011663623B424BF92961BD66B6274DE074B962FDD",
+      "after": "F5CB9082015C13F3CDF8A2CFADD8764E694357F55A8B570C55DC4D09B8520323"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/🏎️viz-62.tex",
+      "before": "6F1A2C1D52A28FFB9C52601664703A2E89208578B498BBE6358414A7FE3DED21",
+      "after": "7B8CF0E7FC75D7B453415A4D545C52681C461B20BD8D447DA2CE9BEBE27A001B"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/🏔️viz-28.tex",
+      "before": "38FDA31C5877D394D1F86C9D1876C7BE7AD60DCDC4AFAE2DD8056E657385B91A",
+      "after": "137B40DFDC8D23F4DDB572DCF4373B062F5ACDBBAC49EEE3E10E56797FF013A3"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/🏗️viz-79.tex",
+      "before": "7C428DADEAA572175FE57400EE9E90711C0B1B4335F25BC57E9C0CCBBD183114",
+      "after": "6630EE8DA2798ED9036CC7FAD99F9412C95F5FD161E38783710FAE3F41E983E0"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/🏛️viz-37.tex",
+      "before": "AE882603B42D52A011DA5C7952F66B6BBD205BF07B95829EF3AAD6B517173CF2",
+      "after": "C3099CFE7E8BFE6F37F7B3D8072D323AEF8EB9B3FEF968F42E99719D5F7EA20F"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/🐟️viz-42.tex",
+      "before": "41E83553DC2A74598482D8BE6D70FF384B2659235EFF2436E14A97B5DF3C5FB4",
+      "after": "3FDCC2534D94121D27C54FD33250A51D15E87E394945CB11D4B726FAB50704F8"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/👣️viz-63.tex",
+      "before": "6094BC788604D651C13F822AE3492A92A6CF05A648C967D23BAE3BBDEE515A5B",
+      "after": "F203F4658E4792309A86F86A0FC5946254FEC82B2E9010CCD15E3578D765446E"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/💬️viz-50.tex",
+      "before": "30467BF4010D0B01E4FE45103143C5B243F66036511774C106F66528F2B036BC",
+      "after": "AAE59B55AB1D112C8F8189244DE26AEE65B31D2FACB8D90D13684D009F794730"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/💹️viz-17.tex",
+      "before": "4DCB6E7825C66319CFF7B6F0AC85A8AE0886760C8A3D93B9BE7CA3B1D5FD9A02",
+      "after": "F372F389F578EAC2B61A562EB6D14A7289904351F5067D4F2F30F39DE09C4700"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/💻️viz-57.tex",
+      "before": "BF43CAFCB3650C98F340323A08EC769F08EF5BA31CF21E28BD5E7DD913A9B7C8",
+      "after": "F5E59DF0D2ACECD24F3A82012DC2A63D70E09287629A48F8BE1477DCE7AD3EB5"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/📅️viz-54.tex",
+      "before": "6614493B14BE2F46166F7D7773FB7E9B9A07EFE934F82BC71CCD3CD9ECE58E97",
+      "after": "59E230BBAEDA7CE6D12974896E632D6A9280889062669B15764B241D0C112054"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/📈️viz-25.tex",
+      "before": "8E5545B5226FE2B5007E70BC1BB2D2249994FCC29C838AB4388D85385B560FD1",
+      "after": "D4661C1A611680EA3FF22D3632B630C0C9132AEC8114EDFF196736BE04B30E45"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/📉️viz-19.tex",
+      "before": "1EF784D24B8172B21B95614506F15811D967E1EDD72C62ECFDF78B23FA5697ED",
+      "after": "200110B1C380AEDB9964A4FA8EDA6F50BF0613C8D6F20A04D3DFE2976274E8E9"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/📊️viz-1.tex",
+      "before": "B558FBDE500B539CB89A51F3009D6265A4029C4E28419A5F58D4E4A5AAABDB60",
+      "after": "1E82F60D2F71BD5F364F0C2D11AAD56FACF629EBCCE589D7A5E1A294B57285D0"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/📋️viz-16.tex",
+      "before": "880ED63823F8F565C601526B7660B17A414ED842A445AB8AC94DB7329F5E37B0",
+      "after": "DB99709C475CE58BC44CDBBE0CA42A48C08CE662EE3379E7F96176C0B2430DB7"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/📍️viz-52.tex",
+      "before": "E6BBC1D2F688D2269245395E53FAABEA9D3624C1FB0AF32F7C54EC61A67FE710",
+      "after": "0FBA97D9AE24E8FCF2BFAF3B3C961A535C3E3BA488C096A4A1A5BE9B3CCA3FFD"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/📏️viz-51.tex",
+      "before": "85C96CF7E7FBD22396E5C0B39600E5AF1C97F6C4598B0D16D260065CD1215362",
+      "after": "99A626B1B4CC0EF06C0AC58C7A58D072246E313899D9B37B538F55BEF64F23F0"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/📐️viz-26.tex",
+      "before": "C88AD295D9627DE73465950544A15B8F0C168F9F527794143D58106E8A511EE5",
+      "after": "17C3D3C30A8574562A87176701B3ECF50438B8B5C5FD46E08DB514C1EAE5AEAA"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/📖️viz-72.tex",
+      "before": "2989A8A475F9104CBC7B0C4C7C8B500EEEF1DC704248CFD472F3EEAAB770DE73",
+      "after": "0BCE7C15C9050D44939606389729A34C2AC453D8AF36D2BC273241C6983754CA"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/📝️viz-69.tex",
+      "before": "B40FE9C3CB0E4E5EE8F3CAB4A9D5598D3F35488D0471E60175350B3311161C8F",
+      "after": "8E7690BC80E6960896913E38BA56ABD8ADC96245B90943E1D62A393B464F4E76"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/📰️viz-46.tex",
+      "before": "EECC4E8761CB0C83F73E9074CEEA50DD6090E0BE9DC7FDAB7583D20E6F86AEC6",
+      "after": "69EDD39E690E4D8A79BE3A8839DA345DC82DC5FD3BE3674F54E7DCACE3940722"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/📶️viz-32.tex",
+      "before": "21A12D4DD93268E41575B248BC16405B858AABA245C4A606C3AA7BB672C381C9",
+      "after": "A08B2D259D77E6A3F9DFC836487F080F67C6380C31A6FAF0C29080FE23D69455"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/🔄️viz-78.tex",
+      "before": "3F923E0062AF6C97739AF2FF8FDEB37F6B52B272861644D296141FF37B527261",
+      "after": "B761B27EE7EFAC8628507E9B51BBA4B6C915E850BA46C9428033DC024F5EB221"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/🔌️viz-31.tex",
+      "before": "91A94A5E6DD0D392D0B945738A857635F31BB39ED0C273F12647954DF684CB94",
+      "after": "5B59BDD42DDE1E1AFA917E63BDE7884CA7E46A2F58F4C2F565C77166F8FFC499"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/🔗️viz-4.tex",
+      "before": "3B8A9D306D70B4B0449E8C3E75F434E71ADB5EDC21615A27707973EBFAD9D6C3",
+      "after": "D734076036C5BF37BCD54F4F9AA35360E20D101998001D360974FEFE7AE9594C"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/🔤️viz-13.tex",
+      "before": "2843FAA41A5DBEC6533ABBFC9D6A61C7A8BF84464FC23DF87D356847CFC32F56",
+      "after": "31D2B3581BB6DBD995B47A971A7219202452D4F8E6F62546EDA0BEFC0D78F5F8"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/🔥️viz-11.tex",
+      "before": "0C95CDDC4FB59A9013E4C11289A65E62C5E3CB5C7D8A2793C7ABD71897ED2ECA",
+      "after": "798F56F32C08F7D73DA95FCCD925FF866C6CF8F8F25A45AAB90E1015E0594059"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/🔧️viz-36.tex",
+      "before": "265FA2FF2683AF1D60A99672F6F1964A1BF7A2B2FBCB70D2AA8C7B042B42C332",
+      "after": "DE6802D72C0C5E9DD9BE360EB9657408914B99AEF536818ECAE2691B15CD9F88"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/🔬️viz-60.tex",
+      "before": "C6959D61524AB2D1F1FB7F3FB9F0688A9B4339020FAC2BB7BB16FC099267BD7B",
+      "after": "2E8DBD05D172E926B8FB0AD18BA9F2AB3D04871A85D3B6B1FAD0C077DD74164C"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/🔺️viz-0.tex",
+      "before": "3910DAAB98532A5472FB05270FF84886ECD40C6AAAF4BEF8FDBE7FA70B4D182A",
+      "after": "49E3383DA3845E4EC31923E7EAE5F548A888DA0A3DC4F6A509EC6A4290B063E2"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/🕸️viz-8.tex",
+      "before": "A5B2915F0500EF9C3B36D5DB0578C2464C4C97B01458FE9F915F269294CC81FE",
+      "after": "FAF4F377C6099B1BB2F04AE02AE970134C88751E3D7AB111B85FA4542EA4B17E"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/🖥️viz-15.tex",
+      "before": "21AF7B87EA3E4D2D459723DFC9BA4A817626FD850F02827D6CDFCED6C19770E6",
+      "after": "5DFB15E486D03DCFDAB2D19DB333F47F7B4C77C4484C42CDD711A38E7E1136B1"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/🗂️viz-76.tex",
+      "before": "86DC088A48A2A2F7ACD5C27BE2D99CC38CE56DBDE6F6DDC03B7952DD5CB020E7",
+      "after": "F04EF5646EF6D8766DC18D8863FD7FA8DC4833A86CE15362CD86277A444070A6"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/🗄️viz-66.tex",
+      "before": "F28087A26890317EDF751CEF005507951549DED5B0921A97F8F419EE3BA4FE4E",
+      "after": "5487D6B986C0FBC4E94908D6DD7A1E5CD0AB839BCA09AAE259483A99142D0FF5"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/🗳️viz-70.tex",
+      "before": "0C07FC4A48FD4B866D116A9F341FDE9F44210AC1851C806586004344EA4236D6",
+      "after": "6E33FF690656A21B0FC5CD8AF889D44C5337D678B3520263FE1F29E980832199"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/🗺️viz-10.tex",
+      "before": "925D67DAB26E7A5DBA000CB66C5422D5B8F923A6D6FFF0FD7C2B9FB75D5C0177",
+      "after": "7C04381B62A0FDA814FF4FB998668087C3DEACE1CC42A4F713C75C57F4968AB4"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/🧊️viz-29.tex",
+      "before": "309004825EEB25E09C7ADA27FCB434A0B9547E1BD71861A6327F92E4667C1E31",
+      "after": "D0F358B97413496183D5FF805492D6D5EB79485099843BA8195E6E1D3B3CCC5B"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/🧠️viz-67.tex",
+      "before": "2A389E3957DBA913381FD60BE8E02E34850C027954B2BEEB8E32738A09AFAFA8",
+      "after": "18FCFDC75A297101D27375A09361A05072E0338CC2D01D6BF78076EB97062149"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/🧩️viz-48.tex",
+      "before": "DC613BAA30FD88CE3E3D79EB7463EC74E35D9F3482F661D2B8087069CB512577",
+      "after": "312E08E0C1FB648C0D667B4AF69EAC14C04D3B7D66413B8733F8C3C4E76C2ACA"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/🧪️viz-68.tex",
+      "before": "394F8B2E1DDA81409F9699F4EE6824F45F2145A822C87A26E13B66EB61FE1489",
+      "after": "C10CF83DCC184BCE135A83529ACFF6791C9D4A5AD4389CE4E4C3FDCA0B36B6B6"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/🧬️viz-21.tex",
+      "before": "072A2B2366BA069538FAA8281A07EFFE35440B442793CED279208A95EC714C99",
+      "after": "E359534C3251E308D66BBF1B97EA9BEDFAF6F88826D0A4BF5DF4AA111576DADB"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/🧭️viz-20.tex",
+      "before": "E7AB719C360C0750F93222F256FB5C2570475054FD49B6C618E4E4E1D3AD71D8",
+      "after": "A80783D5FCA7C45A81D9241B70D1056A97CDDF93D24E6AA1FB7530ADD43C7953"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/🧮️viz-75.tex",
+      "before": "79A8D3DD8E8859CA774B667751E4B97A605DAC69D6AE0D2F8058534A9BF29888",
+      "after": "E263B3DAAA363C4504F7C00C41A0945A822FFC6A41D8756527CCAB26D83E149C"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/🧱️viz-47.tex",
+      "before": "87BA0DD1C62F612576B3E72246EFBD8AB8CB070CC3AE050C128F1C48B47C1B4C",
+      "after": "CD0D1FAAD3287E2550B5662325B4CB7DEB5E0599033BD62B166BC9DA3E1962D8"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/🧾️viz-12.tex",
+      "before": "86C0BCCECBAD61A52A3EF7C17111D384624CD5824CF327DAC6600966AE4F9292",
+      "after": "EA08D10BD6B00003CA1AABC7075FFBD32CDF6802DFD5036D92A7E028E6D4735D"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/🩺️viz-22.tex",
+      "before": "8FDEC5EA711434DEC15A62634373506BC1F01B3FBCB1A9EA51603F81B56C5BBC",
+      "after": "947F15A51AF847404988DF6097851EDBACFDEBD6F20FD7184A59261A6191A4FC"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/🪆️viz-77.tex",
+      "before": "507FB699F1C010481253BFFDF4754A8138EBE1DA7DAB6A4C9F88C480A65015D8",
+      "after": "43154C11024CB57E99D92F56DA903C67B5DB860AFE03C2803172199DCDC41C0A"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/🪑️viz-55.tex",
+      "before": "C121E374FD9F3C4C62444BD230BC2C874E8174F586A06F90F8DBC4DB7BFC1E8D",
+      "after": "3E0FB3112FD84A41967548AEDD3B526CE751D634752FA48608B26E57A34A690D"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/🪞️viz-49.tex",
+      "before": "1261B467135C87B8DF27DF8537B448219DC4D521D279BBD9E28F30A15922EE4F",
+      "after": "1C6020EC5A74B42EB7EBDC0214519525C927724C801A67683002F99F20F43452"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/🫂️viz-71.tex",
+      "before": "60B3E749A9C0849F66B7A7026D062937B5CD3B6A0C1FC97D63AED6A9B5C43BAC",
+      "after": "BD23A59AE2C83624E7A9237139A901E8549847ACAD81A43EB2D7B3DC9961F8B9"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/🚚️viz-59.tex",
+      "before": "457D01084478088D3C0077C3F8D609AC6C229AD3A9A03D318F919B4AB8A871FD",
+      "after": "EFB6D474397AD35FC06CE93749D36E52A4EA9D677D32B2A06E445679BF7C1239"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/🚦️viz-40.tex",
+      "before": "55718EB249D4ADBE2E869B75E77CFED6EABA6EE6BF1DF860D5F34A4171960FB2",
+      "after": "31ADE83589C561109B84285FB5919981594B5169C1306BD25B4AB2FC03295BBC"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/🛡️viz-58.tex",
+      "before": "4FA92A05E1AD34FE5B6ED2282CEEF187F87B8FDDCF5444AE46F55B857C0E7CB3",
+      "after": "70D177D839358396D3BB1517382BD8353B5A5981B5F792ADD72D3CACC1B00DC0"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/🛰️viz-65.tex",
+      "before": "DAA9D51E634F5E451801AA1130D637067626E917C0F8B304665403212B8EF912",
+      "after": "52D6A19AF21AC1AF3A5A12568797CF419156B50ED0DD3294BCD03D7309F30EC4"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-gallery/🫧️viz-39.tex",
+      "before": "364D2344E629CE3F7C284B7C8597C5A26380E905AB94D859474FA56EBF9B1141",
+      "after": "8ECB78F3C8EF0FDAB6C44D70FF1600AF03E7CFA295F5F6283B4C155C589FFD05"
+    }
+  ]
+}

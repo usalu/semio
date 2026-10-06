@@ -1,4 +1,9 @@
 {
+  "authoredLanguageCases": [
+    { "id": "unselected-authored-language", "chart": { "width": 100, "height": 60, "layers": [] }, "valid": false },
+    { "id": "selected-english-language", "chart": { "width": 100, "height": 60, "language": "en", "layers": [] }, "valid": true },
+    { "id": "selected-german-language", "chart": { "width": 100, "height": 60, "language": "de", "layers": [] }, "valid": true }
+  ],
   "cases": [
     {
       "id": "empty",

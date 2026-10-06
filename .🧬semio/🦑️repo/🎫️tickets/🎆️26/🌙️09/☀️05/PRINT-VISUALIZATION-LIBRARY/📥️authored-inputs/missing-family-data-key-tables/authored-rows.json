@@ -1,0 +1,275 @@
+[
+  {
+    "family": "adjacency-matrix",
+    "default": "demo-graph-community",
+    "type": "string",
+    "en": "Name of the graph relationship table.",
+    "de": "Name der Graphbeziehungstabelle."
+  },
+  {
+    "family": "alluvial",
+    "default": "demo-flow",
+    "type": "string",
+    "en": "Name of the flow table.",
+    "de": "Name der Flusstabelle."
+  },
+  {
+    "family": "arc-diagram",
+    "default": "demo-graph-community",
+    "type": "string",
+    "en": "Name of the graph relationship table.",
+    "de": "Name der Graphbeziehungstabelle."
+  },
+  {
+    "family": "axis",
+    "default": "demo",
+    "type": "string",
+    "en": "Name of the table used to derive scales and plot the axis data.",
+    "de": "Name der Tabelle für die Skalenermittlung und die Darstellung der Achsendaten."
+  },
+  {
+    "family": "biofabric",
+    "default": "demo-graph-community",
+    "type": "string",
+    "en": "Name of the graph relationship table.",
+    "de": "Name der Graphbeziehungstabelle."
+  },
+  {
+    "family": "chord",
+    "default": "demo-graph-community",
+    "type": "string",
+    "en": "Name of the weighted relationship table.",
+    "de": "Name der gewichteten Beziehungstabelle."
+  },
+  {
+    "family": "cycle",
+    "default": "demo-diagram-cycle",
+    "type": "string",
+    "en": "Name of the stage table.",
+    "de": "Name der Phasentabelle."
+  },
+  {
+    "family": "decision-table",
+    "default": "demo-diagram-rules",
+    "type": "string",
+    "en": "Name of the condition and action table.",
+    "de": "Name der Bedingungs- und Aktionstabelle."
+  },
+  {
+    "family": "dependency-wheel",
+    "default": "demo-graph-community",
+    "type": "string",
+    "en": "Name of the weighted relationship table.",
+    "de": "Name der gewichteten Beziehungstabelle."
+  },
+  {
+    "family": "edge-bundled",
+    "default": "demo-graph-community",
+    "type": "string",
+    "en": "Name of the graph relationship table.",
+    "de": "Name der Graphbeziehungstabelle."
+  },
+  {
+    "family": "fishbone",
+    "default": "demo-diagram-cause",
+    "type": "string",
+    "en": "Name of the cause table.",
+    "de": "Name der Ursachentabelle."
+  },
+  {
+    "family": "flow",
+    "default": "demo-diagram-flow",
+    "type": "string",
+    "en": "Name of the diagram node table.",
+    "de": "Name der Diagrammknotentabelle."
+  },
+  {
+    "family": "hive-plot",
+    "default": "demo-graph-community",
+    "type": "string",
+    "en": "Name of the graph relationship table.",
+    "de": "Name der Graphbeziehungstabelle."
+  },
+  {
+    "family": "infographic-icon",
+    "default": "demo-infographic",
+    "type": "string",
+    "en": "Name of the icon and value table.",
+    "de": "Name der Symbol- und Wertetabelle."
+  },
+  {
+    "family": "infographic-illustration",
+    "default": "demo-illustration",
+    "type": "string",
+    "en": "Name of the illustration table.",
+    "de": "Name der Illustrationstabelle."
+  },
+  {
+    "family": "infographic-list",
+    "default": "demo-infographic",
+    "type": "string",
+    "en": "Name of the infographic item table.",
+    "de": "Name der Infografikelementtabelle."
+  },
+  {
+    "family": "infographic-number",
+    "default": "demo-infographic",
+    "type": "string",
+    "en": "Name of the value and caption table.",
+    "de": "Name der Werte- und Beschriftungstabelle."
+  },
+  {
+    "family": "logic-tree",
+    "default": "demo-diagram-tree",
+    "type": "string",
+    "en": "Name of the hierarchical node table.",
+    "de": "Name der hierarchischen Knotentabelle."
+  },
+  {
+    "family": "matrix-grid",
+    "default": "demo-matrix-grid",
+    "type": "string",
+    "en": "Name of the grid value table.",
+    "de": "Name der Gitterwertetabelle."
+  },
+  {
+    "family": "node-link-matrix",
+    "default": "demo-graph-community",
+    "type": "string",
+    "en": "Name of the graph relationship table.",
+    "de": "Name der Graphbeziehungstabelle."
+  },
+  {
+    "family": "notation-board",
+    "default": "demo-board",
+    "type": "string",
+    "en": "Name of the board element table.",
+    "de": "Name der Brettpositionstabelle."
+  },
+  {
+    "family": "notation-railroad",
+    "default": "demo-railroad",
+    "type": "string",
+    "en": "Name of the grammar element table.",
+    "de": "Name der Grammatikelementtabelle."
+  },
+  {
+    "family": "parallel-sets",
+    "default": "demo-flow",
+    "type": "string",
+    "en": "Name of the flow table.",
+    "de": "Name der Flusstabelle."
+  },
+  {
+    "family": "pm-board",
+    "default": "demo-pm-board",
+    "type": "string",
+    "en": "Name of the task card table.",
+    "de": "Name der Aufgabenkartentabelle."
+  },
+  {
+    "family": "pm-gantt",
+    "default": "demo-pm-gantt",
+    "type": "string",
+    "en": "Name of the task schedule table.",
+    "de": "Name der Aufgabenplantabelle."
+  },
+  {
+    "family": "pm-network",
+    "default": "demo-pm-gantt",
+    "type": "string",
+    "en": "Name of the task dependency table.",
+    "de": "Name der Aufgabenabhängigkeitstabelle."
+  },
+  {
+    "family": "sankey",
+    "default": "demo-flow",
+    "type": "string",
+    "en": "Name of the flow table.",
+    "de": "Name der Flusstabelle."
+  },
+  {
+    "family": "schedule-calendar",
+    "default": "demo-schedule",
+    "type": "string",
+    "en": "Name of the scheduled event table.",
+    "de": "Name der Terminplantabelle."
+  },
+  {
+    "family": "schedule-timedistance",
+    "default": "demo-timedistance",
+    "type": "string",
+    "en": "Name of the time and distance table.",
+    "de": "Name der Zeit- und Entfernungstabelle."
+  },
+  {
+    "family": "seating",
+    "default": "demo-seating",
+    "type": "string",
+    "en": "Name of the seat allocation table.",
+    "de": "Name der Sitzplatzzuordnungstabelle."
+  },
+  {
+    "family": "stage",
+    "default": "demo-diagram-cycle",
+    "type": "string",
+    "en": "Name of the stage table.",
+    "de": "Name der Phasentabelle."
+  },
+  {
+    "family": "state-overview",
+    "default": "demo-state-series",
+    "type": "string",
+    "en": "Name of the state series table.",
+    "de": "Name der Zustandsreihentabelle."
+  },
+  {
+    "family": "state-selection",
+    "default": "demo-diagram-flow",
+    "type": "string",
+    "en": "Name of the selectable node table.",
+    "de": "Name der auswählbaren Knotentabelle."
+  },
+  {
+    "family": "state-sequence",
+    "default": "demo-state-frames",
+    "type": "string",
+    "en": "Name of the state frame table.",
+    "de": "Name der Zustandsbildtabelle."
+  },
+  {
+    "family": "swimlane",
+    "default": "demo-diagram-flow",
+    "type": "string",
+    "en": "Name of the diagram node table, including lane assignments.",
+    "de": "Name der Diagrammknotentabelle einschließlich Bahnzuordnungen."
+  },
+  {
+    "family": "uml-class",
+    "default": "demo-uml-class",
+    "type": "string",
+    "en": "Name of the class definition table.",
+    "de": "Name der Klassendefinitionstabelle."
+  },
+  {
+    "family": "uml-sequence",
+    "default": "demo-uml-sequence",
+    "type": "string",
+    "en": "Name of the interaction message table.",
+    "de": "Name der Interaktionsnachrichtentabelle."
+  },
+  {
+    "family": "uml-timing",
+    "default": "demo-uml-timing",
+    "type": "string",
+    "en": "Name of the timed state table.",
+    "de": "Name der zeitlichen Zustandstabelle."
+  },
+  {
+    "family": "uml-usecase",
+    "default": "demo-uml-usecase",
+    "type": "string",
+    "en": "Name of the actor and use case table.",
+    "de": "Name der Akteur- und Anwendungsfalltabelle."
+  }
+]

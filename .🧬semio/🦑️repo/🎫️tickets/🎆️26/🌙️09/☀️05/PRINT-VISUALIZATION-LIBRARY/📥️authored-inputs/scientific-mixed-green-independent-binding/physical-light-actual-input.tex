@@ -1,0 +1,276 @@
+\documentclass[type=paper,language=en,theme=light]{semio}
+\usepackage{semio-viz-probe}
+\usepackage{semio-viz}
+\title{Scientific Viewports}
+\author{Semio}
+\date{}
+\errorcontextlines=200
+\ExplSyntaxOn
+\tl_new:N \l_semio_viz_test_canvas_case_tl
+\cs_new_eq:NN \semio_viz_test_canvas_frame: \semio_viz_sci_frame:
+\cs_set_protected:Npn \semio_viz_sci_frame: { \exp_args:Nx \special {pdf:literal~direct~/SemioVizChrome\tl_use:N \l_semio_viz_test_canvas_case_tl \c_space_tl BMC} \semio_viz_test_canvas_frame: \special{pdf:literal~direct~EMC} }
+\cs_if_exist:NT \semio_viz_sci_physical_begin: {
+\cs_new_eq:NN \semio_viz_test_canvas_begin: \semio_viz_sci_physical_begin:
+\cs_new_eq:NN \semio_viz_test_canvas_end: \semio_viz_sci_physical_end:
+\cs_set_protected:Npn \semio_viz_sci_physical_begin: { \semio_viz_test_canvas_begin: \exp_args:Nx \special{pdf:literal~direct~/SemioVizBody\tl_use:N \l_semio_viz_test_canvas_case_tl \c_space_tl BMC} }
+\cs_set_protected:Npn \semio_viz_sci_physical_end: { \special{pdf:literal~direct~EMC} \semio_viz_test_canvas_end: }
+}
+\ExplSyntaxOff
+\begin{document}
+\SemioVizProbeBegin{scientific-canvas}{light}
+\SemioVizProbeOn
+\SemioVizProbePage
+\clearpage\noindent\texttt{Case~Cv0M0}\par\ExplSyntaxOn\tl_set:Nn\l_semio_viz_test_canvas_case_tl{Cv0M0}\ExplSyntaxOff
+\SemioVizProbeBegin{scientific-canvas}{Cv0M0}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{en}\ExplSyntaxOff
+\begin{VizFigure}[width=140,height=120,title={}]
+\draw[line width=.01mm] (0,0) rectangle (140,120);
+\special{pdf:literal direct /SemioVizControlCv0M0 BMC}
+\SemioVizTheme{default}[appearance=light]
+\SemioVizChart{electron-configuration-diagram}[axes={false},domain={},grid={false},height={48},mode={configuration},range={},title={},width={80},xlabel={},ylabel={}]
+% 140mm × 120mm, light appearance
+\special{pdf:literal direct EMC}
+\end{VizFigure}
+\endgroup
+
+\clearpage\noindent\texttt{Case~Cv0M1}\par\ExplSyntaxOn\tl_set:Nn\l_semio_viz_test_canvas_case_tl{Cv0M1}\ExplSyntaxOff
+\SemioVizProbeBegin{scientific-canvas}{Cv0M1}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{en}\ExplSyntaxOff
+\begin{VizFigure}[width=140,height=120,title={}]
+\draw[line width=.01mm] (0,0) rectangle (140,120);
+\special{pdf:literal direct /SemioVizControlCv0M1 BMC}
+\SemioVizTheme{default}[appearance=light]
+\SemioVizChart{electron-configuration-diagram}[axes={true},domain={},grid={true},height={48},mode={configuration},range={},ticks={2},title={Cvtitle},width={80},xlabel={Cvx},ylabel={Cvy}]
+% 140mm × 120mm, light appearance
+\special{pdf:literal direct EMC}
+\end{VizFigure}
+\endgroup
+
+\clearpage\noindent\texttt{Case~Cv0M2}\par\ExplSyntaxOn\tl_set:Nn\l_semio_viz_test_canvas_case_tl{Cv0M2}\ExplSyntaxOff
+\SemioVizProbeBegin{scientific-canvas}{Cv0M2}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{en}\ExplSyntaxOff
+\begin{VizFigure}[width=140,height=120,title={}]
+\draw[line width=.01mm] (0,0) rectangle (140,120);
+\special{pdf:literal direct /SemioVizControlCv0M2 BMC}
+\SemioVizTheme{default}[appearance=light]
+\SemioVizChart{electron-configuration-diagram}[axes={true},domain={-20,100},grid={true},height={48},mode={configuration},range={-20,68},ticks={5},title={Cvtitle},width={80},xlabel={Cvx},ylabel={Cvy}]
+% 140mm × 120mm, light appearance
+\special{pdf:literal direct EMC}
+\end{VizFigure}
+\endgroup
+
+\clearpage\noindent\texttt{Case~Cv1M0}\par\ExplSyntaxOn\tl_set:Nn\l_semio_viz_test_canvas_case_tl{Cv1M0}\ExplSyntaxOff
+\SemioVizProbeBegin{scientific-canvas}{Cv1M0}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{en}\ExplSyntaxOff
+\begin{VizFigure}[width=140,height=120,title={}]
+\draw[line width=.01mm] (0,0) rectangle (140,120);
+\special{pdf:literal direct /SemioVizControlCv1M0 BMC}
+\SemioVizTheme{default}[appearance=light]
+\SemioVizChart{orbital-visualization}[axes={false},domain={},grid={false},height={48},lobes={4},mode={orbital},range={},title={},width={80},xlabel={},ylabel={}]
+% 140mm × 120mm, light appearance
+\special{pdf:literal direct EMC}
+\end{VizFigure}
+\endgroup
+
+\clearpage\noindent\texttt{Case~Cv1M1}\par\ExplSyntaxOn\tl_set:Nn\l_semio_viz_test_canvas_case_tl{Cv1M1}\ExplSyntaxOff
+\SemioVizProbeBegin{scientific-canvas}{Cv1M1}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{en}\ExplSyntaxOff
+\begin{VizFigure}[width=140,height=120,title={}]
+\draw[line width=.01mm] (0,0) rectangle (140,120);
+\special{pdf:literal direct /SemioVizControlCv1M1 BMC}
+\SemioVizTheme{default}[appearance=light]
+\SemioVizChart{orbital-visualization}[axes={true},domain={},grid={true},height={48},lobes={4},mode={orbital},range={},ticks={2},title={Cvtitle},width={80},xlabel={Cvx},ylabel={Cvy}]
+% 140mm × 120mm, light appearance
+\special{pdf:literal direct EMC}
+\end{VizFigure}
+\endgroup
+
+\clearpage\noindent\texttt{Case~Cv1M2}\par\ExplSyntaxOn\tl_set:Nn\l_semio_viz_test_canvas_case_tl{Cv1M2}\ExplSyntaxOff
+\SemioVizProbeBegin{scientific-canvas}{Cv1M2}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{en}\ExplSyntaxOff
+\begin{VizFigure}[width=140,height=120,title={}]
+\draw[line width=.01mm] (0,0) rectangle (140,120);
+\special{pdf:literal direct /SemioVizControlCv1M2 BMC}
+\SemioVizTheme{default}[appearance=light]
+\SemioVizChart{orbital-visualization}[axes={true},domain={-20,100},grid={true},height={48},lobes={4},mode={orbital},range={-20,68},ticks={5},title={Cvtitle},width={80},xlabel={Cvx},ylabel={Cvy}]
+% 140mm × 120mm, light appearance
+\special{pdf:literal direct EMC}
+\end{VizFigure}
+\endgroup
+
+\clearpage\noindent\texttt{Case~Cv2M0}\par\ExplSyntaxOn\tl_set:Nn\l_semio_viz_test_canvas_case_tl{Cv2M0}\ExplSyntaxOff
+\SemioVizProbeBegin{scientific-canvas}{Cv2M0}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{en}\ExplSyntaxOff
+\begin{VizFigure}[width=140,height=120,title={}]
+\draw[line width=.01mm] (0,0) rectangle (140,120);
+\special{pdf:literal direct /SemioVizControlCv2M0 BMC}
+\SemioVizTheme{default}[appearance=light]
+\SemioVizChart{ternary-phase-diagram}[axes={false},domain={},grid={false},height={48},mode={ternary},points={0.2/0.5/x,0.6/0.2/y,0.3/0.3/z},range={},title={},width={80},xlabel={},ylabel={}]
+% 140mm × 120mm, light appearance
+\special{pdf:literal direct EMC}
+\end{VizFigure}
+\endgroup
+
+\clearpage\noindent\texttt{Case~Cv2M1}\par\ExplSyntaxOn\tl_set:Nn\l_semio_viz_test_canvas_case_tl{Cv2M1}\ExplSyntaxOff
+\SemioVizProbeBegin{scientific-canvas}{Cv2M1}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{en}\ExplSyntaxOff
+\begin{VizFigure}[width=140,height=120,title={}]
+\draw[line width=.01mm] (0,0) rectangle (140,120);
+\special{pdf:literal direct /SemioVizControlCv2M1 BMC}
+\SemioVizTheme{default}[appearance=light]
+\SemioVizChart{ternary-phase-diagram}[axes={true},domain={},grid={true},height={48},mode={ternary},points={0.2/0.5/x,0.6/0.2/y,0.3/0.3/z},range={},ticks={2},title={Cvtitle},width={80},xlabel={Cvx},ylabel={Cvy}]
+% 140mm × 120mm, light appearance
+\special{pdf:literal direct EMC}
+\end{VizFigure}
+\endgroup
+
+\clearpage\noindent\texttt{Case~Cv2M2}\par\ExplSyntaxOn\tl_set:Nn\l_semio_viz_test_canvas_case_tl{Cv2M2}\ExplSyntaxOff
+\SemioVizProbeBegin{scientific-canvas}{Cv2M2}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{en}\ExplSyntaxOff
+\begin{VizFigure}[width=140,height=120,title={}]
+\draw[line width=.01mm] (0,0) rectangle (140,120);
+\special{pdf:literal direct /SemioVizControlCv2M2 BMC}
+\SemioVizTheme{default}[appearance=light]
+\SemioVizChart{ternary-phase-diagram}[axes={true},domain={-20,100},grid={true},height={48},mode={ternary},points={0.2/0.5/x,0.6/0.2/y,0.3/0.3/z},range={-20,68},ticks={5},title={Cvtitle},width={80},xlabel={Cvx},ylabel={Cvy}]
+% 140mm × 120mm, light appearance
+\special{pdf:literal direct EMC}
+\end{VizFigure}
+\endgroup
+
+\clearpage\noindent\texttt{Case~Cv3M0}\par\ExplSyntaxOn\tl_set:Nn\l_semio_viz_test_canvas_case_tl{Cv3M0}\ExplSyntaxOff
+\SemioVizProbeBegin{scientific-canvas}{Cv3M0}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{en}\ExplSyntaxOff
+\begin{VizFigure}[width=140,height=120,title={}]
+\draw[line width=.01mm] (0,0) rectangle (140,120);
+\special{pdf:literal direct /SemioVizControlCv3M0 BMC}
+\SemioVizTheme{default}[appearance=light]
+\SemioVizChart{latimer-diagram}[axes={false},domain={},grid={false},height={48},mode={latimer},range={},title={},width={80},xlabel={},ylabel={}]
+% 140mm × 120mm, light appearance
+\special{pdf:literal direct EMC}
+\end{VizFigure}
+\endgroup
+
+\clearpage\noindent\texttt{Case~Cv3M1}\par\ExplSyntaxOn\tl_set:Nn\l_semio_viz_test_canvas_case_tl{Cv3M1}\ExplSyntaxOff
+\SemioVizProbeBegin{scientific-canvas}{Cv3M1}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{en}\ExplSyntaxOff
+\begin{VizFigure}[width=140,height=120,title={}]
+\draw[line width=.01mm] (0,0) rectangle (140,120);
+\special{pdf:literal direct /SemioVizControlCv3M1 BMC}
+\SemioVizTheme{default}[appearance=light]
+\SemioVizChart{latimer-diagram}[axes={true},domain={},grid={true},height={48},mode={latimer},range={},ticks={2},title={Cvtitle},width={80},xlabel={Cvx},ylabel={Cvy}]
+% 140mm × 120mm, light appearance
+\special{pdf:literal direct EMC}
+\end{VizFigure}
+\endgroup
+
+\clearpage\noindent\texttt{Case~Cv3M2}\par\ExplSyntaxOn\tl_set:Nn\l_semio_viz_test_canvas_case_tl{Cv3M2}\ExplSyntaxOff
+\SemioVizProbeBegin{scientific-canvas}{Cv3M2}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{en}\ExplSyntaxOff
+\begin{VizFigure}[width=140,height=120,title={}]
+\draw[line width=.01mm] (0,0) rectangle (140,120);
+\special{pdf:literal direct /SemioVizControlCv3M2 BMC}
+\SemioVizTheme{default}[appearance=light]
+\SemioVizChart{latimer-diagram}[axes={true},domain={-20,100},grid={true},height={48},mode={latimer},range={-20,68},ticks={5},title={Cvtitle},width={80},xlabel={Cvx},ylabel={Cvy}]
+% 140mm × 120mm, light appearance
+\special{pdf:literal direct EMC}
+\end{VizFigure}
+\endgroup
+
+\clearpage\noindent\texttt{Case~Cv4M0}\par\ExplSyntaxOn\tl_set:Nn\l_semio_viz_test_canvas_case_tl{Cv4M0}\ExplSyntaxOff
+\SemioVizProbeBegin{scientific-canvas}{Cv4M0}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{en}\ExplSyntaxOff
+\begin{VizFigure}[width=140,height=120,title={}]
+\draw[line width=.01mm] (0,0) rectangle (140,120);
+\special{pdf:literal direct /SemioVizControlCv4M0 BMC}
+\SemioVizTheme{default}[appearance=light]
+\SemioVizChart{queueing-network-diagram}[axes={false},domain={},grid={false},height={48},mode={queueing},range={},title={},width={80},xlabel={},ylabel={}]
+% 140mm × 120mm, light appearance
+\special{pdf:literal direct EMC}
+\end{VizFigure}
+\endgroup
+
+\clearpage\noindent\texttt{Case~Cv4M1}\par\ExplSyntaxOn\tl_set:Nn\l_semio_viz_test_canvas_case_tl{Cv4M1}\ExplSyntaxOff
+\SemioVizProbeBegin{scientific-canvas}{Cv4M1}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{en}\ExplSyntaxOff
+\begin{VizFigure}[width=140,height=120,title={}]
+\draw[line width=.01mm] (0,0) rectangle (140,120);
+\special{pdf:literal direct /SemioVizControlCv4M1 BMC}
+\SemioVizTheme{default}[appearance=light]
+\SemioVizChart{queueing-network-diagram}[axes={true},domain={},grid={true},height={48},mode={queueing},range={},ticks={2},title={Cvtitle},width={80},xlabel={Cvx},ylabel={Cvy}]
+% 140mm × 120mm, light appearance
+\special{pdf:literal direct EMC}
+\end{VizFigure}
+\endgroup
+
+\clearpage\noindent\texttt{Case~Cv4M2}\par\ExplSyntaxOn\tl_set:Nn\l_semio_viz_test_canvas_case_tl{Cv4M2}\ExplSyntaxOff
+\SemioVizProbeBegin{scientific-canvas}{Cv4M2}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{en}\ExplSyntaxOff
+\begin{VizFigure}[width=140,height=120,title={}]
+\draw[line width=.01mm] (0,0) rectangle (140,120);
+\special{pdf:literal direct /SemioVizControlCv4M2 BMC}
+\SemioVizTheme{default}[appearance=light]
+\SemioVizChart{queueing-network-diagram}[axes={true},domain={-20,100},grid={true},height={48},mode={queueing},range={-20,68},ticks={5},title={Cvtitle},width={80},xlabel={Cvx},ylabel={Cvy}]
+% 140mm × 120mm, light appearance
+\special{pdf:literal direct EMC}
+\end{VizFigure}
+\endgroup
+
+\clearpage\noindent\texttt{Case~Cv5M0}\par\ExplSyntaxOn\tl_set:Nn\l_semio_viz_test_canvas_case_tl{Cv5M0}\ExplSyntaxOff
+\SemioVizProbeBegin{scientific-canvas}{Cv5M0}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{en}\ExplSyntaxOff
+\begin{VizFigure}[width=140,height=120,title={}]
+\draw[line width=.01mm] (0,0) rectangle (140,120);
+\special{pdf:literal direct /SemioVizControlCv5M0 BMC}
+\SemioVizTheme{default}[appearance=light]
+\SemioVizChart{spider-player-profile}[axes={false},domain={},grid={false},height={48},mode={radar},range={},series={A/1:4+2:3+3:5+4:2+5:4+6:3,B/1:2+2:5+3:3+4:4+5:2+6:5},title={},width={80},xlabel={},ylabel={}]
+% 140mm × 120mm, light appearance
+\special{pdf:literal direct EMC}
+\end{VizFigure}
+\endgroup
+
+\clearpage\noindent\texttt{Case~Cv5M1}\par\ExplSyntaxOn\tl_set:Nn\l_semio_viz_test_canvas_case_tl{Cv5M1}\ExplSyntaxOff
+\SemioVizProbeBegin{scientific-canvas}{Cv5M1}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{en}\ExplSyntaxOff
+\begin{VizFigure}[width=140,height=120,title={}]
+\draw[line width=.01mm] (0,0) rectangle (140,120);
+\special{pdf:literal direct /SemioVizControlCv5M1 BMC}
+\SemioVizTheme{default}[appearance=light]
+\SemioVizChart{spider-player-profile}[axes={true},domain={},grid={true},height={48},mode={radar},range={},series={A/1:4+2:3+3:5+4:2+5:4+6:3,B/1:2+2:5+3:3+4:4+5:2+6:5},ticks={2},title={Cvtitle},width={80},xlabel={Cvx},ylabel={Cvy}]
+% 140mm × 120mm, light appearance
+\special{pdf:literal direct EMC}
+\end{VizFigure}
+\endgroup
+
+\clearpage\noindent\texttt{Case~Cv5M2}\par\ExplSyntaxOn\tl_set:Nn\l_semio_viz_test_canvas_case_tl{Cv5M2}\ExplSyntaxOff
+\SemioVizProbeBegin{scientific-canvas}{Cv5M2}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{en}\ExplSyntaxOff
+\begin{VizFigure}[width=140,height=120,title={}]
+\draw[line width=.01mm] (0,0) rectangle (140,120);
+\special{pdf:literal direct /SemioVizControlCv5M2 BMC}
+\SemioVizTheme{default}[appearance=light]
+\SemioVizChart{spider-player-profile}[axes={true},domain={-20,100},grid={true},height={48},mode={radar},range={-20,68},series={A/1:4+2:3+3:5+4:2+5:4+6:3,B/1:2+2:5+3:3+4:4+5:2+6:5},ticks={5},title={Cvtitle},width={80},xlabel={Cvx},ylabel={Cvy}]
+% 140mm × 120mm, light appearance
+\special{pdf:literal direct EMC}
+\end{VizFigure}
+\endgroup
+
+\SemioVizProbeEnd
+\end{document}

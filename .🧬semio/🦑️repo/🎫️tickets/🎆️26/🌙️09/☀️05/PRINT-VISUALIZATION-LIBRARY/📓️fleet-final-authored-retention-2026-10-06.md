@@ -1,0 +1,7 @@
+# Final Authored Input Retention — 2026-10-06
+
+The root executed the authored cleanup-retention manifest using native PowerShell and absolute containment checks. All108 candidate source hashes were checked against the manifest before any copying. The36 unique authored script/config inputs were copied under `📥️authored-inputs/closure-2026-10-06` with their relative hierarchy preserved and every destination hash checked. The68 duplicate source candidates were independently verified against existing retained exact-hash copies. Four generated before/next JSONC source snapshots are designated generated output and remain eligible for deletion.
+
+No source was moved or deleted by this retention step, and the generated root was not removed while native/publication processes are live. Additional read-only JSON/TeX review found native-chart.tex and renderer-specimen.tex already retained by exact hash; fixture-candidate JSON is mechanically produced from retained embedded neutral vectors, and authored-emission.tex names are canonical inference output. This bounded classification does not relabel all JSON/TeX files as authored inputs.
+
+Generated cleanup must wait for the remaining root coverage and full API publication gates, final strict publication route check and final launch projection. It must be limited to the exact ticket generated root, preserving this manifest, all reports, and all retained authored input directories. No repository cache, other ticket, shared process or Git index is included.

@@ -1,0 +1,190 @@
+{
+  "owner": "GEO-SPATIAL",
+  "options": {
+    "arrow": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Arrow length in millimetres at unit vector magnitude.",
+        "de": "Pfeillänge in Millimetern bei Einheitsbetrag des Vektors."
+      }
+    },
+    "cell": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Distance between neighbouring plane-lattice samples in millimetres.",
+        "de": "Abstand benachbarter Abtastpunkte des ebenen Gitters in Millimetern."
+      }
+    },
+    "columns": {
+      "syntax": "expression",
+      "type": "integer",
+      "description": {
+        "en": "Number of sampled columns in the plane lattice.",
+        "de": "Anzahl abgetasteter Spalten im ebenen Gitter."
+      }
+    },
+    "dt": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Time increment of each RK4 integration step.",
+        "de": "Zeitinkrement jedes RK4-Integrationsschritts."
+      }
+    },
+    "field": {
+      "syntax": "identifier",
+      "type": "string",
+      "description": {
+        "en": "Analytic field selector or named rectangular vector-field collection; named fields use bilinear interpolation over their declared domain.",
+        "de": "Auswahl eines analytischen Felds oder Name einer rechteckigen Vektorfeldsammlung; benannte Felder verwenden bilineare Interpolation über ihrem deklarierten Bereich."
+      }
+    },
+    "fit": {
+      "syntax": "identifier",
+      "type": "string",
+      "enum": [
+        "geometry",
+        "world"
+      ],
+      "description": {
+        "en": "What the projection is fitted to; families that draw a graticule default to `world`.",
+        "de": "Woran die Projektion eingepasst wird; Familien mit Gradnetz verwenden `world`."
+      }
+    },
+    "geometry": {
+      "syntax": "identifier",
+      "type": "string",
+      "description": {
+        "en": "Name of the geometry table the map draws.",
+        "de": "Name der Geometrietabelle, die die Karte zeichnet."
+      }
+    },
+    "height": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Frame height in millimetres.",
+        "de": "Rahmenhöhe in Millimetern."
+      }
+    },
+    "lineWidth": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Outline width as a TeX dimension; the hairline stroke token by default.",
+        "de": "Umrissbreite als TeX-Dimension; standardmäßig das Haarlinien-Token."
+      }
+    },
+    "opacity": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Draw opacity of the layer.",
+        "de": "Zeichendeckkraft der Ebene."
+      }
+    },
+    "palette": {
+      "syntax": "identifier",
+      "type": "string",
+      "description": {
+        "en": "Named colour palette resolved by semio-viz-theme.",
+        "de": "Benannte Farbpalette, die semio-viz-theme auflöst."
+      }
+    },
+    "paletteSteps": {
+      "syntax": "expression",
+      "type": "integer",
+      "minimum": 1,
+      "default": 5,
+      "description": {
+        "en": "Number of geographic palette levels, independently of vector integration steps; one level uses the palette midpoint.",
+        "de": "Anzahl der geografischen Palettenstufen unabhängig von den Vektorintegrationsschritten; eine Stufe nutzt die Palettenmitte."
+      }
+    },
+    "parallels": {
+      "syntax": "number-list",
+      "type": "string",
+      "default": "0,60",
+      "description": {
+        "en": "Conic standard parallels `p0,p1` in degrees.",
+        "de": "Standardparallelen `p0,p1` der Kegelprojektion in Grad."
+      }
+    },
+    "projection": {
+      "syntax": "identifier",
+      "type": "string",
+      "description": {
+        "en": "Map or camera projection used.",
+        "de": "Verwendete Karten- bzw. Kameraprojektion."
+      }
+    },
+    "render": {
+      "syntax": "identifier",
+      "type": "string",
+      "description": {
+        "en": "Rendering mode: quiver, streamline, streakline, particle or lic.",
+        "de": "Darstellungsmodus: quiver, streamline, streakline, particle oder lic."
+      }
+    },
+    "rotate": {
+      "syntax": "number-list",
+      "type": "string",
+      "default": "0,0,0",
+      "description": {
+        "en": "Projection rotation `lambda,phi,gamma` in degrees.",
+        "de": "Projektionsdrehung `lambda,phi,gamma` in Grad."
+      }
+    },
+    "rows": {
+      "syntax": "expression",
+      "type": "integer",
+      "description": {
+        "en": "Number of sampled rows in the plane lattice.",
+        "de": "Anzahl abgetasteter Zeilen im ebenen Gitter."
+      }
+    },
+    "seeds": {
+      "syntax": "expression",
+      "type": "integer",
+      "description": {
+        "en": "Number of initial streamline seeds.",
+        "de": "Anzahl anfänglicher Stromlinienstartpunkte."
+      }
+    },
+    "steps": {
+      "syntax": "expression",
+      "type": "integer",
+      "description": {
+        "en": "Number of RK4 integration steps per streamline.",
+        "de": "Anzahl der RK4-Integrationsschritte je Stromlinie."
+      }
+    },
+    "stroke": {
+      "syntax": "paint",
+      "type": "string",
+      "default": "semio-chrome-border-emphasized",
+      "description": {
+        "en": "Outline colour token.",
+        "de": "Farbtoken der Umrisslinie."
+      }
+    },
+    "variant": {
+      "syntax": "identifier",
+      "type": "string",
+      "description": {
+        "en": "Sub-kind the family renders; the catalogue slug of the chart kind. The family must draw a different geometry for every variant it declares.",
+        "de": "Untertyp, den die Familie zeichnet; der Katalog-Slug der Diagrammart. Die Familie muss für jede deklarierte Variante eine andere Geometrie zeichnen."
+      }
+    },
+    "width": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Frame width in millimetres.",
+        "de": "Rahmenbreite in Millimetern."
+      }
+    }
+  }
+}

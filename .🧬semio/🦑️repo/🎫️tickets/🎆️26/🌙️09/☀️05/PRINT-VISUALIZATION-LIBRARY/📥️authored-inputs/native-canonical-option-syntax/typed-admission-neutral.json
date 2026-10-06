@@ -1,0 +1,3176 @@
+[
+  {
+    "id": "admission-palette-0-en",
+    "owner": "spatial-vector-field",
+    "family": true,
+    "key": "paletteSteps",
+    "value": 0,
+    "valid": false,
+    "contract": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "grammar": false,
+    "oracleValue": 0,
+    "snapshot": {
+      "chart": {
+        "width": 60,
+        "height": 40,
+        "language": "en",
+        "layers": [],
+        "presets": [
+          {
+            "kind": "streamline-plot",
+            "options": {
+              "field": "vortex",
+              "render": "streamline",
+              "seeds": 2,
+              "steps": 2
+            }
+          }
+        ]
+      }
+    },
+    "mutations": [
+      {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "paletteSteps"
+        ],
+        "value": 0
+      }
+    ]
+  },
+  {
+    "id": "admission-palette-0-de",
+    "owner": "spatial-vector-field",
+    "family": true,
+    "key": "paletteSteps",
+    "value": 0,
+    "valid": false,
+    "contract": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "grammar": false,
+    "oracleValue": 0,
+    "snapshot": {
+      "chart": {
+        "width": 60,
+        "height": 40,
+        "language": "de",
+        "layers": [],
+        "presets": [
+          {
+            "kind": "streamline-plot",
+            "options": {
+              "field": "vortex",
+              "render": "streamline",
+              "seeds": 2,
+              "steps": 2
+            }
+          }
+        ]
+      }
+    },
+    "mutations": [
+      {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "paletteSteps"
+        ],
+        "value": 0
+      }
+    ]
+  },
+  {
+    "id": "admission-palette--1-en",
+    "owner": "spatial-vector-field",
+    "family": true,
+    "key": "paletteSteps",
+    "value": -1,
+    "valid": false,
+    "contract": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "grammar": false,
+    "oracleValue": -1,
+    "snapshot": {
+      "chart": {
+        "width": 60,
+        "height": 40,
+        "language": "en",
+        "layers": [],
+        "presets": [
+          {
+            "kind": "streamline-plot",
+            "options": {
+              "field": "vortex",
+              "render": "streamline",
+              "seeds": 2,
+              "steps": 2
+            }
+          }
+        ]
+      }
+    },
+    "mutations": [
+      {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "paletteSteps"
+        ],
+        "value": -1
+      }
+    ]
+  },
+  {
+    "id": "admission-palette--1-de",
+    "owner": "spatial-vector-field",
+    "family": true,
+    "key": "paletteSteps",
+    "value": -1,
+    "valid": false,
+    "contract": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "grammar": false,
+    "oracleValue": -1,
+    "snapshot": {
+      "chart": {
+        "width": 60,
+        "height": 40,
+        "language": "de",
+        "layers": [],
+        "presets": [
+          {
+            "kind": "streamline-plot",
+            "options": {
+              "field": "vortex",
+              "render": "streamline",
+              "seeds": 2,
+              "steps": 2
+            }
+          }
+        ]
+      }
+    },
+    "mutations": [
+      {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "paletteSteps"
+        ],
+        "value": -1
+      }
+    ]
+  },
+  {
+    "id": "admission-palette-1-5-en",
+    "owner": "spatial-vector-field",
+    "family": true,
+    "key": "paletteSteps",
+    "value": 1.5,
+    "valid": false,
+    "contract": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "grammar": false,
+    "oracleValue": 1.5,
+    "snapshot": {
+      "chart": {
+        "width": 60,
+        "height": 40,
+        "language": "en",
+        "layers": [],
+        "presets": [
+          {
+            "kind": "streamline-plot",
+            "options": {
+              "field": "vortex",
+              "render": "streamline",
+              "seeds": 2,
+              "steps": 2
+            }
+          }
+        ]
+      }
+    },
+    "mutations": [
+      {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "paletteSteps"
+        ],
+        "value": 1.5
+      }
+    ]
+  },
+  {
+    "id": "admission-palette-1-5-de",
+    "owner": "spatial-vector-field",
+    "family": true,
+    "key": "paletteSteps",
+    "value": 1.5,
+    "valid": false,
+    "contract": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "grammar": false,
+    "oracleValue": 1.5,
+    "snapshot": {
+      "chart": {
+        "width": 60,
+        "height": 40,
+        "language": "de",
+        "layers": [],
+        "presets": [
+          {
+            "kind": "streamline-plot",
+            "options": {
+              "field": "vortex",
+              "render": "streamline",
+              "seeds": 2,
+              "steps": 2
+            }
+          }
+        ]
+      }
+    },
+    "mutations": [
+      {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "paletteSteps"
+        ],
+        "value": 1.5
+      }
+    ]
+  },
+  {
+    "id": "admission-palette-true-en",
+    "owner": "spatial-vector-field",
+    "family": true,
+    "key": "paletteSteps",
+    "value": true,
+    "valid": false,
+    "contract": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "grammar": false,
+    "oracleValue": true,
+    "snapshot": {
+      "chart": {
+        "width": 60,
+        "height": 40,
+        "language": "en",
+        "layers": [],
+        "presets": [
+          {
+            "kind": "streamline-plot",
+            "options": {
+              "field": "vortex",
+              "render": "streamline",
+              "seeds": 2,
+              "steps": 2
+            }
+          }
+        ]
+      }
+    },
+    "mutations": [
+      {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "paletteSteps"
+        ],
+        "value": true
+      }
+    ]
+  },
+  {
+    "id": "admission-palette-true-de",
+    "owner": "spatial-vector-field",
+    "family": true,
+    "key": "paletteSteps",
+    "value": true,
+    "valid": false,
+    "contract": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "grammar": false,
+    "oracleValue": true,
+    "snapshot": {
+      "chart": {
+        "width": 60,
+        "height": 40,
+        "language": "de",
+        "layers": [],
+        "presets": [
+          {
+            "kind": "streamline-plot",
+            "options": {
+              "field": "vortex",
+              "render": "streamline",
+              "seeds": 2,
+              "steps": 2
+            }
+          }
+        ]
+      }
+    },
+    "mutations": [
+      {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "paletteSteps"
+        ],
+        "value": true
+      }
+    ]
+  },
+  {
+    "id": "admission-palette-null-en",
+    "owner": "spatial-vector-field",
+    "family": true,
+    "key": "paletteSteps",
+    "value": null,
+    "valid": false,
+    "contract": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "grammar": false,
+    "oracleValue": null,
+    "snapshot": {
+      "chart": {
+        "width": 60,
+        "height": 40,
+        "language": "en",
+        "layers": [],
+        "presets": [
+          {
+            "kind": "streamline-plot",
+            "options": {
+              "field": "vortex",
+              "render": "streamline",
+              "seeds": 2,
+              "steps": 2
+            }
+          }
+        ]
+      }
+    },
+    "mutations": [
+      {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "paletteSteps"
+        ],
+        "value": null
+      }
+    ]
+  },
+  {
+    "id": "admission-palette-null-de",
+    "owner": "spatial-vector-field",
+    "family": true,
+    "key": "paletteSteps",
+    "value": null,
+    "valid": false,
+    "contract": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "grammar": false,
+    "oracleValue": null,
+    "snapshot": {
+      "chart": {
+        "width": 60,
+        "height": 40,
+        "language": "de",
+        "layers": [],
+        "presets": [
+          {
+            "kind": "streamline-plot",
+            "options": {
+              "field": "vortex",
+              "render": "streamline",
+              "seeds": 2,
+              "steps": 2
+            }
+          }
+        ]
+      }
+    },
+    "mutations": [
+      {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "paletteSteps"
+        ],
+        "value": null
+      }
+    ]
+  },
+  {
+    "id": "admission-palette-0-en",
+    "owner": "spatial-vector-field",
+    "family": true,
+    "key": "paletteSteps",
+    "value": "0",
+    "valid": false,
+    "contract": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "grammar": false,
+    "oracleValue": 0,
+    "snapshot": {
+      "chart": {
+        "width": 60,
+        "height": 40,
+        "language": "en",
+        "layers": [],
+        "presets": [
+          {
+            "kind": "streamline-plot",
+            "options": {
+              "field": "vortex",
+              "render": "streamline",
+              "seeds": 2,
+              "steps": 2
+            }
+          }
+        ]
+      }
+    },
+    "mutations": [
+      {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "paletteSteps"
+        ],
+        "value": "0"
+      }
+    ]
+  },
+  {
+    "id": "admission-palette-0-de",
+    "owner": "spatial-vector-field",
+    "family": true,
+    "key": "paletteSteps",
+    "value": "0",
+    "valid": false,
+    "contract": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "grammar": false,
+    "oracleValue": 0,
+    "snapshot": {
+      "chart": {
+        "width": 60,
+        "height": 40,
+        "language": "de",
+        "layers": [],
+        "presets": [
+          {
+            "kind": "streamline-plot",
+            "options": {
+              "field": "vortex",
+              "render": "streamline",
+              "seeds": 2,
+              "steps": 2
+            }
+          }
+        ]
+      }
+    },
+    "mutations": [
+      {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "paletteSteps"
+        ],
+        "value": "0"
+      }
+    ]
+  },
+  {
+    "id": "admission-palette-1-en",
+    "owner": "spatial-vector-field",
+    "family": true,
+    "key": "paletteSteps",
+    "value": 1,
+    "valid": true,
+    "contract": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "grammar": false,
+    "oracleValue": 1,
+    "snapshot": {
+      "chart": {
+        "width": 60,
+        "height": 40,
+        "language": "en",
+        "layers": [],
+        "presets": [
+          {
+            "kind": "streamline-plot",
+            "options": {
+              "field": "vortex",
+              "render": "streamline",
+              "seeds": 2,
+              "steps": 2
+            }
+          }
+        ]
+      }
+    },
+    "mutations": [
+      {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "paletteSteps"
+        ],
+        "value": 1
+      }
+    ]
+  },
+  {
+    "id": "admission-palette-1-de",
+    "owner": "spatial-vector-field",
+    "family": true,
+    "key": "paletteSteps",
+    "value": 1,
+    "valid": true,
+    "contract": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "grammar": false,
+    "oracleValue": 1,
+    "snapshot": {
+      "chart": {
+        "width": 60,
+        "height": 40,
+        "language": "de",
+        "layers": [],
+        "presets": [
+          {
+            "kind": "streamline-plot",
+            "options": {
+              "field": "vortex",
+              "render": "streamline",
+              "seeds": 2,
+              "steps": 2
+            }
+          }
+        ]
+      }
+    },
+    "mutations": [
+      {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "paletteSteps"
+        ],
+        "value": 1
+      }
+    ]
+  },
+  {
+    "id": "admission-palette-2-1-en",
+    "owner": "spatial-vector-field",
+    "family": true,
+    "key": "paletteSteps",
+    "value": "2+1",
+    "valid": true,
+    "contract": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "grammar": true,
+    "oracleValue": "2+1",
+    "snapshot": {
+      "chart": {
+        "width": 60,
+        "height": 40,
+        "language": "en",
+        "layers": [],
+        "presets": [
+          {
+            "kind": "streamline-plot",
+            "options": {
+              "field": "vortex",
+              "render": "streamline",
+              "seeds": 2,
+              "steps": 2
+            }
+          }
+        ]
+      }
+    },
+    "mutations": [
+      {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "paletteSteps"
+        ],
+        "value": "2+1"
+      }
+    ]
+  },
+  {
+    "id": "admission-palette-2-1-de",
+    "owner": "spatial-vector-field",
+    "family": true,
+    "key": "paletteSteps",
+    "value": "2+1",
+    "valid": true,
+    "contract": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "grammar": true,
+    "oracleValue": "2+1",
+    "snapshot": {
+      "chart": {
+        "width": 60,
+        "height": 40,
+        "language": "de",
+        "layers": [],
+        "presets": [
+          {
+            "kind": "streamline-plot",
+            "options": {
+              "field": "vortex",
+              "render": "streamline",
+              "seeds": 2,
+              "steps": 2
+            }
+          }
+        ]
+      }
+    },
+    "mutations": [
+      {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "paletteSteps"
+        ],
+        "value": "2+1"
+      }
+    ]
+  },
+  {
+    "id": "admission-samples-3-5-en",
+    "owner": "sci-function",
+    "family": true,
+    "key": "samples",
+    "value": 3.5,
+    "valid": false,
+    "contract": {
+      "type": "integer"
+    },
+    "grammar": false,
+    "oracleValue": 3.5,
+    "snapshot": {
+      "chart": {
+        "width": 60,
+        "height": 40,
+        "language": "en",
+        "layers": [],
+        "presets": [
+          {
+            "kind": "cartesian-function-plot",
+            "options": {
+              "expr": "0",
+              "samples": 4,
+              "refine": 0,
+              "domain": "-2,2",
+              "range": "0,4",
+              "axes": false,
+              "grid": false,
+              "title": "A&B_{}%$#^~\\"
+            }
+          }
+        ]
+      }
+    },
+    "mutations": [
+      {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "samples"
+        ],
+        "value": 3.5
+      }
+    ]
+  },
+  {
+    "id": "admission-samples-3-5-de",
+    "owner": "sci-function",
+    "family": true,
+    "key": "samples",
+    "value": 3.5,
+    "valid": false,
+    "contract": {
+      "type": "integer"
+    },
+    "grammar": false,
+    "oracleValue": 3.5,
+    "snapshot": {
+      "chart": {
+        "width": 60,
+        "height": 40,
+        "language": "de",
+        "layers": [],
+        "presets": [
+          {
+            "kind": "cartesian-function-plot",
+            "options": {
+              "expr": "0",
+              "samples": 4,
+              "refine": 0,
+              "domain": "-2,2",
+              "range": "0,4",
+              "axes": false,
+              "grid": false,
+              "title": "A&B_{}%$#^~\\"
+            }
+          }
+        ]
+      }
+    },
+    "mutations": [
+      {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "samples"
+        ],
+        "value": 3.5
+      }
+    ]
+  },
+  {
+    "id": "admission-samples-true-en",
+    "owner": "sci-function",
+    "family": true,
+    "key": "samples",
+    "value": true,
+    "valid": false,
+    "contract": {
+      "type": "integer"
+    },
+    "grammar": false,
+    "oracleValue": true,
+    "snapshot": {
+      "chart": {
+        "width": 60,
+        "height": 40,
+        "language": "en",
+        "layers": [],
+        "presets": [
+          {
+            "kind": "cartesian-function-plot",
+            "options": {
+              "expr": "0",
+              "samples": 4,
+              "refine": 0,
+              "domain": "-2,2",
+              "range": "0,4",
+              "axes": false,
+              "grid": false,
+              "title": "A&B_{}%$#^~\\"
+            }
+          }
+        ]
+      }
+    },
+    "mutations": [
+      {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "samples"
+        ],
+        "value": true
+      }
+    ]
+  },
+  {
+    "id": "admission-samples-true-de",
+    "owner": "sci-function",
+    "family": true,
+    "key": "samples",
+    "value": true,
+    "valid": false,
+    "contract": {
+      "type": "integer"
+    },
+    "grammar": false,
+    "oracleValue": true,
+    "snapshot": {
+      "chart": {
+        "width": 60,
+        "height": 40,
+        "language": "de",
+        "layers": [],
+        "presets": [
+          {
+            "kind": "cartesian-function-plot",
+            "options": {
+              "expr": "0",
+              "samples": 4,
+              "refine": 0,
+              "domain": "-2,2",
+              "range": "0,4",
+              "axes": false,
+              "grid": false,
+              "title": "A&B_{}%$#^~\\"
+            }
+          }
+        ]
+      }
+    },
+    "mutations": [
+      {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "samples"
+        ],
+        "value": true
+      }
+    ]
+  },
+  {
+    "id": "admission-samples-1-5-en",
+    "owner": "sci-function",
+    "family": true,
+    "key": "samples",
+    "value": "1.5",
+    "valid": false,
+    "contract": {
+      "type": "integer"
+    },
+    "grammar": false,
+    "oracleValue": 1.5,
+    "snapshot": {
+      "chart": {
+        "width": 60,
+        "height": 40,
+        "language": "en",
+        "layers": [],
+        "presets": [
+          {
+            "kind": "cartesian-function-plot",
+            "options": {
+              "expr": "0",
+              "samples": 4,
+              "refine": 0,
+              "domain": "-2,2",
+              "range": "0,4",
+              "axes": false,
+              "grid": false,
+              "title": "A&B_{}%$#^~\\"
+            }
+          }
+        ]
+      }
+    },
+    "mutations": [
+      {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "samples"
+        ],
+        "value": "1.5"
+      }
+    ]
+  },
+  {
+    "id": "admission-samples-1-5-de",
+    "owner": "sci-function",
+    "family": true,
+    "key": "samples",
+    "value": "1.5",
+    "valid": false,
+    "contract": {
+      "type": "integer"
+    },
+    "grammar": false,
+    "oracleValue": 1.5,
+    "snapshot": {
+      "chart": {
+        "width": 60,
+        "height": 40,
+        "language": "de",
+        "layers": [],
+        "presets": [
+          {
+            "kind": "cartesian-function-plot",
+            "options": {
+              "expr": "0",
+              "samples": 4,
+              "refine": 0,
+              "domain": "-2,2",
+              "range": "0,4",
+              "axes": false,
+              "grid": false,
+              "title": "A&B_{}%$#^~\\"
+            }
+          }
+        ]
+      }
+    },
+    "mutations": [
+      {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "samples"
+        ],
+        "value": "1.5"
+      }
+    ]
+  },
+  {
+    "id": "admission-samples-4-en",
+    "owner": "sci-function",
+    "family": true,
+    "key": "samples",
+    "value": 4,
+    "valid": true,
+    "contract": {
+      "type": "integer"
+    },
+    "grammar": false,
+    "oracleValue": 4,
+    "snapshot": {
+      "chart": {
+        "width": 60,
+        "height": 40,
+        "language": "en",
+        "layers": [],
+        "presets": [
+          {
+            "kind": "cartesian-function-plot",
+            "options": {
+              "expr": "0",
+              "samples": 4,
+              "refine": 0,
+              "domain": "-2,2",
+              "range": "0,4",
+              "axes": false,
+              "grid": false,
+              "title": "A&B_{}%$#^~\\"
+            }
+          }
+        ]
+      }
+    },
+    "mutations": [
+      {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "samples"
+        ],
+        "value": 4
+      }
+    ]
+  },
+  {
+    "id": "admission-samples-4-de",
+    "owner": "sci-function",
+    "family": true,
+    "key": "samples",
+    "value": 4,
+    "valid": true,
+    "contract": {
+      "type": "integer"
+    },
+    "grammar": false,
+    "oracleValue": 4,
+    "snapshot": {
+      "chart": {
+        "width": 60,
+        "height": 40,
+        "language": "de",
+        "layers": [],
+        "presets": [
+          {
+            "kind": "cartesian-function-plot",
+            "options": {
+              "expr": "0",
+              "samples": 4,
+              "refine": 0,
+              "domain": "-2,2",
+              "range": "0,4",
+              "axes": false,
+              "grid": false,
+              "title": "A&B_{}%$#^~\\"
+            }
+          }
+        ]
+      }
+    },
+    "mutations": [
+      {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "samples"
+        ],
+        "value": 4
+      }
+    ]
+  },
+  {
+    "id": "admission-samples-2-2-en",
+    "owner": "sci-function",
+    "family": true,
+    "key": "samples",
+    "value": "2+2",
+    "valid": true,
+    "contract": {
+      "type": "integer"
+    },
+    "grammar": true,
+    "oracleValue": "2+2",
+    "snapshot": {
+      "chart": {
+        "width": 60,
+        "height": 40,
+        "language": "en",
+        "layers": [],
+        "presets": [
+          {
+            "kind": "cartesian-function-plot",
+            "options": {
+              "expr": "0",
+              "samples": 4,
+              "refine": 0,
+              "domain": "-2,2",
+              "range": "0,4",
+              "axes": false,
+              "grid": false,
+              "title": "A&B_{}%$#^~\\"
+            }
+          }
+        ]
+      }
+    },
+    "mutations": [
+      {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "samples"
+        ],
+        "value": "2+2"
+      }
+    ]
+  },
+  {
+    "id": "admission-samples-2-2-de",
+    "owner": "sci-function",
+    "family": true,
+    "key": "samples",
+    "value": "2+2",
+    "valid": true,
+    "contract": {
+      "type": "integer"
+    },
+    "grammar": true,
+    "oracleValue": "2+2",
+    "snapshot": {
+      "chart": {
+        "width": 60,
+        "height": 40,
+        "language": "de",
+        "layers": [],
+        "presets": [
+          {
+            "kind": "cartesian-function-plot",
+            "options": {
+              "expr": "0",
+              "samples": 4,
+              "refine": 0,
+              "domain": "-2,2",
+              "range": "0,4",
+              "axes": false,
+              "grid": false,
+              "title": "A&B_{}%$#^~\\"
+            }
+          }
+        ]
+      }
+    },
+    "mutations": [
+      {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "samples"
+        ],
+        "value": "2+2"
+      }
+    ]
+  },
+  {
+    "id": "admission-grid-number-1-en",
+    "owner": "sci-function",
+    "family": true,
+    "key": "grid",
+    "value": 1,
+    "valid": false,
+    "contract": {
+      "type": "boolean"
+    },
+    "grammar": false,
+    "oracleValue": 1,
+    "snapshot": {
+      "chart": {
+        "width": 60,
+        "height": 40,
+        "language": "en",
+        "layers": [],
+        "presets": [
+          {
+            "kind": "cartesian-function-plot",
+            "options": {
+              "expr": "0",
+              "samples": 4,
+              "refine": 0,
+              "domain": "-2,2",
+              "range": "0,4",
+              "axes": false,
+              "grid": false,
+              "title": "A&B_{}%$#^~\\"
+            }
+          }
+        ]
+      }
+    },
+    "mutations": [
+      {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "grid"
+        ],
+        "value": 1
+      }
+    ]
+  },
+  {
+    "id": "admission-grid-number-1-de",
+    "owner": "sci-function",
+    "family": true,
+    "key": "grid",
+    "value": 1,
+    "valid": false,
+    "contract": {
+      "type": "boolean"
+    },
+    "grammar": false,
+    "oracleValue": 1,
+    "snapshot": {
+      "chart": {
+        "width": 60,
+        "height": 40,
+        "language": "de",
+        "layers": [],
+        "presets": [
+          {
+            "kind": "cartesian-function-plot",
+            "options": {
+              "expr": "0",
+              "samples": 4,
+              "refine": 0,
+              "domain": "-2,2",
+              "range": "0,4",
+              "axes": false,
+              "grid": false,
+              "title": "A&B_{}%$#^~\\"
+            }
+          }
+        ]
+      }
+    },
+    "mutations": [
+      {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "grid"
+        ],
+        "value": 1
+      }
+    ]
+  },
+  {
+    "id": "admission-grid-string-false-en",
+    "owner": "sci-function",
+    "family": true,
+    "key": "grid",
+    "value": "false",
+    "valid": false,
+    "contract": {
+      "type": "boolean"
+    },
+    "grammar": false,
+    "oracleValue": "false",
+    "snapshot": {
+      "chart": {
+        "width": 60,
+        "height": 40,
+        "language": "en",
+        "layers": [],
+        "presets": [
+          {
+            "kind": "cartesian-function-plot",
+            "options": {
+              "expr": "0",
+              "samples": 4,
+              "refine": 0,
+              "domain": "-2,2",
+              "range": "0,4",
+              "axes": false,
+              "grid": false,
+              "title": "A&B_{}%$#^~\\"
+            }
+          }
+        ]
+      }
+    },
+    "mutations": [
+      {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "grid"
+        ],
+        "value": "false"
+      }
+    ]
+  },
+  {
+    "id": "admission-grid-string-false-de",
+    "owner": "sci-function",
+    "family": true,
+    "key": "grid",
+    "value": "false",
+    "valid": false,
+    "contract": {
+      "type": "boolean"
+    },
+    "grammar": false,
+    "oracleValue": "false",
+    "snapshot": {
+      "chart": {
+        "width": 60,
+        "height": 40,
+        "language": "de",
+        "layers": [],
+        "presets": [
+          {
+            "kind": "cartesian-function-plot",
+            "options": {
+              "expr": "0",
+              "samples": 4,
+              "refine": 0,
+              "domain": "-2,2",
+              "range": "0,4",
+              "axes": false,
+              "grid": false,
+              "title": "A&B_{}%$#^~\\"
+            }
+          }
+        ]
+      }
+    },
+    "mutations": [
+      {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "grid"
+        ],
+        "value": "false"
+      }
+    ]
+  },
+  {
+    "id": "admission-grid-boolean-false-en",
+    "owner": "sci-function",
+    "family": true,
+    "key": "grid",
+    "value": false,
+    "valid": true,
+    "contract": {
+      "type": "boolean"
+    },
+    "grammar": false,
+    "oracleValue": false,
+    "snapshot": {
+      "chart": {
+        "width": 60,
+        "height": 40,
+        "language": "en",
+        "layers": [],
+        "presets": [
+          {
+            "kind": "cartesian-function-plot",
+            "options": {
+              "expr": "0",
+              "samples": 4,
+              "refine": 0,
+              "domain": "-2,2",
+              "range": "0,4",
+              "axes": false,
+              "grid": false,
+              "title": "A&B_{}%$#^~\\"
+            }
+          }
+        ]
+      }
+    },
+    "mutations": [
+      {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "grid"
+        ],
+        "value": false
+      }
+    ]
+  },
+  {
+    "id": "admission-grid-boolean-false-de",
+    "owner": "sci-function",
+    "family": true,
+    "key": "grid",
+    "value": false,
+    "valid": true,
+    "contract": {
+      "type": "boolean"
+    },
+    "grammar": false,
+    "oracleValue": false,
+    "snapshot": {
+      "chart": {
+        "width": 60,
+        "height": 40,
+        "language": "de",
+        "layers": [],
+        "presets": [
+          {
+            "kind": "cartesian-function-plot",
+            "options": {
+              "expr": "0",
+              "samples": 4,
+              "refine": 0,
+              "domain": "-2,2",
+              "range": "0,4",
+              "axes": false,
+              "grid": false,
+              "title": "A&B_{}%$#^~\\"
+            }
+          }
+        ]
+      }
+    },
+    "mutations": [
+      {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "grid"
+        ],
+        "value": false
+      }
+    ]
+  },
+  {
+    "id": "admission-title-number-en",
+    "owner": "sci-function",
+    "family": true,
+    "key": "title",
+    "value": 7,
+    "valid": false,
+    "contract": {
+      "type": "string"
+    },
+    "grammar": false,
+    "oracleValue": 7,
+    "snapshot": {
+      "chart": {
+        "width": 60,
+        "height": 40,
+        "language": "en",
+        "layers": [],
+        "presets": [
+          {
+            "kind": "cartesian-function-plot",
+            "options": {
+              "expr": "0",
+              "samples": 4,
+              "refine": 0,
+              "domain": "-2,2",
+              "range": "0,4",
+              "axes": false,
+              "grid": false,
+              "title": "A&B_{}%$#^~\\"
+            }
+          }
+        ]
+      }
+    },
+    "mutations": [
+      {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "title"
+        ],
+        "value": 7
+      }
+    ]
+  },
+  {
+    "id": "admission-title-number-de",
+    "owner": "sci-function",
+    "family": true,
+    "key": "title",
+    "value": 7,
+    "valid": false,
+    "contract": {
+      "type": "string"
+    },
+    "grammar": false,
+    "oracleValue": 7,
+    "snapshot": {
+      "chart": {
+        "width": 60,
+        "height": 40,
+        "language": "de",
+        "layers": [],
+        "presets": [
+          {
+            "kind": "cartesian-function-plot",
+            "options": {
+              "expr": "0",
+              "samples": 4,
+              "refine": 0,
+              "domain": "-2,2",
+              "range": "0,4",
+              "axes": false,
+              "grid": false,
+              "title": "A&B_{}%$#^~\\"
+            }
+          }
+        ]
+      }
+    },
+    "mutations": [
+      {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "title"
+        ],
+        "value": 7
+      }
+    ]
+  },
+  {
+    "id": "admission-title-literal-en",
+    "owner": "sci-function",
+    "family": true,
+    "key": "title",
+    "value": "A_{}&%",
+    "valid": true,
+    "contract": {
+      "type": "string"
+    },
+    "grammar": false,
+    "oracleValue": "A_{}&%",
+    "snapshot": {
+      "chart": {
+        "width": 60,
+        "height": 40,
+        "language": "en",
+        "layers": [],
+        "presets": [
+          {
+            "kind": "cartesian-function-plot",
+            "options": {
+              "expr": "0",
+              "samples": 4,
+              "refine": 0,
+              "domain": "-2,2",
+              "range": "0,4",
+              "axes": false,
+              "grid": false,
+              "title": "A&B_{}%$#^~\\"
+            }
+          }
+        ]
+      }
+    },
+    "mutations": [
+      {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "title"
+        ],
+        "value": "A_{}&%"
+      }
+    ]
+  },
+  {
+    "id": "admission-title-literal-de",
+    "owner": "sci-function",
+    "family": true,
+    "key": "title",
+    "value": "A_{}&%",
+    "valid": true,
+    "contract": {
+      "type": "string"
+    },
+    "grammar": false,
+    "oracleValue": "A_{}&%",
+    "snapshot": {
+      "chart": {
+        "width": 60,
+        "height": 40,
+        "language": "de",
+        "layers": [],
+        "presets": [
+          {
+            "kind": "cartesian-function-plot",
+            "options": {
+              "expr": "0",
+              "samples": 4,
+              "refine": 0,
+              "domain": "-2,2",
+              "range": "0,4",
+              "axes": false,
+              "grid": false,
+              "title": "A&B_{}%$#^~\\"
+            }
+          }
+        ]
+      }
+    },
+    "mutations": [
+      {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "title"
+        ],
+        "value": "A_{}&%"
+      }
+    ]
+  },
+  {
+    "id": "admission-width-bool-en",
+    "owner": "sci-function",
+    "family": true,
+    "key": "width",
+    "value": false,
+    "valid": false,
+    "contract": {
+      "type": "number"
+    },
+    "grammar": false,
+    "oracleValue": false,
+    "snapshot": {
+      "chart": {
+        "width": 60,
+        "height": 40,
+        "language": "en",
+        "layers": [],
+        "presets": [
+          {
+            "kind": "cartesian-function-plot",
+            "options": {
+              "expr": "0",
+              "samples": 4,
+              "refine": 0,
+              "domain": "-2,2",
+              "range": "0,4",
+              "axes": false,
+              "grid": false,
+              "title": "A&B_{}%$#^~\\"
+            }
+          }
+        ]
+      }
+    },
+    "mutations": [
+      {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "width"
+        ],
+        "value": false
+      }
+    ]
+  },
+  {
+    "id": "admission-width-bool-de",
+    "owner": "sci-function",
+    "family": true,
+    "key": "width",
+    "value": false,
+    "valid": false,
+    "contract": {
+      "type": "number"
+    },
+    "grammar": false,
+    "oracleValue": false,
+    "snapshot": {
+      "chart": {
+        "width": 60,
+        "height": 40,
+        "language": "de",
+        "layers": [],
+        "presets": [
+          {
+            "kind": "cartesian-function-plot",
+            "options": {
+              "expr": "0",
+              "samples": 4,
+              "refine": 0,
+              "domain": "-2,2",
+              "range": "0,4",
+              "axes": false,
+              "grid": false,
+              "title": "A&B_{}%$#^~\\"
+            }
+          }
+        ]
+      }
+    },
+    "mutations": [
+      {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "width"
+        ],
+        "value": false
+      }
+    ]
+  },
+  {
+    "id": "admission-width-null-en",
+    "owner": "sci-function",
+    "family": true,
+    "key": "width",
+    "value": null,
+    "valid": false,
+    "contract": {
+      "type": "number"
+    },
+    "grammar": false,
+    "oracleValue": null,
+    "snapshot": {
+      "chart": {
+        "width": 60,
+        "height": 40,
+        "language": "en",
+        "layers": [],
+        "presets": [
+          {
+            "kind": "cartesian-function-plot",
+            "options": {
+              "expr": "0",
+              "samples": 4,
+              "refine": 0,
+              "domain": "-2,2",
+              "range": "0,4",
+              "axes": false,
+              "grid": false,
+              "title": "A&B_{}%$#^~\\"
+            }
+          }
+        ]
+      }
+    },
+    "mutations": [
+      {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "width"
+        ],
+        "value": null
+      }
+    ]
+  },
+  {
+    "id": "admission-width-null-de",
+    "owner": "sci-function",
+    "family": true,
+    "key": "width",
+    "value": null,
+    "valid": false,
+    "contract": {
+      "type": "number"
+    },
+    "grammar": false,
+    "oracleValue": null,
+    "snapshot": {
+      "chart": {
+        "width": 60,
+        "height": 40,
+        "language": "de",
+        "layers": [],
+        "presets": [
+          {
+            "kind": "cartesian-function-plot",
+            "options": {
+              "expr": "0",
+              "samples": 4,
+              "refine": 0,
+              "domain": "-2,2",
+              "range": "0,4",
+              "axes": false,
+              "grid": false,
+              "title": "A&B_{}%$#^~\\"
+            }
+          }
+        ]
+      }
+    },
+    "mutations": [
+      {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "width"
+        ],
+        "value": null
+      }
+    ]
+  },
+  {
+    "id": "admission-width-expression-en",
+    "owner": "sci-function",
+    "family": true,
+    "key": "width",
+    "value": "60/2+30",
+    "valid": true,
+    "contract": {
+      "type": "number"
+    },
+    "grammar": true,
+    "oracleValue": "60/2+30",
+    "snapshot": {
+      "chart": {
+        "width": 60,
+        "height": 40,
+        "language": "en",
+        "layers": [],
+        "presets": [
+          {
+            "kind": "cartesian-function-plot",
+            "options": {
+              "expr": "0",
+              "samples": 4,
+              "refine": 0,
+              "domain": "-2,2",
+              "range": "0,4",
+              "axes": false,
+              "grid": false,
+              "title": "A&B_{}%$#^~\\"
+            }
+          }
+        ]
+      }
+    },
+    "mutations": [
+      {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "width"
+        ],
+        "value": "60/2+30"
+      }
+    ]
+  },
+  {
+    "id": "admission-width-expression-de",
+    "owner": "sci-function",
+    "family": true,
+    "key": "width",
+    "value": "60/2+30",
+    "valid": true,
+    "contract": {
+      "type": "number"
+    },
+    "grammar": true,
+    "oracleValue": "60/2+30",
+    "snapshot": {
+      "chart": {
+        "width": 60,
+        "height": 40,
+        "language": "de",
+        "layers": [],
+        "presets": [
+          {
+            "kind": "cartesian-function-plot",
+            "options": {
+              "expr": "0",
+              "samples": 4,
+              "refine": 0,
+              "domain": "-2,2",
+              "range": "0,4",
+              "axes": false,
+              "grid": false,
+              "title": "A&B_{}%$#^~\\"
+            }
+          }
+        ]
+      }
+    },
+    "mutations": [
+      {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "width"
+        ],
+        "value": "60/2+30"
+      }
+    ]
+  },
+  {
+    "id": "admission-cap-invalid-en",
+    "owner": "mark-line",
+    "family": true,
+    "key": "cap",
+    "value": "bad-cap",
+    "valid": false,
+    "contract": {
+      "type": "string",
+      "enum": [
+        "butt",
+        "round",
+        "square"
+      ]
+    },
+    "grammar": false,
+    "oracleValue": "bad-cap",
+    "snapshot": {
+      "chart": {
+        "width": 60,
+        "height": 40,
+        "language": "en",
+        "layers": [],
+        "presets": [
+          {
+            "kind": "straight-line",
+            "options": {
+              "points": "0,0;10,10"
+            }
+          }
+        ]
+      }
+    },
+    "mutations": [
+      {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "cap"
+        ],
+        "value": "bad-cap"
+      }
+    ]
+  },
+  {
+    "id": "admission-cap-invalid-de",
+    "owner": "mark-line",
+    "family": true,
+    "key": "cap",
+    "value": "bad-cap",
+    "valid": false,
+    "contract": {
+      "type": "string",
+      "enum": [
+        "butt",
+        "round",
+        "square"
+      ]
+    },
+    "grammar": false,
+    "oracleValue": "bad-cap",
+    "snapshot": {
+      "chart": {
+        "width": 60,
+        "height": 40,
+        "language": "de",
+        "layers": [],
+        "presets": [
+          {
+            "kind": "straight-line",
+            "options": {
+              "points": "0,0;10,10"
+            }
+          }
+        ]
+      }
+    },
+    "mutations": [
+      {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "cap"
+        ],
+        "value": "bad-cap"
+      }
+    ]
+  },
+  {
+    "id": "admission-cap-round-en",
+    "owner": "mark-line",
+    "family": true,
+    "key": "cap",
+    "value": "round",
+    "valid": true,
+    "contract": {
+      "type": "string",
+      "enum": [
+        "butt",
+        "round",
+        "square"
+      ]
+    },
+    "grammar": false,
+    "oracleValue": "round",
+    "snapshot": {
+      "chart": {
+        "width": 60,
+        "height": 40,
+        "language": "en",
+        "layers": [],
+        "presets": [
+          {
+            "kind": "straight-line",
+            "options": {
+              "points": "0,0;10,10"
+            }
+          }
+        ]
+      }
+    },
+    "mutations": [
+      {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "cap"
+        ],
+        "value": "round"
+      }
+    ]
+  },
+  {
+    "id": "admission-cap-round-de",
+    "owner": "mark-line",
+    "family": true,
+    "key": "cap",
+    "value": "round",
+    "valid": true,
+    "contract": {
+      "type": "string",
+      "enum": [
+        "butt",
+        "round",
+        "square"
+      ]
+    },
+    "grammar": false,
+    "oracleValue": "round",
+    "snapshot": {
+      "chart": {
+        "width": 60,
+        "height": 40,
+        "language": "de",
+        "layers": [],
+        "presets": [
+          {
+            "kind": "straight-line",
+            "options": {
+              "points": "0,0;10,10"
+            }
+          }
+        ]
+      }
+    },
+    "mutations": [
+      {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "cap"
+        ],
+        "value": "round"
+      }
+    ]
+  },
+  {
+    "id": "admission-padRadius-empty-en",
+    "owner": "mark-arc",
+    "family": true,
+    "key": "padRadius",
+    "value": "",
+    "valid": true,
+    "contract": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "grammar": false,
+    "oracleValue": "",
+    "snapshot": {
+      "chart": {
+        "width": 60,
+        "height": 40,
+        "language": "en",
+        "layers": [],
+        "presets": [
+          {
+            "kind": "circular-arc",
+            "options": {
+              "points": "0,0;10,10"
+            }
+          }
+        ]
+      }
+    },
+    "mutations": [
+      {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "padRadius"
+        ],
+        "value": ""
+      }
+    ]
+  },
+  {
+    "id": "admission-padRadius-empty-de",
+    "owner": "mark-arc",
+    "family": true,
+    "key": "padRadius",
+    "value": "",
+    "valid": true,
+    "contract": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "grammar": false,
+    "oracleValue": "",
+    "snapshot": {
+      "chart": {
+        "width": 60,
+        "height": 40,
+        "language": "de",
+        "layers": [],
+        "presets": [
+          {
+            "kind": "circular-arc",
+            "options": {
+              "points": "0,0;10,10"
+            }
+          }
+        ]
+      }
+    },
+    "mutations": [
+      {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "padRadius"
+        ],
+        "value": ""
+      }
+    ]
+  },
+  {
+    "id": "admission-padRadius-number-en",
+    "owner": "mark-arc",
+    "family": true,
+    "key": "padRadius",
+    "value": 2,
+    "valid": true,
+    "contract": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "grammar": false,
+    "oracleValue": 2,
+    "snapshot": {
+      "chart": {
+        "width": 60,
+        "height": 40,
+        "language": "en",
+        "layers": [],
+        "presets": [
+          {
+            "kind": "circular-arc",
+            "options": {
+              "points": "0,0;10,10"
+            }
+          }
+        ]
+      }
+    },
+    "mutations": [
+      {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "padRadius"
+        ],
+        "value": 2
+      }
+    ]
+  },
+  {
+    "id": "admission-padRadius-number-de",
+    "owner": "mark-arc",
+    "family": true,
+    "key": "padRadius",
+    "value": 2,
+    "valid": true,
+    "contract": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "grammar": false,
+    "oracleValue": 2,
+    "snapshot": {
+      "chart": {
+        "width": 60,
+        "height": 40,
+        "language": "de",
+        "layers": [],
+        "presets": [
+          {
+            "kind": "circular-arc",
+            "options": {
+              "points": "0,0;10,10"
+            }
+          }
+        ]
+      }
+    },
+    "mutations": [
+      {
+        "path": [
+          "presets",
+          "0",
+          "options",
+          "padRadius"
+        ],
+        "value": 2
+      }
+    ]
+  },
+  {
+    "id": "admission-unknown-null-en",
+    "owner": "scale",
+    "family": false,
+    "key": "unknown",
+    "value": null,
+    "valid": true,
+    "contract": {},
+    "grammar": false,
+    "oracleValue": null,
+    "snapshot": {
+      "chart": {
+        "width": 60,
+        "height": 40,
+        "language": "en",
+        "layers": [],
+        "tables": [
+          {
+            "name": "typed_data",
+            "columns": [
+              "input_value"
+            ],
+            "rows": [
+              {
+                "input_value": null
+              },
+              {},
+              {
+                "input_value": ""
+              },
+              {
+                "input_value": "before"
+              },
+              {
+                "input_value": false
+              },
+              {
+                "input_value": 1
+              },
+              {
+                "input_value": "0"
+              },
+              {
+                "input_value": 0
+              }
+            ]
+          }
+        ],
+        "scales": [
+          {
+            "name": "canonical-linear",
+            "kind": "linear",
+            "domain": [
+              0,
+              1
+            ],
+            "range": [
+              0,
+              10
+            ],
+            "options": {
+              "unknown": -7
+            }
+          },
+          {
+            "name": "canonical-ordinal",
+            "kind": "ordinal",
+            "domain": [
+              "",
+              "false",
+              "0",
+              0
+            ],
+            "range": [
+              10,
+              20,
+              30,
+              40
+            ],
+            "options": {
+              "unknown": -7
+            }
+          }
+        ],
+        "presets": [
+          {
+            "kind": "cartesian-function-plot",
+            "options": {
+              "expr": "0",
+              "samples": 4,
+              "refine": 0,
+              "domain": "0,1",
+              "range": "0,1",
+              "axes": false,
+              "grid": false
+            }
+          }
+        ]
+      }
+    },
+    "mutations": [
+      {
+        "path": [
+          "scales",
+          "0",
+          "options",
+          "unknown"
+        ],
+        "value": null
+      }
+    ]
+  },
+  {
+    "id": "admission-unknown-null-de",
+    "owner": "scale",
+    "family": false,
+    "key": "unknown",
+    "value": null,
+    "valid": true,
+    "contract": {},
+    "grammar": false,
+    "oracleValue": null,
+    "snapshot": {
+      "chart": {
+        "width": 60,
+        "height": 40,
+        "language": "de",
+        "layers": [],
+        "tables": [
+          {
+            "name": "typed_data",
+            "columns": [
+              "input_value"
+            ],
+            "rows": [
+              {
+                "input_value": null
+              },
+              {},
+              {
+                "input_value": ""
+              },
+              {
+                "input_value": "before"
+              },
+              {
+                "input_value": false
+              },
+              {
+                "input_value": 1
+              },
+              {
+                "input_value": "0"
+              },
+              {
+                "input_value": 0
+              }
+            ]
+          }
+        ],
+        "scales": [
+          {
+            "name": "canonical-linear",
+            "kind": "linear",
+            "domain": [
+              0,
+              1
+            ],
+            "range": [
+              0,
+              10
+            ],
+            "options": {
+              "unknown": -7
+            }
+          },
+          {
+            "name": "canonical-ordinal",
+            "kind": "ordinal",
+            "domain": [
+              "",
+              "false",
+              "0",
+              0
+            ],
+            "range": [
+              10,
+              20,
+              30,
+              40
+            ],
+            "options": {
+              "unknown": -7
+            }
+          }
+        ],
+        "presets": [
+          {
+            "kind": "cartesian-function-plot",
+            "options": {
+              "expr": "0",
+              "samples": 4,
+              "refine": 0,
+              "domain": "0,1",
+              "range": "0,1",
+              "axes": false,
+              "grid": false
+            }
+          }
+        ]
+      }
+    },
+    "mutations": [
+      {
+        "path": [
+          "scales",
+          "0",
+          "options",
+          "unknown"
+        ],
+        "value": null
+      }
+    ]
+  },
+  {
+    "id": "admission-unknown-booleanfalse-en",
+    "owner": "scale",
+    "family": false,
+    "key": "unknown",
+    "value": false,
+    "valid": true,
+    "contract": {},
+    "grammar": false,
+    "oracleValue": false,
+    "snapshot": {
+      "chart": {
+        "width": 60,
+        "height": 40,
+        "language": "en",
+        "layers": [],
+        "tables": [
+          {
+            "name": "typed_data",
+            "columns": [
+              "input_value"
+            ],
+            "rows": [
+              {
+                "input_value": null
+              },
+              {},
+              {
+                "input_value": ""
+              },
+              {
+                "input_value": "before"
+              },
+              {
+                "input_value": false
+              },
+              {
+                "input_value": 1
+              },
+              {
+                "input_value": "0"
+              },
+              {
+                "input_value": 0
+              }
+            ]
+          }
+        ],
+        "scales": [
+          {
+            "name": "canonical-linear",
+            "kind": "linear",
+            "domain": [
+              0,
+              1
+            ],
+            "range": [
+              0,
+              10
+            ],
+            "options": {
+              "unknown": -7
+            }
+          },
+          {
+            "name": "canonical-ordinal",
+            "kind": "ordinal",
+            "domain": [
+              "",
+              "false",
+              "0",
+              0
+            ],
+            "range": [
+              10,
+              20,
+              30,
+              40
+            ],
+            "options": {
+              "unknown": -7
+            }
+          }
+        ],
+        "presets": [
+          {
+            "kind": "cartesian-function-plot",
+            "options": {
+              "expr": "0",
+              "samples": 4,
+              "refine": 0,
+              "domain": "0,1",
+              "range": "0,1",
+              "axes": false,
+              "grid": false
+            }
+          }
+        ]
+      }
+    },
+    "mutations": [
+      {
+        "path": [
+          "scales",
+          "0",
+          "options",
+          "unknown"
+        ],
+        "value": false
+      }
+    ]
+  },
+  {
+    "id": "admission-unknown-booleanfalse-de",
+    "owner": "scale",
+    "family": false,
+    "key": "unknown",
+    "value": false,
+    "valid": true,
+    "contract": {},
+    "grammar": false,
+    "oracleValue": false,
+    "snapshot": {
+      "chart": {
+        "width": 60,
+        "height": 40,
+        "language": "de",
+        "layers": [],
+        "tables": [
+          {
+            "name": "typed_data",
+            "columns": [
+              "input_value"
+            ],
+            "rows": [
+              {
+                "input_value": null
+              },
+              {},
+              {
+                "input_value": ""
+              },
+              {
+                "input_value": "before"
+              },
+              {
+                "input_value": false
+              },
+              {
+                "input_value": 1
+              },
+              {
+                "input_value": "0"
+              },
+              {
+                "input_value": 0
+              }
+            ]
+          }
+        ],
+        "scales": [
+          {
+            "name": "canonical-linear",
+            "kind": "linear",
+            "domain": [
+              0,
+              1
+            ],
+            "range": [
+              0,
+              10
+            ],
+            "options": {
+              "unknown": -7
+            }
+          },
+          {
+            "name": "canonical-ordinal",
+            "kind": "ordinal",
+            "domain": [
+              "",
+              "false",
+              "0",
+              0
+            ],
+            "range": [
+              10,
+              20,
+              30,
+              40
+            ],
+            "options": {
+              "unknown": -7
+            }
+          }
+        ],
+        "presets": [
+          {
+            "kind": "cartesian-function-plot",
+            "options": {
+              "expr": "0",
+              "samples": 4,
+              "refine": 0,
+              "domain": "0,1",
+              "range": "0,1",
+              "axes": false,
+              "grid": false
+            }
+          }
+        ]
+      }
+    },
+    "mutations": [
+      {
+        "path": [
+          "scales",
+          "0",
+          "options",
+          "unknown"
+        ],
+        "value": false
+      }
+    ]
+  },
+  {
+    "id": "admission-unknown-number0-en",
+    "owner": "scale",
+    "family": false,
+    "key": "unknown",
+    "value": 0,
+    "valid": true,
+    "contract": {},
+    "grammar": false,
+    "oracleValue": 0,
+    "snapshot": {
+      "chart": {
+        "width": 60,
+        "height": 40,
+        "language": "en",
+        "layers": [],
+        "tables": [
+          {
+            "name": "typed_data",
+            "columns": [
+              "input_value"
+            ],
+            "rows": [
+              {
+                "input_value": null
+              },
+              {},
+              {
+                "input_value": ""
+              },
+              {
+                "input_value": "before"
+              },
+              {
+                "input_value": false
+              },
+              {
+                "input_value": 1
+              },
+              {
+                "input_value": "0"
+              },
+              {
+                "input_value": 0
+              }
+            ]
+          }
+        ],
+        "scales": [
+          {
+            "name": "canonical-linear",
+            "kind": "linear",
+            "domain": [
+              0,
+              1
+            ],
+            "range": [
+              0,
+              10
+            ],
+            "options": {
+              "unknown": -7
+            }
+          },
+          {
+            "name": "canonical-ordinal",
+            "kind": "ordinal",
+            "domain": [
+              "",
+              "false",
+              "0",
+              0
+            ],
+            "range": [
+              10,
+              20,
+              30,
+              40
+            ],
+            "options": {
+              "unknown": -7
+            }
+          }
+        ],
+        "presets": [
+          {
+            "kind": "cartesian-function-plot",
+            "options": {
+              "expr": "0",
+              "samples": 4,
+              "refine": 0,
+              "domain": "0,1",
+              "range": "0,1",
+              "axes": false,
+              "grid": false
+            }
+          }
+        ]
+      }
+    },
+    "mutations": [
+      {
+        "path": [
+          "scales",
+          "0",
+          "options",
+          "unknown"
+        ],
+        "value": 0
+      }
+    ]
+  },
+  {
+    "id": "admission-unknown-number0-de",
+    "owner": "scale",
+    "family": false,
+    "key": "unknown",
+    "value": 0,
+    "valid": true,
+    "contract": {},
+    "grammar": false,
+    "oracleValue": 0,
+    "snapshot": {
+      "chart": {
+        "width": 60,
+        "height": 40,
+        "language": "de",
+        "layers": [],
+        "tables": [
+          {
+            "name": "typed_data",
+            "columns": [
+              "input_value"
+            ],
+            "rows": [
+              {
+                "input_value": null
+              },
+              {},
+              {
+                "input_value": ""
+              },
+              {
+                "input_value": "before"
+              },
+              {
+                "input_value": false
+              },
+              {
+                "input_value": 1
+              },
+              {
+                "input_value": "0"
+              },
+              {
+                "input_value": 0
+              }
+            ]
+          }
+        ],
+        "scales": [
+          {
+            "name": "canonical-linear",
+            "kind": "linear",
+            "domain": [
+              0,
+              1
+            ],
+            "range": [
+              0,
+              10
+            ],
+            "options": {
+              "unknown": -7
+            }
+          },
+          {
+            "name": "canonical-ordinal",
+            "kind": "ordinal",
+            "domain": [
+              "",
+              "false",
+              "0",
+              0
+            ],
+            "range": [
+              10,
+              20,
+              30,
+              40
+            ],
+            "options": {
+              "unknown": -7
+            }
+          }
+        ],
+        "presets": [
+          {
+            "kind": "cartesian-function-plot",
+            "options": {
+              "expr": "0",
+              "samples": 4,
+              "refine": 0,
+              "domain": "0,1",
+              "range": "0,1",
+              "axes": false,
+              "grid": false
+            }
+          }
+        ]
+      }
+    },
+    "mutations": [
+      {
+        "path": [
+          "scales",
+          "0",
+          "options",
+          "unknown"
+        ],
+        "value": 0
+      }
+    ]
+  },
+  {
+    "id": "admission-unknown-string-en",
+    "owner": "scale",
+    "family": false,
+    "key": "unknown",
+    "value": "",
+    "valid": true,
+    "contract": {},
+    "grammar": false,
+    "oracleValue": "",
+    "snapshot": {
+      "chart": {
+        "width": 60,
+        "height": 40,
+        "language": "en",
+        "layers": [],
+        "tables": [
+          {
+            "name": "typed_data",
+            "columns": [
+              "input_value"
+            ],
+            "rows": [
+              {
+                "input_value": null
+              },
+              {},
+              {
+                "input_value": ""
+              },
+              {
+                "input_value": "before"
+              },
+              {
+                "input_value": false
+              },
+              {
+                "input_value": 1
+              },
+              {
+                "input_value": "0"
+              },
+              {
+                "input_value": 0
+              }
+            ]
+          }
+        ],
+        "scales": [
+          {
+            "name": "canonical-linear",
+            "kind": "linear",
+            "domain": [
+              0,
+              1
+            ],
+            "range": [
+              0,
+              10
+            ],
+            "options": {
+              "unknown": -7
+            }
+          },
+          {
+            "name": "canonical-ordinal",
+            "kind": "ordinal",
+            "domain": [
+              "",
+              "false",
+              "0",
+              0
+            ],
+            "range": [
+              10,
+              20,
+              30,
+              40
+            ],
+            "options": {
+              "unknown": -7
+            }
+          }
+        ],
+        "presets": [
+          {
+            "kind": "cartesian-function-plot",
+            "options": {
+              "expr": "0",
+              "samples": 4,
+              "refine": 0,
+              "domain": "0,1",
+              "range": "0,1",
+              "axes": false,
+              "grid": false
+            }
+          }
+        ]
+      }
+    },
+    "mutations": [
+      {
+        "path": [
+          "scales",
+          "0",
+          "options",
+          "unknown"
+        ],
+        "value": ""
+      }
+    ]
+  },
+  {
+    "id": "admission-unknown-string-de",
+    "owner": "scale",
+    "family": false,
+    "key": "unknown",
+    "value": "",
+    "valid": true,
+    "contract": {},
+    "grammar": false,
+    "oracleValue": "",
+    "snapshot": {
+      "chart": {
+        "width": 60,
+        "height": 40,
+        "language": "de",
+        "layers": [],
+        "tables": [
+          {
+            "name": "typed_data",
+            "columns": [
+              "input_value"
+            ],
+            "rows": [
+              {
+                "input_value": null
+              },
+              {},
+              {
+                "input_value": ""
+              },
+              {
+                "input_value": "before"
+              },
+              {
+                "input_value": false
+              },
+              {
+                "input_value": 1
+              },
+              {
+                "input_value": "0"
+              },
+              {
+                "input_value": 0
+              }
+            ]
+          }
+        ],
+        "scales": [
+          {
+            "name": "canonical-linear",
+            "kind": "linear",
+            "domain": [
+              0,
+              1
+            ],
+            "range": [
+              0,
+              10
+            ],
+            "options": {
+              "unknown": -7
+            }
+          },
+          {
+            "name": "canonical-ordinal",
+            "kind": "ordinal",
+            "domain": [
+              "",
+              "false",
+              "0",
+              0
+            ],
+            "range": [
+              10,
+              20,
+              30,
+              40
+            ],
+            "options": {
+              "unknown": -7
+            }
+          }
+        ],
+        "presets": [
+          {
+            "kind": "cartesian-function-plot",
+            "options": {
+              "expr": "0",
+              "samples": 4,
+              "refine": 0,
+              "domain": "0,1",
+              "range": "0,1",
+              "axes": false,
+              "grid": false
+            }
+          }
+        ]
+      }
+    },
+    "mutations": [
+      {
+        "path": [
+          "scales",
+          "0",
+          "options",
+          "unknown"
+        ],
+        "value": ""
+      }
+    ]
+  }
+]

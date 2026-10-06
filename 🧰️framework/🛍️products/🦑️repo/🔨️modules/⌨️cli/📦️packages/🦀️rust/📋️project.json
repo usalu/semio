@@ -46,12 +46,12 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts run",
-        "forwardAllArgs": true
+        "forwardAllArgs": true,
+        "env": {
+          "SEMIO_NATIVE_OWNER_PROGRESS": "delegated"
+        }
       },
-      "cache": false,
-      "dependsOn": [
-        "build"
-      ]
+      "cache": false
     },
     "repo": {
       "executor": "nx:run-commands",
@@ -78,10 +78,7 @@
         "command": "bun ./📜️script.ts daemon",
         "forwardAllArgs": true
       },
-      "cache": false,
-      "dependsOn": [
-        "build"
-      ]
+      "cache": false
     },
     "workflow": {
       "executor": "nx:run-commands",
@@ -90,10 +87,27 @@
         "command": "bun ./📜️script.ts workflow",
         "forwardAllArgs": true
       },
+      "cache": false
+    },
+    "install": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts install"
+      },
       "cache": false,
       "dependsOn": [
         "build"
       ]
+    },
+    "preferences": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts preferences",
+        "forwardAllArgs": true
+      },
+      "cache": false
     }
   }
 }

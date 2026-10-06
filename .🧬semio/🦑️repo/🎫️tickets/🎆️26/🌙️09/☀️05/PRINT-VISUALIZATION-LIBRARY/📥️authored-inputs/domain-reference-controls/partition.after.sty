@@ -1,0 +1,101 @@
+% 🌲 Validates complete stratified records before resolving memoized ancestry.
+\bool_new:N \l_semio_viz_dom_tree_valid_bool
+\prop_new:N \l_semio_viz_dom_tree_state_prop
+\msg_new:nnn { semio-viz-dom } { hierarchy } { Domain~hierarchy~'#1':~#2. }
+\cs_new_protected:Npn \semio_viz_dom_tree_reject:n #1 {
+  \bool_set_false:N \l_semio_viz_dom_tree_valid_bool
+  \msg_error:nnxx { semio-viz-dom } { hierarchy } { \l_semio_viz_dom_data_tl } {#1}
+}
+\cs_new_protected:Npn \semio_viz_dom_tree_value:N #1 {
+  \regex_match:nVTF { \A \s* [-+]? ( \d+ (\.\d*)? | \.\d+ ) ([eE][-+]?\d+)? \s* \Z } #1
+    {
+      \fp_compare:nNnTF { abs ( #1 ) } < { inf }
+        { \fp_compare:nNnT {#1} < {0} { \semio_viz_dom_tree_reject:n { values~must~be~nonnegative } } }
+        { \semio_viz_dom_tree_reject:n { values~must~be~finite } }
+    }
+    { \semio_viz_dom_tree_reject:n { values~must~be~finite~numbers } }
+}
+% 🌲 Reads every row before resolving ancestry and folding descendants into their parents.
+\cs_new_protected:Npn \semio_viz_dom_tree_load: {
+  \bool_set_true:N \l_semio_viz_dom_tree_valid_bool
+  \prop_clear:N \l_semio_viz_dom_tree_state_prop
+  \prop_clear:N \l_semio_viz_dom_par_prop
+  \prop_clear:N \l_semio_viz_dom_dep_prop
+  \prop_clear:N \l_semio_viz_dom_bag_prop
+  \prop_clear:N \l_semio_viz_dom_lab_prop
+  \prop_clear:N \l_semio_viz_dom_sum_prop
+  \seq_clear:N \l_semio_viz_dom_keys_seq
+  \int_set:Nn \l_semio_viz_dom_rows_int { 1 }
+  \semio_viz_table_nrows:VN \l_semio_viz_dom_data_tl \l_semio_viz_dom_n_int
+  \int_step_inline:nn { \l_semio_viz_dom_n_int }
+    { \bool_if:NT \l_semio_viz_dom_tree_valid_bool { \semio_viz_dom_tree_row:n {##1} } }
+  \seq_map_inline:Nn \l_semio_viz_dom_keys_seq
+    { \bool_if:NT \l_semio_viz_dom_tree_valid_bool { \semio_viz_dom_tree_depth:n {##1} } }
+  \bool_if:NTF \l_semio_viz_dom_tree_valid_bool
+    {
+      \int_step_inline:nn { \l_semio_viz_dom_rows_int - 1 }
+        { \semio_viz_dom_tree_fold:n { \l_semio_viz_dom_rows_int - ##1 + 1 } }
+    }
+    { \seq_clear:N \l_semio_viz_dom_keys_seq }
+}
+% 🌲 Stores a unique scalar identity, optional parent, nonnegative own value and unchanged caption.
+\cs_new_protected:Npn \semio_viz_dom_tree_row:n #1 {
+  \semio_viz_table_cell:nnnN { \l_semio_viz_dom_data_tl } {#1} { \l_semio_viz_dom_id_tl }
+    \l_semio_viz_dom_key_tl
+  \semio_viz_table_scalar:N \l_semio_viz_dom_key_tl
+  \tl_if_blank:VTF \l_semio_viz_dom_key_tl
+    { \semio_viz_dom_tree_reject:n { node~IDs~must~be~nonempty } }
+    { \prop_if_in:NVTF \l_semio_viz_dom_par_prop \l_semio_viz_dom_key_tl
+        { \semio_viz_dom_tree_reject:n { duplicate~node~ID } } { } }
+  \semio_viz_table_cell_opt:nnnN { \l_semio_viz_dom_data_tl } {#1} { \l_semio_viz_dom_group_tl }
+    \l_semio_viz_dom_tmp_tl
+  \semio_viz_table_scalar:N \l_semio_viz_dom_tmp_tl
+  \semio_viz_table_cell_opt:nnnN { \l_semio_viz_dom_data_tl } {#1} { \l_semio_viz_dom_value_tl }
+    \l_semio_viz_dom_cell_tl
+  \semio_viz_table_scalar:N \l_semio_viz_dom_cell_tl
+  \tl_if_empty:NT \l_semio_viz_dom_cell_tl { \tl_set:Nn \l_semio_viz_dom_cell_tl { 0 } }
+  \semio_viz_dom_tree_value:N \l_semio_viz_dom_cell_tl
+  \bool_if:NT \l_semio_viz_dom_tree_valid_bool {
+    \seq_put_right:NV \l_semio_viz_dom_keys_seq \l_semio_viz_dom_key_tl
+    \prop_put:NVV \l_semio_viz_dom_par_prop \l_semio_viz_dom_key_tl \l_semio_viz_dom_tmp_tl
+    \prop_put:NVV \l_semio_viz_dom_bag_prop \l_semio_viz_dom_key_tl \l_semio_viz_dom_cell_tl
+    \prop_put:NVV \l_semio_viz_dom_sum_prop \l_semio_viz_dom_key_tl \l_semio_viz_dom_cell_tl
+    \semio_viz_table_cell_opt:nnnN { \l_semio_viz_dom_data_tl } {#1} { \l_semio_viz_dom_label_tl }
+      \l_semio_viz_dom_cell_tl
+    \semio_viz_table_scalar:N \l_semio_viz_dom_cell_tl
+    \prop_put:NVV \l_semio_viz_dom_lab_prop \l_semio_viz_dom_key_tl \l_semio_viz_dom_cell_tl
+  }
+}
+% 🌲 Resolves each ancestry chain once, diagnosing missing parents and cycles before numeric lookup.
+\cs_new_protected:Npn \semio_viz_dom_tree_depth:n #1 {
+  \prop_if_in:NnF \l_semio_viz_dom_dep_prop {#1} {
+    \prop_if_in:NnTF \l_semio_viz_dom_tree_state_prop {#1}
+      { \semio_viz_dom_tree_reject:n { parent~references~must~be~acyclic } }
+      {
+        \prop_put:Nnn \l_semio_viz_dom_tree_state_prop {#1} {1}
+        \prop_get:NnN \l_semio_viz_dom_par_prop {#1} \l_semio_viz_dom_tmp_tl
+        \tl_if_empty:NTF \l_semio_viz_dom_tmp_tl
+          { \prop_put:Nnn \l_semio_viz_dom_dep_prop {#1} {1} }
+          {
+            \prop_if_in:NVTF \l_semio_viz_dom_par_prop \l_semio_viz_dom_tmp_tl
+              {
+                \exp_args:NV \semio_viz_dom_tree_depth:n \l_semio_viz_dom_tmp_tl
+                \bool_if:NT \l_semio_viz_dom_tree_valid_bool {
+                  \prop_get:NnN \l_semio_viz_dom_par_prop {#1} \l_semio_viz_dom_tmp_tl
+                  \prop_get:NVN \l_semio_viz_dom_dep_prop \l_semio_viz_dom_tmp_tl \l_semio_viz_dom_cell_tl
+                  \prop_put:Nnx \l_semio_viz_dom_dep_prop {#1}
+                    { \int_eval:n { \l_semio_viz_dom_cell_tl + 1 } }
+                }
+              }
+              { \semio_viz_dom_tree_reject:n { parent~reference~does~not~name~a~node } }
+          }
+        \bool_if:NT \l_semio_viz_dom_tree_valid_bool {
+          \prop_get:NnN \l_semio_viz_dom_dep_prop {#1} \l_semio_viz_dom_cell_tl
+          \int_set:Nn \l_semio_viz_dom_rows_int
+            { \int_max:nn { \l_semio_viz_dom_rows_int } { \l_semio_viz_dom_cell_tl } }
+          \prop_remove:Nn \l_semio_viz_dom_tree_state_prop {#1}
+        }
+      }
+  }
+}
+

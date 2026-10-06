@@ -212,6 +212,6 @@ export function generateWithheldPlaygroundRegistry(repoRoot: string, diagnostics
   return diagnostics.flatMap(({ pluginId, cratePath }) => {
     const manifestPath = join(repoRoot, cratePath, "Cargo.toml");
     const crateAssets = parseAssetsForCrate(manifestPath, repoRoot, view);
-    return parsePlaygroundsForCrate(manifestPath, pluginId, cratePath, repoRoot, view).map((playground) => ({ ...playground, examples: [], assets: crateAssets.filter((asset) => asset.app === undefined || asset.app === playground.app) }));
+    return parsePlaygroundsForCrate(manifestPath, pluginId, cratePath, repoRoot, view).map((playground) => ({ ...playground, examples: discoverExamplesForPlayground(repoRoot, cratePath, new Set(), view), assets: crateAssets.filter((asset) => asset.app === undefined || asset.app === playground.app) }));
   });
 }

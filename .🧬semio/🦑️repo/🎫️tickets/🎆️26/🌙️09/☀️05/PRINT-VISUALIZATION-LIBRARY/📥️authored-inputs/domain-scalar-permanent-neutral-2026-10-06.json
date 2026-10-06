@@ -1,0 +1,202 @@
+{
+  "schema": {
+    "type": "array",
+    "minItems": 12,
+    "maxItems": 12,
+    "items": {
+      "type": "object",
+      "required": [
+        "id",
+        "valid",
+        "rows"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "valid": {
+          "type": "boolean"
+        },
+        "rows": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": {
+              "type": [
+                "string",
+                "number",
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "cases": [
+    {
+      "id": "string-null-root",
+      "rows": [
+        {
+          "id": "null",
+          "pred": "",
+          "duration": 1,
+          "label": "String null"
+        }
+      ],
+      "valid": true
+    },
+    {
+      "id": "string-undefined-root",
+      "rows": [
+        {
+          "id": "undefined",
+          "pred": "",
+          "duration": 1,
+          "label": "String undefined"
+        }
+      ],
+      "valid": true
+    },
+    {
+      "id": "string-true-root",
+      "rows": [
+        {
+          "id": "true",
+          "pred": "",
+          "duration": 1,
+          "label": "String true"
+        }
+      ],
+      "valid": true
+    },
+    {
+      "id": "literal-null-parent",
+      "rows": [
+        {
+          "id": "null",
+          "pred": "",
+          "duration": 1,
+          "label": "Root"
+        },
+        {
+          "id": "child",
+          "pred": "null",
+          "duration": 1,
+          "label": "Child"
+        }
+      ],
+      "valid": true
+    },
+    {
+      "id": "actual-null-id",
+      "rows": [
+        {
+          "id": null,
+          "pred": "",
+          "duration": 1,
+          "label": "Actual null"
+        }
+      ],
+      "valid": false
+    },
+    {
+      "id": "missing-id",
+      "rows": [
+        {
+          "pred": "",
+          "duration": 1,
+          "label": "Missing ID"
+        }
+      ],
+      "valid": false
+    },
+    {
+      "id": "boolean-id",
+      "rows": [
+        {
+          "id": true,
+          "pred": "",
+          "duration": 1,
+          "label": "Boolean"
+        }
+      ],
+      "valid": false
+    },
+    {
+      "id": "null-parent",
+      "rows": [
+        {
+          "id": "child",
+          "pred": null,
+          "duration": 1,
+          "label": "Null parent"
+        }
+      ],
+      "valid": false
+    },
+    {
+      "id": "missing-parent",
+      "rows": [
+        {
+          "id": "child",
+          "duration": 1,
+          "label": "Missing parent"
+        }
+      ],
+      "valid": false
+    },
+    {
+      "id": "string-seven",
+      "rows": [
+        {
+          "id": "7",
+          "pred": "",
+          "duration": 1,
+          "label": "String seven"
+        }
+      ],
+      "valid": true
+    },
+    {
+      "id": "number-seven",
+      "rows": [
+        {
+          "id": 7,
+          "pred": "",
+          "duration": 1,
+          "label": "Number seven"
+        }
+      ],
+      "valid": false
+    },
+    {
+      "id": "carrier-command-strings",
+      "rows": [
+        {
+          "id": "\\SemioVizNull{}",
+          "pred": "",
+          "duration": 1,
+          "label": "Literal Null command"
+        },
+        {
+          "id": "\\SemioVizUndefined{}",
+          "pred": "\\SemioVizNull{}",
+          "duration": 1,
+          "label": "Literal Undefined command"
+        },
+        {
+          "id": "\\SemioVizBoolean{true}",
+          "pred": "\\SemioVizUndefined{}",
+          "duration": 1,
+          "label": "Literal Boolean command"
+        }
+      ],
+      "valid": true
+    }
+  ]
+}

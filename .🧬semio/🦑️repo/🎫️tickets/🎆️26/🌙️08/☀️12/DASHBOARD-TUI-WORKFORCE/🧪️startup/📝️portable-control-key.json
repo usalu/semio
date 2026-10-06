@@ -1,0 +1,7 @@
+[
+ {"path":"dashboard/🖥️terminal/🦀️.rs","replace":[{"from":"k.key == Key::Char(' ') && k.mods & mods::CTRL","to":"k.key == Key::Char('b') && k.mods & mods::CTRL"},{"from":"Ctrl+Space","to":"Ctrl+B","all":true},{"from":"C-Space","to":"C-B","all":true}]},
+ {"path":"dashboard/README.md","replace":[{"from":"Ctrl+Space","to":"Ctrl+B","all":true}]},
+ {"path":"dashboard/🌀️daemon/🧪️tests/🔬️unit/🦀️.rs","replace":[{"from":"write_controls(&mut view, b\"\\0p\").unwrap();","to":"view.write_all(b\"\\x02p\").unwrap();","all":true},{"from":"write_controls(&mut view, b\"\\0eq\").unwrap();","to":"view.write_all(b\"\\x02eq\").unwrap();"},{"from":"fn write_controls(view: &mut ui_tui::tui::pty::Pty, bytes: &[u8]) -> Result<(), ui_tui::tui::pty::PtyError> {\n    #[cfg(windows)]\n    for byte in bytes {\n        if *byte == 0 { view.write_all(b\"\\x1b[32;57;0;1;8;1_\\x1b[32;57;0;0;8;1_\")?; } else { view.write_all(&[*byte])?; }\n    }\n    #[cfg(unix)]\n    view.write_all(bytes)?;\n    Ok(())\n}\n\n","to":""}]},
+ {"path":"dashboard/🧫️fixtures/⌨️controls/🔣️.json","replace":[{"from":"[0,112,18,195,156]","to":"[2,112,18,195,156,0]"},{"from":"{\"key\":\" \",\"ctrl\":true}","to":"{\"key\":\"b\",\"ctrl\":true}"},{"from":"{\"key\":\"Ü\",\"ctrl\":false}","to":"{\"key\":\"Ü\",\"ctrl\":false},{\"key\":\" \",\"ctrl\":true}"}]},
+ {"path":"dashboard/🧪️tests/⌨️controls/🥒️.feature","replace":[{"from":"Ctrl+Space","to":"Ctrl+B","all":true}]}
+]

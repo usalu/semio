@@ -1,0 +1,1201 @@
+{
+  "generatedRoot": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated",
+  "policy": "No deletion while live owners use generated root. Preserve input sources and Markdown. This manifest is authored classification input, not generated receipt.",
+  "candidates": [
+    {
+      "path": "🗑️generated\\📜️script.ts",
+      "sha256": "6C0B16F6C8E1C43A8D3E507E2E0ED35A7C7E2C08F6CA5D931186F4408065F63F",
+      "classification": "authored-input-script-or-config",
+      "action": "already-retained-exact-hash",
+      "retainedMatches": [
+        "📥️authored-inputs\\📜️script.ts"
+      ]
+    },
+    {
+      "path": "🗑️generated\\api-title-contract\\📜️script.ts",
+      "sha256": "632B8FF659EDD7F1AA86DAD7B8574D85F8F272CADF5B733A8C3044B289870631",
+      "classification": "authored-input-script-or-config",
+      "action": "already-retained-exact-hash",
+      "retainedMatches": [
+        "📥️authored-inputs\\title-carrier-research\\api-title-contract\\📜️script.ts"
+      ]
+    },
+    {
+      "path": "🗑️generated\\api-title-contract\\candidate\\📜️script.ts",
+      "sha256": "9CECCB18851439A2997932E4DB498F05ADB152A6D39C8FA7991EF27D27BFBE87",
+      "classification": "authored-input-script-or-config",
+      "action": "already-retained-exact-hash",
+      "retainedMatches": [
+        "📥️authored-inputs\\title-carrier-research\\api-title-contract-candidate\\📜️script.ts"
+      ]
+    },
+    {
+      "path": "🗑️generated\\api-title-contract\\row-equality\\📜️script.ts",
+      "sha256": "3204E68F2BFBBA8D8A21EADADC6EEDDEEC95214225998DE127C762F87604B390",
+      "classification": "authored-input-script-or-config",
+      "action": "retain-before-cleanup",
+      "retainedMatches": [
+        null
+      ]
+    },
+    {
+      "path": "🗑️generated\\api-title-current-view\\📜️script.ts",
+      "sha256": "63A8FD95FF15C28CC4BC977641E692E5A5BA7CF345A2F1418EF1911FAE4B875B",
+      "classification": "authored-input-script-or-config",
+      "action": "already-retained-exact-hash",
+      "retainedMatches": [
+        "📥️authored-inputs\\title-carrier-research\\api-title-current-view\\📜️script.ts"
+      ]
+    },
+    {
+      "path": "🗑️generated\\api-title-current-view\\verification\\📜️script.ts",
+      "sha256": "EC43DB4956947D567828667919AF70A254D91545A1DAF0652FBF0A865F25AF3E",
+      "classification": "authored-input-script-or-config",
+      "action": "already-retained-exact-hash",
+      "retainedMatches": [
+        "📥️authored-inputs\\title-carrier-research\\api-title-current-view-verification\\📜️script.ts"
+      ]
+    },
+    {
+      "path": "🗑️generated\\axis-pdf-style-inspect\\📜️script.ts",
+      "sha256": "198317B38535A05E27E5E6F8ACBA227528685C6667C3F9CDFF1B5309B9EB5FB1",
+      "classification": "authored-input-script-or-config",
+      "action": "already-retained-exact-hash",
+      "retainedMatches": [
+        "📥️authored-inputs\\generated-history\\axis-pdf-style-inspect\\📜️script.ts"
+      ]
+    },
+    {
+      "path": "🗑️generated\\axis-style-proof\\📜️script.ts",
+      "sha256": "AA2514D5FCB58ED6E10418C5B54D72C2B01A980F995A42E19446DDEA616F8670",
+      "classification": "authored-input-script-or-config",
+      "action": "already-retained-exact-hash",
+      "retainedMatches": [
+        "📥️authored-inputs\\generated-history\\axis-style-proof\\📜️script.ts"
+      ]
+    },
+    {
+      "path": "🗑️generated\\axis-text-paint\\📜️script.ts",
+      "sha256": "F17B2592D2039B611DDAAE6994748AB27336429FC11D7B93BA06E4BA2D431CD0",
+      "classification": "authored-input-script-or-config",
+      "action": "already-retained-exact-hash",
+      "retainedMatches": [
+        "📥️authored-inputs\\generated-history\\axis-text-paint\\📜️script.ts"
+      ]
+    },
+    {
+      "path": "🗑️generated\\axis-visual-after\\📜️script.ts",
+      "sha256": "A388FFC0D1D1F094C02E934916A73031397A9481E6C539280DA3BE71FD3D6349",
+      "classification": "authored-input-script-or-config",
+      "action": "already-retained-exact-hash",
+      "retainedMatches": [
+        "📥️authored-inputs\\generated-history\\axis-visual-after\\📜️script.ts"
+      ]
+    },
+    {
+      "path": "🗑️generated\\axis-visual-before\\📜️script.ts",
+      "sha256": "DAD3BD37C16E46B26E446FCEBCC11E97A5639492D658281D7DDC5BCEF7A079A0",
+      "classification": "authored-input-script-or-config",
+      "action": "already-retained-exact-hash",
+      "retainedMatches": [
+        "📥️authored-inputs\\generated-history\\axis-visual-before\\📜️script.ts"
+      ]
+    },
+    {
+      "path": "🗑️generated\\current-api-rendered-row-audit\\📜️script.ts",
+      "sha256": "48AB684C38B1FC4DFD04F7331F02DA97BAB623FDC8DE5CF4A1B0EC3895BA90C0",
+      "classification": "authored-input-script-or-config",
+      "action": "retain-before-cleanup",
+      "retainedMatches": [
+        null
+      ]
+    },
+    {
+      "path": "🗑️generated\\family-option-admission\\📜️script.ts",
+      "sha256": "D81B3090623FC2B6569BD3C9F7BAA70811526090EDBC12CB4CC3301A8CB864BC",
+      "classification": "authored-input-script-or-config",
+      "action": "retain-before-cleanup",
+      "retainedMatches": [
+        null
+      ]
+    },
+    {
+      "path": "🗑️generated\\final-compiler-source-binding\\📜️script.ts",
+      "sha256": "643F9DC687CA2452AADE9E6E1A8D1B86033AAE01B1ECBC0A286F8B511432B70D",
+      "classification": "authored-input-script-or-config",
+      "action": "already-retained-exact-hash",
+      "retainedMatches": [
+        "📥️authored-inputs\\title-carrier-research\\final-compiler-source-binding\\📜️script.ts"
+      ]
+    },
+    {
+      "path": "🗑️generated\\final-compiler-source-binding\\retained\\📜️script.ts",
+      "sha256": "CE2E813570CEB6DABD97F1A189FA432FA72B3F50B58C86029DE304B636D77C1F",
+      "classification": "authored-input-script-or-config",
+      "action": "retain-before-cleanup",
+      "retainedMatches": [
+        null
+      ]
+    },
+    {
+      "path": "🗑️generated\\final-printed-generation\\📜️script.ts",
+      "sha256": "F5BAA47E7CD0C2DC81A2EFDEC87EDA90A184AC3D6FF4A33BB3E8A0BDF01B754C",
+      "classification": "authored-input-script-or-config",
+      "action": "retain-before-cleanup",
+      "retainedMatches": [
+        null
+      ]
+    },
+    {
+      "path": "🗑️generated\\financial-counter-fix\\📜️script.ts",
+      "sha256": "216EB07D3AB80F6945E7CA0617C3E51A489C537FD0C87E4D2469B6C9CD2DA35A",
+      "classification": "authored-input-script-or-config",
+      "action": "already-retained-exact-hash",
+      "retainedMatches": [
+        "📥️authored-inputs\\generated-history\\financial-counter-fix\\📜️script.ts"
+      ]
+    },
+    {
+      "path": "🗑️generated\\financial-fix\\📜️script.ts",
+      "sha256": "391BE4F37E937E7A9E9B376C12675A02B6FD48FB1FC3A9937A8B1D5A62FFEF2E",
+      "classification": "authored-input-script-or-config",
+      "action": "already-retained-exact-hash",
+      "retainedMatches": [
+        "📥️authored-inputs\\generated-history\\financial-fix\\📜️script.ts"
+      ]
+    },
+    {
+      "path": "🗑️generated\\financial-geometry-test\\📜️script.ts",
+      "sha256": "DF7367A8139F8CCAA00985900957C9D4AF6A08CB57E7FB7FC5C1C3B3D8E35495",
+      "classification": "authored-input-script-or-config",
+      "action": "already-retained-exact-hash",
+      "retainedMatches": [
+        "📥️authored-inputs\\generated-history\\financial-geometry-test\\📜️script.ts"
+      ]
+    },
+    {
+      "path": "🗑️generated\\financial-native-probe\\📜️script.ts",
+      "sha256": "B79A492E67F4A734AC2C9ACB6E2D62E51351A1EB8954FB5CA26536CFC4E1BE85",
+      "classification": "authored-input-script-or-config",
+      "action": "already-retained-exact-hash",
+      "retainedMatches": [
+        "📥️authored-inputs\\generated-history\\financial-native-probe\\📜️script.ts"
+      ]
+    },
+    {
+      "path": "🗑️generated\\font-inspection\\📜️script.ts",
+      "sha256": "195ECD42413B03049CC892AA74D54C93A9E8991224F22F24F6D921BCE68E4827",
+      "classification": "authored-input-script-or-config",
+      "action": "already-retained-exact-hash",
+      "retainedMatches": [
+        "📥️authored-inputs\\generated-history\\font-inspection\\📜️script.ts"
+      ]
+    },
+    {
+      "path": "🗑️generated\\font-registration\\📜️script.ts",
+      "sha256": "929D9B8495751A8A1B76B37755D83574D4D9C117D13DF71D8DB669201A750950",
+      "classification": "authored-input-script-or-config",
+      "action": "already-retained-exact-hash",
+      "retainedMatches": [
+        "📥️authored-inputs\\generated-history\\font-registration\\📜️script.ts"
+      ]
+    },
+    {
+      "path": "🗑️generated\\font-shaping-inspection\\📜️script.ts",
+      "sha256": "842736461A2D3A143628BA86FC213E79CAFF4C98F594DA7AAF1609AA0598282D",
+      "classification": "authored-input-script-or-config",
+      "action": "already-retained-exact-hash",
+      "retainedMatches": [
+        "📥️authored-inputs\\generated-history\\font-shaping-inspection\\📜️script.ts"
+      ]
+    },
+    {
+      "path": "🗑️generated\\gallery-carrier-generation-binding\\📜️script.ts",
+      "sha256": "B1CC5407811F0883EA7B3CB20B05B48603632D58C9D52C96BB2A55BCF7B88F54",
+      "classification": "authored-input-script-or-config",
+      "action": "already-retained-exact-hash",
+      "retainedMatches": [
+        "📥️authored-inputs\\title-carrier-research\\gallery-carrier-generation-binding\\📜️script.ts"
+      ]
+    },
+    {
+      "path": "🗑️generated\\gallery-carrier-inspection\\📜️script.ts",
+      "sha256": "F3CD997D451C6726D8DE0DC77690517E3930B29A75CF3C6BBDC2C064F98FE837",
+      "classification": "authored-input-script-or-config",
+      "action": "already-retained-exact-hash",
+      "retainedMatches": [
+        "📥️authored-inputs\\title-carrier-research\\gallery-carrier-inspection\\📜️script.ts"
+      ]
+    },
+    {
+      "path": "🗑️generated\\gallery-carrier-red-extraction\\📜️script.ts",
+      "sha256": "D77DA496104612663506F094B29689081CF8481B4FAC2D5ED2085829AFDE5D88",
+      "classification": "authored-input-script-or-config",
+      "action": "already-retained-exact-hash",
+      "retainedMatches": [
+        "📥️authored-inputs\\title-carrier-research\\gallery-carrier-red-extraction\\📜️script.ts"
+      ]
+    },
+    {
+      "path": "🗑️generated\\gallery-empty-default-contract\\📜️script.ts",
+      "sha256": "317EB6FE0A2B1944A4DEF4AF5D483077C8489EC42B2D59B4A240B63B35C32D1F",
+      "classification": "authored-input-script-or-config",
+      "action": "already-retained-exact-hash",
+      "retainedMatches": [
+        "📥️authored-inputs\\title-carrier-research\\gallery-empty-default-contract\\📜️script.ts"
+      ]
+    },
+    {
+      "path": "🗑️generated\\gallery-empty-default-order\\📜️script.ts",
+      "sha256": "3CCE14B65D1266A680A0C857BEEA213F1CFE91961D7649328AFF7DA47BAF4ADA",
+      "classification": "authored-input-script-or-config",
+      "action": "already-retained-exact-hash",
+      "retainedMatches": [
+        "📥️authored-inputs\\title-carrier-research\\gallery-empty-default-order\\📜️script.ts"
+      ]
+    },
+    {
+      "path": "🗑️generated\\gallery-planar-api-reversal\\📜️script.ts",
+      "sha256": "12551D9794934578E95D11D4D7D33FC4FF315ED80EB689FD62B7FCE1EF4DAEA2",
+      "classification": "authored-input-script-or-config",
+      "action": "already-retained-exact-hash",
+      "retainedMatches": [
+        "📥️authored-inputs\\title-carrier-research\\gallery-planar-api-reversal\\📜️script.ts"
+      ]
+    },
+    {
+      "path": "🗑️generated\\gallery-planar-contract\\📜️script.ts",
+      "sha256": "950FAA329875515781FCF01328325F5152EC80584E0C6E97A007DA87BAE3EE69",
+      "classification": "authored-input-script-or-config",
+      "action": "already-retained-exact-hash",
+      "retainedMatches": [
+        "📥️authored-inputs\\title-carrier-research\\gallery-planar-contract\\📜️script.ts"
+      ]
+    },
+    {
+      "path": "🗑️generated\\gallery-planar-family-contract\\📜️script.ts",
+      "sha256": "00074ADDFE162F0769C5DD4DD1445C24073CE9FF8AFB4ED53887A43F7079B1DC",
+      "classification": "authored-input-script-or-config",
+      "action": "already-retained-exact-hash",
+      "retainedMatches": [
+        "📥️authored-inputs\\title-carrier-research\\gallery-planar-family-contract\\📜️script.ts"
+      ]
+    },
+    {
+      "path": "🗑️generated\\gallery-planar-row-inspection\\📜️script.ts",
+      "sha256": "D24E8820F548C23D7382EC87FA97E01A68C8843936FDB82FAECC12159CF5D50C",
+      "classification": "authored-input-script-or-config",
+      "action": "already-retained-exact-hash",
+      "retainedMatches": [
+        "📥️authored-inputs\\title-carrier-research\\gallery-planar-row-inspection\\📜️script.ts"
+      ]
+    },
+    {
+      "path": "🗑️generated\\gallery-planar-source-admission\\📜️script.ts",
+      "sha256": "BA8C6E60F1E877C3E7F9502F7494A36A1A0E39AD1933FCFE05DB14267ABBF756",
+      "classification": "authored-input-script-or-config",
+      "action": "already-retained-exact-hash",
+      "retainedMatches": [
+        "📥️authored-inputs\\title-carrier-research\\gallery-planar-source-admission\\📜️script.ts"
+      ]
+    },
+    {
+      "path": "🗑️generated\\gallery-sampling-api\\📜️script.ts",
+      "sha256": "4A93ABB7483F27FFCF8E330B334B71530A68D6758EF0268B6EFCB0B1F7F9A0E8",
+      "classification": "authored-input-script-or-config",
+      "action": "already-retained-exact-hash",
+      "retainedMatches": [
+        "📥️authored-inputs\\title-carrier-research\\gallery-sampling-api\\📜️script.ts"
+      ]
+    },
+    {
+      "path": "🗑️generated\\gallery-sampling-contract\\📜️script.ts",
+      "sha256": "989FA627FB22A22796E7898C578062070A3B64FA1E067B79578F73E520006898",
+      "classification": "authored-input-script-or-config",
+      "action": "already-retained-exact-hash",
+      "retainedMatches": [
+        "📥️authored-inputs\\title-carrier-research\\gallery-sampling-contract\\📜️script.ts"
+      ]
+    },
+    {
+      "path": "🗑️generated\\gallery-sampling-final-contract\\📜️script.ts",
+      "sha256": "667CF340A88706D4991C40436A668D2AD510F28D78478C1C2EB45174981C8C48",
+      "classification": "authored-input-script-or-config",
+      "action": "already-retained-exact-hash",
+      "retainedMatches": [
+        "📥️authored-inputs\\title-carrier-research\\gallery-sampling-final-contract\\📜️script.ts"
+      ]
+    },
+    {
+      "path": "🗑️generated\\gallery-sampling-row-inspection\\📜️script.ts",
+      "sha256": "B11394B6D6707BEE8899A639A6A495D176E63D6C0EBFB0D2C25AA7DDE84A47C5",
+      "classification": "authored-input-script-or-config",
+      "action": "already-retained-exact-hash",
+      "retainedMatches": [
+        "📥️authored-inputs\\title-carrier-research\\gallery-sampling-row-inspection\\📜️script.ts"
+      ]
+    },
+    {
+      "path": "🗑️generated\\gallery-sampling-source-admission\\📜️script.ts",
+      "sha256": "28576E2E40499D5FCBB4DE04765270EB5AD402948EC934A9B7F9F956EA46A755",
+      "classification": "authored-input-script-or-config",
+      "action": "already-retained-exact-hash",
+      "retainedMatches": [
+        "📥️authored-inputs\\title-carrier-research\\gallery-sampling-source-admission\\📜️script.ts"
+      ]
+    },
+    {
+      "path": "🗑️generated\\geo-planar-frame\\revalidation\\launch-density-projection.before.jsonc",
+      "sha256": "D28ADD33FDABAA81E2A462137E035475FC64F6833A3A1322D11EA3401043D7E6",
+      "classification": "generated-source-snapshot",
+      "action": "delete-with-generated-root",
+      "retainedMatches": [
+        null
+      ]
+    },
+    {
+      "path": "🗑️generated\\geo-planar-frame\\revalidation\\launch-density-projection.next.jsonc",
+      "sha256": "E942350A91334F600A16EAA2A2C4D742907BCBB223B218B48B89B95E2316F21E",
+      "classification": "generated-source-snapshot",
+      "action": "delete-with-generated-root",
+      "retainedMatches": [
+        "📥️authored-inputs\\scientific-focused-launch\\launch.json.before.txt"
+      ]
+    },
+    {
+      "path": "🗑️generated\\geo-planar-frame\\revalidation\\launch-density-seed.before.jsonc",
+      "sha256": "BC2B84C9870EE7F1A23001E75AF82CF0D1DE9C5425F2B078086A9FD8589A3CDE",
+      "classification": "generated-source-snapshot",
+      "action": "delete-with-generated-root",
+      "retainedMatches": [
+        null
+      ]
+    },
+    {
+      "path": "🗑️generated\\geo-planar-frame\\revalidation\\launch-density-seed.next.jsonc",
+      "sha256": "705E34CA3218BFED62FD53651F45E97A9D5A2C269715A8466432456E465C5BCD",
+      "classification": "generated-source-snapshot",
+      "action": "delete-with-generated-root",
+      "retainedMatches": [
+        "📥️authored-inputs\\scientific-focused-launch\\🧩️launch.seed.jsonc.before.txt"
+      ]
+    },
+    {
+      "path": "🗑️generated\\graph-diagnostic\\📜️script.ts",
+      "sha256": "917FB56B393AE3CC434EE2E986A9A305ABB93168E9F2FA827C42DC5986856A47",
+      "classification": "authored-input-script-or-config",
+      "action": "already-retained-exact-hash",
+      "retainedMatches": [
+        "📥️authored-inputs\\generated-history\\graph-diagnostic\\📜️script.ts"
+      ]
+    },
+    {
+      "path": "🗑️generated\\graph-loop-native-edit\\📜️script.ts",
+      "sha256": "3214D0B0AABAC9C8B04241F38E26D1B78EF42131909415E3F5CFA8A1A3AD21AE",
+      "classification": "authored-input-script-or-config",
+      "action": "already-retained-exact-hash",
+      "retainedMatches": [
+        "📥️authored-inputs\\generated-history\\graph-loop-native-edit\\📜️script.ts"
+      ]
+    },
+    {
+      "path": "🗑️generated\\graph-loop-test-edit\\📜️script.ts",
+      "sha256": "1BD2E31B3CE71647FF87751C19201C726E94A00B4F3692F68D1896A011C46F68",
+      "classification": "authored-input-script-or-config",
+      "action": "already-retained-exact-hash",
+      "retainedMatches": [
+        "📥️authored-inputs\\generated-history\\graph-loop-test-edit\\📜️script.ts"
+      ]
+    },
+    {
+      "path": "🗑️generated\\legend-correction\\📜️script.ts",
+      "sha256": "1719A0601376E7495BDF96819B43A0EF6744BF95A01E1433A8598446CA8A0126",
+      "classification": "authored-input-script-or-config",
+      "action": "already-retained-exact-hash",
+      "retainedMatches": [
+        "📥️authored-inputs\\generated-history\\legend-correction\\📜️script.ts"
+      ]
+    },
+    {
+      "path": "🗑️generated\\legend-emission-proof\\📜️script.ts",
+      "sha256": "27FD11DDEEBD2D04E5C140EE4830BF25369F09E72915C59F5809D40B8BFE40FC",
+      "classification": "authored-input-script-or-config",
+      "action": "already-retained-exact-hash",
+      "retainedMatches": [
+        "📥️authored-inputs\\generated-history\\legend-emission-proof\\📜️script.ts"
+      ]
+    },
+    {
+      "path": "🗑️generated\\legend-font-role\\📜️script.ts",
+      "sha256": "87D5D610D58EC67EF70DE487EB81C5CA36837ECB926481D9C1C8AF1C97ECCAD8",
+      "classification": "authored-input-script-or-config",
+      "action": "already-retained-exact-hash",
+      "retainedMatches": [
+        "📥️authored-inputs\\generated-history\\legend-font-role\\📜️script.ts"
+      ]
+    },
+    {
+      "path": "🗑️generated\\legend-implementation\\📜️script.ts",
+      "sha256": "9F398006E7E5930E122C13158BBF423E6AB8AF67FEFE3EBBB1935019BBD34B01",
+      "classification": "authored-input-script-or-config",
+      "action": "already-retained-exact-hash",
+      "retainedMatches": [
+        "📥️authored-inputs\\generated-history\\legend-implementation\\📜️script.ts"
+      ]
+    },
+    {
+      "path": "🗑️generated\\legend-line-box\\📜️script.ts",
+      "sha256": "F9E5AC94527813D12389F91C65C1F0642589126D174ABDB09A679B8B7001491D",
+      "classification": "authored-input-script-or-config",
+      "action": "already-retained-exact-hash",
+      "retainedMatches": [
+        "📥️authored-inputs\\generated-history\\legend-line-box\\📜️script.ts"
+      ]
+    },
+    {
+      "path": "🗑️generated\\legend-line-box-fix\\📜️script.ts",
+      "sha256": "F4B851D3CCAF601BE5928C5A5AA61C8F9F4918EAB2CCE4FB376B35CFB3B5A6CC",
+      "classification": "authored-input-script-or-config",
+      "action": "already-retained-exact-hash",
+      "retainedMatches": [
+        "📥️authored-inputs\\generated-history\\legend-line-box-fix\\📜️script.ts"
+      ]
+    },
+    {
+      "path": "🗑️generated\\legend-line-box-runtime\\📜️script.ts",
+      "sha256": "8432700532777ED763CDF68BBDBE52ED16960630167635C4571D4A6D70A840F5",
+      "classification": "authored-input-script-or-config",
+      "action": "already-retained-exact-hash",
+      "retainedMatches": [
+        "📥️authored-inputs\\generated-history\\legend-line-box-runtime\\📜️script.ts"
+      ]
+    },
+    {
+      "path": "🗑️generated\\legend-line-box-test\\📜️script.ts",
+      "sha256": "0C47C8BA4886D0D80CA79F3A33B2474659E37A2691E6603F28268E3D5D582AE7",
+      "classification": "authored-input-script-or-config",
+      "action": "already-retained-exact-hash",
+      "retainedMatches": [
+        "📥️authored-inputs\\generated-history\\legend-line-box-test\\📜️script.ts"
+      ]
+    },
+    {
+      "path": "🗑️generated\\legend-native-add\\📜️script.ts",
+      "sha256": "B45C40D99E1BE21DE6685E0C0E829288176D0E1FAD5C151E65BE2FD38150DD69",
+      "classification": "authored-input-script-or-config",
+      "action": "already-retained-exact-hash",
+      "retainedMatches": [
+        "📥️authored-inputs\\generated-history\\legend-native-add\\📜️script.ts"
+      ]
+    },
+    {
+      "path": "🗑️generated\\legend-native-probe\\📜️script.ts",
+      "sha256": "E9FD9EEC7D221757C5D4DF0008045D7E27815D90EF3639F964CBD761AD57FB43",
+      "classification": "authored-input-script-or-config",
+      "action": "already-retained-exact-hash",
+      "retainedMatches": [
+        "📥️authored-inputs\\generated-history\\legend-native-probe\\📜️script.ts"
+      ]
+    },
+    {
+      "path": "🗑️generated\\legend-oracle-types\\📜️script.ts",
+      "sha256": "B9DDC29CD291654B268BEBB78E311419258C46E8110FAEAB2DDD5E3A0746BF87",
+      "classification": "authored-input-script-or-config",
+      "action": "already-retained-exact-hash",
+      "retainedMatches": [
+        "📥️authored-inputs\\generated-history\\legend-oracle-types\\📜️script.ts"
+      ]
+    },
+    {
+      "path": "🗑️generated\\legend-probe-fix\\📜️script.ts",
+      "sha256": "D5A040ED1DC6DFD57E3587815A3CB37023B60B04F9928BA6B9C475F8955A3447",
+      "classification": "authored-input-script-or-config",
+      "action": "already-retained-exact-hash",
+      "retainedMatches": [
+        "📥️authored-inputs\\generated-history\\legend-probe-fix\\📜️script.ts"
+      ]
+    },
+    {
+      "path": "🗑️generated\\legend-projection-fix\\📜️script.ts",
+      "sha256": "5A81D87EFFE63DD85DBCC80A929D97CE425713C64D00833A1D4D177E1909DCA7",
+      "classification": "authored-input-script-or-config",
+      "action": "already-retained-exact-hash",
+      "retainedMatches": [
+        "📥️authored-inputs\\generated-history\\legend-projection-fix\\📜️script.ts"
+      ]
+    },
+    {
+      "path": "🗑️generated\\legend-projection-red\\📜️script.ts",
+      "sha256": "324676B2574B3960DA919D0CA0EF151DF298E2B87002DC821CFB035302589E72",
+      "classification": "authored-input-script-or-config",
+      "action": "already-retained-exact-hash",
+      "retainedMatches": [
+        "📥️authored-inputs\\generated-history\\legend-projection-red\\📜️script.ts"
+      ]
+    },
+    {
+      "path": "🗑️generated\\legend-symbol-oracle\\📜️script.ts",
+      "sha256": "A024513882F144029D78894584A52BE5920E03B1C57BA1B0F8C271C16E3EABE1",
+      "classification": "authored-input-script-or-config",
+      "action": "already-retained-exact-hash",
+      "retainedMatches": [
+        "📥️authored-inputs\\generated-history\\legend-symbol-oracle\\📜️script.ts"
+      ]
+    },
+    {
+      "path": "🗑️generated\\legend-test-edit\\📜️script.ts",
+      "sha256": "3F1E78B9A50CA4C8D32FAC19C712F0BFB8F6D8AEF02D60AD5D36A13E4F178A36",
+      "classification": "authored-input-script-or-config",
+      "action": "already-retained-exact-hash",
+      "retainedMatches": [
+        "📥️authored-inputs\\generated-history\\legend-test-edit\\📜️script.ts"
+      ]
+    },
+    {
+      "path": "🗑️generated\\legend-text-paint\\📜️script.ts",
+      "sha256": "5C0361AD9F3C504F0601B92B7FF8106D05494D6CA4DA6044630D083259BBA54A",
+      "classification": "authored-input-script-or-config",
+      "action": "already-retained-exact-hash",
+      "retainedMatches": [
+        "📥️authored-inputs\\generated-history\\legend-text-paint\\📜️script.ts"
+      ]
+    },
+    {
+      "path": "🗑️generated\\legend-visual-qa\\📜️script.ts",
+      "sha256": "D1906E0E571FC3952DB7C8AA01DED370FBA5B443F82A19CC70287633B1E44FF9",
+      "classification": "authored-input-script-or-config",
+      "action": "already-retained-exact-hash",
+      "retainedMatches": [
+        "📥️authored-inputs\\generated-history\\legend-visual-qa\\📜️script.ts"
+      ]
+    },
+    {
+      "path": "🗑️generated\\native-arrow-edit\\📜️script.ts",
+      "sha256": "9D1D025B335C9323165EC10A9904A8E992792710F19C7B0613C2AF6B47844231",
+      "classification": "authored-input-script-or-config",
+      "action": "already-retained-exact-hash",
+      "retainedMatches": [
+        "📥️authored-inputs\\generated-history\\native-arrow-edit\\📜️script.ts"
+      ]
+    },
+    {
+      "path": "🗑️generated\\native-comment-unicode\\📜️script.ts",
+      "sha256": "AF73C70577187B20D766A86864FE11766521D76D105D8803F95BF054369EBA3A",
+      "classification": "authored-input-script-or-config",
+      "action": "already-retained-exact-hash",
+      "retainedMatches": [
+        "📥️authored-inputs\\generated-history\\native-comment-unicode\\📜️script.ts"
+      ]
+    },
+    {
+      "path": "🗑️generated\\native-control-api\\📜️script.ts",
+      "sha256": "63646E35E6C33EE7D9F29825CE6E506CA7324B91D3EC540C7C89955EBF919639",
+      "classification": "authored-input-script-or-config",
+      "action": "retain-before-cleanup",
+      "retainedMatches": [
+        null
+      ]
+    },
+    {
+      "path": "🗑️generated\\native-diagnostic\\📜️script.ts",
+      "sha256": "1DC5A00AB9B0D55B7CB11B74730278DFC3F1C4FE8B12DA71E857CFA1B7776533",
+      "classification": "authored-input-script-or-config",
+      "action": "already-retained-exact-hash",
+      "retainedMatches": [
+        "📥️authored-inputs\\generated-history\\native-diagnostic\\📜️script.ts"
+      ]
+    },
+    {
+      "path": "🗑️generated\\native-diagnostic-emission\\📜️script.ts",
+      "sha256": "5A0226849EF6E99C1E0F3CA6C27E4D720FE22F5E4242DC44E1870DDC33488AD0",
+      "classification": "authored-input-script-or-config",
+      "action": "already-retained-exact-hash",
+      "retainedMatches": [
+        "📥️authored-inputs\\generated-history\\native-diagnostic-emission\\📜️script.ts"
+      ]
+    },
+    {
+      "path": "🗑️generated\\native-diagnostic-group\\📜️script.ts",
+      "sha256": "19D89621C25534D3418EAC14708BA52E139D96EA969876D9B8330685A3CF6E45",
+      "classification": "authored-input-script-or-config",
+      "action": "already-retained-exact-hash",
+      "retainedMatches": [
+        "📥️authored-inputs\\generated-history\\native-diagnostic-group\\📜️script.ts"
+      ]
+    },
+    {
+      "path": "🗑️generated\\native-diagnostic-missing\\📜️script.ts",
+      "sha256": "9D911BC61630A981123A8E4A63AC5DFEEA53650F81B9D46376DDAAD6B6CF6FA4",
+      "classification": "authored-input-script-or-config",
+      "action": "already-retained-exact-hash",
+      "retainedMatches": [
+        "📥️authored-inputs\\generated-history\\native-diagnostic-missing\\📜️script.ts"
+      ]
+    },
+    {
+      "path": "🗑️generated\\native-diagnostic-ordinal\\📜️script.ts",
+      "sha256": "B96B1A986A58F8867CB7133AB5E4A099CF9954B20C4990F9C33054EAA855E1BE",
+      "classification": "authored-input-script-or-config",
+      "action": "already-retained-exact-hash",
+      "retainedMatches": [
+        "📥️authored-inputs\\generated-history\\native-diagnostic-ordinal\\📜️script.ts"
+      ]
+    },
+    {
+      "path": "🗑️generated\\native-diagnostic-shared-missing\\📜️script.ts",
+      "sha256": "85780AA2735E5B0FD5F33A90E4A908F6DDD0257394E238A0E6AAC1D56CC7E1C2",
+      "classification": "authored-input-script-or-config",
+      "action": "already-retained-exact-hash",
+      "retainedMatches": [
+        "📥️authored-inputs\\generated-history\\native-diagnostic-shared-missing\\📜️script.ts"
+      ]
+    },
+    {
+      "path": "🗑️generated\\native-diagnostic-shared-unknown\\📜️script.ts",
+      "sha256": "87EE6BF12DC21512B712AD394E0D57317BCCA9146A04EFFF57DAD5C0D88ABBF8",
+      "classification": "authored-input-script-or-config",
+      "action": "already-retained-exact-hash",
+      "retainedMatches": [
+        "📥️authored-inputs\\generated-history\\native-diagnostic-shared-unknown\\📜️script.ts"
+      ]
+    },
+    {
+      "path": "🗑️generated\\native-diagnostic-unknown\\📜️script.ts",
+      "sha256": "F63DA63490D8A329A3BF53E64411CA0DD5F14216673566914DED76590FFF568D",
+      "classification": "authored-input-script-or-config",
+      "action": "already-retained-exact-hash",
+      "retainedMatches": [
+        "📥️authored-inputs\\generated-history\\native-diagnostic-unknown\\📜️script.ts"
+      ]
+    },
+    {
+      "path": "🗑️generated\\native-final-contracts\\📜️script.ts",
+      "sha256": "0A34D050DBEAE3BD8953AF07C6841168D6BDA085C9B2A6DE5F8F18685CA1A27E",
+      "classification": "authored-input-script-or-config",
+      "action": "retain-before-cleanup",
+      "retainedMatches": [
+        null
+      ]
+    },
+    {
+      "path": "🗑️generated\\native-final-five\\📜️script.ts",
+      "sha256": "DE890DCAA1D96FA2E5278CDCE0933FB493D061B87FEFCC169480E3D086911F10",
+      "classification": "authored-input-script-or-config",
+      "action": "retain-before-cleanup",
+      "retainedMatches": [
+        null
+      ]
+    },
+    {
+      "path": "🗑️generated\\native-final-six\\📜️script.ts",
+      "sha256": "747D13C693041AF8FDABCBECB285AF002003EE4929238A090434758C3F23ED87",
+      "classification": "authored-input-script-or-config",
+      "action": "retain-before-cleanup",
+      "retainedMatches": [
+        null
+      ]
+    },
+    {
+      "path": "🗑️generated\\native-final35\\📜️script.ts",
+      "sha256": "13D9AC5DEA31DD4864559A5AF1A7549BA00802D15A4F128CEA37C59E02A603E2",
+      "classification": "authored-input-script-or-config",
+      "action": "retain-before-cleanup",
+      "retainedMatches": [
+        null
+      ]
+    },
+    {
+      "path": "🗑️generated\\native-final41-fixture\\📜️script.ts",
+      "sha256": "22674F20C48F2BD58B522B5CA5381484323CA6B75941915306D5232242A49EFD",
+      "classification": "authored-input-script-or-config",
+      "action": "retain-before-cleanup",
+      "retainedMatches": [
+        null
+      ]
+    },
+    {
+      "path": "🗑️generated\\native-font-role-before\\📜️script.ts",
+      "sha256": "46EDAE593A94276C9869FC7C7DA9A45896F92509726CF161A412B30E37A1A3E8",
+      "classification": "authored-input-script-or-config",
+      "action": "already-retained-exact-hash",
+      "retainedMatches": [
+        "📥️authored-inputs\\generated-history\\native-font-role-before\\📜️script.ts"
+      ]
+    },
+    {
+      "path": "🗑️generated\\native-font-role-fix\\📜️script.ts",
+      "sha256": "1EC6928D6F312E8241C3F14714957E1C3B4C616A7746F99B6D81B9D295B85D23",
+      "classification": "authored-input-script-or-config",
+      "action": "already-retained-exact-hash",
+      "retainedMatches": [
+        "📥️authored-inputs\\generated-history\\native-font-role-fix\\📜️script.ts"
+      ]
+    },
+    {
+      "path": "🗑️generated\\native-font-role-regression\\📜️script.ts",
+      "sha256": "79CB7C4F119D45F0F827C6E2D653D71EBEF3232D132DEBC5A7DB405F06A7706B",
+      "classification": "authored-input-script-or-config",
+      "action": "already-retained-exact-hash",
+      "retainedMatches": [
+        "📥️authored-inputs\\generated-history\\native-font-role-regression\\📜️script.ts"
+      ]
+    },
+    {
+      "path": "🗑️generated\\native-key-class-correction\\📜️script.ts",
+      "sha256": "18B773F1D83F807DE0D71E9C5FF985C3659D257EA7CB726E248FE6054A0C2629",
+      "classification": "authored-input-script-or-config",
+      "action": "retain-before-cleanup",
+      "retainedMatches": [
+        null
+      ]
+    },
+    {
+      "path": "🗑️generated\\native-numeric-grammar\\📜️script.ts",
+      "sha256": "B2D4D3DBB4E8A7C999BC5DB15BB0B02321889E7C534A422009CC15C65F9EB99B",
+      "classification": "authored-input-script-or-config",
+      "action": "retain-before-cleanup",
+      "retainedMatches": [
+        null
+      ]
+    },
+    {
+      "path": "🗑️generated\\native-numeric-grammar-fixture\\📜️script.ts",
+      "sha256": "82D6E213ACE5C8CA8338238F439BC3C4041C0402F7A3032F932621EF7CD247CF",
+      "classification": "authored-input-script-or-config",
+      "action": "retain-before-cleanup",
+      "retainedMatches": [
+        null
+      ]
+    },
+    {
+      "path": "🗑️generated\\native-palette-catalogue\\📜️script.ts",
+      "sha256": "D0C498B3EBEFCADDFDB1581890079DA25065F540C7EFE623990BD276FEB01812",
+      "classification": "authored-input-script-or-config",
+      "action": "retain-before-cleanup",
+      "retainedMatches": [
+        null
+      ]
+    },
+    {
+      "path": "🗑️generated\\native-palette-descriptor\\📜️script.ts",
+      "sha256": "AF4CAF7E51DFEEE0C25EAEA7345F8973160106470959033E1B1D05D6FEABF5D6",
+      "classification": "authored-input-script-or-config",
+      "action": "retain-before-cleanup",
+      "retainedMatches": [
+        null
+      ]
+    },
+    {
+      "path": "🗑️generated\\package-declared-projection\\📜️script.ts",
+      "sha256": "ADE5982A336A62CF056100BA8F33D7390A3C77CD3289875C8E986ECFC8AD5304",
+      "classification": "authored-input-script-or-config",
+      "action": "retain-before-cleanup",
+      "retainedMatches": [
+        null
+      ]
+    },
+    {
+      "path": "🗑️generated\\package-row-complete-controls\\📜️script.ts",
+      "sha256": "CF71E7BDCA887FEDC6334D479A671E071815DA306ABBBAFFEB21EFE487463319",
+      "classification": "authored-input-script-or-config",
+      "action": "retain-before-cleanup",
+      "retainedMatches": [
+        null
+      ]
+    },
+    {
+      "path": "🗑️generated\\package-row-negatives\\📜️script.ts",
+      "sha256": "DA2EDB9CCC878CA931F05984EEF3FAC210FBECF0051380E2F9DD8A6CD3C966B6",
+      "classification": "authored-input-script-or-config",
+      "action": "retain-before-cleanup",
+      "retainedMatches": [
+        null
+      ]
+    },
+    {
+      "path": "🗑️generated\\package-row-projection\\📜️script.ts",
+      "sha256": "3F039E77AA2D10C036368DC72AEA624BFDE162E5AEE2FD4474978B1F30EB809E",
+      "classification": "authored-input-script-or-config",
+      "action": "retain-before-cleanup",
+      "retainedMatches": [
+        null
+      ]
+    },
+    {
+      "path": "🗑️generated\\package-scope-admission\\📜️script.ts",
+      "sha256": "80F6431E985A0B6BBB17FCA5819223E57AEF7188E8B09B0B4AEB673EAD42CDDE",
+      "classification": "authored-input-script-or-config",
+      "action": "retain-before-cleanup",
+      "retainedMatches": [
+        null
+      ]
+    },
+    {
+      "path": "🗑️generated\\package-scope-gap-read\\📜️script.ts",
+      "sha256": "CA8916F198FBB9DE98F487F119E189B72B7C1704306DA378CF7218826A6BC7AF",
+      "classification": "authored-input-script-or-config",
+      "action": "retain-before-cleanup",
+      "retainedMatches": [
+        null
+      ]
+    },
+    {
+      "path": "🗑️generated\\palette-final-generation-binding\\📜️script.ts",
+      "sha256": "0C4800F3632FC0016666513A4D359AE6EF4A0E1D1EC4805E669BDC70D2ECF16F",
+      "classification": "authored-input-script-or-config",
+      "action": "retain-before-cleanup",
+      "retainedMatches": [
+        null
+      ]
+    },
+    {
+      "path": "🗑️generated\\printed-api-current-read\\📜️script.ts",
+      "sha256": "490902CBEBDF0F9AC33666AFB90079C735CA11A199F53AC82FAC055182634561",
+      "classification": "authored-input-script-or-config",
+      "action": "retain-before-cleanup",
+      "retainedMatches": [
+        null
+      ]
+    },
+    {
+      "path": "🗑️generated\\printed-api-data-edit\\📜️script.ts",
+      "sha256": "8654A9CEB516CD100DA81774EB91170C6A54C9866BE312BEE0069B75B45783C8",
+      "classification": "authored-input-script-or-config",
+      "action": "retain-before-cleanup",
+      "retainedMatches": [
+        null
+      ]
+    },
+    {
+      "path": "🗑️generated\\printed-api-edit\\📜️script.ts",
+      "sha256": "CD23804421587833DC5C643C8402DFB001A13982E52F38DE27FB7776EE076065",
+      "classification": "authored-input-script-or-config",
+      "action": "retain-before-cleanup",
+      "retainedMatches": [
+        null
+      ]
+    },
+    {
+      "path": "🗑️generated\\printed-api-ref-edit\\📜️script.ts",
+      "sha256": "542E1589475F43AF5616A3974662C14B85267C7EC69948FD637C766B96EC1E46",
+      "classification": "authored-input-script-or-config",
+      "action": "retain-before-cleanup",
+      "retainedMatches": [
+        null
+      ]
+    },
+    {
+      "path": "🗑️generated\\printed-api-region-fixture\\📜️script.ts",
+      "sha256": "F645C4D59EAD2B5868403D30BACA80AE4B6B85EE01176C0AD9901B7DC16A29A9",
+      "classification": "authored-input-script-or-config",
+      "action": "retain-before-cleanup",
+      "retainedMatches": [
+        null
+      ]
+    },
+    {
+      "path": "🗑️generated\\printed-api-source-edit\\📜️script.ts",
+      "sha256": "575A08E7C37108EC0E1EBAC5E6544358C0BF6719CBB5214192E70033EDDA19B8",
+      "classification": "authored-input-script-or-config",
+      "action": "retain-before-cleanup",
+      "retainedMatches": [
+        null
+      ]
+    },
+    {
+      "path": "🗑️generated\\printed-final-publication-binding\\📜️script.ts",
+      "sha256": "B27E672686AFA75A276D884E3097A2192D4BFA569195FF2C8EDC4942E11B7DA2",
+      "classification": "authored-input-script-or-config",
+      "action": "retain-before-cleanup",
+      "retainedMatches": [
+        null
+      ]
+    },
+    {
+      "path": "🗑️generated\\printed-final-publication-binding\\source\\📜️script.ts",
+      "sha256": "43D572824282F40891DEC34A677232E6C097788BCFBDD383F73469D108062048",
+      "classification": "authored-input-script-or-config",
+      "action": "retain-before-cleanup",
+      "retainedMatches": [
+        null
+      ]
+    },
+    {
+      "path": "🗑️generated\\printed-flow-reference-fix\\📜️script.ts",
+      "sha256": "7119D39086AD57A79A4065663DF80D09AF75298FDFF0717DEC706DF64FF96817",
+      "classification": "authored-input-script-or-config",
+      "action": "retain-before-cleanup",
+      "retainedMatches": [
+        null
+      ]
+    },
+    {
+      "path": "🗑️generated\\printed-geo-reference-fix\\📜️script.ts",
+      "sha256": "7EFC950840B73FF91391D79D77E38009957F14025DEA44DDC143AF9AB0D026C5",
+      "classification": "authored-input-script-or-config",
+      "action": "retain-before-cleanup",
+      "retainedMatches": [
+        null
+      ]
+    },
+    {
+      "path": "🗑️generated\\restore-neutral-owned-controls\\📜️script.ts",
+      "sha256": "FD15CB0A738AC256724B10D753F283C92DA7D8D49FDB5BDCFE9EA42D5B1B0627",
+      "classification": "authored-input-script-or-config",
+      "action": "retain-before-cleanup",
+      "retainedMatches": [
+        null
+      ]
+    },
+    {
+      "path": "🗑️generated\\shared-row-diff-read\\📜️script.ts",
+      "sha256": "85C47E0BD876E43EB58A04E4AA07DC758422DE5C4FBBA5B7A664624C4B2611B5",
+      "classification": "authored-input-script-or-config",
+      "action": "retain-before-cleanup",
+      "retainedMatches": [
+        null
+      ]
+    },
+    {
+      "path": "🗑️generated\\title-final-publication-binding\\📜️script.ts",
+      "sha256": "FE6A7AF6BE3D3487957885E665D6AA02C221B40DA92C163C4686851443A7C28D",
+      "classification": "authored-input-script-or-config",
+      "action": "already-retained-exact-hash",
+      "retainedMatches": [
+        "📥️authored-inputs\\title-carrier-research\\title-final-publication-binding\\📜️script.ts"
+      ]
+    },
+    {
+      "path": "🗑️generated\\vector9-schema\\📜️script.ts",
+      "sha256": "7D6D4B53352F2D63A8145F53336374C9A9027AEE4F15E81609B6DA9085FB4DCC",
+      "classification": "authored-input-script-or-config",
+      "action": "retain-before-cleanup",
+      "retainedMatches": [
+        null
+      ]
+    }
+  ],
+  "existingNonGeneratedCode": [
+    "🏗️build-catalog.ts",
+    "🏗️build-schema.ts",
+    "🏗️catalog-charts-a.ts",
+    "🏗️catalog-families.ts",
+    "🏗️catalog-german.ts",
+    "🏗️catalog-groups-de.ts",
+    "🏗️catalog-scientific.ts",
+    "🏗️catalog-sections-de.ts",
+    "🔧️audit-family-keys.py",
+    "🔧️build-finished-sections.sh",
+    "🔧️catalog-variant-key.py",
+    "🔧️clone-twin-features.py",
+    "🔧️cover-orphan-leaves.py",
+    "🔧️desuffix-taxonomy.ts",
+    "🔧️docs-emoji-in-mono.py",
+    "🔧️docs-inventory.py",
+    "🔧️docs-namespaces.py",
+    "🔧️docstring-gaps.py",
+    "🔧️domain-families-catalog.py",
+    "🔧️domain-families-schema.py",
+    "🔧️extract-kernel-probes.py",
+    "🔧️gaps-schema.ts",
+    "🔧️gaps-worksheet.ts",
+    "🔧️keys-from-sty.ts",
+    "🔧️move-pending-transform.py",
+    "🔧️move-seq-statistics.py",
+    "🔧️network-flow-catalog.py",
+    "🔧️network-flow-gallery.py",
+    "🔧️network-flow-schema.py",
+    "🔧️oracle-scientific-flip.py",
+    "🔧️oracle-substitute-vocabulary.py",
+    "🔧️oracle-substitutes.py",
+    "🔧️package-closure.py",
+    "🔧️parity-finished-cases.sh",
+    "🔧️parity-matrix.py",
+    "🔧️polish-apply.py",
+    "🔧️polish-colors.py",
+    "🔧️polish-inventory.py",
+    "🔧️polish-sites.py",
+    "🔧️polish-unread-keys.py",
+    "🔧️register-twin-capabilities-2.py",
+    "🔧️register-twin-capabilities.py",
+    "🔧️register-twin-oracle.py",
+    "🔧️rename-cs.py",
+    "🔧️rewire-stat-fixtures.py",
+    "🔧️splice-plot-pipeline.py",
+    "🔧️split-demo-interval.py",
+    "🔧️standalone-load.py",
+    "🔧️unwrap-projection-reads.py",
+    "🔧️unwrap-subject-projection.py",
+    "🔬analyze-taxonomy.ts",
+    "🔬files-manifest.ts",
+    "🔬gallery-lane.ts",
+    "🔬gallery-merge.ts",
+    "🔬sync-oracle-capabilities.ts",
+    "🗂️catalog-update-guides.py",
+    "🗂️fixture-rewire-guides.py",
+    "🗂️theme-rewire-guides.py",
+    "🗺️geo-spatial-catalog.ts",
+    "🟦️bootstrap-ui-axes.ts",
+    "📜️async-runtime\\📜️script.ts",
+    "📜️axis-audit\\📜️script.ts",
+    "📜️encoder-edit\\📜️script.ts",
+    "📜️geo-planar-frame\\📜️script.ts",
+    "📜️option-syntax-audit\\📜️script.ts",
+    "📜️publisher-audit\\📜️script.ts",
+    "📜️rust-input-closure\\📜️script.ts",
+    "📜️ticket-retention\\📜️script.ts",
+    "📥️authored-inputs\\📜️script.ts",
+    "📥️authored-inputs\\api-freshness-before\\🟦️.ts",
+    "📥️authored-inputs\\axis-baseline-input\\📜️script.ts",
+    "📥️authored-inputs\\axis-baseline-vectors-input\\📜️script.ts",
+    "📥️authored-inputs\\axis-context-default-input\\📜️script.ts",
+    "📥️authored-inputs\\axis-default-fix-input\\📜️script.ts",
+    "📥️authored-inputs\\axis-default-native-input\\📜️script.ts",
+    "📥️authored-inputs\\axis-default-schema-input\\📜️script.ts",
+    "📥️authored-inputs\\axis-default-vectors-input\\📜️script.ts",
+    "📥️authored-inputs\\axis-invalid-boolean-input\\📜️script.ts",
+    "📥️authored-inputs\\axis-native-boolean-input\\📜️script.ts",
+    "📥️authored-inputs\\axis-native-boolean-probe-input\\📜️script.ts",
+    "📥️authored-inputs\\axis-native-boolean-vectors-input\\📜️script.ts",
+    "📥️authored-inputs\\axis-native-booleans-fix-input\\📜️script.ts",
+    "📥️authored-inputs\\axis-restore-input\\📜️script.ts",
+    "📥️authored-inputs\\axis-runtime-input\\📜️script.ts",
+    "📥️authored-inputs\\axis-style-probe-input\\📜️script.ts",
+    "📥️authored-inputs\\axis-style-proof\\📜️script.ts",
+    "📥️authored-inputs\\axis-test-input\\📜️script.ts",
+    "📥️authored-inputs\\axis-text-baseline-fix-input\\📜️script.ts",
+    "📥️authored-inputs\\axis-text-followup-input\\📜️script.ts",
+    "📥️authored-inputs\\axis-text-paint\\📜️script.ts",
+    "📥️authored-inputs\\catalogue-domain-scalar-contract\\current-phase\\grammar.ts",
+    "📥️authored-inputs\\catalogue-domain-scalar-contract\\current-phase2\\grammar.ts",
+    "📥️authored-inputs\\cjk-font-controls\\current-green57\\owner-0.ts",
+    "📥️authored-inputs\\cjk-font-controls\\current-green57\\owner-1.ts",
+    "📥️authored-inputs\\cjk-font-controls\\current-green57\\owner-2.ts",
+    "📥️authored-inputs\\cjk-font-controls\\current-green57\\owner-6.ts",
+    "📥️authored-inputs\\cjk-font-controls\\metric-red16\\observer.ts",
+    "📥️authored-inputs\\cjk-font-controls\\metric-red16\\owner.before.ts",
+    "📥️authored-inputs\\construction-window-contract\\actual-red14\\observer.ts",
+    "📥️authored-inputs\\construction-window-contract\\actual-red80\\observer.ts",
+    "📥️authored-inputs\\critical-complete-paint-contract\\current-green46\\observer.ts",
+    "📥️authored-inputs\\critical-path-controls\\helper.canonical-intake-red.ts",
+    "📥️authored-inputs\\critical-path-controls\\helper.full.ts",
+    "📥️authored-inputs\\critical-path-controls\\complete-paint-contract\\helper.after.ts",
+    "📥️authored-inputs\\critical-path-controls\\complete-paint-contract\\helper.before.ts",
+    "📥️authored-inputs\\dev-launch-phases\\after-seed.jsonc",
+    "📥️authored-inputs\\dev-launch-phases\\before-seed.jsonc",
+    "📥️authored-inputs\\domain-reference-controls\\helper.initial.ts",
+    "📥️authored-inputs\\domain-reference-controls\\helper.reader-baseline.ts",
+    "📥️authored-inputs\\domain-reference-controls\\current-green\\observer.ts",
+    "📥️authored-inputs\\domain-reference-controls\\current-ordinal-probe\\helper.after.ts",
+    "📥️authored-inputs\\domain-reference-controls\\current-ordinal-probe\\helper.before.ts",
+    "📥️authored-inputs\\final-catalogue-revalidation\\📜️script.ts",
+    "📥️authored-inputs\\final-close-transport\\after\\📜️script.ts",
+    "📥️authored-inputs\\final-close-transport\\before\\📜️script.ts",
+    "📥️authored-inputs\\gallery-intrinsic-carrier\\gallery-before.ts",
+    "📥️authored-inputs\\generated-history\\axis-pdf-style-inspect\\📜️script.ts",
+    "📥️authored-inputs\\generated-history\\axis-style-proof\\📜️script.ts",
+    "📥️authored-inputs\\generated-history\\axis-text-paint\\📜️script.ts",
+    "📥️authored-inputs\\generated-history\\axis-visual-after\\📜️script.ts",
+    "📥️authored-inputs\\generated-history\\axis-visual-before\\📜️script.ts",
+    "📥️authored-inputs\\generated-history\\financial-counter-fix\\📜️script.ts",
+    "📥️authored-inputs\\generated-history\\financial-fix\\📜️script.ts",
+    "📥️authored-inputs\\generated-history\\financial-geometry-test\\📜️script.ts",
+    "📥️authored-inputs\\generated-history\\financial-native-probe\\📜️script.ts",
+    "📥️authored-inputs\\generated-history\\font-inspection\\📜️script.ts",
+    "📥️authored-inputs\\generated-history\\font-registration\\📜️script.ts",
+    "📥️authored-inputs\\generated-history\\font-shaping-inspection\\📜️script.ts",
+    "📥️authored-inputs\\generated-history\\graph-diagnostic\\📜️script.ts",
+    "📥️authored-inputs\\generated-history\\graph-loop-native-edit\\📜️script.ts",
+    "📥️authored-inputs\\generated-history\\graph-loop-test-edit\\📜️script.ts",
+    "📥️authored-inputs\\generated-history\\legend-correction\\📜️script.ts",
+    "📥️authored-inputs\\generated-history\\legend-emission-proof\\📜️script.ts",
+    "📥️authored-inputs\\generated-history\\legend-font-role\\📜️script.ts",
+    "📥️authored-inputs\\generated-history\\legend-implementation\\📜️script.ts",
+    "📥️authored-inputs\\generated-history\\legend-line-box\\📜️script.ts",
+    "📥️authored-inputs\\generated-history\\legend-line-box-fix\\📜️script.ts",
+    "📥️authored-inputs\\generated-history\\legend-line-box-runtime\\📜️script.ts",
+    "📥️authored-inputs\\generated-history\\legend-line-box-test\\📜️script.ts",
+    "📥️authored-inputs\\generated-history\\legend-native-add\\📜️script.ts",
+    "📥️authored-inputs\\generated-history\\legend-native-probe\\📜️script.ts",
+    "📥️authored-inputs\\generated-history\\legend-oracle-types\\📜️script.ts",
+    "📥️authored-inputs\\generated-history\\legend-probe-fix\\📜️script.ts",
+    "📥️authored-inputs\\generated-history\\legend-projection-fix\\📜️script.ts",
+    "📥️authored-inputs\\generated-history\\legend-projection-red\\📜️script.ts",
+    "📥️authored-inputs\\generated-history\\legend-symbol-oracle\\📜️script.ts",
+    "📥️authored-inputs\\generated-history\\legend-test-edit\\📜️script.ts",
+    "📥️authored-inputs\\generated-history\\legend-text-paint\\📜️script.ts",
+    "📥️authored-inputs\\generated-history\\legend-visual-qa\\📜️script.ts",
+    "📥️authored-inputs\\generated-history\\native-arrow-edit\\📜️script.ts",
+    "📥️authored-inputs\\generated-history\\native-comment-unicode\\📜️script.ts",
+    "📥️authored-inputs\\generated-history\\native-diagnostic\\📜️script.ts",
+    "📥️authored-inputs\\generated-history\\native-diagnostic-emission\\📜️script.ts",
+    "📥️authored-inputs\\generated-history\\native-diagnostic-group\\📜️script.ts",
+    "📥️authored-inputs\\generated-history\\native-diagnostic-missing\\📜️script.ts",
+    "📥️authored-inputs\\generated-history\\native-diagnostic-ordinal\\📜️script.ts",
+    "📥️authored-inputs\\generated-history\\native-diagnostic-shared-missing\\📜️script.ts",
+    "📥️authored-inputs\\generated-history\\native-diagnostic-shared-unknown\\📜️script.ts",
+    "📥️authored-inputs\\generated-history\\native-diagnostic-unknown\\📜️script.ts",
+    "📥️authored-inputs\\generated-history\\native-font-role-before\\📜️script.ts",
+    "📥️authored-inputs\\generated-history\\native-font-role-fix\\📜️script.ts",
+    "📥️authored-inputs\\generated-history\\native-font-role-regression\\📜️script.ts",
+    "📥️authored-inputs\\geographic-custom-data-audit\\📜️script.ts",
+    "📥️authored-inputs\\geographic-custom-data-audit\\corrected-compiler-harness\\📜️script.ts",
+    "📥️authored-inputs\\geographic-custom-data-audit\\initial-harness\\📜️script.ts",
+    "📥️authored-inputs\\geographic-planar-frame\\🧩️launch.seed.jsonc.before-planning.jsonc",
+    "📥️authored-inputs\\geographic-planar-frame\\🧩️launch.seed.jsonc.before-spatial.jsonc",
+    "📥️authored-inputs\\geographic-planar-frame\\canonical-admission.before.ts",
+    "📥️authored-inputs\\geographic-planar-frame\\launch-seed.before-native-revalidation.jsonc",
+    "📥️authored-inputs\\geographic-planar-frame\\launch.json.before-planning.jsonc",
+    "📥️authored-inputs\\geographic-planar-frame\\launch.json.before-spatial.jsonc",
+    "📥️authored-inputs\\legend-text-paint\\📜️script.ts",
+    "📥️authored-inputs\\native-api-option-flow-before\\🟦️.ts",
+    "📥️authored-inputs\\native-completion\\📜️script.ts",
+    "📥️authored-inputs\\native-math-custom-caption-probe\\📜️script.ts",
+    "📥️authored-inputs\\native-worker-before-node-browser-controller\\📜️script.ts",
+    "📥️authored-inputs\\native-worker-before-pinned-scanner\\📜️script.ts",
+    "📥️authored-inputs\\publication-rename-before\\🟦️.ts",
+    "📥️authored-inputs\\scientific-mixed-launch\\projection-after.jsonc",
+    "📥️authored-inputs\\scientific-mixed-launch\\projection-before.jsonc",
+    "📥️authored-inputs\\scientific-mixed-launch\\seed-after.jsonc",
+    "📥️authored-inputs\\scientific-mixed-launch\\seed-before.jsonc",
+    "📥️authored-inputs\\scientific-mode-launch\\projection-after.jsonc",
+    "📥️authored-inputs\\scientific-mode-launch\\projection-before.jsonc",
+    "📥️authored-inputs\\scientific-mode-launch\\seed-after.jsonc",
+    "📥️authored-inputs\\scientific-mode-launch\\seed-before.jsonc",
+    "📥️authored-inputs\\scientific-radar-window-grid\\canvas-helper.after.ts",
+    "📥️authored-inputs\\scientific-radar-window-grid\\canvas-helper.before.ts",
+    "📥️authored-inputs\\scientific-visible-relation-styles\\helper.after.ts",
+    "📥️authored-inputs\\scientific-visible-relation-styles\\helper.before.ts",
+    "📥️authored-inputs\\scientific-visible-relation-styles\\helper.visible-empty-node-red.ts",
+    "📥️authored-inputs\\ticket-retention-before\\owner\\🧰️framework\\🛍️products\\🦑️repo\\🔨️modules\\💻️client\\⌨️cli\\📦️packages\\🟦️typescript\\📜️script.ts",
+    "📥️authored-inputs\\ticket-retention-before\\owner\\🧰️framework\\🛍️products\\🦑️repo\\🔨️modules\\💻️client\\⌨️cli\\🧪️tests\\🃏️glob\\🟦️.ts",
+    "📥️authored-inputs\\ticket-retention-before\\🧰️framework\\🛍️products\\🦑️repo\\🔨️modules\\💻️client\\⌨️cli\\📦️packages\\🟦️typescript\\📜️script.ts",
+    "📥️authored-inputs\\ticket-retention-before\\🧰️framework\\🛍️products\\🦑️repo\\🔨️modules\\💻️client\\⌨️cli\\🧪️tests\\🃏️glob\\🟦️.ts",
+    "📥️authored-inputs\\ticket-retention-harness-before\\🟦️.ts",
+    "📥️authored-inputs\\title-carrier-research\\api-title-contract\\📜️script.ts",
+    "📥️authored-inputs\\title-carrier-research\\api-title-contract-candidate\\📜️script.ts",
+    "📥️authored-inputs\\title-carrier-research\\api-title-current-view\\📜️script.ts",
+    "📥️authored-inputs\\title-carrier-research\\api-title-current-view-verification\\📜️script.ts",
+    "📥️authored-inputs\\title-carrier-research\\final-compiler-source-binding\\📜️script.ts",
+    "📥️authored-inputs\\title-carrier-research\\gallery-carrier-generation-binding\\📜️script.ts",
+    "📥️authored-inputs\\title-carrier-research\\gallery-carrier-inspection\\📜️script.ts",
+    "📥️authored-inputs\\title-carrier-research\\gallery-carrier-red-extraction\\📜️script.ts",
+    "📥️authored-inputs\\title-carrier-research\\gallery-empty-default-contract\\📜️script.ts",
+    "📥️authored-inputs\\title-carrier-research\\gallery-empty-default-order\\📜️script.ts",
+    "📥️authored-inputs\\title-carrier-research\\gallery-planar-api-reversal\\📜️script.ts",
+    "📥️authored-inputs\\title-carrier-research\\gallery-planar-contract\\📜️script.ts",
+    "📥️authored-inputs\\title-carrier-research\\gallery-planar-family-contract\\📜️script.ts",
+    "📥️authored-inputs\\title-carrier-research\\gallery-planar-row-inspection\\📜️script.ts",
+    "📥️authored-inputs\\title-carrier-research\\gallery-planar-source-admission\\📜️script.ts",
+    "📥️authored-inputs\\title-carrier-research\\gallery-sampling-api\\📜️script.ts",
+    "📥️authored-inputs\\title-carrier-research\\gallery-sampling-contract\\📜️script.ts",
+    "📥️authored-inputs\\title-carrier-research\\gallery-sampling-final-contract\\📜️script.ts",
+    "📥️authored-inputs\\title-carrier-research\\gallery-sampling-row-inspection\\📜️script.ts",
+    "📥️authored-inputs\\title-carrier-research\\gallery-sampling-source-admission\\📜️script.ts",
+    "📥️authored-inputs\\title-carrier-research\\title-final-publication-binding\\📜️script.ts",
+    "📥️authored-inputs\\token-publication\\current-green\\owner-0.ts",
+    "📥️authored-inputs\\token-publication\\current-green\\owner-1.ts",
+    "📥️authored-inputs\\token-publication\\current-green\\owner-2.ts",
+    "🔧️fixture-lock\\📜️script.ts"
+  ]
+}

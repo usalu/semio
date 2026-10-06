@@ -1,0 +1,39 @@
+{
+  "capturedAt": "2026-10-05T06:21:54.0795373Z",
+  "fullSession": 25808,
+  "scope": "Actual current API paired publication; every-page consumer and full terminal pending.",
+  "markerLines": [
+    4856
+  ],
+  "stageBinding": "📥️authored-inputs/final-native-grammar-current045/current-full25808-api-live-stage-binding.json",
+  "stageBindingSha256": "D67C559722FC0A1388E6823143BF44EF4F5F0D2C5C433E3A067129F44134DC61",
+  "outputDirectory": "C:/git/semio/🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/dist/documents/viz-api",
+  "receipt": {
+    "version": 1,
+    "owner": "@semio-tech/print:build-viz-api",
+    "files": [
+      "🔓️viz-api-dark.pdf",
+      "🔓️viz-api.pdf"
+    ]
+  },
+  "receiptSha256": "2094A63BB197C5905F6CCDBB3C7660D18292696B53C8EA411C38EB9D0502A93F",
+  "directoryFiles": [
+    ".nx-artifact.json",
+    "🔓️viz-api-dark.pdf",
+    "🔓️viz-api.pdf"
+  ],
+  "pdfs": [
+    {
+      "name": "🔓️viz-api-dark.pdf",
+      "bytes": 1475759,
+      "sha256": "9C858BA27D6B5DF0E1CC191D243D2EEA14306680FFBB03762B53BA0B572DECA3",
+      "header": "%PDF-"
+    },
+    {
+      "name": "🔓️viz-api.pdf",
+      "bytes": 1477485,
+      "sha256": "B8876C5EDDD9E5441062E1D65A87607472B55F65E7C3EF98181E683FFB2AD05F",
+      "header": "%PDF-"
+    }
+  ]
+}

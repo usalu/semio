@@ -1,0 +1,107 @@
+{
+  "schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "basemap": {
+        "type": "boolean"
+      },
+      "curvature": {
+        "type": "number"
+      },
+      "fit": {
+        "type": "string"
+      },
+      "flow": {
+        "type": "string",
+        "enum": [
+          "band",
+          "arrow",
+          "desire",
+          "migration"
+        ]
+      },
+      "geometry": {
+        "type": "string"
+      },
+      "height": {
+        "type": "number"
+      },
+      "lineWidth": {
+        "type": "string"
+      },
+      "opacity": {
+        "type": "number"
+      },
+      "origins": {
+        "type": "boolean"
+      },
+      "palette": {
+        "type": "string"
+      },
+      "paletteSteps": {
+        "type": "integer"
+      },
+      "parallels": {
+        "type": "string"
+      },
+      "projection": {
+        "type": "string"
+      },
+      "rotate": {
+        "type": "string"
+      },
+      "routes": {
+        "type": "string"
+      },
+      "routeWidth": {
+        "type": "number"
+      },
+      "stroke": {
+        "type": "string"
+      },
+      "variant": {
+        "type": "string"
+      },
+      "width": {
+        "type": "number"
+      }
+    }
+  },
+  "vectors": {
+    "accepted": {
+      "flow": "band",
+      "basemap": false,
+      "origins": false,
+      "routes": "demo-geo-routes",
+      "geometry": "demo-geo-regions",
+      "curvature": 0.25
+    },
+    "rejected": [
+      {
+        "key": "mode",
+        "value": "great-circle"
+      },
+      {
+        "key": "samples",
+        "value": 8
+      },
+      {
+        "key": "stations",
+        "value": true
+      },
+      {
+        "key": "flow",
+        "value": "authored-table"
+      },
+      {
+        "key": "flow",
+        "value": "unsupported-flow"
+      }
+    ],
+    "languages": [
+      "en",
+      "de"
+    ]
+  }
+}

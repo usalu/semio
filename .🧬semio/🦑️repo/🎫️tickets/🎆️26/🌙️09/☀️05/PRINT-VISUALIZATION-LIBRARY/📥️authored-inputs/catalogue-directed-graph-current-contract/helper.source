@@ -1,0 +1,63 @@
+export async function compileNativeDirectedGraphGrammar(workDir: string, loopOnly = false): Promise<void> {
+  const rows = loopOnly ? arrowVectors.rows.filter(row=>row[0]===row[1]) : arrowVectors.rows;
+  const cases = loopOnly ? arrowVectors.cases.filter(entry=>["circle-straight","degree-curved","box-curved"].includes(entry.name)) : arrowVectors.cases;
+  const bodies = cases.map(entry => ({raw: '\\begin{VizFigure}[width=80,height=40]\\SemioVizTable{arrow-data}{source,target,weight}'+rows.map(row=>'\\SemioVizRow{arrow-data}{'+row.join(',')+'}').join('')+'\\SemioVizProbeBegin{native-chart-grammar}{'+entry.name+'}\\SemioVizRunFamily{graph}[data=arrow-data,source=source,target=target,weight=weight,layout=arc,order=name,directed=true,labels=false,shape='+entry.shape+',sizeBy='+entry.sizeBy+',curvature='+entry.curvature+']\\end{VizFigure}'}));
+  bodies.push({raw:'\\ExplSyntaxOn\\cs_if_exist:NF\\semio_viz_guide_title_position:{\\cs_set_eq:NN\\semio_viz_test_title_draw:\\semio_viz_guide_title_draw:\\cs_set_protected:Npn\\semio_viz_guide_title_draw:{\\semio_viz_test_title_draw:\\semio_viz_probe_geometry:nx{axis-title}{\\fp_eval:n{\\l_semio_viz_guide_ax_fp+\\l_semio_viz_guide_a_fp*(\\l_semio_viz_guide_bx_fp-\\l_semio_viz_guide_ax_fp)+\\l_semio_viz_guide_nx_fp*(\\l_semio_viz_axis_tick_size_fp+\\l_semio_viz_axis_title_gap_fp)},\\fp_eval:n{\\l_semio_viz_guide_ay_fp+\\l_semio_viz_guide_a_fp*(\\l_semio_viz_guide_by_fp-\\l_semio_viz_guide_ay_fp)+\\l_semio_viz_guide_ny_fp*(\\l_semio_viz_axis_tick_size_fp+\\l_semio_viz_axis_title_gap_fp)}}}}\\ExplSyntaxOff'});
+  const a = arrowVectors.angularTitle;
+  for(const anchor of loopOnly ? [] : a.anchors)bodies.push({raw:'\\begin{VizFigure}[width=100,height=80]\\SemioVizScale{angular-title}{linear}{0,10}{0,180}\\SemioVizProbeBegin{native-chart-grammar}{angular-title-'+anchor+'}\\SemioVizAxis[scale=angular-title,orient=angular,center={'+a.center.join(',')+'},outerRadius='+a.radius+',startAngle='+a.startAngle+',endAngle='+a.endAngle+',tickValues={0,5,10},tickSize='+a.tickSize+',titleGap='+a.titleGap+',title=Angular,titleAnchor='+anchor+',domainLine=false]\\end{VizFigure}'});
+  const records = await compileVizProbeDocument({case:'native-chart-grammar',scenario:'directed-graph',documentClass:'semio',documentClassOptions:'type=paper,language=en',packages:['semio-viz'],geometry:true,preamble:['\\title{Directed Graph Grammar}','\\author{Semio}','\\date{}','\\errorcontextlines=200'],body:bodies},{workDir,scenario:undefined,keepWorkDir:true});
+  const failures:string[]=[];
+  const ids=sort([...new Set(rows.flatMap(row=>[String(row[0]),String(row[1])]))]);
+  const clearance=.75*25.4/72.27/2;
+  const distance=(dx:number,dy:number,r:number,shape:string):number=>{
+    if(shape==='box'){
+      const corner=Math.min(.4,r),qx=Math.abs(dx)-(2.1*r-corner),qy=Math.abs(dy)-(r-corner);
+      return Math.hypot(Math.max(qx,0),Math.max(qy,0))+Math.min(Math.max(qx,qy),0)-corner;
+    }
+    if(shape!=='square'&&shape!=='diamond')return Math.hypot(dx,dy)-r;
+    const polygon:[number,number][]=shape==='square'?[[-r,-r],[r,-r],[r,r],[-r,r]]:[[-1.3*r,0],[0,-1.3*r],[1.3*r,0],[0,1.3*r]];
+    const nearest=Math.min(...polygon.map(([x,y],i)=>{
+      const [bx,by]=polygon[(i+1)%polygon.length]!,vx=bx-x,vy=by-y;
+      const t=scaleLinear([0,vx*vx+vy*vy],[0,1]).clamp(true)((dx-x)*vx+(dy-y)*vy);
+      return Math.hypot(dx-x-t*vx,dy-y-t*vy);
+    }));
+    return polygonContains(polygon,[dx,dy])?-nearest:nearest;
+  };
+  for(const entry of cases){
+    const own=records.filter(record=>record.scenario===entry.name);
+    const nodes=own.filter(record=>record.key==='geometry/node');
+    const links=own.filter(record=>['geometry/link','geometry/curve','geometry/directed-curve','geometry/loop','geometry/directed-loop'].includes(record.key));
+    if(nodes.length!==ids.length||links.length!==rows.length)throw Error(entry.name+': graph probe inventory differs');
+    const pairs=new Map<string,number>();
+    rows.forEach((row,index)=>{
+      const source=nodes[ids.indexOf(String(row[0]))]!.values.map(Number),target=nodes[ids.indexOf(String(row[1]))]!.values.map(Number);
+      const [sx,sy]=source,[tx,ty,r]=target;
+      if(row[0]===row[1]){
+        const cy=ty!+1.4*r!,radius=1.1*r!;
+        let lo=180,hi=270;for(let k=0;k<64;k++){const angle=(lo+hi)/2*Math.PI/180;if(distance(radius*Math.cos(angle),cy+radius*Math.sin(angle)-ty!,r!,entry.shape)>clearance)lo=(lo+hi)/2;else hi=(lo+hi)/2;}
+        const angle=(lo+hi)/2;
+        try{equal(links[index]!.values.slice(0,5).map(Number),[tx!,cy,radius,540-angle,360+angle],entry.name+" directed self-loop",5e-4);}catch(error){failures.push(String(error));}
+        return;
+      }
+      const key=[String(row[0]),String(row[1])].sort().join('/'),slot=pairs.get(key)??0;pairs.set(key,slot+1);
+      const bend=entry.curvature+.16*Math.ceil(slot/2)*(slot%2?1:-1);
+      const cx=(sx!+tx!)/2-bend*(ty!-sy!),cy=(sy!+ty!)/2+bend*(tx!-sx!);
+      const point=(t:number):[number,number]=>[0,1].map(axis=>{const start=source[axis]!,end=target[axis]!,control=[cx,cy][axis]!;if(Math.abs(bend)<1e-9)return interpolateNumber(start,end)(t);const a=interpolateNumber(start,control)(t),c=interpolateNumber(control,end)(t);return interpolateNumber(interpolateNumber(a,control)(t),interpolateNumber(control,c)(t))(t);})as[number,number];
+      let lo=0,hi=1;for(let k=0;k<64;k++){const t=(lo+hi)/2,[x,y]=point(t);if(distance(x-tx!,y-ty!,r!,entry.shape)>clearance)lo=t;else hi=t;}
+      const t=(lo+hi)/2,tip=point(t),record=links[index]!;
+      const p=d3Path();p.moveTo(sx!,sy!);
+      if(Math.abs(bend)<1e-9)p.lineTo(...tip);
+      else p.bezierCurveTo(sx!+t*(cx-sx!),sy!+t*(cy-sy!),(1-t)**2*sx!+(2*t-t*t)*cx,(1-t)**2*sy!+(2*t-t*t)*cy,...tip);
+      const expected=String(p).match(/[-+]?(?:\d*\.?\d+)(?:e[-+]?\d+)?/gi)!.map(Number);
+      const actual=record.values.slice(0,Math.abs(bend)<1e-9?4:8).map(Number);
+      try{equal(actual,expected,entry.name+'/edge-'+index,5e-4);}catch(error){failures.push(String(error));}
+    });
+  }
+  (loopOnly ? [] : a.anchors).forEach(anchor=>{
+    const t=anchor==='start'?0:anchor==='end'?1:.5,angle=scaleLinear([0,1],[a.startAngle,a.endAngle])(t)*Math.PI/180,r=a.radius+a.tickSize+a.titleGap;
+    const record=records.find(record=>record.scenario==='angular-title-'+anchor&&record.key==='geometry/axis-title')!;
+    try{equal(record.values.map(Number),[a.center[0]!+r*Math.cos(angle),a.center[1]!+r*Math.sin(angle)],'angular title '+anchor,1e-4);}catch(error){failures.push(String(error));}
+  });
+  if(failures.length)throw Error(failures.length+' directed graph/title mismatches:\n'+failures.join('\n'));
+  console.log('[native-grammar] '+(cases.length*rows.length)+' directed graph boundaries including '+(cases.length*rows.filter(row=>row[0]===row[1]).length)+' loops and '+(loopOnly?0:a.anchors.length)+' angular title anchors matched D3 geometry');
+}

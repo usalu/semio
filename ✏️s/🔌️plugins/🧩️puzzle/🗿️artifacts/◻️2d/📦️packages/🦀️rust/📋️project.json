@@ -9,41 +9,41 @@
   ],
   "targets": {
     "test-snapshot-sqlite": {
-        "executor": "nx:run-commands",
-        "cache": false,
-        "options": {
-          "cwd": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/📦️packages/🦀️rust",
-          "command": "bun ./📜️script.ts test-snapshot-sqlite",
-          "forwardAllArgs": true
-        }
-      },
-      "test-snapshot-sqlite-native": {
-        "executor": "nx:run-commands",
-        "cache": false,
-        "options": {
-          "cwd": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/📦️packages/🦀️rust",
-          "command": "bun ./📜️script.ts test-snapshot-sqlite native",
-          "forwardAllArgs": true
-        }
-      },
-      "test-snapshot-sqlite-source": {
-        "executor": "nx:run-commands",
-        "cache": false,
-        "options": {
-          "cwd": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/📦️packages/🦀️rust",
-          "command": "bun ./📜️script.ts test-snapshot-sqlite source",
-          "forwardAllArgs": true
-        }
-      },
-      "verify-snapshot-sqlite-source": {
-        "executor": "nx:run-commands",
-        "cache": false,
-        "options": {
-          "cwd": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/📦️packages/🦀️rust",
-          "command": "bun ./📜️script.ts verify snapshot-sqlite-source",
-          "forwardAllArgs": true
-        }
-      },
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-snapshot-sqlite",
+        "forwardAllArgs": true
+      }
+    },
+    "test-snapshot-sqlite-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-snapshot-sqlite native",
+        "forwardAllArgs": true
+      }
+    },
+    "test-snapshot-sqlite-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-snapshot-sqlite source",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-snapshot-sqlite-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts verify snapshot-sqlite-source",
+        "forwardAllArgs": true
+      }
+    },
     "build": {
       "executor": "nx:run-commands",
       "cache": true,
@@ -116,6 +116,15 @@
         "command": "bun ./📜️script.ts graph-wire-check"
       },
       "outputs": []
+    },
+    "preview-generated": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts preview-generated"
+      }
     }
   }
 }

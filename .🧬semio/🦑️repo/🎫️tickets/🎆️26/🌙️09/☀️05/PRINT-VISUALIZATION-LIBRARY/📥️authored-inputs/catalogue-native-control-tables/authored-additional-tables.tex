@@ -1,0 +1,40 @@
+%region 🔖️AdditionalNativeControlTables
+\section{\ApiText{Native pipeline control scopes}{Native Pipeline-Schlüsselbereiche}}
+\ApiScopeSource{api-path-plot-channel}{semio / viz / plot / channel}
+\SemioTableLong[text-size=8pt]{\Key{api-path-plot-channel}}{0.19,0.12,0.19,0.50}{\ApiKey & \ApiType & \ApiDefault & \ApiMeaning}{%
+  \SemioTableRow{\Key{column} & string & \ApiText{empty}{leer} & \ApiText{Source column of one explicit encoding channel.}{Quellspalte eines expliziten Kodierungskanals.}}
+  \SemioTableRow{\Key{scale} & string & \ApiText{channel name}{Kanalname} & \ApiText{Named scale for this channel; only an explicitly supplied scale is applied.}{Benannte Skala für diesen Kanal; nur eine explizit angegebene Skala wird angewandt.}}
+}
+\ApiScopeSource{api-path-quadtree}{semio / viz / quadtree}
+\SemioTableLong[text-size=8pt]{\Key{api-path-quadtree}}{0.19,0.12,0.19,0.50}{\ApiKey & \ApiType & \ApiDefault & \ApiMeaning}{%
+  \SemioTableRow{\Key{x} & string & \Key{x} & \ApiText{Column carrying horizontal point coordinates.}{Spalte mit den waagerechten Punktkoordinaten.}}
+  \SemioTableRow{\Key{y} & string & \Key{y} & \ApiText{Column carrying vertical point coordinates.}{Spalte mit den senkrechten Punktkoordinaten.}}
+}
+\ApiScopeSource{api-path-transform-schema}{semio / viz / transform}
+\ApiText{These are the structured transform reset values; a selected transform kind may override them before authored options. They share the native scope with the shorthand operations.}{Dies sind die Rücksetzwerte strukturierter Transformationen; eine gewählte Transformationsart kann sie vor den Aufruferoptionen überschreiben. Sie teilen den nativen Bereich mit den Kurzformoperationen.}
+\SemioTableLong[text-size=8pt]{\Key{api-path-transform-schema}}{0.19,0.12,0.19,0.50}{\ApiKey & \ApiType & \ApiDefault & \ApiMeaning}{%
+  \SemioTableRow{\Key{kind} & string & \ApiText{empty}{leer} & \ApiText{Registered structured transformation to execute.}{Auszuführende registrierte strukturierte Transformation.}}
+  \SemioTableRow{\Key{column} & string & \Key{value} & \ApiText{Input measure column.}{Eingabespalte des Messwerts.}}
+  \SemioTableRow{\Key{columns} & clist & \ApiText{empty}{leer} & \ApiText{Input columns of a multi-column operation.}{Eingabespalten einer Mehrspaltenoperation.}}
+  \SemioTableRow{\Key{as} & string & \ApiText{empty}{leer} & \ApiText{Output column override; empty uses the operation's own naming.}{Überschreibung der Ausgabespalte; leer verwendet die Benennung der Operation.}}
+  \SemioTableRow{\Key{groupby} & clist & \ApiText{empty}{leer} & \ApiText{Grouping columns, preserving first encounter order.}{Gruppierungsspalten unter Beibehaltung der Erstbegegnungsreihenfolge.}}
+  \SemioTableRow{\Key{operation} & string & \ApiText{empty}{leer} & \ApiText{Aggregation operation selector.}{Auswahl der Aggregationsoperation.}}
+  \SemioTableRow{\Key{operator} & string & \Key{eq} & \ApiText{Comparison operator for a filter.}{Vergleichsoperator eines Filters.}}
+  \SemioTableRow{\Key{index} & string & \Key{id} & \ApiText{Identity column used by reshaping operations.}{Identitätsspalte für Umformungsoperationen.}}
+  \SemioTableRow{\Key{key} & string & \Key{key} & \ApiText{Key column used by reshaping operations.}{Schlüsselspalte für Umformungsoperationen.}}
+  \SemioTableRow{\Key{value} & string & \Key{value} & \ApiText{Value column or authored typed comparison operand, according to the operation.}{Wertspalte oder angegebener typisierter Vergleichsoperand entsprechend der Operation.}}
+  \SemioTableRow{\Key{table} & string & \ApiText{empty}{leer} & \ApiText{Additional table for a join.}{Zusätzliche Tabelle für einen Verbund.}}
+  \SemioTableRow{\Key{left} & string & \Key{id} & \ApiText{Join-key column of the current table.}{Verbundschlüsselspalte der aktuellen Tabelle.}}
+  \SemioTableRow{\Key{right} & string & \Key{id} & \ApiText{Join-key column of the additional table.}{Verbundschlüsselspalte der zusätzlichen Tabelle.}}
+  \SemioTableRow{\Key{prefix} & string & \ApiText{empty}{leer} & \ApiText{Prefix for joined output columns.}{Präfix verbundener Ausgabespalten.}}
+  \SemioTableRow{\Key{size} & integer & \Key{3} & \ApiText{Window size in rows.}{Fenstergröße in Reihen.}}
+  \SemioTableRow{\Key{centred} & boolean & \Key{false} & \ApiText{Centres a window around its current row.}{Zentriert ein Fenster um seine aktuelle Reihe.}}
+  \SemioTableRow{\Key{mode} & string & \Key{sum} & \ApiText{Stack or normalization mode.}{Stapel- oder Normalisierungsmodus.}}
+  \SemioTableRow{\Key{keys} & clist & \ApiText{empty}{leer} & \ApiText{Explicit series or reshape keys.}{Explizite Reihen- oder Umformungsschlüssel.}}
+  \SemioTableRow{\Key{min} & string & \ApiText{empty}{leer} & \ApiText{Optional lower normalization bound.}{Optionale untere Normalisierungsgrenze.}}
+  \SemioTableRow{\Key{max} & string & \ApiText{empty}{leer} & \ApiText{Optional upper normalization bound.}{Optionale obere Normalisierungsgrenze.}}
+  \SemioTableRow{\Key{x} & string & \Key{x} & \ApiText{Independent regression column.}{Unabhängige Regressionsspalte.}}
+  \SemioTableRow{\Key{y} & string & \Key{y} & \ApiText{Dependent regression column.}{Abhängige Regressionsspalte.}}
+  \SemioTableRow{\Key{method} & string & \Key{linear} & \ApiText{Regression model selector.}{Auswahl des Regressionsmodells.}}
+}
+%endregion 🔖️AdditionalNativeControlTables

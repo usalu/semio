@@ -1,0 +1,26 @@
+      { semio~sci~arrow }
+  }
+% 🔀 Draws every edge between its two endpoint node positions, with its label riding the line.
+\cs_new_protected:Npn \semio_viz_math_diagram_edges:
+  {
+    \clist_map_inline:Nn \l_semio_viz_math_edges_clist
+      {
+        \semio_viz_math_record:n {##1}
+        \use:x
+          {
+            \exp_not:N \draw
+              [ \semio_viz_math_edge_style:n { \semio_viz_math_field:n { 3 } } ]
+              ( \fp_eval:n { \l_semio_viz_math_unit_fp * \semio_viz_math_nodex:n { \semio_viz_math_field:n { 1 } } } ,
+                \fp_eval:n { \l_semio_viz_math_unit_fp * \semio_viz_math_nodey:n { \semio_viz_math_field:n { 1 } } } ) --
+              \tl_if_blank:eF { \semio_viz_math_field:n { 4 } }
+                {
+                  node [ font=\exp_not:N \c_semio_viz_theme_font_label_tl , text=semio-chrome-text-normal ,
+                         inner~sep=0.4mm , fill=semio-chrome-base , sloped ]
+                    { \exp_not:e { \semio_viz_math_field:n { 4 } } }
+                }
+              ( \fp_eval:n { \l_semio_viz_math_unit_fp * \semio_viz_math_nodex:n { \semio_viz_math_field:n { 2 } } } ,
+                \fp_eval:n { \l_semio_viz_math_unit_fp * \semio_viz_math_nodey:n { \semio_viz_math_field:n { 2 } } } ) ;
+          }
+      }
+  }
+% 🟣 Places each node label at its scaled coordinate, bare or inside the requested circle or box.

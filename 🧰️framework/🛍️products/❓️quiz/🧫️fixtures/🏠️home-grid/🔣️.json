@@ -1,6 +1,6 @@
 {
   "schema": "semio.quiz.home-grid/v1",
-  "description": "The overview of a quiz site: cards over a glass layer, the real page of each card on the strip behind it. Pages in reading order (DOM, focus and visual order at every width): learner, quiz 1, introduction, quiz 2, leaderboard, quiz 3, badges, quiz 4, preferences; quizzes a catalog lacks leave no gap, quizzes beyond the fourth follow the preferences. Each page's strip cell is where its card sits: row by row in three columns on desktop, in two columns on tablets with the leaderboard on a row of its own. At rest the overview is a live grid of every page and the card layer shares its tracks, each card in its page's cell; by viewport width at the design system's breakpoints: a list of sections in one column up to the mobile maximum, two equal columns over five equal rows up to the tablet maximum (the leaderboard alone on its row), three columns weighted 1 : 1.5 : 1 over three rows weighted 1 : 1.4 : 1 from there (the leaderboard in the larger centre cell). A leaderboard is the rows the proctor sends (the top 100 by rank), the number of ranked learners and the asking learner's own row with its real rank. The leaderboard card shows the first five rows by rank and the own row apart when it ranks lower, wherever it ranks; the leaderboard page shows every sent row, the own row apart below them when it is not among them, the number of ranked learners and, when there are more than the sent rows, how many are shown.",
+  "description": "The overview of a quiz site: cards over a glass layer, the real page of each card on the strip behind it. Pages in reading order (DOM, focus and visual order at every width): learner, quiz 1, introduction, quiz 2, leaderboard, quiz 3, badges, quiz 4, preferences; quizzes a catalog lacks leave no gap, quizzes beyond the fourth follow the preferences. Each page's strip cell is where its card sits: row by row in three columns on desktop, in two columns on tablets with the leaderboard on a row of its own. At rest the overview is a live grid of every page and the card layer shares its tracks, each card in its page's cell; by viewport width at the design system's breakpoints: two equal columns over five equal rows above the mobile maximum up to the tablet maximum (the leaderboard alone on its row), three columns weighted 1 : 1.5 : 1 over three rows weighted 1 : 1.4 : 1 on either side of them (the leaderboard in the larger centre cell). Up to the mobile maximum the learner swipes through that three-column grid one page at a time instead (mode swipe), each card centred on its own page and the card layer of the strip's own equal tracks; elsewhere the cards stand fixed on the grid over the pages (mode strip). A leaderboard is the rows the proctor sends (the top 100 by rank), the number of ranked learners and the asking learner's own row with its real rank. The leaderboard card shows the first five rows by rank and the own row apart when it ranks lower, wherever it ranks; the leaderboard page shows every sent row, the own row apart below them when it is not among them, the number of ranked learners and, when there are more than the sent rows, how many are shown.",
   "breakpoints": {
     "mobileMaxPx": 767,
     "tabletMaxPx": 1023
@@ -8,77 +8,86 @@
   "layouts": [
     {
       "width": 320,
-      "layout": "list",
-      "columns": [1],
-      "rows": null
+      "grid": "desktop",
+      "mode": "swipe",
+      "columns": [1, 1, 1],
+      "rows": [1, 1, 1]
     },
     {
       "width": 375,
-      "layout": "list",
-      "columns": [1],
-      "rows": null
+      "grid": "desktop",
+      "mode": "swipe",
+      "columns": [1, 1, 1],
+      "rows": [1, 1, 1]
     },
     {
       "width": 767,
-      "layout": "list",
-      "columns": [1],
-      "rows": null
+      "grid": "desktop",
+      "mode": "swipe",
+      "columns": [1, 1, 1],
+      "rows": [1, 1, 1]
     },
     {
       "width": 768,
-      "layout": "tablet",
+      "grid": "tablet",
+      "mode": "strip",
       "columns": [1, 1],
       "rows": [1, 1, 1, 1, 1]
     },
     {
       "width": 1023,
-      "layout": "tablet",
+      "grid": "tablet",
+      "mode": "strip",
       "columns": [1, 1],
       "rows": [1, 1, 1, 1, 1]
     },
     {
       "width": 1024,
-      "layout": "desktop",
+      "grid": "desktop",
+      "mode": "strip",
       "columns": [1, 1.5, 1],
       "rows": [1, 1.4, 1]
     },
     {
       "width": 1440,
-      "layout": "desktop",
+      "grid": "desktop",
+      "mode": "strip",
       "columns": [1, 1.5, 1],
       "rows": [1, 1.4, 1]
     }
   ],
   "heights": {
-    "description": "A grid is only laid out where every card fits its cell: its lowest row must be at least rowHeightPx high, so the viewport must be at least chromeHeightPx (the navigation bar above the overview) + rowHeightPx × (sum of the row weights ÷ the smallest row weight) high, rounded up — else the overview is the list, as on a phone. Widths and heights are measured in the learner's text size: at a text scale s every threshold is s times as large (a breakpoint b becomes floor(b × s), a least height h becomes floor(h × s)). Each vector is a viewport in px, a text scale, and the layout it gets with the nine pages of four quizzes.",
+    "description": "A grid is only laid out where every card fits its cell: its lowest row must be at least rowHeightPx high, so the viewport must be at least chromeHeightPx (the navigation bar above the overview) + rowHeightPx × (sum of the row weights ÷ the smallest row weight) high, rounded up — else the learner swipes through that grid one page at a time, as on a phone (mode swipe). Widths and heights are measured in the learner's text size: at a text scale s every threshold is s times as large (a breakpoint b becomes floor(b × s), a least height h becomes floor(h × s)). Each vector is a viewport in px, a text scale, and the grid and mode it gets with the nine pages of four quizzes.",
     "rowHeightPx": 160,
     "chromeHeightPx": 56,
     "minimum": { "desktop": 600, "tablet": 856 },
     "vectors": [
-      { "width": 1280, "height": 800, "scale": 1, "layout": "desktop" },
-      { "width": 1280, "height": 720, "scale": 1, "layout": "desktop" },
-      { "width": 1366, "height": 625, "scale": 1, "layout": "desktop" },
-      { "width": 1280, "height": 600, "scale": 1, "layout": "desktop" },
-      { "width": 1280, "height": 599, "scale": 1, "layout": "list" },
-      { "width": 1024, "height": 768, "scale": 1, "layout": "desktop" },
-      { "width": 1023, "height": 768, "scale": 1, "layout": "list" },
-      { "width": 1023, "height": 855, "scale": 1, "layout": "list" },
-      { "width": 1023, "height": 856, "scale": 1, "layout": "tablet" },
-      { "width": 768, "height": 1024, "scale": 1, "layout": "tablet" },
-      { "width": 900, "height": 700, "scale": 1, "layout": "list" },
-      { "width": 900, "height": 400, "scale": 1, "layout": "list" },
-      { "width": 767, "height": 1024, "scale": 1, "layout": "list" },
-      { "width": 1440, "height": 900, "scale": 1.5, "layout": "list" },
-      { "width": 1280, "height": 720, "scale": 1.5, "layout": "list" },
-      { "width": 1100, "height": 800, "scale": 1.5, "layout": "list" },
-      { "width": 1534, "height": 1283, "scale": 1.5, "layout": "list" },
-      { "width": 1534, "height": 1284, "scale": 1.5, "layout": "tablet" },
-      { "width": 1535, "height": 899, "scale": 1.5, "layout": "list" },
-      { "width": 1535, "height": 900, "scale": 1.5, "layout": "desktop" },
-      { "width": 1920, "height": 1080, "scale": 1.5, "layout": "desktop" },
-      { "width": 1440, "height": 900, "scale": 1.25, "layout": "desktop" },
-      { "width": 1280, "height": 720, "scale": 1.125, "layout": "desktop" },
-      { "width": 1280, "height": 674, "scale": 1.125, "layout": "list" }
+      { "width": 1280, "height": 800, "scale": 1, "grid": "desktop", "mode": "strip" },
+      { "width": 1280, "height": 720, "scale": 1, "grid": "desktop", "mode": "strip" },
+      { "width": 1366, "height": 625, "scale": 1, "grid": "desktop", "mode": "strip" },
+      { "width": 1280, "height": 600, "scale": 1, "grid": "desktop", "mode": "strip" },
+      { "width": 1280, "height": 599, "scale": 1, "grid": "desktop", "mode": "swipe" },
+      { "width": 1024, "height": 768, "scale": 1, "grid": "desktop", "mode": "strip" },
+      { "width": 1023, "height": 768, "scale": 1, "grid": "tablet", "mode": "swipe" },
+      { "width": 1023, "height": 855, "scale": 1, "grid": "tablet", "mode": "swipe" },
+      { "width": 1023, "height": 856, "scale": 1, "grid": "tablet", "mode": "strip" },
+      { "width": 768, "height": 1024, "scale": 1, "grid": "tablet", "mode": "strip" },
+      { "width": 900, "height": 700, "scale": 1, "grid": "tablet", "mode": "swipe" },
+      { "width": 900, "height": 400, "scale": 1, "grid": "tablet", "mode": "swipe" },
+      { "width": 767, "height": 1024, "scale": 1, "grid": "desktop", "mode": "swipe" },
+      { "width": 375, "height": 812, "scale": 1, "grid": "desktop", "mode": "swipe" },
+      { "width": 812, "height": 375, "scale": 1, "grid": "tablet", "mode": "swipe" },
+      { "width": 1440, "height": 900, "scale": 1.5, "grid": "tablet", "mode": "swipe" },
+      { "width": 1280, "height": 720, "scale": 1.5, "grid": "tablet", "mode": "swipe" },
+      { "width": 1100, "height": 800, "scale": 1.5, "grid": "desktop", "mode": "swipe" },
+      { "width": 1534, "height": 1283, "scale": 1.5, "grid": "tablet", "mode": "swipe" },
+      { "width": 1534, "height": 1284, "scale": 1.5, "grid": "tablet", "mode": "strip" },
+      { "width": 1535, "height": 899, "scale": 1.5, "grid": "desktop", "mode": "swipe" },
+      { "width": 1535, "height": 900, "scale": 1.5, "grid": "desktop", "mode": "strip" },
+      { "width": 1920, "height": 1080, "scale": 1.5, "grid": "desktop", "mode": "strip" },
+      { "width": 1440, "height": 900, "scale": 1.25, "grid": "desktop", "mode": "strip" },
+      { "width": 1280, "height": 720, "scale": 1.125, "grid": "desktop", "mode": "strip" },
+      { "width": 1280, "height": 674, "scale": 1.125, "grid": "desktop", "mode": "swipe" }
     ]
   },
   "orders": [
@@ -187,7 +196,7 @@
   "cells": [
     {
       "quizzes": 4,
-      "layout": "desktop",
+      "grid": "desktop",
       "cells": {
         "learner": {
           "column": 0,
@@ -229,7 +238,7 @@
     },
     {
       "quizzes": 4,
-      "layout": "tablet",
+      "grid": "tablet",
       "cells": {
         "learner": {
           "column": 0,
@@ -271,7 +280,7 @@
     },
     {
       "quizzes": 3,
-      "layout": "desktop",
+      "grid": "desktop",
       "cells": {
         "learner": {
           "column": 0,
@@ -309,7 +318,7 @@
     },
     {
       "quizzes": 3,
-      "layout": "tablet",
+      "grid": "tablet",
       "cells": {
         "learner": {
           "column": 0,
@@ -347,7 +356,7 @@
     },
     {
       "quizzes": 0,
-      "layout": "desktop",
+      "grid": "desktop",
       "cells": {
         "learner": {
           "column": 0,
@@ -373,7 +382,7 @@
     },
     {
       "quizzes": 0,
-      "layout": "tablet",
+      "grid": "tablet",
       "cells": {
         "learner": {
           "column": 0,
@@ -399,7 +408,7 @@
     },
     {
       "quizzes": 6,
-      "layout": "desktop",
+      "grid": "desktop",
       "cells": {
         "learner": {
           "column": 0,
@@ -449,7 +458,7 @@
     },
     {
       "quizzes": 6,
-      "layout": "tablet",
+      "grid": "tablet",
       "cells": {
         "learner": {
           "column": 0,

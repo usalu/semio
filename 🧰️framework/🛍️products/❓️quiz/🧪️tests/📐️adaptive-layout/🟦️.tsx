@@ -151,9 +151,9 @@ describe("📐️ the rooms the parts measure", () => {
     }
   });
 
-  it("asks no room for the width of the window: the only width media queries are the home grid's", () => {
+  it("asks no room for the width of the window: the only width media query is the first-visit pair's", () => {
     const widths = [...stylesheet.matchAll(/@media \((?:min|max)-width: [^)]*\)\s*\{\s*([^\s{]+)/gu)].map((found) => found[1]);
-    expect(widths).toEqual([".quiz-home-grid", ".quiz-pair"]);
+    expect(widths).toEqual([".quiz-pair"]);
   });
 });
 

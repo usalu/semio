@@ -1,0 +1,90 @@
+{
+  "snapshot": {
+    "chart": {
+      "width": 40,
+      "height": 30,
+      "language": "en",
+      "layers": [],
+      "margin": {
+        "left": 0,
+        "right": 0,
+        "top": 0,
+        "bottom": 0
+      },
+      "presets": [
+        {
+          "kind": "streamline-plot",
+          "options": {
+            "render": "streamline",
+            "field": "vortex",
+            "seeds": 2,
+            "cell": 3
+          }
+        }
+      ]
+    }
+  },
+  "inputs": [
+    0.2,
+    0.4,
+    0.7
+  ],
+  "cases": [
+    {
+      "id": "default-en",
+      "language": "en",
+      "expectedPaletteSteps": 5,
+      "expectedSteps": 24
+    },
+    {
+      "id": "palette-en",
+      "language": "en",
+      "paletteSteps": 3,
+      "expectedPaletteSteps": 3,
+      "expectedSteps": 24
+    },
+    {
+      "id": "integration-en",
+      "language": "en",
+      "steps": 6,
+      "expectedPaletteSteps": 5,
+      "expectedSteps": 6
+    },
+    {
+      "id": "both-en",
+      "language": "en",
+      "paletteSteps": 4,
+      "steps": 8,
+      "expectedPaletteSteps": 4,
+      "expectedSteps": 8
+    },
+    {
+      "id": "default-de",
+      "language": "de",
+      "expectedPaletteSteps": 5,
+      "expectedSteps": 24
+    },
+    {
+      "id": "palette-de",
+      "language": "de",
+      "paletteSteps": 3,
+      "expectedPaletteSteps": 3,
+      "expectedSteps": 24
+    },
+    {
+      "id": "integration-de",
+      "language": "de",
+      "steps": 6,
+      "expectedPaletteSteps": 5,
+      "expectedSteps": 6
+    },
+    {
+      "id": "both-de",
+      "language": "de",
+      "paletteSteps": 4,
+      "steps": 8,
+      "expectedPaletteSteps": 4,
+      "expectedSteps": 8
+    }
+  ]
+}

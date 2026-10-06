@@ -1,0 +1,11 @@
+export async function compileNativeGeoFlowAdmission():Promise<void>{
+  const c=fixture.nativeGeoFlowAdmission,validate=new Ajv2020({strict:false}).compile(c.schema),before=JSON.stringify(c),failures:string[]=[];
+  for(const language of c.vectors.languages){
+    const base={chart:{language,width:80,height:40,margin:{top:0,right:0,bottom:0,left:0},layers:[],tables:[],presets:[{kind:"flow-map",options:c.vectors.accepted}]}} as unknown as VizChartSnapshot,valid=await inferVizChart(base);
+    if(!validate(c.vectors.accepted)||!valid.complete)throw Error(language+" admitted geographic-flow options rejected");
+    for(const entry of c.vectors.rejected){
+      const original=JSON.stringify(base),outcome=changeVizChartValue(base,{path:["presets","0","options",entry.key],value:entry.value});if(outcome.messages.length||outcome.diff.edits.length!==1)throw Error(entry.key+" vector applicability mutation refused");const replay=applyVizChartDiff(base,outcome.diff),inverse=applyVizChartDiff(replay.snapshot,inverseVizChartDiff(base,outcome.diff));if(replay.messages.length||inverse.messages.length)throw Error(entry.key+" vector applicability replay refused");deepStrictEqual(inverse.snapshot,base);if(JSON.stringify(base)!==original)throw Error("Flow applicability base changed");if(validate({...c.vectors.accepted,[entry.key]:entry.value}))throw Error("Independent JSON Schema admitted inapplicable vector option "+entry.key);const result=await inferVizChart(replay.snapshot);if(result.complete||result.tikz!==""||result.scene!==undefined||result.plan!==undefined)failures.push(language+" geographic-flow inapplicable control published "+entry.key);
+    }
+  }
+  if(JSON.stringify(c)!==before)throw Error("Flow applicability fixture changed");if(failures.length)throw Error("Flow applicability failures:\n"+failures.join("\n"));console.log("[DEBUG] Flow10 inapplicable canonical rejections and2 admitted flow-control sets matched independent AJV, mutation/replay/inverse/purity");
+}

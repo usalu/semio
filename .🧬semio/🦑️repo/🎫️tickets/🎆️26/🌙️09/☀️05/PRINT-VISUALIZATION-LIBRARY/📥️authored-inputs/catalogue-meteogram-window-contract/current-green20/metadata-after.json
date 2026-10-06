@@ -1,0 +1,147 @@
+{
+  "owner": "SCIENTIFIC",
+  "options": {
+    "axes": {
+      "syntax": "scalar",
+      "type": "boolean",
+      "default": true,
+      "description": {
+        "en": "Draw the frame and the tick labels.",
+        "de": "Rahmen und Achsenbeschriftungen zeichnen."
+      }
+    },
+    "baseline": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "The reference the anomaly is measured against.",
+        "de": "Die Referenz, gegen die die Anomalie gemessen wird."
+      }
+    },
+    "data": {
+      "syntax": "identifier",
+      "type": "string",
+      "description": {
+        "en": "Name of the source table. A scientific family usually carries its own literal vectors instead, so the table name is recorded for the kinds that do read one rather than refused for the kinds that do not.",
+        "de": "Name der Quelltabelle. Eine wissenschaftliche Familie trägt ihre Vektoren meist selbst als Literale, daher wird der Tabellenname für die Arten festgehalten, die eine Tabelle lesen, statt für die anderen zurückgewiesen zu werden."
+      }
+    },
+    "domain": {
+      "syntax": "number-list",
+      "type": "string",
+      "description": {
+        "en": "Input domain `min,max` of the scale or function.",
+        "de": "Eingabebereich `min,max` der Skala bzw. Funktion."
+      }
+    },
+    "grid": {
+      "syntax": "scalar",
+      "type": "boolean",
+      "default": false,
+      "description": {
+        "en": "Draw the background grid behind the family.",
+        "de": "Das Hintergrundgitter hinter der Familie zeichnen."
+      }
+    },
+    "height": {
+      "syntax": "expression",
+      "type": "number",
+      "default": 40,
+      "description": {
+        "en": "Canvas height in millimetres.",
+        "de": "Zeichenflächenhöhe in Millimetern."
+      }
+    },
+    "mode": {
+      "syntax": "identifier",
+      "type": "string",
+      "description": {
+        "en": "Rendering mode: stripes, anomaly or meteogram.",
+        "de": "Darstellungsmodus: stripes, anomaly oder meteogram."
+      }
+    },
+    "panels": {
+      "syntax": "records",
+      "type": "string",
+      "description": {
+        "en": "Meteogram label/series records; series uses time:value samples joined with +. Panels share the authored height with 3mm gaps and apply domain/range independently after fitting.",
+        "de": "Meteogramm-Beschriftung/Reihe-Datensätze; Reihen verwenden mit + verbundene Zeit:Wert-Abtastpunkte. Tafeln teilen die verfasste Höhe mit 3mm-Abständen und wenden domain/range nach der Anpassung einzeln an."
+      }
+    },
+    "range": {
+      "syntax": "number-list",
+      "type": "string",
+      "description": {
+        "en": "Output range `min,max` of the scale or sweep.",
+        "de": "Ausgabebereich `min,max` der Skala bzw. des Durchlaufs."
+      }
+    },
+    "seed": {
+      "syntax": "expression",
+      "type": "integer",
+      "default": 20260905,
+      "description": {
+        "en": "Seed of the pseudo-random stream, so a sampled family draws the same picture on every run.",
+        "de": "Startwert des Pseudozufallsstroms, damit eine abgetastete Familie bei jedem Lauf dasselbe Bild zeichnet."
+      }
+    },
+    "ticks": {
+      "syntax": "expression",
+      "type": "integer",
+      "default": 4,
+      "description": {
+        "en": "Tick divisions per axis.",
+        "de": "Teilstriche je Achse."
+      }
+    },
+    "title": {
+      "syntax": "text",
+      "type": "string",
+      "description": {
+        "en": "Caption printed above the canvas.",
+        "de": "Über der Zeichenfläche gesetzte Überschrift."
+      }
+    },
+    "values": {
+      "syntax": "records",
+      "type": "string",
+      "description": {
+        "en": "The anomaly or observation series.",
+        "de": "Die Anomalie- oder Beobachtungsreihe."
+      }
+    },
+    "variant": {
+      "syntax": "identifier",
+      "type": "string",
+      "description": {
+        "en": "Sub-kind the family renders; the catalogue slug of the chart kind. The family must draw a different geometry for every variant it declares.",
+        "de": "Untertyp, den die Familie zeichnet; der Katalog-Slug der Diagrammart. Die Familie muss für jede deklarierte Variante eine andere Geometrie zeichnen."
+      }
+    },
+    "width": {
+      "syntax": "expression",
+      "type": "number",
+      "default": 60,
+      "description": {
+        "en": "Canvas width in millimetres.",
+        "de": "Zeichenflächenbreite in Millimetern."
+      }
+    },
+    "xlabel": {
+      "syntax": "text",
+      "type": "string",
+      "description": {
+        "en": "Caption of the horizontal axis.",
+        "de": "Beschriftung der waagerechten Achse."
+      }
+    },
+    "ylabel": {
+      "syntax": "text",
+      "type": "string",
+      "description": {
+        "en": "Caption of the vertical axis.",
+        "de": "Beschriftung der senkrechten Achse."
+      }
+    }
+  }
+}

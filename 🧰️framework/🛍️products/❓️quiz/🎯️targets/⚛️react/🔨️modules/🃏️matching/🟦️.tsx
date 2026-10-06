@@ -104,7 +104,7 @@ export function MatchingTaskView(props: TaskViewProps<SheetMatchingTask, Matchin
           };
         return (
           <section key={dimension.id} className="quiz-match" data-keys={cards === undefined ? "hidden" : undefined} aria-labelledby={elementId(scope, dimension.id)}>
-            <h3 id={elementId(scope, dimension.id)} className="m-0 text-sm font-semibold">
+            <h3 data-icon-host="" id={elementId(scope, dimension.id)} className="m-0 text-sm font-semibold">
               <IconLabel icon={dimension.icon}>{quantity}</IconLabel>
             </h3>
             {cards === undefined ? null : (
@@ -113,10 +113,10 @@ export function MatchingTaskView(props: TaskViewProps<SheetMatchingTask, Matchin
                   const holder = holders.get(index);
                   const state = holder === undefined ? text("quiz.matching.free") : text("quiz.matching.used", { item: itemLabel(holder) });
                   return (
-                    <li key={index} className="quiz-value border border-normal bg-background py-single pe-double ps-single data-[used]:border-dashed" data-quiz-drag="" data-used={holder === undefined ? undefined : ""}>
+                    <li key={index} data-icon-host="" className="quiz-value border border-normal bg-background py-single pe-double ps-single data-[used]:border-dashed" data-quiz-drag="" data-used={holder === undefined ? undefined : ""}>
                       <DragGrip title={text("quiz.matching.drag", { value: cardText(dimension, index) })} locked={locked} onDrop={drop(index)} />
                       <span className="min-w-0 text-sm font-semibold tabular-nums">
-                        <IconLabel icon={dimension.icon} order={index}>
+                        <IconLabel icon={dimension.icon}>
                           {cardText(dimension, index)}
                         </IconLabel>
                       </span>
@@ -129,14 +129,14 @@ export function MatchingTaskView(props: TaskViewProps<SheetMatchingTask, Matchin
               </ul>
             )}
             <ul role="list" className="quiz-rows quiz-slots m-0 list-none p-0 text-sm" aria-labelledby={elementId(scope, dimension.id)}>
-              {task.items.map((item, place) => {
+              {task.items.map((item) => {
                 const card = current[item.id];
                 const hint = far.get(`${dimension.id}:${item.id}`);
                 const hintId = hint === undefined ? undefined : elementId(scope, dimension.id, item.id, "hint");
                 return (
-                  <li key={item.id} className="quiz-slot" data-quiz-drop={cards === undefined ? undefined : `${SLOT_ZONE}${dimension.id}:${item.id}`} data-presence-anchor={PRESENCE_ANCHORS.item(item.id)} data-pet-prop={petProp(topic, item.id)}>
+                  <li key={item.id} data-icon-host="" className="quiz-slot" data-quiz-drop={cards === undefined ? undefined : `${SLOT_ZONE}${dimension.id}:${item.id}`} data-presence-anchor={PRESENCE_ANCHORS.item(item.id)} data-pet-prop={petProp(topic, item.id)}>
                     <span className="quiz-slot-label quiz-row-label min-w-0 font-semibold">
-                      <IconLabel icon={item.icon} order={place}>
+                      <IconLabel icon={item.icon}>
                         {itemLabel(item.id)}
                       </IconLabel>
                       {hint === undefined || hintId === undefined ? null : (

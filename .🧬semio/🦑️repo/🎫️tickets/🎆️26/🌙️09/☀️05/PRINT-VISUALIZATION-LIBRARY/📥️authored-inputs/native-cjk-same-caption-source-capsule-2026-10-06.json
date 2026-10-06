@@ -1,0 +1,13 @@
+{
+  "owners": [
+    {
+      "path": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-fonts.sty",
+      "sha256": "652634D20651133E775C0C7D5504FD4AEF80C0AFC8CBAE4F98AC54649A6EAC8B"
+    },
+    {
+      "path": "C:/git/semio/🧰️framework/🛍️products/📓️print/🔨️modules/🧪️viz-probe/🟦️.ts",
+      "sha256": "B449DB27FD110EC4CB581486F6F263459C18D88730534781B28EC9D9FEF3862A"
+    }
+  ],
+  "capturedAt": "2026-10-06T02:32:44.5548161+02:00"
+}

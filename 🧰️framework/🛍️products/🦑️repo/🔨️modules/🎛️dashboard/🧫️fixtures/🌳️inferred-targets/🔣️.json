@@ -1,0 +1,39 @@
+{
+  "graph": {
+    "nodes": {
+      "@semio-tech/owner": {
+        "name": "@semio-tech/owner",
+        "type": "lib",
+        "data": {
+          "root": "owner/📦️packages/🦀️rust",
+          "targets": {
+            "materialize-dev": {
+              "executor": "nx:run-commands"
+            },
+            "component-dev": {
+              "executor": "nx:run-commands"
+            }
+          }
+        }
+      },
+      "workspace": {
+        "name": "workspace",
+        "type": "lib",
+        "data": {
+          "root": ".",
+          "targets": {
+            "build": {
+              "executor": "nx:run-commands"
+            }
+          }
+        }
+      }
+    },
+    "dependencies": {}
+  },
+  "expected": [
+    "@semio-tech/owner:component-dev",
+    "@semio-tech/owner:materialize-dev",
+    "workspace:build"
+  ]
+}

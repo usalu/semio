@@ -1,0 +1,6 @@
+[
+ {"path":"dashboard/🌀️daemon/🧪️tests/🔬️unit/🦀️.rs","replace":[
+ {"from":"        let started = Instant::now();\n        let native_args","to":"        if trial == 3 { let status = std::process::Command::new(&executable).args([\"daemon\", \"stop\", \"--root\", &root_text]).status().unwrap(); assert!(status.success()); }\n        let started = Instant::now();\n        let native_args"},
+ {"from":"        assert_eq!(view.try_wait().unwrap(), Some(0)); drop(view); drop(connection);","to":"        assert_eq!(view.try_wait().unwrap(), Some(0));\n        let daemon_pid = connection.daemon_pid(); drop(view); drop(connection);\n        let reattached = client::Connection::connect(connection_root).expect(\"daemon must survive destroying the native view\");\n        assert_eq!(reattached.daemon_pid(), daemon_pid);\n        println!(\"[DEBUG] detached startup trial={trial} retained workspace daemon {daemon_pid}\");"}
+ ]}
+]

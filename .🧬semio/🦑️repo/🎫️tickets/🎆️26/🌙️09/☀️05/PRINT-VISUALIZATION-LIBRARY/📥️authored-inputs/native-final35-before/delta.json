@@ -1,0 +1,697 @@
+[
+  {
+    "family": "adjacency-matrix",
+    "key": "root",
+    "before": {
+      "syntax": "identifier",
+      "type": "integer",
+      "description": {
+        "en": "Node the layout starts from.",
+        "de": "Knoten, bei dem das Layout beginnt."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "integer",
+      "description": {
+        "en": "Node the layout starts from.",
+        "de": "Knoten, bei dem das Layout beginnt."
+      },
+      "default": 1
+    }
+  },
+  {
+    "family": "alluvial",
+    "key": "root",
+    "before": {
+      "syntax": "identifier",
+      "type": "integer",
+      "description": {
+        "en": "Node the layout starts from.",
+        "de": "Knoten, bei dem das Layout beginnt."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "integer",
+      "description": {
+        "en": "Node the layout starts from.",
+        "de": "Knoten, bei dem das Layout beginnt."
+      },
+      "default": 1
+    }
+  },
+  {
+    "family": "arc-diagram",
+    "key": "root",
+    "before": {
+      "syntax": "identifier",
+      "type": "integer",
+      "description": {
+        "en": "Node the layout starts from.",
+        "de": "Knoten, bei dem das Layout beginnt."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "integer",
+      "description": {
+        "en": "Node the layout starts from.",
+        "de": "Knoten, bei dem das Layout beginnt."
+      },
+      "default": 1
+    }
+  },
+  {
+    "family": "biofabric",
+    "key": "root",
+    "before": {
+      "syntax": "identifier",
+      "type": "integer",
+      "description": {
+        "en": "Node the layout starts from.",
+        "de": "Knoten, bei dem das Layout beginnt."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "integer",
+      "description": {
+        "en": "Node the layout starts from.",
+        "de": "Knoten, bei dem das Layout beginnt."
+      },
+      "default": 1
+    }
+  },
+  {
+    "family": "chord",
+    "key": "root",
+    "before": {
+      "syntax": "identifier",
+      "type": "integer",
+      "description": {
+        "en": "Node the layout starts from.",
+        "de": "Knoten, bei dem das Layout beginnt."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "integer",
+      "description": {
+        "en": "Node the layout starts from.",
+        "de": "Knoten, bei dem das Layout beginnt."
+      },
+      "default": 1
+    }
+  },
+  {
+    "family": "dependency-wheel",
+    "key": "root",
+    "before": {
+      "syntax": "identifier",
+      "type": "integer",
+      "description": {
+        "en": "Node the layout starts from.",
+        "de": "Knoten, bei dem das Layout beginnt."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "integer",
+      "description": {
+        "en": "Node the layout starts from.",
+        "de": "Knoten, bei dem das Layout beginnt."
+      },
+      "default": 1
+    }
+  },
+  {
+    "family": "edge-bundled",
+    "key": "root",
+    "before": {
+      "syntax": "identifier",
+      "type": "integer",
+      "description": {
+        "en": "Node the layout starts from.",
+        "de": "Knoten, bei dem das Layout beginnt."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "integer",
+      "description": {
+        "en": "Node the layout starts from.",
+        "de": "Knoten, bei dem das Layout beginnt."
+      },
+      "default": 1
+    }
+  },
+  {
+    "family": "hive-plot",
+    "key": "root",
+    "before": {
+      "syntax": "identifier",
+      "type": "integer",
+      "description": {
+        "en": "Node the layout starts from.",
+        "de": "Knoten, bei dem das Layout beginnt."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "integer",
+      "description": {
+        "en": "Node the layout starts from.",
+        "de": "Knoten, bei dem das Layout beginnt."
+      },
+      "default": 1
+    }
+  },
+  {
+    "family": "node-link-matrix",
+    "key": "root",
+    "before": {
+      "syntax": "identifier",
+      "type": "integer",
+      "description": {
+        "en": "Node the layout starts from.",
+        "de": "Knoten, bei dem das Layout beginnt."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "integer",
+      "description": {
+        "en": "Node the layout starts from.",
+        "de": "Knoten, bei dem das Layout beginnt."
+      },
+      "default": 1
+    }
+  },
+  {
+    "family": "parallel-sets",
+    "key": "root",
+    "before": {
+      "syntax": "identifier",
+      "type": "integer",
+      "description": {
+        "en": "Node the layout starts from.",
+        "de": "Knoten, bei dem das Layout beginnt."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "integer",
+      "description": {
+        "en": "Node the layout starts from.",
+        "de": "Knoten, bei dem das Layout beginnt."
+      },
+      "default": 1
+    }
+  },
+  {
+    "family": "sankey",
+    "key": "root",
+    "before": {
+      "syntax": "identifier",
+      "type": "integer",
+      "description": {
+        "en": "Node the layout starts from.",
+        "de": "Knoten, bei dem das Layout beginnt."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "integer",
+      "description": {
+        "en": "Node the layout starts from.",
+        "de": "Knoten, bei dem das Layout beginnt."
+      },
+      "default": 1
+    }
+  },
+  {
+    "family": "arch-layer",
+    "key": "tier-title",
+    "before": {
+      "syntax": "scalar",
+      "type": "string",
+      "default": "true",
+      "description": {
+        "en": "Draw the tier caption on the left.",
+        "de": "Die Ebenenbeschriftung links zeichnen."
+      }
+    },
+    "after": {
+      "syntax": "scalar",
+      "type": "boolean",
+      "default": true,
+      "description": {
+        "en": "Draw the tier caption on the left.",
+        "de": "Die Ebenenbeschriftung links zeichnen."
+      }
+    }
+  },
+  {
+    "family": "graph",
+    "key": "padding",
+    "before": {
+      "syntax": "scalar",
+      "type": "string",
+      "default": "3",
+      "description": {
+        "en": "Same inset on all four sides.",
+        "de": "Gleiche Einrückung auf allen vier Seiten."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "default": 3,
+      "description": {
+        "en": "Same inset on all four sides.",
+        "de": "Gleiche Einrückung auf allen vier Seiten."
+      }
+    }
+  },
+  {
+    "family": "commit-graph",
+    "key": "padding",
+    "before": {
+      "syntax": "scalar",
+      "type": "string",
+      "description": {
+        "en": "Same inset on all four sides.",
+        "de": "Gleiche Einrückung auf allen vier Seiten."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Same inset on all four sides.",
+        "de": "Gleiche Einrückung auf allen vier Seiten."
+      },
+      "default": 3
+    }
+  },
+  {
+    "family": "data-structure",
+    "key": "padding",
+    "before": {
+      "syntax": "scalar",
+      "type": "string",
+      "description": {
+        "en": "Same inset on all four sides.",
+        "de": "Gleiche Einrückung auf allen vier Seiten."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Same inset on all four sides.",
+        "de": "Gleiche Einrückung auf allen vier Seiten."
+      },
+      "default": 3
+    }
+  },
+  {
+    "family": "neural-network",
+    "key": "padding",
+    "before": {
+      "syntax": "scalar",
+      "type": "string",
+      "description": {
+        "en": "Same inset on all four sides.",
+        "de": "Gleiche Einrückung auf allen vier Seiten."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Same inset on all four sides.",
+        "de": "Gleiche Einrückung auf allen vier Seiten."
+      },
+      "default": 3
+    }
+  },
+  {
+    "family": "schema-graph",
+    "key": "padding",
+    "before": {
+      "syntax": "scalar",
+      "type": "string",
+      "description": {
+        "en": "Same inset on all four sides.",
+        "de": "Gleiche Einrückung auf allen vier Seiten."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Same inset on all four sides.",
+        "de": "Gleiche Einrückung auf allen vier Seiten."
+      },
+      "default": 3
+    }
+  },
+  {
+    "family": "state-machine",
+    "key": "padding",
+    "before": {
+      "syntax": "scalar",
+      "type": "string",
+      "description": {
+        "en": "Same inset on all four sides.",
+        "de": "Gleiche Einrückung auf allen vier Seiten."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Same inset on all four sides.",
+        "de": "Gleiche Einrückung auf allen vier Seiten."
+      },
+      "default": 3
+    }
+  },
+  {
+    "family": "geo-field",
+    "key": "grid",
+    "before": {
+      "syntax": "scalar",
+      "type": "string",
+      "description": {
+        "en": "Grid lines drawn behind the marks.",
+        "de": "Gitterlinien hinter den Marken."
+      }
+    },
+    "after": {
+      "syntax": "identifier",
+      "type": "string",
+      "description": {
+        "en": "Named raster grid collection used by the field.",
+        "de": "Benannte Rastergittersammlung für das Feld."
+      },
+      "default": "demo-grid"
+    }
+  },
+  {
+    "family": "geo-terrain",
+    "key": "grid",
+    "before": {
+      "syntax": "scalar",
+      "type": "string",
+      "description": {
+        "en": "Grid lines drawn behind the marks.",
+        "de": "Gitterlinien hinter den Marken."
+      }
+    },
+    "after": {
+      "syntax": "identifier",
+      "type": "string",
+      "description": {
+        "en": "Named raster grid collection used by the field.",
+        "de": "Benannte Rastergittersammlung für das Feld."
+      },
+      "default": "demo-grid"
+    }
+  },
+  {
+    "family": "geo-weather",
+    "key": "grid",
+    "before": {
+      "syntax": "scalar",
+      "type": "string",
+      "description": {
+        "en": "Grid lines drawn behind the marks.",
+        "de": "Gitterlinien hinter den Marken."
+      }
+    },
+    "after": {
+      "syntax": "identifier",
+      "type": "string",
+      "description": {
+        "en": "Named raster grid collection used by the field.",
+        "de": "Benannte Rastergittersammlung für das Feld."
+      },
+      "default": "demo-grid"
+    }
+  },
+  {
+    "family": "spatial-scalar-field",
+    "key": "grid",
+    "before": {
+      "syntax": "scalar",
+      "type": "string",
+      "description": {
+        "en": "Grid lines drawn behind the marks.",
+        "de": "Gitterlinien hinter den Marken."
+      }
+    },
+    "after": {
+      "syntax": "identifier",
+      "type": "string",
+      "description": {
+        "en": "Named raster grid collection used by the field.",
+        "de": "Benannte Rastergittersammlung für das Feld."
+      },
+      "default": "demo-grid"
+    }
+  },
+  {
+    "family": "geo-hexbin",
+    "key": "points",
+    "before": {
+      "syntax": "scalar",
+      "type": "string",
+      "description": {
+        "en": "Draw the individual data points.",
+        "de": "Die einzelnen Datenpunkte zeichnen."
+      }
+    },
+    "after": {
+      "syntax": "identifier",
+      "type": "string",
+      "description": {
+        "en": "Named geographic point collection binned into hexagonal cells.",
+        "de": "Benannte geografische Punktsammlung für die Aufteilung in sechseckige Zellen."
+      },
+      "default": "demo-points-dense"
+    }
+  },
+  {
+    "family": "geo-weather",
+    "key": "labels",
+    "before": {
+      "syntax": "scalar",
+      "type": "string",
+      "description": {
+        "en": "Draw the captions.",
+        "de": "Die Beschriftungen zeichnen."
+      }
+    },
+    "after": {
+      "syntax": "scalar",
+      "type": "boolean",
+      "description": {
+        "en": "Draw the captions.",
+        "de": "Die Beschriftungen zeichnen."
+      },
+      "default": false
+    }
+  },
+  {
+    "family": "spatial-scalar-field",
+    "key": "labels",
+    "before": {
+      "syntax": "scalar",
+      "type": "string",
+      "description": {
+        "en": "Draw the captions.",
+        "de": "Die Beschriftungen zeichnen."
+      }
+    },
+    "after": {
+      "syntax": "scalar",
+      "type": "boolean",
+      "description": {
+        "en": "Draw the captions.",
+        "de": "Die Beschriftungen zeichnen."
+      },
+      "default": false
+    }
+  },
+  {
+    "family": "geo-weather",
+    "key": "filled",
+    "before": {
+      "syntax": "scalar",
+      "type": "string",
+      "description": {
+        "en": "Fill the bands between contour levels.",
+        "de": "Die Bänder zwischen den Höhenlinien füllen."
+      }
+    },
+    "after": {
+      "syntax": "scalar",
+      "type": "boolean",
+      "description": {
+        "en": "Fill the bands between contour levels.",
+        "de": "Die Bänder zwischen den Höhenlinien füllen."
+      },
+      "default": false
+    }
+  },
+  {
+    "family": "geo-weather",
+    "key": "raster",
+    "before": {
+      "syntax": "scalar",
+      "type": "string",
+      "description": {
+        "en": "Draw the field as a filled raster.",
+        "de": "Das Feld als gefülltes Raster zeichnen."
+      }
+    },
+    "after": {
+      "syntax": "scalar",
+      "type": "boolean",
+      "description": {
+        "en": "Draw the field as a filled raster.",
+        "de": "Das Feld als gefülltes Raster zeichnen."
+      },
+      "default": false
+    }
+  },
+  {
+    "family": "geo-terrain",
+    "key": "cell",
+    "before": {
+      "syntax": "identifier",
+      "type": "string",
+      "description": {
+        "en": "Cell size in millimetres, or the column that carries it.",
+        "de": "Zellgröße in Millimetern oder die Spalte, die sie trägt."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Raster cell size in millimetres.",
+        "de": "Rasterzellgröße in Millimetern."
+      },
+      "default": 12
+    }
+  },
+  {
+    "family": "spatial-scalar-field",
+    "key": "cell",
+    "before": {
+      "syntax": "identifier",
+      "type": "string",
+      "description": {
+        "en": "Cell size in millimetres, or the column that carries it.",
+        "de": "Zellgröße in Millimetern oder die Spalte, die sie trägt."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Raster cell size in millimetres.",
+        "de": "Rasterzellgröße in Millimetern."
+      },
+      "default": 12
+    }
+  },
+  {
+    "family": "geo-terrain",
+    "key": "levels",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Number of contour levels.",
+        "de": "Anzahl der Höhenlinienniveaus."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "integer",
+      "description": {
+        "en": "Number of contour levels.",
+        "de": "Anzahl der Höhenlinienniveaus."
+      },
+      "default": 5
+    }
+  },
+  {
+    "family": "geo-weather",
+    "key": "levels",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Number of contour levels.",
+        "de": "Anzahl der Höhenlinienniveaus."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "integer",
+      "description": {
+        "en": "Number of contour levels.",
+        "de": "Anzahl der Höhenlinienniveaus."
+      },
+      "default": 5
+    }
+  },
+  {
+    "family": "spatial-scalar-field",
+    "key": "levels",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Number of contour levels.",
+        "de": "Anzahl der Höhenlinienniveaus."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "integer",
+      "description": {
+        "en": "Number of contour levels.",
+        "de": "Anzahl der Höhenlinienniveaus."
+      },
+      "default": 5
+    }
+  },
+  {
+    "family": "spatial-scalar-field",
+    "key": "row",
+    "before": {
+      "syntax": "identifier",
+      "type": "string",
+      "description": {
+        "en": "Row index on the layout grid.",
+        "de": "Zeilenindex im Anordnungsgitter."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "integer",
+      "description": {
+        "en": "Row index on the layout grid.",
+        "de": "Zeilenindex im Anordnungsgitter."
+      },
+      "default": 3
+    }
+  }
+]

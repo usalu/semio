@@ -1,0 +1,131 @@
+[
+  {
+    "family": "arch-axonometric",
+    "key": "scale-z",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "default": "1",
+      "description": {
+        "en": "Vertical foreshortening.",
+        "de": "Senkrechte Verkürzung."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "default": 1,
+      "description": {
+        "en": "Vertical foreshortening.",
+        "de": "Senkrechte Verkürzung."
+      }
+    }
+  },
+  {
+    "family": "arch-schematic",
+    "key": "col-gap",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Millimetre gap between grid columns.",
+        "de": "Millimeterabstand zwischen den Gitterspalten."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Millimetre gap between grid columns.",
+        "de": "Millimeterabstand zwischen den Gitterspalten."
+      },
+      "default": 4
+    }
+  },
+  {
+    "family": "arch-schematic",
+    "key": "row-gap",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Millimetre gap between grid rows.",
+        "de": "Millimeterabstand zwischen den Gitterzeilen."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Millimetre gap between grid rows.",
+        "de": "Millimeterabstand zwischen den Gitterzeilen."
+      },
+      "default": 4
+    }
+  },
+  {
+    "family": "uml-class",
+    "key": "col-gap",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Millimetre gap between grid columns.",
+        "de": "Millimeterabstand zwischen den Gitterspalten."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Millimetre gap between grid columns.",
+        "de": "Millimeterabstand zwischen den Gitterspalten."
+      },
+      "default": 4
+    }
+  },
+  {
+    "family": "infographic-icon",
+    "key": "unit-value",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "default": "1",
+      "description": {
+        "en": "Units represented by one glyph.",
+        "de": "Einheiten, die ein Glyph darstellt."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "default": 1,
+      "description": {
+        "en": "Units represented by one glyph.",
+        "de": "Einheiten, die ein Glyph darstellt."
+      }
+    }
+  },
+  {
+    "family": "state-overview",
+    "key": "detail-share",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "default": "0.5",
+      "description": {
+        "en": "Fraction of the frame taken by the detail panel.",
+        "de": "Anteil des Rahmens, den das Detailfeld einnimmt."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "default": 0.5,
+      "description": {
+        "en": "Fraction of the frame taken by the detail panel.",
+        "de": "Anteil des Rahmens, den das Detailfeld einnimmt."
+      }
+    }
+  }
+]

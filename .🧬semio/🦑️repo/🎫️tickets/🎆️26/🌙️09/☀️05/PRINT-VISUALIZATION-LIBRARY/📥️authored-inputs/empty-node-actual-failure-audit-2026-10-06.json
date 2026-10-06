@@ -1,0 +1,34 @@
+[
+  {
+    "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧪️tests\\🧬️native-chart-grammar\\🟦️.ts",
+    "sha256": "B814B23A46E26541E15F9447685C404965F79846C42756FEFEF6EA2D1E4BEB14"
+  },
+  {
+    "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🖋️latex\\semio-viz-scientific-mathematics.sty",
+    "sha256": "663860591A746F421844DE977E896352EAE769A4EDC1E0670E591DA06215E14E"
+  },
+  {
+    "path": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-empty-node-green-2026-10-06.log",
+    "sha256": "DA0C7DAF768095B5814329F4E0414F696FA993A63DF75CBE62CF60F092B6C92D"
+  },
+  {
+    "path": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\root-current-strict-2026-10-06.log",
+    "sha256": "CE47868CA7F7FC7C9596BD895365A42EB017C4C8A12696015D9843EC7363816A"
+  },
+  {
+    "path": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-empty-node-green-2026-10-06\\scientific-styles\\light\\actual-owned-styles.json",
+    "sha256": "D00D585C17841895C26548D8912AB8F7DF8AE13BACDE230CB0A1DA56F8C5CD67"
+  },
+  {
+    "path": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-empty-node-green-2026-10-06\\scientific-styles\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-scientific-mathematics.sty",
+    "sha256": "663860591A746F421844DE977E896352EAE769A4EDC1E0670E591DA06215E14E"
+  },
+  {
+    "path": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-empty-node-green-2026-10-06\\scientific-styles\\dark\\actual-owned-styles.json",
+    "sha256": "A1B48C54251026947E74F79C2E19F10C5B1172990441705BF1C96D47F367EC59"
+  },
+  {
+    "path": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-empty-node-green-2026-10-06\\scientific-styles\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-scientific-mathematics.sty",
+    "sha256": "663860591A746F421844DE977E896352EAE769A4EDC1E0670E591DA06215E14E"
+  }
+]

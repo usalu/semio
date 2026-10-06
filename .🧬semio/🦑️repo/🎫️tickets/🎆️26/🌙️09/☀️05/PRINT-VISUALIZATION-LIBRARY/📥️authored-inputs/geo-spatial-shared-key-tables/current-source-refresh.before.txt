@@ -1,0 +1,497 @@
+{
+  "scopes": [
+    {
+      "id": "api-path-geo-base",
+      "scope": "semio / viz / geo / base",
+      "source": {
+        "file": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🖋️latex\\semio-viz-geo.sty",
+        "sha256": "735EE60A114BFC98CFFD173C20457EF048ADE4AD322903F68CDE96056EB9DE92",
+        "declaration": 2396,
+        "reset": 2415
+      },
+      "keys": [
+        {
+          "key": "fit",
+          "type": "string",
+          "default": "geometry",
+          "setter": "tl",
+          "description": {
+            "en": "Projection fitting reference: geometry fits the selected collection; world fits the world collection. Family presets may choose world.",
+            "de": "Referenz der Projektionsanpassung: geometry passt die gewählte Sammlung an; world passt die Weltsammlung an. Familienvorgaben können world wählen."
+          }
+        },
+        {
+          "key": "geometry",
+          "type": "string",
+          "default": "demo-geo-regions",
+          "setter": "tl",
+          "description": {
+            "en": "Named geographic geometry collection used by the family.",
+            "de": "Benannte geografische Geometriesammlung der Familie."
+          }
+        },
+        {
+          "key": "height",
+          "type": "number",
+          "default": "44",
+          "setter": "fp",
+          "description": {
+            "en": "Height of the fitted geographic frame in millimetres.",
+            "de": "Höhe des angepassten geografischen Rahmens in Millimetern."
+          }
+        },
+        {
+          "key": "lineWidth",
+          "type": "string",
+          "default": "semio@stroke@hairline",
+          "setter": "tl",
+          "description": {
+            "en": "Outline width as a TeX dimension from the theme hairline token.",
+            "de": "Umrissbreite als TeX-Dimension aus dem Haarlinienwert des Themas."
+          }
+        },
+        {
+          "key": "opacity",
+          "type": "number",
+          "default": "1",
+          "setter": "fp",
+          "description": {
+            "en": "Fill opacity from zero to one.",
+            "de": "Füllungsdeckkraft von null bis eins."
+          }
+        },
+        {
+          "key": "palette",
+          "type": "string",
+          "default": "sequential",
+          "setter": "tl",
+          "description": {
+            "en": "Colour ramp: sequential, diverging, terrain, bathymetric or neutral.",
+            "de": "Farbverlauf: sequential, diverging, terrain, bathymetric oder neutral."
+          }
+        },
+        {
+          "key": "parallels",
+          "type": "string",
+          "default": "0,60",
+          "setter": "clist",
+          "description": {
+            "en": "Comma-separated pair of conic standard parallels in degrees.",
+            "de": "Kommagetrenntes Paar der Standardbreiten der Kegelprojektion in Grad."
+          }
+        },
+        {
+          "key": "projection",
+          "type": "string",
+          "default": "equirectangular",
+          "setter": "tl",
+          "description": {
+            "en": "Projection kind used to define the family projection before fitting its frame.",
+            "de": "Projektionsart zur Definition der Familienprojektion vor der Rahmenanpassung."
+          }
+        },
+        {
+          "key": "rotate",
+          "type": "string",
+          "default": "0,0,0",
+          "setter": "clist",
+          "description": {
+            "en": "Comma-separated longitude, latitude and roll rotation angles in degrees.",
+            "de": "Kommagetrennte Drehwinkel für Länge, Breite und Rollwinkel in Grad."
+          }
+        },
+        {
+          "key": "paletteSteps",
+          "type": "integer",
+          "default": "5",
+          "setter": "int",
+          "description": {
+            "en": "Positive number of discrete colour-ramp levels, independent of vector integration steps. One level uses the palette midpoint.",
+            "de": "Positive Anzahl diskreter Farbverlaufsstufen. Vektorintegrationsschritte sind separat. Eine Stufe nutzt die Palettenmitte."
+          }
+        },
+        {
+          "key": "stroke",
+          "type": "string",
+          "default": "semio-chrome-border-emphasized",
+          "setter": "tl",
+          "description": {
+            "en": "Outline colour as a native colour expression.",
+            "de": "Umrissfarbe als nativer Farbausdruck."
+          }
+        },
+        {
+          "key": "width",
+          "type": "number",
+          "default": "76",
+          "setter": "fp",
+          "description": {
+            "en": "Width of the fitted geographic frame in millimetres.",
+            "de": "Breite des angepassten geografischen Rahmens in Millimetern."
+          }
+        }
+      ]
+    },
+    {
+      "id": "api-path-geo-field",
+      "scope": "semio / viz / family / geo-field",
+      "source": {
+        "file": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🖋️latex\\semio-viz-geo-contours.sty",
+        "sha256": "ED810FF0CF1A7CC3ADF2E0CDDCC8FBB479774C53DD596FA8DACB3F3C39802467",
+        "declaration": 30,
+        "reset": 99
+      },
+      "keys": [
+        {
+          "key": "cell",
+          "type": "number",
+          "default": "12",
+          "setter": "fp",
+          "description": {
+            "en": "Grid-node pitch in millimetres.",
+            "de": "Abstand der Gitterknoten in Millimetern."
+          }
+        },
+        {
+          "key": "filled",
+          "type": "boolean",
+          "default": "false",
+          "setter": "bool",
+          "description": {
+            "en": "Fill contour rings. The scalar surface filled selects filling after parsing.",
+            "de": "Konturringe füllen. Die skalare Oberfläche filled wählt die Füllung nach dem Parsen."
+          }
+        },
+        {
+          "key": "grid",
+          "type": "string",
+          "default": "demo-grid",
+          "setter": "tl",
+          "description": {
+            "en": "Named scalar grid sampled by the field renderer.",
+            "de": "Benanntes skalares Gitter für den Feldrenderer."
+          }
+        },
+        {
+          "key": "labels",
+          "type": "boolean",
+          "default": "false",
+          "setter": "bool",
+          "description": {
+            "en": "Print threshold labels along generated contour rings.",
+            "de": "Schwellenbeschriftungen entlang der erzeugten Konturringe ausgeben."
+          }
+        },
+        {
+          "key": "levels",
+          "type": "integer",
+          "default": "5",
+          "setter": "int",
+          "description": {
+            "en": "Number of evenly spaced interior contour thresholds. The scalar levelset surface fixes one threshold.",
+            "de": "Anzahl gleichmäßig verteilter innerer Konturschwellen. Die skalare Oberfläche levelset legt eine Schwelle fest."
+          }
+        },
+        {
+          "key": "raster",
+          "type": "boolean",
+          "default": "false",
+          "setter": "bool",
+          "description": {
+            "en": "Draw the value raster beneath geo-field contours. Scalar heatmap selects raster rendering through surface.",
+            "de": "Werteraster unter geo-field-Konturen zeichnen. Skalare heatmap wählt die Rasterdarstellung über surface."
+          }
+        }
+      ]
+    },
+    {
+      "id": "api-path-geo-terrain",
+      "scope": "semio / viz / family / geo-terrain",
+      "source": {
+        "file": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🖋️latex\\semio-viz-geo-contours.sty",
+        "sha256": "ED810FF0CF1A7CC3ADF2E0CDDCC8FBB479774C53DD596FA8DACB3F3C39802467",
+        "declaration": 51,
+        "reset": 99
+      },
+      "keys": [
+        {
+          "key": "altitude",
+          "type": "number",
+          "default": "45",
+          "setter": "fp",
+          "description": {
+            "en": "Hillshade illumination altitude in degrees.",
+            "de": "Beleuchtungshöhe der Schummerung in Grad."
+          }
+        },
+        {
+          "key": "azimuth",
+          "type": "number",
+          "default": "315",
+          "setter": "fp",
+          "description": {
+            "en": "Hillshade illumination azimuth in degrees.",
+            "de": "Beleuchtungsazimut der Schummerung in Grad."
+          }
+        },
+        {
+          "key": "mode",
+          "type": "string",
+          "default": "hillshade",
+          "setter": "tl",
+          "description": {
+            "en": "Terrain rendering: hillshade, hypsometric, relief, raster, profile or cross-section. Scalar surfaces select their renderer through surface.",
+            "de": "Geländedarstellung: hillshade, hypsometric, relief, raster, profile oder cross-section. Skalare Oberflächen wählen ihren Renderer über surface."
+          }
+        },
+        {
+          "key": "row",
+          "type": "integer",
+          "default": "3",
+          "setter": "int",
+          "description": {
+            "en": "Grid row sampled by profile, cross-section and scalar slice.",
+            "de": "Gitterzeile für profile, cross-section und skalare slice."
+          }
+        }
+      ]
+    },
+    {
+      "id": "api-path-family-geo-route",
+      "scope": "semio / viz / family / geo-route",
+      "source": {
+        "file": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🖋️latex\\semio-viz-geo-routes.sty",
+        "sha256": "D02E1EBAEC78E7960CE03BFDB6D18CB662E739B0D8EC0E807FD503F5115D6E86",
+        "declaration": 28,
+        "reset": 92
+      },
+      "keys": [
+        {
+          "key": "basemap",
+          "type": "boolean",
+          "default": "true",
+          "setter": "bool",
+          "description": {
+            "en": "Draw the geographic reference geometry beneath routes and flow bands.",
+            "de": "Geografische Referenzgeometrie unter Routen und Flussbändern zeichnen."
+          }
+        },
+        {
+          "key": "mode",
+          "type": "string",
+          "default": "direct",
+          "setter": "tl",
+          "description": {
+            "en": "Route geometry: direct, great-circle or octilinear.",
+            "de": "Routengeometrie: direct, great-circle oder octilinear."
+          }
+        },
+        {
+          "key": "routeWidth",
+          "type": "number",
+          "default": "1.4",
+          "setter": "fp",
+          "description": {
+            "en": "Width factor: route strokes use points; flow-band half-width uses millimetres, scaled by the normalized route value.",
+            "de": "Breitenfaktor: Routenstriche verwenden Punkte, Flussbandhalbbreiten Millimeter, skaliert mit dem normalisierten Routenwert."
+          }
+        },
+        {
+          "key": "routes",
+          "type": "string",
+          "default": "demo-geo-routes",
+          "setter": "tl",
+          "description": {
+            "en": "Named line geometry collection supplying the routes and their values.",
+            "de": "Benannte Liniengeometriesammlung für die Routen und ihre Werte."
+          }
+        },
+        {
+          "key": "samples",
+          "type": "integer",
+          "default": "20",
+          "setter": "int",
+          "description": {
+            "en": "Number of great-circle segments sampled for each route.",
+            "de": "Anzahl der abgetasteten Großkreissegmente je Route."
+          }
+        },
+        {
+          "key": "stations",
+          "type": "boolean",
+          "default": "false",
+          "setter": "bool",
+          "description": {
+            "en": "Draw station markers at route endpoints.",
+            "de": "Stationsmarkierungen an den Routenenden zeichnen."
+          }
+        }
+      ]
+    },
+    {
+      "id": "api-path-family-spatial-scalar-field",
+      "scope": "semio / viz / family / spatial-scalar-field",
+      "source": {
+        "file": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🖋️latex\\semio-viz-geo-contours.sty",
+        "sha256": "ED810FF0CF1A7CC3ADF2E0CDDCC8FBB479774C53DD596FA8DACB3F3C39802467",
+        "declaration": 87,
+        "reset": 99
+      },
+      "keys": [
+        {
+          "key": "surface",
+          "type": "string",
+          "default": "contour",
+          "setter": "tl",
+          "description": {
+            "en": "Scalar rendering: contour, filled, levelset, heatmap, wireframe, mesh, shaded, heightmap, waterfall, curtain or slice.",
+            "de": "Skalare Darstellung: contour, filled, levelset, heatmap, wireframe, mesh, shaded, heightmap, waterfall, curtain oder slice."
+          }
+        },
+        {
+          "key": "tilt",
+          "type": "number",
+          "default": "30",
+          "setter": "fp",
+          "description": {
+            "en": "Axonometric tilt of the sampled grid surface in degrees.",
+            "de": "Axonometrische Neigung der abgetasteten Gitteroberfläche in Grad."
+          }
+        },
+        {
+          "key": "turn",
+          "type": "number",
+          "default": "30",
+          "setter": "fp",
+          "description": {
+            "en": "Axonometric rotation of the sampled grid surface in degrees.",
+            "de": "Axonometrische Drehung der abgetasteten Gitteroberfläche in Grad."
+          }
+        },
+        {
+          "key": "zScale",
+          "type": "number",
+          "default": "1.6",
+          "setter": "fp",
+          "description": {
+            "en": "Millimetres per scalar grid value for surfaces and profiles.",
+            "de": "Millimeter je skalarem Gitterwert für Oberflächen und Profile."
+          }
+        }
+      ]
+    },
+    {
+      "id": "api-path-sankey",
+      "scope": "semio / viz / layout / sankey",
+      "source": {
+        "file": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🖋️latex\\semio-viz-flow.sty",
+        "sha256": "0E79C84406EB9EC79E9D82628A7EBBA9F63B9351B64A8C2E1A3F96AFD32411F9",
+        "declaration": 65,
+        "reset": 78
+      },
+      "keys": [
+        {
+          "key": "node-width",
+          "type": "number",
+          "default": "24",
+          "setter": "fp",
+          "description": {
+            "en": "Width of each node rectangle in layout units.",
+            "de": "Breite jedes Knotenrechtecks in Layouteinheiten."
+          }
+        },
+        {
+          "key": "node-padding",
+          "type": "number",
+          "default": "8",
+          "setter": "fp",
+          "description": {
+            "en": "Vertical gap between nodes in a column. Parallel sets presets zero before authored options.",
+            "de": "Senkrechter Abstand zwischen Knoten einer Spalte. Parallelmengen setzen vor den Aufruferoptionen null als Vorgabe."
+          }
+        },
+        {
+          "key": "node-align",
+          "type": "string",
+          "default": "justify",
+          "setter": "tl",
+          "description": {
+            "en": "Column assignment: left, right, center or justify. Alluvial and parallel sets preset left before authored options.",
+            "de": "Spaltenzuweisung: left, right, center oder justify. Alluvial und Parallelmengen setzen vor den Aufruferoptionen left als Vorgabe."
+          }
+        },
+        {
+          "key": "node-sort",
+          "type": "string",
+          "default": "auto",
+          "setter": "tl",
+          "description": {
+            "en": "auto reorders each column by node position; none preserves input order. Alluvial and parallel sets preset none.",
+            "de": "auto ordnet jede Spalte nach der Knotenposition; none erhält die Eingabereihenfolge. Alluvial und Parallelmengen verwenden none als Vorgabe."
+          }
+        },
+        {
+          "key": "link-sort",
+          "type": "string",
+          "default": "auto",
+          "setter": "tl",
+          "description": {
+            "en": "auto orders incident links by their partner node positions; none preserves input link order.",
+            "de": "auto ordnet anliegende Kanten nach den Positionen ihrer Partnerknoten; none erhält die Eingabereihenfolge der Kanten."
+          }
+        },
+        {
+          "key": "iterations",
+          "type": "integer",
+          "default": "6",
+          "setter": "int",
+          "description": {
+            "en": "Number of vertical relaxation passes.",
+            "de": "Anzahl senkrechter Relaxationsdurchläufe."
+          }
+        },
+        {
+          "key": "x0",
+          "type": "number",
+          "default": "0",
+          "setter": "fp",
+          "description": {
+            "en": "Left boundary of the layout extent.",
+            "de": "Linke Grenze der Layoutausdehnung."
+          }
+        },
+        {
+          "key": "y0",
+          "type": "number",
+          "default": "0",
+          "setter": "fp",
+          "description": {
+            "en": "Lower numeric vertical boundary of the layout extent.",
+            "de": "Untere numerische Vertikalgrenze der Layoutausdehnung."
+          }
+        },
+        {
+          "key": "x1",
+          "type": "number",
+          "default": "1",
+          "setter": "fp",
+          "description": {
+            "en": "Right boundary of the layout extent.",
+            "de": "Rechte Grenze der Layoutausdehnung."
+          }
+        },
+        {
+          "key": "y1",
+          "type": "number",
+          "default": "1",
+          "setter": "fp",
+          "description": {
+            "en": "Upper numeric vertical boundary of the layout extent.",
+            "de": "Obere numerische Vertikalgrenze der Layoutausdehnung."
+          }
+        }
+      ]
+    }
+  ],
+  "status": "Handcrafted42 native keys/types/defaults with independently audited source locations; intended for current scoped printed-table admission."
+}

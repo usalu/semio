@@ -5,7 +5,6 @@
     "🔨️modules/🖨️tectonic-template-compilation/📜️script.ts",
     "🔨️modules/🎨print-design-token-paints/📜️script.ts"
   ],
-  "maxSourceFiles": 23,
   "forbidden": [
     "📚️library/📦️packages/🟦️typescript/🟦️.ts",
     "🎨️styling/📦️packages/🦀️rust/📜️script.ts",
@@ -22,5 +21,112 @@
       "sharp"
     ],
     "🔨️modules/🎨print-design-token-paints/📜️script.ts": []
-  }
+  },
+  "sourceInputs": {
+    "🔨️modules/🖨️tectonic-template-compilation/🟦️.ts": [
+      "🧰️framework/🔨️modules/🏃️process/⏱️budget/🧬️schema/🔣️.json",
+      "🧰️framework/🔨️modules/🏃️process/⏱️budget/🟦️.ts",
+      "🧰️framework/🔨️modules/🏃️process/📦️artifacts/📤️publication/🟦️.ts",
+      "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🗂️files/🟦️.ts",
+      "🧰️framework/🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+      "🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts",
+      "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🌗️mixing/🟦️.ts",
+      "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🔣️.json",
+      "🧰️framework/🛍️products/📓️print/🔨️modules/🎨print-design-token-paints/🧮️resolution/🟦️.ts",
+      "🧰️framework/🛍️products/📓️print/🔨️modules/🎨print-design-token-paints/🟦️.ts",
+      "🧰️framework/🛍️products/📓️print/🔨️modules/📥️source-staging/🟦️.ts",
+      "🧰️framework/🛍️products/📓️print/🔨️modules/🔤print-font-catalog/📏️metrics/🌏️.json",
+      "🧰️framework/🛍️products/📓️print/🔨️modules/🔤print-font-catalog/📏️metrics/🔣️.json",
+      "🧰️framework/🛍️products/📓️print/🔨️modules/🔤print-font-catalog/📏️metrics/🟦️.ts",
+      "🧰️framework/🛍️products/📓️print/🔨️modules/🔤print-font-catalog/🔣️.json",
+      "🧰️framework/🛍️products/📓️print/🔨️modules/🔤print-font-catalog/🟦️.ts",
+      "🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/📇️catalog/🟦️.ts",
+      "🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/📚️bundle/📜️script.ts",
+      "🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/🔧️toolchain/📜️script.ts",
+      "🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/🟦️.ts",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/📦️payload/🟦️.ts",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🟦️.ts"
+    ],
+    "🔨️modules/🎨print-design-token-paints/🟦️.ts": [
+      "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🗂️files/🟦️.ts",
+      "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🌗️mixing/🟦️.ts",
+      "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🔣️.json",
+      "🧰️framework/🛍️products/📓️print/🔨️modules/🎨print-design-token-paints/🧮️resolution/🟦️.ts",
+      "🧰️framework/🛍️products/📓️print/🔨️modules/🎨print-design-token-paints/🟦️.ts",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/📦️payload/🟦️.ts",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🟦️.ts"
+    ],
+    "🔨️modules/🖨️tectonic-template-compilation/📜️script.ts": [
+      "🧰️framework/🔨️modules/🏃️process/⏱️budget/🧬️schema/🔣️.json",
+      "🧰️framework/🔨️modules/🏃️process/⏱️budget/🟦️.ts",
+      "🧰️framework/🔨️modules/🏃️process/📦️artifacts/📤️publication/🟦️.ts",
+      "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🗂️files/🟦️.ts",
+      "🧰️framework/🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+      "🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts",
+      "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🌗️mixing/🟦️.ts",
+      "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🔣️.json",
+      "🧰️framework/🛍️products/📓️print/🔨️modules/🎨print-design-token-paints/🧮️resolution/🟦️.ts",
+      "🧰️framework/🛍️products/📓️print/🔨️modules/🎨print-design-token-paints/🟦️.ts",
+      "🧰️framework/🛍️products/📓️print/🔨️modules/📥️source-staging/🟦️.ts",
+      "🧰️framework/🛍️products/📓️print/🔨️modules/🔤print-font-catalog/📏️metrics/🌏️.json",
+      "🧰️framework/🛍️products/📓️print/🔨️modules/🔤print-font-catalog/📏️metrics/🔣️.json",
+      "🧰️framework/🛍️products/📓️print/🔨️modules/🔤print-font-catalog/📏️metrics/🟦️.ts",
+      "🧰️framework/🛍️products/📓️print/🔨️modules/🔤print-font-catalog/🔣️.json",
+      "🧰️framework/🛍️products/📓️print/🔨️modules/🔤print-font-catalog/🟦️.ts",
+      "🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/📇️catalog/🟦️.ts",
+      "🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/📚️bundle/📜️script.ts",
+      "🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/📜️script.ts",
+      "🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/🔧️toolchain/📜️script.ts",
+      "🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/🟦️.ts",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/📦️payload/🟦️.ts",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🟦️.ts"
+    ],
+    "🔨️modules/🎨print-design-token-paints/📜️script.ts": [
+      "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🗂️files/🟦️.ts",
+      "🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts",
+      "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🌗️mixing/🟦️.ts",
+      "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🔣️.json",
+      "🧰️framework/🛍️products/📓️print/🔨️modules/🎨print-design-token-paints/📜️script.ts",
+      "🧰️framework/🛍️products/📓️print/🔨️modules/🎨print-design-token-paints/🧮️resolution/🟦️.ts",
+      "🧰️framework/🛍️products/📓️print/🔨️modules/🎨print-design-token-paints/🟦️.ts",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/📦️payload/🟦️.ts",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🟦️.ts"
+    ]
+  },
+  "sourceRefusals": [
+    {
+      "lengthDelta": 1,
+      "at": 0,
+      "remove": 0,
+      "id": "extra-source",
+      "add": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts"
+      ],
+      "accepted": false
+    },
+    {
+      "lengthDelta": -1,
+      "at": 0,
+      "remove": 1,
+      "id": "missing-source",
+      "add": [],
+      "accepted": false
+    },
+    {
+      "lengthDelta": 0,
+      "at": 0,
+      "remove": 1,
+      "id": "same-count-substitution",
+      "add": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts"
+      ],
+      "accepted": false
+    }
+  ]
 }

@@ -1,0 +1,58 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/🖱️ui/⌨️tui/🦀️.rs",
+    "replace": [
+      {
+        "from": "if let NodeContent::Widget(crate::tui::widget::WidgetState::Wizard(state)) = &mut self.scene.node_mut(id).content {",
+        "to": "if let Some(crate::tui::widget::WidgetState::Wizard(state)) = self.scene.node_mut(id).widget() {"
+      }
+    ]
+  },
+  {
+    "path": "dashboard/🌳️command-tree/🦀️.rs",
+    "replace": [
+      {
+        "from": "    collect_inferred_targets(root, &mut trie, cancelled);\n    collect_workspace_scripts(root, &mut trie);\n    inject_playground_dev(root, &mut trie);\n    inject_repo_domain(root, &mut trie, repo_implementation());",
+        "to": "    if !cancelled.load(std::sync::atomic::Ordering::Relaxed) { collect_inferred_targets(root, &mut trie, cancelled); }\n    if !cancelled.load(std::sync::atomic::Ordering::Relaxed) { collect_workspace_scripts(root, &mut trie); inject_playground_dev(root, &mut trie); inject_repo_domain(root, &mut trie, repo_implementation()); }"
+      },
+      {
+        "from": "terminology: crate::options::Lock::Individual(\"native\".into()), ..Default::default()",
+        "to": "terminology: crate::options::Lock::Individual(\"native\".into()), appearance: crate::options::Lock::Individual(\"dark\".into()), ..Default::default()"
+      },
+      {
+        "from": "#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]\n    pub struct TicketEntry",
+        "to": "#[derive(Debug, Clone, PartialEq, Eq)]\n    pub struct TicketEntry"
+      }
+    ]
+  },
+  {
+    "path": "dashboard/⚙️preferences/🦀️.rs",
+    "replace": [
+      {
+        "from": "(\"VITE_SEMIO_LOCKED_TERMINOLOGY\", &self.terminology)]",
+        "to": "(\"VITE_SEMIO_LOCKED_TERMINOLOGY\", &self.terminology), (\"SEMIO_LOCKED_APPEARANCE\", &self.appearance)]"
+      }
+    ]
+  },
+  {
+    "path": "dashboard/🖥️terminal/🦀️.rs",
+    "replace": [
+      {
+        "from": "        if let Some(WidgetState::Wizard(state)) = tui.scene.node_mut(widget).widget() {\n            let selected",
+        "to": "        let title = match self.windows[idx].body { WindowBody::Overview { .. } => self.text(\"Tasks\", \"Aufgaben\"), WindowBody::Settings { .. } => self.text(\"Settings\", \"Einstellungen\"), _ => self.text(\"Commands\", \"Befehle\") };\n        if let Some(ChromeState::Window(chrome)) = tui.scene.node_mut(self.windows[idx].chrome).chrome() { chrome.title = title; }\n        if let Some(WidgetState::Wizard(state)) = tui.scene.node_mut(widget).widget() {\n            let selected"
+      },
+      {
+        "from": "        if let Some(result) = self.connecting.as_ref().and_then(|receiver| receiver.try_recv().ok()) {\n            self.connecting = None;\n            if let Ok(mut connection) = result {",
+        "to": "        let mut connected = false;\n        if let Some(result) = self.connecting.as_ref().and_then(|receiver| receiver.try_recv().ok()) {\n            self.connecting = None;\n            if let Err(error) = &result { self.connection_status = error.to_string(); }\n            if let Ok(mut connection) = result {\n                connected = true;"
+      },
+      {
+        "from": "let Some(connection) = self.connection.as_mut() else { return false };",
+        "to": "let Some(connection) = self.connection.as_mut() else { return connected };"
+      },
+      {
+        "from": "let changed = !messages.is_empty();",
+        "to": "let changed = connected || !messages.is_empty();"
+      }
+    ]
+  }
+]

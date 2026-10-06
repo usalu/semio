@@ -16,5 +16,11 @@
     "directory": "😀️noto-emoji",
     "filename": "😀️NotoEmoji-Regular.ttf",
     "texFilename": "NotoEmoji-Regular.ttf"
+  },
+  {
+    "family": "Noto Sans CJK SC",
+    "directory": "🌏️noto-sans-cjk-sc",
+    "filename": "🌏️NotoSansCJKsc-Regular.otf",
+    "texFilename": "NotoSansCJKsc-Regular.otf"
   }
 ]

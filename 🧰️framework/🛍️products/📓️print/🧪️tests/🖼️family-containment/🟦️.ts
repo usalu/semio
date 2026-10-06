@@ -2,22 +2,38 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { createRequire } from "node:module";
-import { getDocument, OPS } from "pdfjs-dist/legacy/build/pdf.mjs";
-import { scaleLinear, scaleThreshold, scaleOrdinal, scaleBand } from "d3-scale";
-import { linkHorizontal, symbol, symbolCircle, symbolSquare } from "d3-shape";
+import { getDocument, OPS, Util, type PDFPageProxy } from "pdfjs-dist/legacy/build/pdf.mjs";
+import { rgb as d3Rgb } from "d3-color";
+import { scaleLinear, scaleThreshold, scaleOrdinal, scaleBand, scaleSqrt } from "d3-scale";
+import { linkHorizontal, symbol, symbolCircle, symbolSquare, pointRadial } from "d3-shape";
 import { geoStereographic } from "d3-geo";
 const SunCalc = createRequire(import.meta.url)("suncalc") as { getPosition(date: Date, latitude: number, longitude: number): { altitude: number; azimuth: number } };
 import { compileVizProbeDocument } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
 import fixture from "./🔣️.json";
+import optionFixture from "../../🧫️fixtures/🧬️chart-mutations/🔣️.json";
+import schemaDocument from "../../🧬️schema/🔣️.json";
+import Ajv2020 from "ajv/dist/2020.js";
+import { validateJsonSchemaSubset } from "../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import { changeVizChartValue } from "../../🧬️schema/🧬️mutations/🟦️.ts";
+import { applyVizChartDiff, inverseVizChartDiff } from "../../🧬️schema/🔀️diff/🟦️.ts";
+import { inferVizChart } from "../../🔨️modules/🏠️host/💡️inferences/🟦️.ts";
+import type { VizChartSnapshot } from "../../🧬️schema/📸️snapshot/🟦️.ts";
 import sunpaths from "./☀️sunpath.json";
 import complex from "./🌀️complex.json";
 import bifurcation from "./🌿️bifurcation.json";
 import chemistry from "./⚛️chemistry.json";
 import {compileNativeTreeContainment} from "./🌳️tree/🟦️.ts";
 import { compileNativePhysicsContainment } from "./⚛️physics/🟦️.ts";
+import { compileNativeSetContainment } from "./🫧️sets/🟦️.ts";
 
 /** 🔬️ Verifies actual native family bounds and glyphs in both configured themes. */
 export async function compileNativeFamilyContainment(workDir: string): Promise<void> {
+  if (process.env.PRINT_NATIVE_FAMILY_PHASE === "canonical-options-admission") return compileNativeCanonicalAdmission(join(workDir, "canonical-admission"));
+  if (process.env.PRINT_NATIVE_FAMILY_PHASE === "canonical-options-metadata") return verifyCanonicalOptionSyntaxContract();
+  if (process.env.PRINT_NATIVE_FAMILY_PHASE === "canonical-options") return compileNativeCanonicalOptions(join(workDir, "canonical-options"));
+  if (process.env.PRINT_NATIVE_FAMILY_PHASE === "sets") return compileNativeSetContainment(join(workDir, "sets"));
+  if (process.env.PRINT_NATIVE_FAMILY_PHASE === "queueing") return compileNativeQueueingLabels(join(workDir, "queueing"));
+  if (process.env.PRINT_NATIVE_FAMILY_PHASE === "math-records") return compileNativeMathRecords(join(workDir, "math-records"));
   if (process.env.PRINT_NATIVE_FAMILY_PHASE === "physics") return compileNativePhysicsContainment(join(workDir, "physics"));
   if (process.env.PRINT_NATIVE_FAMILY_PHASE === "tree") return compileNativeTreeContainment(join(workDir, "tree"));
   if (process.env.PRINT_NATIVE_FAMILY_PHASE === "chemistry") return compileNativeOrbitalContainment(join(workDir, "chemistry"));
@@ -36,6 +52,11 @@ export async function compileNativeFamilyContainment(workDir: string): Promise<v
   await compileNativeOrbitalContainment(join(workDir, "chemistry"));
   await compileNativeTreeContainment(join(workDir, "tree"));
   await compileNativePhysicsContainment(join(workDir, "physics"));
+  await compileNativeQueueingLabels(join(workDir, "queueing"));
+  await compileNativeMathRecords(join(workDir, "math-records"));
+  await compileNativeSetContainment(join(workDir, "sets"));
+  await compileNativeCanonicalOptions(join(workDir, "canonical-options"));
+  await compileNativeCanonicalAdmission(join(workDir, "canonical-admission"));
   const failures: string[] = [];
   for (const theme of ["light", "dark"]) {
     const root = join(workDir, theme);
@@ -108,6 +129,81 @@ export async function compileNativeFamilyContainment(workDir: string): Promise<v
   }
   if (failures.length) throw new Error(failures.join("\n"));
   console.log("[native-families] scientific containment, reaction glyphs, board cells and process labels PASS");
+}
+
+/** 🪪️ Checks stock and authored queueing captions and preserved station spacing with PDF.js and D3. */
+async function compileNativeQueueingLabels(workDir: string): Promise<void> {
+  const failures: string[] = [];
+  for (const theme of ["light", "dark"]) {
+    const root = join(workDir, theme), body = fixture.queueingCases.map(entry => ({ raw: `\\clearpage\\SemioVizProbeBegin{queueing-labels}{${entry.id}}\\begin{VizFigure}[title={${entry.id}},width=80,height=40]\\SemioVizChart{queueing-network-diagram}[${entry.options}]\\end{VizFigure}` }));
+    await compileVizProbeDocument({ case: "queueing-labels", scenario: "captions", documentClass: "semio", documentClassOptions: `type=paper,language=en,theme=${theme}`, packages: ["semio-viz"], geometry: true, preamble: ["\\title{Queueing Captions}", "\\author{Semio}", "\\date{}"], body }, { workDir: root, scenario: undefined, keepWorkDir: true });
+    const out = join(root, "🧪️probe-out"), pdf = await getDocument({ data: new Uint8Array(readFileSync(join(out, readdirSync(out).find(name => name.endsWith(".pdf"))!))) }).promise;
+    let pages = 0, captions = 0, projections = 0;
+    const seen = new Set<string>();
+    try {
+      for (let index = 1; index <= pdf.numPages; index++) {
+        const page = await pdf.getPage(index), items = (await page.getTextContent()).items.flatMap(item => "str" in item ? [item] : []), text = items.map(item => item.str).join(" "), entry = fixture.queueingCases.find(entry => text.includes(entry.id));
+        if (entry) {
+          if (seen.has(entry.id)) failures.push(`${theme}/${entry.id}: duplicate actual case page`);
+          seen.add(entry.id);
+          const labels = entry.labels.map(name => items.find(item => item.str.trim() === name));
+          for (const [position, label] of labels.entries()) {
+            if (!label) failures.push(`${theme}/${entry.id}: missing mathematical station caption ${entry.labels[position]}`);
+            else captions++;
+          }
+          if (labels.every(Boolean)) {
+            const origin = labels[0]!.transform[4] + labels[0]!.width / 2, projection = scaleLinear([0, 1], [0, entry.unit * 72 / 25.4]);
+            for (const [position, label] of labels.entries()) {
+              const expected = projection(entry.positions[position]! - entry.positions[0]!), actual = label!.transform[4] + label!.width / 2 - origin;
+              if (Math.abs(actual - expected) > 0.2) failures.push(`${theme}/${entry.id}: station ${position} spacing differs from independent D3 unit projection`);
+              projections++;
+            }
+          }
+        }
+        if (/[\uFFFD\uFFFF]/u.test(text)) failures.push(`${theme}/page${index}: invalid queueing glyph`);
+        page.cleanup(); pages++;
+      }
+    } finally { await pdf.destroy(); }
+    for (const entry of fixture.queueingCases) if (!seen.has(entry.id)) failures.push(`${theme}/${entry.id}: missing actual case page`);
+    console.log(`[native-queueing] ${theme}: ${fixture.queueingCases.length} cases, ${captions} actual captions, ${projections} D3 station projections, ${pages} PDF.js pages consumed`);
+  }
+  if (failures.length) throw Error(`${failures.length} queueing caption/projection failures:\n${failures.join("\n")}`);
+  console.log("[native-queueing] stock and authored mathematical captions PASS");
+}
+
+/** 🧮️ Consumes protected mathematical captions and every shared record-reader family with PDF.js and D3. */
+async function compileNativeMathRecords(workDir: string): Promise<void> {
+  const failures: string[] = [], cases = fixture.mathRecordCases.filter(entry => process.env.PRINT_NATIVE_MATH_PHASE === "piecewise" ? entry.reference.mode === "piecewise" : process.env.PRINT_NATIVE_MATH_PHASE !== "baseline" || !entry.options.includes("\\("));
+  for (const theme of ["light", "dark"]) {
+    const root = join(workDir, theme), body = cases.map(entry => ({ raw: `\\clearpage\\SemioVizProbeBegin{math-records}{${entry.id}}\\begin{VizFigure}[title={${entry.id}},width=80,height=40]\\SemioVizChart{${entry.kind}}[${entry.options}]\\end{VizFigure}` }));
+    const records = await compileVizProbeDocument({ case: "math-records", scenario: "cases", documentClass: "semio", documentClassOptions: `type=paper,language=en,theme=${theme}`, packages: ["semio-viz"], geometry: true, preamble: ["\\title{Mathematical Records}", "\\author{Semio}", "\\date{}"], body }, { workDir: root, scenario: undefined, keepWorkDir: true });
+    const out = join(root, "🧪️probe-out"), pdf = await getDocument({ data: new Uint8Array(readFileSync(join(out, readdirSync(out).find(name => name.endsWith(".pdf"))!))) }).promise;
+    const texts: string[] = [];
+    try { for (let index = 1; index <= pdf.numPages; index++) texts.push((await (await pdf.getPage(index)).getTextContent()).items.flatMap(item => "str" in item ? [item.str] : []).join(" ")); }
+    finally { await pdf.destroy(); }
+    let glyphs = 0, references = 0;
+    for (const entry of cases) {
+      const pages = texts.filter(text => text.includes(entry.id));
+      if (pages.length !== 1) failures.push(`${theme}/${entry.id}: expected one actual case page, found ${pages.length}`);
+      for (const glyph of entry.glyphs) { if (!pages[0]?.includes(glyph)) failures.push(`${theme}/${entry.id}: missing actual glyph ${glyph}`); else glyphs++; }
+      const reference = entry.reference, actual = records.filter(record => record.scenario === entry.id && record.key === `geometry/${reference.key}`);
+      if (reference.mode === "none") continue;
+      if (actual.length !== reference.values.length) failures.push(`${theme}/${entry.id}: actual record count ${actual.length} differs from ${reference.values.length}`);
+      const linear = scaleLinear([0, 1], [0, reference.unit]), radius = scaleSqrt([0, Math.max(...reference.values.map(value => value[0]!))], [0, reference.unit]);
+      for (const [index, input] of reference.values.entries()) {
+        const angle = 2 * Math.PI * (index + 1) / reference.values.length + Math.PI;
+        const control = fixture.piecewiseControl, x = scaleLinear(control.domain, [0, control.canvas[0]!]), y = scaleLinear(control.range, [0, control.canvas[1]!]), sample = scaleLinear([0, control.samples], input);
+        const expected = reference.mode === "piecewise" ? Array.from({ length: control.samples + 1 }, (_, position) => { const value = sample(position); return [x(value), y(control.expressions[index] === "negative" ? -value : value * value / 3)]; }).flat() : reference.mode === "venn" ? [...pointRadial(angle, reference.unit * 0.62), reference.unit] : reference.mode === "euler" ? [1.15 * reference.unit * (index + 1 - (reference.values.length + 1) / 2), 0, radius(input[0]!)] : input.map(linear);
+        const values = reference.key === "braid/crossing" ? actual[index]?.values.slice(1) : actual[index]?.values;
+        if (reference.mode !== "count" && (values?.length !== expected.length || expected.some((value, position) => !Number.isFinite(Number(values?.[position])) || Math.abs(Number(values?.[position]) - value) > 1e-5))) failures.push(`${theme}/${entry.id}/${index}: actual values differ from independent D3 projection`);
+        references += reference.mode === "count" ? 0 : expected.length;
+      }
+    }
+    if (texts.some(text => /[\uFFFD\uFFFF]/u.test(text))) failures.push(`${theme}: invalid mathematical caption glyph`);
+    console.log(`[native-math-records] ${theme}: ${cases.length} cases, ${glyphs} actual glyphs, ${references} D3 values, ${texts.length} PDF.js pages consumed`);
+  }
+  if (failures.length) throw Error(`${failures.length} mathematical record failures:\n${failures.join("\n")}`);
+  console.log("[native-math-records] protected captions and shared record consumers PASS");
 }
 
 /** 🎛️ Compiles categorical grammar bindings and compares actual paints with independent D3 ordinal scales. */
@@ -329,4 +425,107 @@ export async function compileNativeOrbitalContainment(workDir: string): Promise<
     if (failures.length) throw Error(theme + ":\n" + failures.join("\n"));
     console.log("[native-orbital] " + theme + ": " + chemistry.cases.length + " cases, 7 actual D3 column centers, mathematical glyphs and horizontal bounds, " + pages + " PDF.js pages PASS");
   }
+}
+
+/** 🧷️ Checks every closed syntax descriptor against owned validation and independent AJV. */
+function verifyCanonicalOptionSyntaxContract():void{
+ const document=schemaDocument as unknown as {$id:string,$defs:Record<string,unknown>,"x-semio-family-options":Record<string,unknown>,"x-semio-option-syntax":Record<string,Record<string,unknown>>},contract=document.$defs.OptionSyntax;
+ if(!contract)throw Error("Canonical option syntax contract is missing");
+ const ajv=new Ajv2020({strict:false,allErrors:true});ajv.addSchema(document);const external=ajv.compile({$ref:`${document.$id}#/$defs/OptionSyntax`});
+ for(const entry of optionFixture.optionSyntax.descriptors){const owned=validateJsonSchemaSubset(contract,entry.input,document).length===0,reference=external(entry.input);if(owned!==entry.valid||reference!==entry.valid)throw Error(`Syntax ${entry.id}: owned ${owned}, AJV ${reference}`);}
+ const family=ajv.compile({$ref:`${document.$id}#/$defs/FamilyOptions`});
+ const failures:string[]=[];for(const[name,options]of Object.entries(document["x-semio-family-options"])){const owned=validateJsonSchemaSubset(document.$defs.FamilyOptions,options,document),accepted=family(options);if(owned.length||!accepted)failures.push(`Family syntax metadata ${name}: owned ${JSON.stringify(owned)}, AJV ${JSON.stringify(family.errors)}`);}if(failures.length)throw Error(failures.join("\n"));
+ let count=0;for(const[owner,options]of Object.entries(document["x-semio-option-syntax"])){for(const[key,value]of Object.entries(options)){if(validateJsonSchemaSubset(contract,value,document).length||!external(value))throw Error(`Generic syntax metadata ${owner}/${key}`);count++;}}
+ console.log(`[DEBUG] Canonical syntax: ${optionFixture.optionSyntax.descriptors.length} neutral policy cases, ${Object.keys(document["x-semio-family-options"]).length} families and ${count} generic descriptors compared with independent AJV PASS`);
+}
+
+/** 🪄️ Compiles actual canonical mutation output and compares its numerical paths with independent D3. */
+async function compileNativeCanonicalOptions(workDir:string):Promise<void>{
+ verifyCanonicalOptionSyntaxContract();
+ for(const entry of optionFixture.optionSyntax.rejections){let snapshot=structuredClone(entry.snapshot) as unknown as VizChartSnapshot;for(const mutation of entry.mutations){const outcome=changeVizChartValue(snapshot,mutation);if(outcome.messages.length)throw Error(JSON.stringify(outcome.messages));const result=applyVizChartDiff(snapshot,outcome.diff);if(result.messages.length)throw Error(JSON.stringify(result.messages));snapshot=result.snapshot;}const inferred=await inferVizChart(snapshot);if(inferred.complete||!inferred.diagnostics.length)throw Error(`Invalid source syntax accepted ${entry.id}`);}
+ const implementation=process.env.PRINT_NATIVE_OPTION_SOURCE??"typescript",sources:string[]=[];
+ for(const entry of optionFixture.optionSyntax.cases){
+  let snapshot=structuredClone(entry.snapshot) as unknown as VizChartSnapshot;
+  for(const mutation of entry.mutations){const outcome=changeVizChartValue(snapshot,mutation);if(outcome.messages.length)throw Error(JSON.stringify(outcome.messages));const applied=applyVizChartDiff(snapshot,outcome.diff);if(applied.messages.length)throw Error(JSON.stringify(applied.messages));snapshot=applied.snapshot;}
+  if(implementation==="rust"){const root=process.env.PRINT_NATIVE_OPTION_TIKZ;if(!root)throw Error("Rust canonical option source directory is required");sources.push(readFileSync(join(root,`${entry.id}.tex`),"utf8"));}
+  else if(implementation==="typescript"){const result=await inferVizChart(snapshot);if(!result.complete)throw Error(JSON.stringify(result.diagnostics));sources.push(result.tikz);}
+  else throw Error(`Unknown canonical option implementation ${implementation}`);
+ }
+ let projections=0,pages=0;const failures:string[]=[];
+ for(const theme of ["light","dark"]){
+  const root=join(workDir,implementation,theme),body=optionFixture.optionSyntax.cases.filter(entry=>!entry.reference.pdfStroke).map(entry=>{const index=optionFixture.optionSyntax.cases.indexOf(entry),reference=entry.reference,probes=reference.inputs?.map((_,row)=>`\\CanonicalTypedCellProbe{${reference.table}}{${row+1}}{${reference.column}}{${row}}${reference.scales!.map(scale=>`\\CanonicalTypedScaleProbe{${scale.name}}{${row}}`).join("")}`).join("\n")??"";return{raw:`\\clearpage\\SemioVizProbeBegin{canonical-options}{${entry.id}}${sources[index]!.replace("\\end{VizFigure}",probes+"\n\\end{VizFigure}")}`};});
+  const records=await compileVizProbeDocument({case:"canonical-options",scenario:"mutations",documentClass:"semio",documentClassOptions:`type=paper,language=en,theme=${theme}`,packages:["semio-viz"],geometry:true,preamble:["\\title{Canonical Options}","\\author{Semio}","\\date{}","\\ExplSyntaxOn\\NewDocumentCommand\\CanonicalTypedCellProbe{mmmm}{\\semio_viz_table_cell:nnnN{#1}{#2}{#3}\\l_tmpa_tl\\exp_args:NnV\\semio_viz_probe_string:nn{typed/#4}\\l_tmpa_tl}\\NewDocumentCommand\\CanonicalTypedScaleProbe{mm}{\\semio_viz_scale_value:nVN{#1}\\l_tmpa_tl\\l_tmpb_tl\\semio_viz_probe_values:nV{typed/#1/#2}\\l_tmpb_tl}\\ExplSyntaxOff"],body},{workDir:root,scenario:undefined,keepWorkDir:true});
+  for(const entry of optionFixture.optionSyntax.cases){
+   const reference=entry.reference;if(reference.pdfStroke)continue;const actual=records.filter(record=>record.scenario===entry.id&&record.key===reference.key),x=scaleLinear(reference.domain,[0,reference.canvas[0]!]),y=scaleLinear(reference.range,[0,reference.canvas[1]!]);
+   if(!reference.pdfStroke&&!reference.columns&&!reference.centres&&actual.length!==reference.segments.length)failures.push(`${implementation}/${theme}/${entry.id}: path count ${actual.length}`);
+   if(reference.inputs){for(const[row,input]of reference.inputs.entries()){const value=input.kind==="undefined"?undefined:input.value,carrier=input.kind==="undefined"?"\\SemioVizUndefined{}":input.kind==="null"?"\\SemioVizNull{}":input.kind==="string"?`\\SemioVizString{${value}}`:input.kind==="boolean"?`\\SemioVizBoolean{${value}}`:String(value),observed=records.find(record=>record.scenario===entry.id&&record.key===`typed/${row}`)?.values[0];if(String(observed).replace(/\s/g,"")!==carrier.replace(/\s/g,""))failures.push(`${implementation}/${theme}/${entry.id}/${row}: typed carrier ${observed} differs from ${carrier}`);for(const scale of reference.scales!){const expected=scale.kind==="ordinal"?scaleOrdinal<string|number,number>().domain(scale.domain).range(scale.range).unknown(scale.unknown)(value as string|number):scaleLinear<number,number>().domain(scale.domain.map(Number)).range(scale.range).unknown(scale.unknown)(value as number),actual=records.find(record=>record.scenario===entry.id&&record.key===`typed/${scale.name}/${row}`)?.values[0];if(Number(actual)!==expected)failures.push(`${implementation}/${theme}/${entry.id}/${scale.name}/${row}: actual ${actual}, D3 ${expected}`);projections++;}}}
+   if(reference.columns){const position=scaleLinear([0,reference.columns],[reference.pad!,reference.canvas[0]!-reference.pad!]),expected=Array.from({length:reference.rows!+1},(_,row)=>Array.from({length:reference.columns!},(_,column)=>[position(column),reference.canvas[1]!-reference.pad!-(row===0?0:(row+1)*reference.rowheight!)])).flat(),repeated=Array.from({length:reference.repeat??1},()=>expected).flat();if(actual.length!==repeated.length||repeated.some((point,index)=>point.some((value,axis)=>Math.abs(Number(actual[index]?.values[axis])-value)>1e-5)))failures.push(`${implementation}/${theme}/${entry.id}: independent D3 header/cell coordinates differ`);projections+=repeated.length*2;}
+   if(reference.centres){const sx=reference.area?scaleLinear(reference.domain,[reference.pad!,reference.canvas[0]!-reference.pad!]):scaleLinear([0,1],[0,reference.unit!]),sy=reference.area?scaleLinear(reference.range,[reference.pad!,reference.canvas[1]!-reference.pad!]):scaleLinear([0,1],[0,reference.unit!]),expected=reference.centres.map(point=>[sx(point[0]!),sy(point[1]!)]);if(actual.length!==expected.length||expected.some((point,index)=>point.some((value,axis)=>Math.abs(Number(actual[index]?.values[axis])-value)>1e-5)))failures.push(`${implementation}/${theme}/${entry.id}: independent D3 centres differ`);projections+=expected.length*2;}
+   for(const[index,segment]of reference.segments.entries()){const sample=scaleLinear([0,reference.samples],segment),expected=Array.from({length:reference.samples+1},(_,position)=>{const value=sample(position),expression=reference.expressions[index];return[x(value),y(expression==="zero"?0:expression==="negative"?-value:expression==="square-third"?value*value/3:value*value)];}).flat(),values=actual[index]?.values;if(values?.length!==expected.length||expected.some((value,index)=>!Number.isFinite(Number(values?.[index]))||Math.abs(Number(values?.[index])-value)>1e-5))failures.push(`${implementation}/${theme}/${entry.id}/${index}: independent D3 path differs`);projections+=expected.length;}
+  }
+  const out=join(root,"🧪️probe-out"),pdf=await getDocument({data:new Uint8Array(readFileSync(join(out,readdirSync(out).find(name=>name.endsWith(".pdf"))!)))}).promise;
+  const texts:string[]=[],paints=new Set<string>(),widths:number[]=[];try{for(let index=1;index<=pdf.numPages;index++){const text=(await(await pdf.getPage(index)).getTextContent()).items.flatMap(item=>"str"in item?[item.str]:[]).join(" ");const operators=await(await pdf.getPage(index)).getOperatorList();for(const[position,operation]of operators.fnArray.entries()){if(operation===OPS.setFillRGBColor)paints.add(String(operators.argsArray[position]?.[0]).toLowerCase());if(operation===OPS.setLineWidth)widths.push(Number(operators.argsArray[position]?.[0]));}texts.push(text);if(/[\uFFFD\uFFFF]/u.test(text))failures.push(`${implementation}/${theme}/page${index}: invalid glyph`);pages++;}}finally{await pdf.destroy();}
+  for(const entry of optionFixture.optionSyntax.cases)for(const expected of entry.reference.text??[])if(!texts.join(" ").includes(expected))failures.push(`${implementation}/${theme}/${entry.id}: literal PDF text ${expected} missing`);
+  for(const entry of optionFixture.optionSyntax.cases){const reference=entry.reference;if(reference.paint&&!paints.has(d3Rgb(reference.paint).formatHex()))failures.push(`${implementation}/${theme}/${entry.id}: actual PDF paint missing`);if(reference.strokeWidth&&!widths.some(value=>Math.abs(value-reference.strokeWidth!*72/25.4)<1e-3))failures.push(`${implementation}/${theme}/${entry.id}: actual PDF stroke width missing`);}
+  for(const[index,entry]of optionFixture.optionSyntax.cases.entries()){
+   const reference=entry.reference.pdfStroke;if(!reference)continue;
+   const isolated=join(root,entry.id);
+   await compileVizProbeDocument({case:"canonical-options",scenario:entry.id,documentClass:"semio",documentClassOptions:`type=paper,language=en,theme=${theme}`,packages:["semio-viz"],geometry:true,preamble:["\\title{Canonical Paint Bindings}","\\author{Semio}","\\date{}"],body:[{raw:`\\SemioVizProbeBegin{canonical-options}{${entry.id}}${sources[index]}\\SemioVizProbeValues{canonical/paint-owner}{1}`} ]},{workDir:isolated,keepWorkDir:true});
+   const directory=join(isolated,"🧪️probe-out"),document=await getDocument({data:new Uint8Array(readFileSync(join(directory,readdirSync(directory).find(name=>name.endsWith(".pdf"))!)))}).promise;
+   const painted:CanonicalPaintShape[]=[];try{for(let page=1;page<=document.numPages;page++){const ownerPage=await document.getPage(page),text=(await ownerPage.getTextContent()).items.flatMap(item=>"str"in item?[item.str]:[]).join(" ");if(/[\uFFFD\uFFFF]/u.test(text))failures.push(`${implementation}/${theme}/${entry.id}/page${page}: invalid glyph`);painted.push(...canonicalPaintShapes(await ownerPage.getOperatorList()));pages++;}}finally{await document.destroy();}
+   if(reference.shape==="circles"){
+    const radius=Number(symbol().type(symbolCircle).size(reference.area!).digits(12)()!.match(/^M([^,]+),/)?.[1]),sx=scaleLinear(reference.domain,[reference.pad!,entry.reference.canvas[0]!-reference.pad!]),sy=scaleLinear(reference.range,[reference.pad!,entry.reference.canvas[1]!-reference.pad!]),anchors:{actual:number[],expected:number[]}[]=[];
+    for(const group of reference.groups!){const matches=painted.filter(shape=>shape.kind==="circle"&&shape.paint===d3Rgb(group.paint).formatHex()&&shape.fill===d3Rgb(group.fill).formatHex()).sort((left,right)=>left.centre[0]!-right.centre[0]!);if(matches.length!==group.points.length||matches.some(shape=>shape.delta.some(value=>Math.abs(value-2*radius)>=.002)))failures.push(`${implementation}/${theme}/${entry.id}: exact owned circle paints/count/D3 area differ (${JSON.stringify(matches)})`);for(const[index,point]of group.points.entries())if(matches[index])anchors.push({actual:matches[index]!.centre,expected:[sx(point[0]!),sy(point[1]!)]});projections+=group.points.length*2;}
+    for(const anchor of anchors)if(anchor.actual.some((value,axis)=>Math.abs(Math.abs(value-anchors[0]!.actual[axis]!)-Math.abs(anchor.expected[axis]!-anchors[0]!.expected[axis]!))>=.002))failures.push(`${implementation}/${theme}/${entry.id}: independent D3 relative circle centres differ`);projections+=anchors.length*2;
+   }else{
+    const sx=scaleLinear(reference.domain,[0,entry.reference.canvas[0]!]),sy=scaleLinear(reference.range,[0,entry.reference.canvas[1]!]),expected=[Math.abs(sx(reference.domain[1]!)-sx(reference.domain[0]!)),Math.abs(sy(reference.range[1]!)-sy(reference.range[0]!))],matches=painted.filter(shape=>shape.kind==="line"&&shape.paint===d3Rgb(reference.paint).formatHex());
+    if(matches.length!==1||matches[0]!.delta.some((value,axis)=>Math.abs(value-expected[axis]!)>=.002))failures.push(`${implementation}/${theme}/${entry.id}: exact owned painted PDF segment differs from independent D3 (${JSON.stringify(matches)})`);projections+=2;
+   }
+  }
+  console.log(`[DEBUG] Canonical options ${implementation}/${theme}: ${optionFixture.optionSyntax.cases.length} actual emitted cases consumed`);
+ }
+ if(failures.length)throw Error(failures.join("\n"));console.log(`[DEBUG] Canonical ${implementation} mutations/inference/native compiler: ${projections} independent D3 values and ${pages} PDF.js pages PASS`);
+}
+type CanonicalPaintShape={paint:string,fill:string,kind:"line"|"circle",delta:number[],centre:number[]};
+/** 🔭️ Resolves actual painted PDF spans through the independent graphics-state interpreter. */
+function canonicalPaintShapes(operators:Awaited<ReturnType<PDFPageProxy["getOperatorList"]>>):CanonicalPaintShape[]{
+ const results:CanonicalPaintShape[]=[],stack:{matrix:number[],paint:string,fill:string}[]=[];let matrix=[1,0,0,1,0,0],paint="",fill="";
+ for(const[index,operation]of operators.fnArray.entries()){
+  const args=operators.argsArray[index];
+  if(operation===OPS.save||operation===OPS.paintFormXObjectBegin){stack.push({matrix:[...matrix],paint,fill});if(operation===OPS.paintFormXObjectBegin&&args[0])matrix=Util.transform(matrix,args[0]);}
+  else if(operation===OPS.restore||operation===OPS.paintFormXObjectEnd){const previous=stack.pop();if(!previous)throw Error("Canonical PDF graphics state underflow");matrix=previous.matrix;paint=previous.paint;fill=previous.fill;}
+  else if(operation===OPS.transform)matrix=Util.transform(matrix,args);
+  else if(operation===OPS.setStrokeRGBColor)paint=String(args[0]).toLowerCase();
+  else if(operation===OPS.setFillRGBColor)fill=String(args[0]).toLowerCase();
+  else if(operation===OPS.constructPath&&[OPS.stroke,OPS.fillStroke,OPS.eoFillStroke].includes(args[0])){
+   const values=Array.from(args[1]?.[0]??[],Number),points:number[][]=[];let cursor=0,lines=0,curves=0;
+   while(cursor<values.length){const command=values[cursor++]!;if(command===4)continue;if(command===2){cursor+=4;curves++;}else if(command===1)lines++;else if(command!==0){points.length=0;break;}const point=[values[cursor++]!,values[cursor++]!];Util.applyTransform(point,matrix);points.push(point);}
+   const kind=points.length===2&&curves===0&&lines===1?"line":curves===4&&lines===0?"circle":undefined;
+   if(kind){const bounds=[0,1].map(axis=>[Math.min(...points.map(point=>point[axis]!))*25.4/72,Math.max(...points.map(point=>point[axis]!))*25.4/72]);results.push({paint,fill,kind,delta:bounds.map(bound=>bound[1]!-bound[0]!),centre:bounds.map(bound=>(bound[1]!+bound[0]!)/2)});}
+  }
+ }
+ if(stack.length)throw Error("Canonical PDF graphics state imbalance");return results;
+}
+/** 🛂️ Adjudicates declared option values through canonical replay, independent AJV and actual native grammar. */
+async function compileNativeCanonicalAdmission(workDir:string):Promise<void>{
+ const metadata=schemaDocument as unknown as {"x-semio-family-options":Record<string,{options:Record<string,Record<string,unknown>>}>,"x-semio-option-syntax":Record<string,Record<string,Record<string,unknown>>>},ajv=new Ajv2020({strict:false,allErrors:true}),failures:string[]=[],sources=new Map<string,string>(),implementation=process.env.PRINT_NATIVE_OPTION_SOURCE??"typescript";
+ for(const entry of optionFixture.optionSyntax.admission){
+  const descriptor=entry.family?metadata["x-semio-family-options"][entry.owner]?.options[entry.key]:metadata["x-semio-option-syntax"][entry.owner]?.[entry.key];if(!descriptor)throw Error(`Missing admission owner ${entry.owner}/${entry.key}`);
+  for(const[key,value]of Object.entries(entry.contract))if(JSON.stringify(descriptor[key])!==JSON.stringify(value))failures.push(`${entry.id}: authored ${key} differs from independent contract`);
+  const contract=entry.grammar?{anyOf:[entry.contract,{type:"string",minLength:1}]}:entry.contract,oracle=ajv.compile(contract)(entry.oracleValue);if(oracle!==entry.valid)throw Error(`Independent AJV admission differs ${entry.id}`);
+  if(entry.grammar&&descriptor.syntax!=="expression")failures.push(`${entry.id}: native arithmetic setter requires Expression syntax`);
+  let snapshot=structuredClone(entry.snapshot) as unknown as VizChartSnapshot;
+  for(const mutation of entry.mutations){const outcome=changeVizChartValue(snapshot,mutation);if(outcome.messages.length)throw Error(JSON.stringify(outcome.messages));const applied=applyVizChartDiff(snapshot,outcome.diff);if(applied.messages.length)throw Error(JSON.stringify(applied.messages));const restored=applyVizChartDiff(applied.snapshot,inverseVizChartDiff(snapshot,outcome.diff));if(restored.messages.length||JSON.stringify(restored.snapshot)!==JSON.stringify(snapshot))throw Error(`Canonical admission inverse differs ${entry.id}`);snapshot=applied.snapshot;}
+  const result=await inferVizChart(snapshot);if(result.complete!==entry.valid)failures.push(`${entry.id}: canonical admission ${result.complete}, expected ${entry.valid}; ${JSON.stringify(result.diagnostics)}`);
+  if(entry.valid&&result.complete){if(implementation==="rust"){const root=process.env.PRINT_NATIVE_OPTION_TIKZ;if(!root)throw Error("Rust admission emitted input required");sources.set(entry.id,readFileSync(join(root,"admission",`${entry.id}.tex`),"utf8"));}else if(implementation==="typescript")sources.set(entry.id,result.tikz);else throw Error(`Unknown admission implementation ${implementation}`);}
+ }
+ if(failures.length)throw Error(failures.join("\n"));
+ console.log(`[DEBUG] Typed canonical admission: ${optionFixture.optionSyntax.admission.length} neutral en/de mutation/replay/inference cases compared with independent AJV PASS`);
+ let pages=0,projections=0;
+ for(const theme of ["light","dark"]){const root=join(workDir,implementation,theme),body=[...sources].map(([id,source])=>({raw:`\\clearpage\\SemioVizProbeBegin{canonical-admission}{${id}}${source}\\SemioVizProbeValues{admission/compiled}{1}`}));
+ const records=await compileVizProbeDocument({case:"canonical-admission",scenario:"values",documentClass:"semio",documentClassOptions:`type=paper,language=en,theme=${theme}`,packages:["semio-viz"],geometry:true,preamble:["\\title{Canonical Option Admission}","\\author{Semio}","\\date{}"],body},{workDir:root,scenario:undefined,keepWorkDir:true});
+ for(const entry of optionFixture.optionSyntax.admission.filter(entry=>entry.valid)){if(!records.some(record=>record.scenario===entry.id&&record.key==="admission/compiled"&&Number(record.values[0])===1))failures.push(`${theme}/${entry.id}: compiler owner marker absent`);if(entry.owner==="sci-function"&&entry.key==="samples"){const actual=records.find(record=>record.scenario===entry.id&&record.key==="geometry/path")?.values,x=scaleLinear([-2,2],[0,60]),y=scaleLinear([0,4],[0,40]),domain=scaleLinear([0,4],[-2,2]),expected=Array.from({length:5},(_,index)=>[x(domain(index)),y(0)]).flat();if(actual?.length!==expected.length||expected.some((value,index)=>Math.abs(Number(actual?.[index])-value)>1e-5))failures.push(`${theme}/${entry.id}: declared samples and D3 path differ`);projections+=expected.length;}}
+ const out=join(root,"🧪️probe-out"),pdf=await getDocument({data:new Uint8Array(readFileSync(join(out,readdirSync(out).find(name=>name.endsWith(".pdf"))!)))}).promise;try{for(let page=1;page<=pdf.numPages;page++){const text=(await(await pdf.getPage(page)).getTextContent()).items.flatMap(item=>"str"in item?[item.str]:[]).join(" ");if(/[\uFFFD\uFFFF]/u.test(text))failures.push(`${theme}/page${page}: invalid glyph`);pages++;}}finally{await pdf.destroy();}
+ }
+ if(failures.length)throw Error(failures.join("\n"));console.log(`[DEBUG] Typed canonical ${implementation}: ${sources.size} actual valid emitted controls, ${projections} independent D3 path values, ${pages} PDF.js pages PASS`);
 }

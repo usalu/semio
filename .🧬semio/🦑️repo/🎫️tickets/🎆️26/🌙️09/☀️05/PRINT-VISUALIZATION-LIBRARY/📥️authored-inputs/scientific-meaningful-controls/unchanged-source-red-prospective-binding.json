@@ -1,0 +1,52 @@
+{
+  "capturedAt": "2026-10-05T14:06:34.6658509Z",
+  "kind": "Scientific six-control unchanged-source baseline binding",
+  "actualSession": 10057,
+  "status": "running; no RED or GREEN claimed",
+  "inputs": [
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧪️tests\\🧬️native-chart-grammar\\🔣️.json",
+      "sha256": "FA2BD97100F0D182F45E1150A0073D4CB90BC9D15DF2A3D06CB935DF04EA2239"
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧪️tests\\🧬️native-chart-grammar\\🟦️.ts",
+      "sha256": "F75D4D5BF87F13816F694FE98E3368140D0F1810304C8EB90F56ABC86E8F73C1"
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🖋️latex\\semio-viz-scientific-geometry.sty",
+      "sha256": "A8A7210D6F0159D1353CE169F482F389AEFC4D6487E48364DAAE82B44058601A"
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🖋️latex\\semio-viz-scientific-physics.sty",
+      "sha256": "52DFB58BEB621CD36EACECFB727CB9D41E9DC2C7509709FCD86EB986A59CB994"
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🖋️latex\\semio-viz-scientific-signal.sty",
+      "sha256": "3F6D3B9B3433BEC7EA2137959767F5363547DDB350D1E00158DB979EA8DFE892"
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🖋️latex\\semio-viz-scientific-engineering.sty",
+      "sha256": "05225652A914073F07F80383960AC8475D7D02F1031A436799CB37A107A447D2"
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🖋️latex\\semio-viz-scientific-field.sty",
+      "sha256": "3087D2FF69C4CB68DE6AD32B8B8AE8E7F8D5E23C13A9B503E23FD87F33FEB62F"
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\🔣️.json",
+      "sha256": "EAC7C86E37BE89CB78BEAA406974289B585D08F11BB54711928950C923D9D446"
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\🧬️mutations\\🟦️.ts",
+      "sha256": "5731A4203352C98A23FCCB3B46F2D5CE798B57A380F508DA59EF2927DB135415"
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\🔀️diff\\🟦️.ts",
+      "sha256": "5DAF3F5FB336BD95FE7C6C8F65BD743BC77CF9A05518FC4423320E1B5D338D4F"
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\💡️inferences\\🟦️.ts",
+      "sha256": "EDB3DFE3639B08A14EF87D750E3AEE277A6DD08ABB647F91708A177224620DD9"
+    }
+  ]
+}

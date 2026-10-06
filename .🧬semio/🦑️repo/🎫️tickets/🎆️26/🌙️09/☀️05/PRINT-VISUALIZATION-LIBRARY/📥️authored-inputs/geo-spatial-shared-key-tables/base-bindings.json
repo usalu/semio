@@ -1,0 +1,15 @@
+{
+  "file": "C:/git/semio/🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-api/🔓️viz-api.tex",
+  "before": "9C0C77E3DFA0B6D2266585B55AD9945B40A86A3A89E855A7FD7DDCB069469780",
+  "after": "868AA7158366E7C98C3258FF14BD87225016AFD336BD08C9EF967A36158FE323",
+  "source": {
+    "file": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-geo.sty",
+    "hash": "C50E1030BCC2A4F0C9CBE9F27BB187B34947B5BEA3B8D4D85097EDFC3E0589E5",
+    "declaration": 2396,
+    "reset": 2415
+  },
+  "rows": 12,
+  "anchor": "%region 🔖️GeneratedNamespaces",
+  "region": "GeoSpatialSharedKeyTables",
+  "meaning": "Direct declaration types and base reset defaults; authored routing and family override scope remain independently audited."
+}

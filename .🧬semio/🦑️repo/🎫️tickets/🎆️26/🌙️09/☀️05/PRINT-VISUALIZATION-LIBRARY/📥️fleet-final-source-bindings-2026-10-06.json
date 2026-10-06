@@ -1,0 +1,266 @@
+{
+  "capturedAt": "2026-10-06T04:08:04.2025053Z",
+  "scope": "52 explicit recent fleet source owners; whole-goal ownership is separately retained",
+  "files": [
+    {
+      "path": ".vscode/🧩️launch.seed.jsonc",
+      "sha256": "6B1AD739C6630E83E148F4592E77767D525163B7C25BF66F4A7E374923F580FC",
+      "bytes": 1347027
+    },
+    {
+      "path": ".vscode/launch.json",
+      "sha256": "0CEAC8BC90155BBCBA529A88E847D30C888D24C1D8A6E7BFAB2672B9B05DAD67",
+      "bytes": 1936912
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🖍️draw/🔣️.json",
+      "sha256": "EE9F92FC58489C47BBB38C38A94E9CDDD1317DD9362DEDDAC64135B2D29FEF37",
+      "bytes": 336012
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🫳️preflight/🦀️.rs",
+      "sha256": "6791EF0093E29A048604FD75A908E81F3D14CE9A09FC309BE6EF635EB579C917",
+      "bytes": 29303
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🫳️preflight/🦀️.rs",
+      "sha256": "92535FEC4C9C803832FC729174E10D1943AF397B2BCA942448FD427C146314D6",
+      "bytes": 24775
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🛫️encoding/🫳️borrowed/🦀️.rs",
+      "sha256": "9CD45D4E55982B68FF907223238731A3E092372EA31C6CE10218926817FF5738",
+      "bytes": 12390
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🛂️manifest/🤖️generated/📜️ui-contract/🟦️.ts",
+      "sha256": "9CBED816B514FBA7EEA2D78D9A275942D91F2E41D56F4553B2E215C5A075E7E1",
+      "bytes": 49345
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🪪️manifest/🟦️.ts",
+      "sha256": "5C69DFEA46A79F2FABD5D28B3DCD2EDE638A730B0772DF40DF1F6953DD4DA80B",
+      "bytes": 97557
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📽️projection/🟦️.ts",
+      "sha256": "7534B445D385FE4AEAB34EE5522BED1586734EDB156ECF860F569DDF771E4857",
+      "bytes": 37623
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/Cargo.lock",
+      "sha256": "3491E6AD5F0362BE332F9999AEE94FC7C357C540FF056F3887811955D6CC9D5B",
+      "bytes": 11211
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🎮️commands/🧪️print-pipeline-verification/🧪️tests/🖨️pipeline/🟦️.ts",
+      "sha256": "2F5B32C5BD8B40D57F9C5830B4AF47DF33F8044DA45E3905E39FEB8C7B3CC4D9",
+      "bytes": 118127
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🎮️commands/🧪️print-pipeline-verification/🧫️fixtures/📖️api-publication/🔣️.json",
+      "sha256": "D5368CB3474840F66FFD8F57754B18A13E99D361AAD8B805995FC6982D8EBBFA",
+      "bytes": 12168
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🎮️commands/🧪️print-pipeline-verification/🧫️fixtures/📖️api-publication/🥒️.feature",
+      "sha256": "875EC86D6B30CCD8405E78F290625D58F2E817F7CFE3C31D95D45BF6A8789392",
+      "bytes": 811
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🎮️commands/🧪️print-pipeline-verification/🧫️fixtures/🔓️api-freshness.json",
+      "sha256": "CADCFDF0DA36422B42943AA38F8F75412739AEC99197B8D7DB7F804809B1983B",
+      "bytes": 246114
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🎮️commands/🧪️print-pipeline-verification/🧫️fixtures/🧫️command-boundaries.json",
+      "sha256": "2A320BBB29E4A115164A7608746E06B08EEAC9FBE0DB0EB2D4C4A4E1703D1049",
+      "bytes": 9434
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🎮️commands/🧪️print-pipeline-verification/🟦️.ts",
+      "sha256": "8978A28D5F7252772DB6B7419D8EF7E5D9ECEE9BB3BBF658789A31B19C34FC26",
+      "bytes": 3253
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "912E6FBDA8523F9DA8E455444736B36FA12ACCF6B79D65751743A84EE2E9170C",
+      "bytes": 1321
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/📜️script.ts",
+      "sha256": "C9F102E70B6D0A5236B6181330D92B697AFCFBC0968E0451FE248350C762F5EB",
+      "bytes": 4080
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🔨️modules/🏠️host/💡️inferences/🧵️worker/🟦️.ts",
+      "sha256": "6E3B04CD78A0B76898C33079599AA1D269CE45F0FEDF2DC05537C7AEBD962A3E",
+      "bytes": 3990
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🔨️modules/📊️visualization-gallery/🟦️.ts",
+      "sha256": "76B369B5036ACE688A2D3F2D9CDD79C9E34A30A8EBC8D69CD7E9CE3F49A13B81",
+      "bytes": 71739
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-catalog.sty",
+      "sha256": "F74190E87BDD3BEB6119C848B058FED19A29C68161C2BDEA839F675F1D7AD58A",
+      "bytes": 312395
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-domain.sty",
+      "sha256": "C45A4D255FBD2F6DB919DD14496C7E43347E936AD10787AAD97C87184FD575B7",
+      "bytes": 220991
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-network-graph.sty",
+      "sha256": "B2A029EFCFF61D0F605F8DB8890E541C8A44F3C28F7638E5430B9B7F277C109C",
+      "bytes": 123496
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-network.sty",
+      "sha256": "E809E5A965FD9746BC383414861A27DFBCC73F477422AB2E8EE6322D76F9FC14",
+      "bytes": 115700
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-scientific-physics.sty",
+      "sha256": "9BDDEDBB62F3370D4767BFF3285760374E783A2AEBB95D05A92FBF559174AE5B",
+      "bytes": 73662
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-scientific-surface.sty",
+      "sha256": "5B0211083306625B3C1F621D54FBEA55967FEFA2B0232AFAB510B873CE942F41",
+      "bytes": 32042
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🖼️assets/🔣️viz-api.json",
+      "sha256": "2D91D03E33AEF002B958BAEB37F354F18BB40774F8861C4F02DAD3739F9EC836",
+      "bytes": 3113423
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🖼️assets/🔣️viz-catalog.json",
+      "sha256": "2617D61DE7F736B1AC6BD57467B986CC8CBB4B48267639A45901A00D1A3701F5",
+      "bytes": 822294
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧪️tests/📜️chart-inference-result/🟦️.ts",
+      "sha256": "D3D8877D8ACD7BC043E0BEB1D0BBCB079E5D101E4E61371D398F1F77AD04C091",
+      "bytes": 2293
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧪️tests/🧬️chart-mutations/🦀️.rs",
+      "sha256": "043C820D1C1FB1D13F5A5DBACC5063B7FC84B5CD0D968C001D82635335360226",
+      "bytes": 40849
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧪️tests/🧬️native-chart-grammar/🌧️surface/🌊️range/🔣️.json",
+      "sha256": "E629302F95F6FBE8F318EE255E0364D382CCABDA43DD32B379769FF985C7AD05",
+      "bytes": 1541
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧪️tests/🧬️native-chart-grammar/🌧️surface/🌊️range/🥒️.feature",
+      "sha256": "0E7BA4E0FFC365F3D9B42E838C0D98CEB2F80C9B7DB6A26530C22CFEF2EF93CB",
+      "bytes": 731
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧪️tests/🧬️native-chart-grammar/🌧️surface/🔣️.json",
+      "sha256": "235D06FCC9E984D1B901351A099E8BB9AEC5A274CB5711F2903EA42C884BF24F",
+      "bytes": 1497
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧪️tests/🧬️native-chart-grammar/🌧️surface/🥒️.feature",
+      "sha256": "201079C78C6A556B63A5C8240F2729C424EC859D5AD5CEF1F8D7687A4FB7C2A6",
+      "bytes": 784
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧪️tests/🧬️native-chart-grammar/🔣️.json",
+      "sha256": "1E0F24244BCA3FC721EAFEF2C706F8EF52D2AEDF7191D0FAE60F86B6666284C4",
+      "bytes": 558495
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧪️tests/🧬️native-chart-grammar/🥒️.feature",
+      "sha256": "EEA49FBFD7F163BA193B2F484185827277BDA78B509A03BFD5291728D7692A3A",
+      "bytes": 7094
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧪️tests/🧬️native-chart-grammar/🚀️physics/🔣️.json",
+      "sha256": "B8B06AADB49BC6261B1697EB724552C6C709414487E11BD19C6E3B9974CFE87B",
+      "bytes": 1855
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧪️tests/🧬️native-chart-grammar/🚀️physics/🥒️.feature",
+      "sha256": "C264A9989DFB3B07B7BBF29757CC917EDB1A8A5B677415A067BA3EC99C862012",
+      "bytes": 713
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧪️tests/🧬️native-chart-grammar/🟦️.ts",
+      "sha256": "B271107C2DFB62190AFBF9375669055E8C4C5BF7B5AF4E8D7A25468C7578AEA3",
+      "bytes": 466729
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧬️schema/💡️inferences/✅️validation/🟦️.ts",
+      "sha256": "D93E44D0DE49A42D2A2C8329D5F2FCB32CAD64934937766E0FD9D7DAA9616CE7",
+      "bytes": 2198
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧬️schema/💡️inferences/📦️packages/🟦️typescript/🔬️probes/🟦️.ts",
+      "sha256": "1D9408D3FCCDDA303B417503C995DBF5EE87B4CE808D69A44288C175A3129588",
+      "bytes": 107306
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧬️schema/💡️inferences/🦀️.rs",
+      "sha256": "19769199097E7BC9B81BF5097A5BCCE169BF53A1D675119DB8759A644B779F75",
+      "bytes": 48891
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧬️schema/📸️snapshot/🦀️.rs",
+      "sha256": "AA2214137779F4CF3ED46CCFC7D4717F69BEBD1F9D0403A34BBFA26CCD8A9D86",
+      "bytes": 713
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧬️schema/🔀️diff/🦀️.rs",
+      "sha256": "9EE3A65578E08E670FD6F546A3499A0D1518726CB64E772351612A514C5ACDE7",
+      "bytes": 7345
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧬️schema/🔣️.json",
+      "sha256": "F96007BC6B46ED33850707A2EB0C7223365870D5B4F98069CC291DFD8F14515B",
+      "bytes": 1637091
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧬️schema/🧬️mutations/🦀️.rs",
+      "sha256": "41B891F818E42676293FE53E074A98DDE88922D7C6E294EE71F00482AB38BDAE",
+      "bytes": 4233
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-api/🔓️viz-api.tex",
+      "sha256": "89BBDE3A5A38621A6BD2B8FBFFD4CFD68266BD9AE360D25869CB4F8D47A6AB9E",
+      "bytes": 750001
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+      "sha256": "3F7FB3DC9A0E62810298A754809040C5F632FA054926121C73FBEEFF364A31B5",
+      "bytes": 33830
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "sha256": "100075AA70989B602A3A9D903C72383B603D7FDF99465117A0D540E32DB8274C",
+      "bytes": 20843
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+      "sha256": "DB0E341CC6235D6AA86BC2A0A5328B07094F44EFA9E07671E872E83C25F2279F",
+      "bytes": 120039
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+      "sha256": "79832E8619062E1255D8097A23CFDB05CC5377BD198F1FEA515E8A134FC50745",
+      "bytes": 77905
+    },
+    {
+      "path": "Cargo.lock",
+      "sha256": "8A1B2DF08FF363260C77D8C6173A3FA4655BF166D8CD38EF8D37748E08251770",
+      "bytes": 260182
+    }
+  ]
+}

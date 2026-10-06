@@ -1,0 +1,790 @@
+{
+  "namespace": [
+    [
+      "variant",
+      "string",
+      "charts",
+      "Namespace catalogue slug; dispatches the namespace's canonical family.",
+      "Katalog-Slug des Namensraums; ruft die kanonische Familie des Namensraums auf."
+    ],
+    [
+      "data",
+      "string",
+      "demo",
+      "Name of the source table.",
+      "Name der Quelltabelle."
+    ],
+    [
+      "options",
+      "string",
+      "",
+      "Additional key list appended to the canonical family options.",
+      "Zusätzliche Schlüsselliste, die an die Optionen der kanonischen Familie angefügt wird."
+    ],
+    [
+      "caption",
+      "boolean",
+      "true",
+      "Print the namespace caption.",
+      "Die Namensraumbeschriftung ausgeben."
+    ],
+    [
+      "locator",
+      "boolean",
+      "true",
+      "Draw the taxonomy locator track.",
+      "Die Positionsleiste der Taxonomie zeichnen."
+    ],
+    [
+      "order",
+      "string",
+      "adjacency,alluvial,annotation,arc,architecture,area,axis,bar,biology,bundling,charts,chemistry,chord,choropleth,concept,contours,correlation,diagram,distribution,engineering,field,financial,flow,geo,graph,hierarchy,infographic,interactionstate,layout,legend,line,map,matrix,network,network-matrix,pack,parallelsets,partition,physics,polar,process,projection,routes,scale,scatter,scientific,signal,statistical,surface,symbols,table,theme,tree,uml",
+      "Comma-separated namespace order used to compute the locator position and length.",
+      "Kommagetrennte Namensraumreihenfolge zur Berechnung von Position und Länge der Positionsleiste."
+    ],
+    [
+      "swatch",
+      "number",
+      "2.4",
+      "Locator mark edge length in millimetres.",
+      "Kantenlänge der Markierung der Positionsleiste in Millimetern."
+    ]
+  ],
+  "figure": [
+    [
+      "variant",
+      "string",
+      "themes",
+      "Figure-infrastructure catalogue slug.",
+      "Katalog-Slug der Figureninfrastruktur."
+    ],
+    [
+      "data",
+      "string",
+      "demo",
+      "Name of the source table.",
+      "Name der Quelltabelle."
+    ],
+    [
+      "x",
+      "string",
+      "cat",
+      "Column containing categorical series values.",
+      "Spalte mit den kategorialen Reihenwerten."
+    ],
+    [
+      "y",
+      "string",
+      "val",
+      "Column containing quantitative series values.",
+      "Spalte mit den quantitativen Reihenwerten."
+    ],
+    [
+      "category",
+      "string",
+      "grp",
+      "Column used to split facets.",
+      "Spalte zur Aufteilung der Facetten."
+    ],
+    [
+      "caption",
+      "boolean",
+      "true",
+      "Print the infrastructure caption.",
+      "Die Infrastrukturbeschriftung ausgeben."
+    ],
+    [
+      "label",
+      "string",
+      "label",
+      "Column supplying labels and annotations.",
+      "Spalte für Beschriftungen und Anmerkungen."
+    ],
+    [
+      "cut",
+      "number",
+      "6",
+      "Clipping threshold above which a record is dropped.",
+      "Beschneidungsschwelle, oberhalb derer ein Datensatz entfällt."
+    ],
+    [
+      "panels",
+      "integer",
+      "3",
+      "Number of stacked responsive or typographic panels.",
+      "Anzahl gestapelter responsiver oder typografischer Tafeln."
+    ],
+    [
+      "gap",
+      "number",
+      "3",
+      "Gap between the contrast halves in millimetres.",
+      "Abstand zwischen den Kontrasthälften in Millimetern."
+    ],
+    [
+      "swatch",
+      "number",
+      "6",
+      "Swatch edge length in millimetres.",
+      "Kantenlänge des Musterfelds in Millimetern."
+    ],
+    [
+      "patterns",
+      "string",
+      "hatch,crosshatch,dots,grid",
+      "Comma-separated fills cycled by the accessible kind.",
+      "Kommagetrennte Füllungen, die die barrierefreie Art durchläuft."
+    ],
+    [
+      "textKinds",
+      "string",
+      "title,label,value,chip",
+      "Comma-separated text roles cycled by the typographic kind.",
+      "Kommagetrennte Textrollen, die die typografische Art durchläuft."
+    ]
+  ],
+  "grammar": [
+    [
+      "variant",
+      "string",
+      "point",
+      "Grammar-element catalogue slug.",
+      "Katalog-Slug des Grammatikelements."
+    ],
+    [
+      "data",
+      "string",
+      "demo",
+      "Name of the source table.",
+      "Name der Quelltabelle."
+    ],
+    [
+      "x",
+      "string",
+      "cat",
+      "Column bound to the horizontal channel.",
+      "An den horizontalen Kanal gebundene Spalte."
+    ],
+    [
+      "y",
+      "string",
+      "val",
+      "Column bound to the vertical channel.",
+      "An den vertikalen Kanal gebundene Spalte."
+    ],
+    [
+      "y2",
+      "string",
+      "val2",
+      "Column bound to the second quantitative channel.",
+      "An den zweiten quantitativen Kanal gebundene Spalte."
+    ],
+    [
+      "category",
+      "string",
+      "grp",
+      "Column bound to the qualitative channel.",
+      "An den qualitativen Kanal gebundene Spalte."
+    ],
+    [
+      "label",
+      "string",
+      "label",
+      "Column supplying node and mark text.",
+      "Spalte für Knoten- und Markentext."
+    ],
+    [
+      "bins",
+      "integer",
+      "4",
+      "Number of bins used by the transform kind.",
+      "Anzahl der Klassen der Transformationsart."
+    ],
+    [
+      "samples",
+      "integer",
+      "24",
+      "Number of evaluations used by the functional kind.",
+      "Anzahl der Auswertungen der funktionalen Art."
+    ],
+    [
+      "corners",
+      "integer",
+      "3",
+      "Corner count of the first shape example.",
+      "Eckenzahl des ersten Formbeispiels."
+    ],
+    [
+      "swatch",
+      "number",
+      "6",
+      "Grammar swatch edge length in millimetres.",
+      "Kantenlänge des Grammatikmusterfelds in Millimetern."
+    ],
+    [
+      "marks",
+      "string",
+      "dot,straight-line,band,sector,straight-connector,rectangular-region,label",
+      "Comma-separated primitives enumerated by the mark kind.",
+      "Kommagetrennte Primitive, die die Markenart aufzählt."
+    ]
+  ],
+  "encoding": [
+    [
+      "variant",
+      "string",
+      "cartesian-x-y",
+      "Encoding-channel catalogue slug.",
+      "Katalog-Slug des Kodierungskanals."
+    ],
+    [
+      "data",
+      "string",
+      "demo",
+      "Name of the source table.",
+      "Name der Quelltabelle."
+    ],
+    [
+      "column",
+      "string",
+      "val",
+      "Numeric column carried by the channel.",
+      "Vom Kanal getragene numerische Spalte."
+    ],
+    [
+      "column2",
+      "string",
+      "val2",
+      "Second numeric column of two-dimensional channels.",
+      "Zweite numerische Spalte zweidimensionaler Kanäle."
+    ],
+    [
+      "text",
+      "string",
+      "cat",
+      "Column supplying typographic samples.",
+      "Spalte für typografische Beispiele."
+    ],
+    [
+      "samples",
+      "integer",
+      "0",
+      "Number of drawn samples; zero uses every table row.",
+      "Anzahl gezeichneter Beispiele; null verwendet jede Tabellenzeile."
+    ],
+    [
+      "low",
+      "number",
+      "1.6",
+      "Smallest sample magnitude in millimetres.",
+      "Kleinste Beispielgröße in Millimetern."
+    ],
+    [
+      "high",
+      "number",
+      "7",
+      "Largest sample magnitude in millimetres.",
+      "Größte Beispielgröße in Millimetern."
+    ],
+    [
+      "span",
+      "number",
+      "120",
+      "Rotational-channel angular span in degrees.",
+      "Winkelspanne des Drehungskanals in Grad."
+    ],
+    [
+      "swatch",
+      "number",
+      "7",
+      "Constant sample edge length in millimetres.",
+      "Kantenlänge eines konstanten Beispiels in Millimetern."
+    ],
+    [
+      "strands",
+      "integer",
+      "4",
+      "Number of strands in a hatched, ramped or repeated sample.",
+      "Anzahl der Stränge in einem schraffierten, abgestuften oder wiederholten Beispiel."
+    ],
+    [
+      "symbols",
+      "string",
+      "dot,square,triangle,diamond,cross",
+      "Comma-separated mark kinds cycled by the symbol channel.",
+      "Kommagetrennte Markenarten, die der Symbolkanal durchläuft."
+    ],
+    [
+      "dashes",
+      "string",
+      "none,dashed,dotted,dash-dot",
+      "Comma-separated dash patterns cycled by the dash channel.",
+      "Kommagetrennte Strichmuster, die der Strichkanal durchläuft."
+    ],
+    [
+      "patterns",
+      "string",
+      "hatch,crosshatch,dots,grid",
+      "Comma-separated fills cycled by the pattern channel.",
+      "Kommagetrennte Füllungen, die der Musterkanal durchläuft."
+    ],
+    [
+      "arrows",
+      "string",
+      "none,end,start,both",
+      "Comma-separated arrow ends cycled by the arrowhead channel.",
+      "Kommagetrennte Pfeilenden, die der Pfeilspitzenkanal durchläuft."
+    ],
+    [
+      "fonts",
+      "string",
+      "scriptsize,footnotesize,small,normalsize,large",
+      "Comma-separated TeX size switch names cycled by the font-size channel.",
+      "Kommagetrennte Namen der TeX-Größenschalter, die der Schriftgrößenkanal durchläuft."
+    ],
+    [
+      "weights",
+      "string",
+      "mdseries,bfseries",
+      "Comma-separated TeX series switch names cycled by the font-weight channel.",
+      "Kommagetrennte Namen der TeX-Schriftserienschalter, die der Schriftstärkenkanal durchläuft."
+    ]
+  ],
+  "scale": [
+    [
+      "variant",
+      "string",
+      "linear",
+      "Scale catalogue slug: linear, logarithmic, power, square-root, symlog, identity, ordinal, band-scale, point-scale, quantile, quantize, threshold, sequential, diverging or temporal.",
+      "Skalen-Katalog-Slug: linear, logarithmic, power, square-root, symlog, identity, ordinal, band-scale, point-scale, quantile, quantize, threshold, sequential, diverging oder temporal."
+    ],
+    [
+      "data",
+      "string",
+      "demo",
+      "Name of the source table.",
+      "Name der Quelltabelle."
+    ],
+    [
+      "column",
+      "string",
+      "val",
+      "Numeric sample column.",
+      "Numerische Beispielspalte."
+    ],
+    [
+      "category",
+      "string",
+      "cat",
+      "Category column for discrete scales.",
+      "Kategoriespalte für diskrete Skalen."
+    ],
+    [
+      "date",
+      "string",
+      "date",
+      "ISO date column for the temporal scale.",
+      "ISO-Datumsspalte für die zeitliche Skala."
+    ],
+    [
+      "timeData",
+      "string",
+      "demo-time",
+      "Source table for the temporal scale.",
+      "Quelltabelle für die zeitliche Skala."
+    ],
+    [
+      "domain",
+      "string",
+      "0,10",
+      "Continuous input domain as lower and upper values.",
+      "Stetiger Eingabebereich als unterer und oberer Wert."
+    ],
+    [
+      "logDomain",
+      "string",
+      "1,10",
+      "Input domain for the logarithmic kind.",
+      "Eingabebereich für die logarithmische Art."
+    ],
+    [
+      "divergingDomain",
+      "string",
+      "-10,0,10",
+      "Three-point input domain for the diverging kind.",
+      "Dreipunkt-Eingabebereich für die divergierende Art."
+    ],
+    [
+      "timeDomain",
+      "string",
+      "2026-01-01,2026-12-01",
+      "Input domain for the temporal kind as ISO dates.",
+      "Eingabebereich für die zeitliche Art als ISO-Daten."
+    ],
+    [
+      "thresholds",
+      "string",
+      "4,6",
+      "Comma-separated cut points for the threshold kind.",
+      "Kommagetrennte Schnittpunkte für die Schwellenart."
+    ],
+    [
+      "range",
+      "string",
+      "0,60",
+      "Output offsets from the plot origin in millimetres.",
+      "Ausgabeversätze vom Zeichnungsursprung in Millimetern."
+    ],
+    [
+      "nice",
+      "boolean",
+      "false",
+      "Extend the domain to round tick values.",
+      "Den Wertebereich auf runde Teilstrichwerte erweitern."
+    ],
+    [
+      "ticks",
+      "integer",
+      "5",
+      "Target tick count for the axis and gradient legend.",
+      "Angestrebte Teilstrichzahl für Achse und Verlaufslegende."
+    ],
+    [
+      "base",
+      "number",
+      "10",
+      "Logarithmic scale base.",
+      "Basis der logarithmischen Skala."
+    ],
+    [
+      "exponent",
+      "number",
+      "2",
+      "Power-scale exponent.",
+      "Exponent der Potenzskala."
+    ],
+    [
+      "constant",
+      "number",
+      "1",
+      "Linear-region constant of the symlog scale.",
+      "Konstante des linearen Bereichs der Symlog-Skala."
+    ],
+    [
+      "bins",
+      "integer",
+      "4",
+      "Number of range entries for binned and ordinal kinds.",
+      "Anzahl der Ausgabeeinträge für klassierte und ordinale Arten."
+    ],
+    [
+      "swatch",
+      "number",
+      "4",
+      "Discrete swatch edge length in millimetres.",
+      "Kantenlänge des diskreten Musterfelds in Millimetern."
+    ]
+  ],
+  "shape": [
+    [
+      "variant",
+      "string",
+      "lines",
+      "Generator catalogue slug: lines, areas, arcs, links or ribbons.",
+      "Generator-Katalog-Slug: lines, areas, arcs, links oder ribbons."
+    ],
+    [
+      "data",
+      "string",
+      "demo",
+      "Name of the source table.",
+      "Name der Quelltabelle."
+    ],
+    [
+      "y",
+      "string",
+      "val",
+      "Column mapped to the vertical axis.",
+      "Auf die vertikale Achse abgebildete Spalte."
+    ],
+    [
+      "curves",
+      "string",
+      "linear,cardinal,natural,step",
+      "Comma-separated interpolators cycled by lines and areas.",
+      "Kommagetrennte Interpolatoren, die Linien und Flächen durchlaufen."
+    ],
+    [
+      "count",
+      "integer",
+      "4",
+      "Number of generator repetitions.",
+      "Anzahl der Generatorwiederholungen."
+    ],
+    [
+      "innerRadius",
+      "number",
+      "4",
+      "Inner arc radius in millimetres.",
+      "Innerer Bogenradius in Millimetern."
+    ],
+    [
+      "outerRadius",
+      "number",
+      "14",
+      "Outer arc or ribbon radius in millimetres.",
+      "Äußerer Bogen- oder Zierbandradius in Millimetern."
+    ],
+    [
+      "padAngle",
+      "number",
+      "0.04",
+      "Padding angle between arcs or ribbon ends in radians.",
+      "Abstandswinkel zwischen Bögen oder Zierbandenden in Radiant."
+    ],
+    [
+      "corner",
+      "number",
+      "0.6",
+      "Arc corner radius in millimetres.",
+      "Eckradius des Bogens in Millimetern."
+    ]
+  ],
+  "layout-algorithm": [
+    [
+      "variant",
+      "string",
+      "stack",
+      "Layout catalogue slug; dispatches the algorithm named by the kind.",
+      "Anordnungs-Katalog-Slug; ruft den von der Art benannten Algorithmus auf."
+    ],
+    [
+      "data",
+      "string",
+      "",
+      "Source table; empty selects demo-series for stacks, demo-distribution for binning/jitter, or demo for pie.",
+      "Quelltabelle; leer wählt demo-series für Stapel, demo-distribution für Klassierung/Zufallsversatz oder demo für Kreisdiagramme."
+    ],
+    [
+      "x",
+      "string",
+      "t",
+      "Column placed along the horizontal axis.",
+      "Entlang der horizontalen Achse platzierte Spalte."
+    ],
+    [
+      "series",
+      "string",
+      "series",
+      "Column whose distinct values identify stacked series.",
+      "Spalte, deren verschiedene Werte gestapelte Reihen kennzeichnen."
+    ],
+    [
+      "value",
+      "string",
+      "value",
+      "Numeric column consumed by stacking kinds.",
+      "Von Stapelarten verwendete numerische Spalte."
+    ],
+    [
+      "binColumn",
+      "string",
+      "value",
+      "Numeric column used by binning and jitter.",
+      "Von Klassierung und Zufallsversatz verwendete numerische Spalte."
+    ],
+    [
+      "pieColumn",
+      "string",
+      "val",
+      "Numeric column used by pie layout.",
+      "Von der Kreisanordnung verwendete numerische Spalte."
+    ],
+    [
+      "order",
+      "string",
+      "auto",
+      "Stack order: auto, none, ascending, descending, inside-out, reverse or appearance; auto follows the variant.",
+      "Stapelreihenfolge: auto, none, ascending, descending, inside-out, reverse oder appearance; auto folgt der Variante."
+    ],
+    [
+      "bins",
+      "integer",
+      "8",
+      "Number of histogram bins.",
+      "Anzahl der Histogrammklassen."
+    ],
+    [
+      "amount",
+      "number",
+      "3",
+      "Jitter amplitude in millimetres.",
+      "Amplitude des Zufallsversatzes in Millimetern."
+    ],
+    [
+      "innerRadius",
+      "number",
+      "0",
+      "Pie inner radius in millimetres.",
+      "Innenradius des Kreisdiagramms in Millimetern."
+    ]
+  ],
+  "analytical": [
+    [
+      "data",
+      "string",
+      "demo-causes",
+      "Name of the source table.",
+      "Name der Quelltabelle."
+    ],
+    [
+      "cause",
+      "string",
+      "cause",
+      "Column containing the cause caption.",
+      "Spalte mit der Ursachenbeschriftung."
+    ],
+    [
+      "category",
+      "string",
+      "category",
+      "Column identifying the bone carrying each cause.",
+      "Spalte, die den jede Ursache tragenden Ast kennzeichnet."
+    ],
+    [
+      "effect",
+      "string",
+      "",
+      "Effect-box caption; empty uses the bilingual default.",
+      "Beschriftung des Wirkungskastens; leer verwendet die zweisprachige Vorgabe."
+    ],
+    [
+      "angle",
+      "number",
+      "34",
+      "Bone slope relative to the spine in degrees.",
+      "Astneigung relativ zum Rückgrat in Grad."
+    ],
+    [
+      "bone",
+      "number",
+      "14",
+      "Bone length in millimetres.",
+      "Astlänge in Millimetern."
+    ],
+    [
+      "twig",
+      "number",
+      "4",
+      "Cause twig length in millimetres.",
+      "Länge des Ursachenzweigs in Millimetern."
+    ],
+    [
+      "pad",
+      "number",
+      "3",
+      "Inset from the frame in millimetres.",
+      "Abstand vom Rahmen in Millimetern."
+    ],
+    [
+      "width",
+      "number",
+      "",
+      "Drawing width in millimetres; inherits the enclosing figure with 80 mm fallback.",
+      "Zeichnungsbreite in Millimetern; übernimmt die umgebende Figur mit 80 mm als Ersatz."
+    ],
+    [
+      "height",
+      "number",
+      "",
+      "Drawing height in millimetres; inherits the enclosing figure with 40 mm fallback.",
+      "Zeichnungshöhe in Millimetern; übernimmt die umgebende Figur mit 40 mm als Ersatz."
+    ],
+    [
+      "labels",
+      "boolean",
+      "true",
+      "Print bone and cause captions.",
+      "Ast- und Ursachenbeschriftungen ausgeben."
+    ]
+  ],
+  "transform-data": [
+    [
+      "variant",
+      "string",
+      "filter",
+      "Transform catalogue slug: filter, sort, group, rollup, nest, pivot, fold, join or window.",
+      "Transformations-Katalog-Slug: filter, sort, group, rollup, nest, pivot, fold, join oder window."
+    ],
+    [
+      "data",
+      "string",
+      "demo",
+      "Name of the source table.",
+      "Name der Quelltabelle."
+    ],
+    [
+      "group",
+      "string",
+      "grp",
+      "Grouping column; also used as the join key.",
+      "Gruppierungsspalte; wird auch als Verknüpfungsschlüssel verwendet."
+    ],
+    [
+      "value",
+      "string",
+      "val",
+      "Numeric column reduced by the operation.",
+      "Von der Operation reduzierte numerische Spalte."
+    ],
+    [
+      "key",
+      "string",
+      "cat",
+      "Key column for pivot and fold.",
+      "Schlüsselspalte für Pivotierung und Auffaltung."
+    ],
+    [
+      "second",
+      "string",
+      "val2",
+      "Second folded column.",
+      "Zweite aufgefaltete Spalte."
+    ],
+    [
+      "predicate",
+      "string",
+      "val > 4",
+      "Filter expression over bare column names.",
+      "Filterausdruck über unveränderten Spaltennamen."
+    ],
+    [
+      "sortBy",
+      "string",
+      "val",
+      "Column used to sort records.",
+      "Zur Sortierung der Datensätze verwendete Spalte."
+    ],
+    [
+      "descending",
+      "boolean",
+      "true",
+      "Reverse the sort order.",
+      "Die Sortierreihenfolge umkehren."
+    ],
+    [
+      "windowSize",
+      "integer",
+      "3",
+      "Moving-average window length.",
+      "Fensterlänge des gleitenden Mittelwerts."
+    ],
+    [
+      "windowKind",
+      "string",
+      "movingAverage",
+      "Window operation and appended column name: movingAverage, cumulativeSum, rank or lag.",
+      "Fensteroperation und Name der angefügten Spalte: movingAverage, cumulativeSum, rank oder lag."
+    ]
+  ]
+}

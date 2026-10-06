@@ -1,0 +1,521 @@
+{
+  "sources": [
+    {
+      "file": "semio-viz-data.sty",
+      "sha": "EFB5E5D397AF1B6BD21AEB4C70F61141AAFF42DC1F2F03532CA7D4379CFB2CFC"
+    },
+    {
+      "file": "semio-viz-geo.sty",
+      "sha": "04A45F0CF3C7B9AE61FB76B805C0E8F1ADBFD5A44A3D7A78597A67F6ADF0CC66"
+    }
+  ],
+  "rows": [
+    {
+      "scope": "semio/viz/data",
+      "key": "id",
+      "type": "string",
+      "default": "id",
+      "en": "Column for the id role.",
+      "de": "Spalte für die Rolle id.",
+      "declaration": "data.sty356–378",
+      "reset": "data.sty384–397",
+      "consumer": "data.sty530–555 role assignment; geometry conversion988 onward"
+    },
+    {
+      "scope": "semio/viz/data",
+      "key": "parent",
+      "type": "string",
+      "default": "parent",
+      "en": "Column for the parent role.",
+      "de": "Spalte für die Rolle parent.",
+      "declaration": "data.sty356–378",
+      "reset": "data.sty384–397",
+      "consumer": "data.sty530–555 role assignment; geometry conversion988 onward"
+    },
+    {
+      "scope": "semio/viz/data",
+      "key": "value",
+      "type": "string",
+      "default": "value",
+      "en": "Column for the value role.",
+      "de": "Spalte für die Rolle value.",
+      "declaration": "data.sty356–378",
+      "reset": "data.sty384–397",
+      "consumer": "data.sty530–555 role assignment; geometry conversion988 onward"
+    },
+    {
+      "scope": "semio/viz/data",
+      "key": "source",
+      "type": "string",
+      "default": "source",
+      "en": "Column for the source role.",
+      "de": "Spalte für die Rolle source.",
+      "declaration": "data.sty356–378",
+      "reset": "data.sty384–397",
+      "consumer": "data.sty530–555 role assignment; geometry conversion988 onward"
+    },
+    {
+      "scope": "semio/viz/data",
+      "key": "target",
+      "type": "string",
+      "default": "target",
+      "en": "Column for the target role.",
+      "de": "Spalte für die Rolle target.",
+      "declaration": "data.sty356–378",
+      "reset": "data.sty384–397",
+      "consumer": "data.sty530–555 role assignment; geometry conversion988 onward"
+    },
+    {
+      "scope": "semio/viz/data",
+      "key": "weight",
+      "type": "string",
+      "default": "weight",
+      "en": "Column for the weight role.",
+      "de": "Spalte für die Rolle weight.",
+      "declaration": "data.sty356–378",
+      "reset": "data.sty384–397",
+      "consumer": "data.sty530–555 role assignment; geometry conversion988 onward"
+    },
+    {
+      "scope": "semio/viz/data",
+      "key": "row",
+      "type": "string",
+      "default": "row",
+      "en": "Column for the row role.",
+      "de": "Spalte für die Rolle row.",
+      "declaration": "data.sty356–378",
+      "reset": "data.sty384–397",
+      "consumer": "data.sty530–555 role assignment; geometry conversion988 onward"
+    },
+    {
+      "scope": "semio/viz/data",
+      "key": "col",
+      "type": "string",
+      "default": "col",
+      "en": "Column for the col role.",
+      "de": "Spalte für die Rolle col.",
+      "declaration": "data.sty356–378",
+      "reset": "data.sty384–397",
+      "consumer": "data.sty530–555 role assignment; geometry conversion988 onward"
+    },
+    {
+      "scope": "semio/viz/data",
+      "key": "ring",
+      "type": "string",
+      "default": "ring",
+      "en": "Column for the ring role.",
+      "de": "Spalte für die Rolle ring.",
+      "declaration": "data.sty356–378",
+      "reset": "data.sty384–397",
+      "consumer": "data.sty530–555 role assignment; geometry conversion988 onward"
+    },
+    {
+      "scope": "semio/viz/data",
+      "key": "lon",
+      "type": "string",
+      "default": "lon",
+      "en": "Column for the lon role.",
+      "de": "Spalte für die Rolle lon.",
+      "declaration": "data.sty356–378",
+      "reset": "data.sty384–397",
+      "consumer": "data.sty530–555 role assignment; geometry conversion988 onward"
+    },
+    {
+      "scope": "semio/viz/data",
+      "key": "lat",
+      "type": "string",
+      "default": "lat",
+      "en": "Column for the lat role.",
+      "de": "Spalte für die Rolle lat.",
+      "declaration": "data.sty356–378",
+      "reset": "data.sty384–397",
+      "consumer": "data.sty530–555 role assignment; geometry conversion988 onward"
+    },
+    {
+      "scope": "semio/viz/data",
+      "key": "label",
+      "type": "string",
+      "default": "label",
+      "en": "Column for the label role.",
+      "de": "Spalte für die Rolle label.",
+      "declaration": "data.sty356–378",
+      "reset": "data.sty384–397",
+      "consumer": "data.sty530–555 role assignment; geometry conversion988 onward"
+    },
+    {
+      "scope": "semio/viz/data",
+      "key": "nodes",
+      "type": "string",
+      "default": "",
+      "en": "Named table for nodes.",
+      "de": "Benannte Tabelle für nodes.",
+      "declaration": "data.sty364–365",
+      "reset": "data.sty390–391",
+      "consumer": "data.sty554–555 role assignment"
+    },
+    {
+      "scope": "semio/viz/data",
+      "key": "edges",
+      "type": "string",
+      "default": "",
+      "en": "Named table for edges.",
+      "de": "Benannte Tabelle für edges.",
+      "declaration": "data.sty364–365",
+      "reset": "data.sty390–391",
+      "consumer": "data.sty554–555 role assignment"
+    },
+    {
+      "scope": "semio/viz/data",
+      "key": "domain",
+      "type": "number-list",
+      "default": "0,1",
+      "en": "Sampling domain endpoints.",
+      "de": "Grenzen des Abtastbereichs.",
+      "declaration": "data.sty372",
+      "reset": "data.sty398",
+      "consumer": "data.sty611–620"
+    },
+    {
+      "scope": "semio/viz/data",
+      "key": "samples",
+      "type": "integer",
+      "default": "100",
+      "en": "Number of sampled rows.",
+      "de": "Anzahl der abgetasteten Zeilen.",
+      "declaration": "data.sty373",
+      "reset": "data.sty399",
+      "consumer": "data.sty615–620"
+    },
+    {
+      "scope": "semio/viz/data",
+      "key": "delimiter",
+      "type": "string",
+      "default": ",",
+      "en": "CSV field delimiter.",
+      "de": "CSV-Feldtrennzeichen.",
+      "declaration": "data.sty374",
+      "reset": "data.sty400",
+      "consumer": "data.sty445–469"
+    },
+    {
+      "scope": "semio/viz/data",
+      "key": "quote",
+      "type": "string",
+      "default": "\"",
+      "en": "CSV quoting character.",
+      "de": "CSV-Anführungszeichen.",
+      "declaration": "data.sty375",
+      "reset": "data.sty401",
+      "consumer": "data.sty432–469"
+    },
+    {
+      "scope": "semio/viz/data",
+      "key": "header",
+      "type": "boolean",
+      "default": "true",
+      "en": "Read the first CSV row as headers.",
+      "de": "Erste CSV-Zeile als Spaltenüberschriften lesen.",
+      "declaration": "data.sty376–377",
+      "reset": "data.sty402",
+      "consumer": "data.sty484"
+    },
+    {
+      "scope": "semio/viz/data",
+      "key": "columns",
+      "type": "records",
+      "default": "",
+      "en": "Explicit ordered CSV column names.",
+      "de": "Explizite geordnete CSV-Spaltennamen.",
+      "declaration": "data.sty378",
+      "reset": "data.sty403",
+      "consumer": "data.sty471–473"
+    },
+    {
+      "scope": "semio/viz/geo/part",
+      "key": "id",
+      "type": "string",
+      "default": "",
+      "en": "Identifier of this geometry part.",
+      "de": "Kennung dieses Geometrieteils.",
+      "declaration": "data.sty844",
+      "reset": "data.sty875",
+      "consumer": "data.sty878–888"
+    },
+    {
+      "scope": "semio/viz/geo/part",
+      "key": "value",
+      "type": "string",
+      "default": "0",
+      "en": "Value token retained with this geometry part.",
+      "de": "Mit diesem Geometrieteil gespeicherter Wert.",
+      "declaration": "data.sty845",
+      "reset": "data.sty876",
+      "consumer": "data.sty878–888"
+    },
+    {
+      "scope": "semio/viz/geo/projection",
+      "key": "kind",
+      "type": "string",
+      "default": "equirectangular",
+      "en": "Projection kind.",
+      "de": "Projektionsart.",
+      "declaration": "geo.sty723–734",
+      "reset": "geo.sty752–929;933–936 kind defaults then authored options",
+      "consumer": "geo.sty projection/clip/resample consumers"
+    },
+    {
+      "scope": "semio/viz/geo/projection",
+      "key": "scale",
+      "type": "number",
+      "default": "kind-dependent",
+      "en": "Projection scale in plane units.",
+      "de": "Projektionsmaßstab in Ebeneneinheiten.",
+      "declaration": "geo.sty723–734",
+      "reset": "geo.sty752–929;933–936 kind defaults then authored options",
+      "consumer": "geo.sty projection/clip/resample consumers"
+    },
+    {
+      "scope": "semio/viz/geo/projection",
+      "key": "translate",
+      "type": "number-list",
+      "default": "480,250",
+      "en": "Plane translation.",
+      "de": "Verschiebung in der Ebene.",
+      "declaration": "geo.sty723–734",
+      "reset": "geo.sty752–929;933–936 kind defaults then authored options",
+      "consumer": "geo.sty projection/clip/resample consumers"
+    },
+    {
+      "scope": "semio/viz/geo/projection",
+      "key": "center",
+      "type": "number-list",
+      "default": "kind-dependent",
+      "en": "Geographic center in degrees.",
+      "de": "Geografisches Zentrum in Grad.",
+      "declaration": "geo.sty723–734",
+      "reset": "geo.sty752–929;933–936 kind defaults then authored options",
+      "consumer": "geo.sty projection/clip/resample consumers"
+    },
+    {
+      "scope": "semio/viz/geo/projection",
+      "key": "rotate",
+      "type": "number-list",
+      "default": "0,0,0",
+      "en": "Spherical rotation in degrees.",
+      "de": "Sphärische Drehung in Grad.",
+      "declaration": "geo.sty723–734",
+      "reset": "geo.sty752–929;933–936 kind defaults then authored options",
+      "consumer": "geo.sty projection/clip/resample consumers"
+    },
+    {
+      "scope": "semio/viz/geo/projection",
+      "key": "parallels",
+      "type": "number-list",
+      "default": "kind-dependent",
+      "en": "Conic standard parallels in degrees.",
+      "de": "Standardparallelen der Kegelprojektion in Grad.",
+      "declaration": "geo.sty723–734",
+      "reset": "geo.sty752–929;933–936 kind defaults then authored options",
+      "consumer": "geo.sty projection/clip/resample consumers"
+    },
+    {
+      "scope": "semio/viz/geo/projection",
+      "key": "clipAngle",
+      "type": "string",
+      "default": "kind-dependent",
+      "en": "Spherical clip angle; empty disables it.",
+      "de": "Sphärischer Beschneidungswinkel; leer deaktiviert ihn.",
+      "declaration": "geo.sty723–734",
+      "reset": "geo.sty752–929;933–936 kind defaults then authored options",
+      "consumer": "geo.sty projection/clip/resample consumers"
+    },
+    {
+      "scope": "semio/viz/geo/projection",
+      "key": "clipExtent",
+      "type": "number-list",
+      "default": "",
+      "en": "Plane clipping rectangle.",
+      "de": "Beschneidungsrechteck in der Ebene.",
+      "declaration": "geo.sty723–734",
+      "reset": "geo.sty752–929;933–936 kind defaults then authored options",
+      "consumer": "geo.sty projection/clip/resample consumers"
+    },
+    {
+      "scope": "semio/viz/geo/projection",
+      "key": "precision",
+      "type": "number",
+      "default": "sqrt(0.5)",
+      "en": "Adaptive resampling tolerance; zero disables resampling.",
+      "de": "Toleranz der adaptiven Abtastung; null deaktiviert sie.",
+      "declaration": "geo.sty723–734",
+      "reset": "geo.sty752–929;933–936 kind defaults then authored options",
+      "consumer": "geo.sty projection/clip/resample consumers"
+    },
+    {
+      "scope": "semio/viz/geo/layout",
+      "key": "projection",
+      "type": "string",
+      "default": "equirectangular",
+      "en": "Projection name.",
+      "de": "Projektionsname.",
+      "declaration": "geo.sty2596–2604",
+      "reset": "geo.sty2607–2616",
+      "consumer": "geo.sty2658–2668"
+    },
+    {
+      "scope": "semio/viz/geo/layout",
+      "key": "fit",
+      "type": "string",
+      "default": "extent",
+      "en": "Fit mode; extent fits to the rectangle.",
+      "de": "Anpassungsmodus; extent passt ins Rechteck.",
+      "declaration": "geo.sty2596–2604",
+      "reset": "geo.sty2607–2616",
+      "consumer": "geo.sty2658–2668"
+    },
+    {
+      "scope": "semio/viz/geo/layout",
+      "key": "x0",
+      "type": "number",
+      "default": "0",
+      "en": "Lower horizontal plane bound.",
+      "de": "Untere horizontale Ebenengrenze.",
+      "declaration": "geo.sty2596–2604",
+      "reset": "geo.sty2607–2616",
+      "consumer": "geo.sty2658–2668"
+    },
+    {
+      "scope": "semio/viz/geo/layout",
+      "key": "y0",
+      "type": "number",
+      "default": "0",
+      "en": "Lower vertical plane bound.",
+      "de": "Untere vertikale Ebenengrenze.",
+      "declaration": "geo.sty2596–2604",
+      "reset": "geo.sty2607–2616",
+      "consumer": "geo.sty2658–2668"
+    },
+    {
+      "scope": "semio/viz/geo/layout",
+      "key": "x1",
+      "type": "number",
+      "default": "100",
+      "en": "Upper horizontal plane bound.",
+      "de": "Obere horizontale Ebenengrenze.",
+      "declaration": "geo.sty2596–2604",
+      "reset": "geo.sty2607–2616",
+      "consumer": "geo.sty2658–2668"
+    },
+    {
+      "scope": "semio/viz/geo/layout",
+      "key": "y1",
+      "type": "number",
+      "default": "60",
+      "en": "Upper vertical plane bound.",
+      "de": "Obere vertikale Ebenengrenze.",
+      "declaration": "geo.sty2596–2604",
+      "reset": "geo.sty2607–2616",
+      "consumer": "geo.sty2658–2668"
+    },
+    {
+      "scope": "semio/viz/geo/graticule",
+      "key": "step",
+      "type": "number-list",
+      "default": "10,10 and90,360",
+      "en": "Set minor and major angular steps together.",
+      "de": "Kleine und große Winkelschritte gemeinsam setzen.",
+      "declaration": "geo.sty1691–1718",
+      "reset": "geo.sty1722–1734",
+      "consumer": "geo.sty1778 onward graticule generation"
+    },
+    {
+      "scope": "semio/viz/geo/graticule",
+      "key": "stepMinor",
+      "type": "number-list",
+      "default": "10,10",
+      "en": "Minor angular step in degrees.",
+      "de": "Kleiner Winkelschritt in Grad.",
+      "declaration": "geo.sty1691–1718",
+      "reset": "geo.sty1722–1734",
+      "consumer": "geo.sty1778 onward graticule generation"
+    },
+    {
+      "scope": "semio/viz/geo/graticule",
+      "key": "stepMajor",
+      "type": "number-list",
+      "default": "90,360",
+      "en": "Major angular step in degrees.",
+      "de": "Großer Winkelschritt in Grad.",
+      "declaration": "geo.sty1691–1718",
+      "reset": "geo.sty1722–1734",
+      "consumer": "geo.sty1778 onward graticule generation"
+    },
+    {
+      "scope": "semio/viz/geo/graticule",
+      "key": "extent",
+      "type": "number-list",
+      "default": "separate minor/major defaults",
+      "en": "Set both geographic extents together.",
+      "de": "Beide geografischen Grenzen gemeinsam setzen.",
+      "declaration": "geo.sty1691–1718",
+      "reset": "geo.sty1722–1734",
+      "consumer": "geo.sty1778 onward graticule generation"
+    },
+    {
+      "scope": "semio/viz/geo/graticule",
+      "key": "extentMinor",
+      "type": "number-list",
+      "default": "-180,-80.000001,180,80.000001",
+      "en": "Minor geographic extent.",
+      "de": "Kleiner geografischer Bereich.",
+      "declaration": "geo.sty1691–1718",
+      "reset": "geo.sty1722–1734",
+      "consumer": "geo.sty1778 onward graticule generation"
+    },
+    {
+      "scope": "semio/viz/geo/graticule",
+      "key": "extentMajor",
+      "type": "number-list",
+      "default": "-180,-89.999999,180,89.999999",
+      "en": "Major geographic extent.",
+      "de": "Großer geografischer Bereich.",
+      "declaration": "geo.sty1691–1718",
+      "reset": "geo.sty1722–1734",
+      "consumer": "geo.sty1778 onward graticule generation"
+    },
+    {
+      "scope": "semio/viz/geo/graticule",
+      "key": "precision",
+      "type": "number",
+      "default": "2.5",
+      "en": "Parallel sampling step in degrees.",
+      "de": "Abtastschritt der Breitenkreise in Grad.",
+      "declaration": "geo.sty1691–1718",
+      "reset": "geo.sty1722–1734",
+      "consumer": "geo.sty1778 onward graticule generation"
+    },
+    {
+      "scope": "semio/viz/geo/solver",
+      "key": "invertSteps",
+      "type": "integer",
+      "default": "12",
+      "en": "Equal-earth inverse Newton iterations.",
+      "de": "Newton-Iterationen der Equal-Earth-Umkehrung.",
+      "declaration": "geo.sty745–748",
+      "reset": "geo.sty739",
+      "consumer": "geo.sty528"
+    },
+    {
+      "scope": "semio/viz/geo/solver",
+      "key": "clipSteps",
+      "type": "integer",
+      "default": "48",
+      "en": "Great-circle clipping bisection iterations.",
+      "de": "Halbierungsiterationen der Großkreis-Beschneidung.",
+      "declaration": "geo.sty745–748",
+      "reset": "geo.sty740",
+      "consumer": "geo.sty1330"
+    }
+  ],
+  "note": "Current-source refresh after whole-palette04A45; original source-contracts.json retained historical. Data/Geo46 declaration/reset semantics unchanged; layout line references shift by2 after ramp span."
+}

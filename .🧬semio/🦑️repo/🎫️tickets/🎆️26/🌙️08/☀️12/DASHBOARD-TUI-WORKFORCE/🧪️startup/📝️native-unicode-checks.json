@@ -1,0 +1,5 @@
+[
+ {"path":"dashboard/🌀️daemon/🧪️tests/🔬️unit/🦀️.rs","replace":[{"from":"let micros: u128 = output.split(\"elapsed_us=\").nth(1).unwrap().split(|character: char| !character.is_ascii_digit()).next().unwrap().parse().unwrap_or_else(|error| panic!(\"startup trace: {error}: {output:?}\"));","to":"let rendered = terminal_text(&screen);\n        let micros: u128 = rendered.split(\"elapsed_us=\").nth(1).unwrap_or_else(|| panic!(\"missing rendered trace: {rendered}\")).split(|character: char| !character.is_ascii_digit()).next().unwrap().parse().unwrap_or_else(|error| panic!(\"startup trace: {error}: {rendered}\"));\n        assert!(output.contains('─') && !output.contains(\"Ôö\"), \"native terminal must preserve UTF-8 glyphs\");"}]},
+ {"path":"dashboard/🧫️fixtures/⌨️controls/🔣️.json","replace":[{"from":"[0,112,18]","to":"[0,112,18,195,156]"},{"from":"{\"key\":\"r\",\"ctrl\":true}","to":"{\"key\":\"r\",\"ctrl\":true},{\"key\":\"Ü\",\"ctrl\":false}"}]},
+ {"path":"dashboard/🧪️tests/🌀️control-plane/🟦️.ts","replace":[{"from":"key.name==='space'?' ':key.name","to":"!key.ctrl&&key.sequence.length===1?key.sequence:key.name==='space'?' ':key.name"}]}
+]

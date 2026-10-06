@@ -78,6 +78,7 @@ impl Emitter{
   if depth>=path.len(){return Err(ValueError::new(ValueRefusalKind::DepthLimit,"borrowed Text field exceeds path depth"))}
   if matches!(shape,H::Value){return self.borrowed_intrinsic(source,path,depth,control)}
   control.scoped_stage(|control|{control.begin_stage(0)?;control.scoped_depth(64,|control|{control.checkpoint()?;match(source.projection_view(&path[..depth])?,shape){
+   (_,H::Value)=>self.borrowed_intrinsic(source,path,depth,control),
    (V::Bool(value),H::Bool)=>self.atom(if value{"true"}else{"false"},control),
    (V::Int(value),H::Int)=>{self.begin_atom(control)?;self.number(value,control)},
    (V::UInt(value),H::UInt|H::Count)=>{self.begin_atom(control)?;if matches!(shape,H::Count){self.raw("x",control)?;}self.number(value,control)},
@@ -118,14 +119,13 @@ impl Emitter{
   }})})
  }
  fn borrowed_intrinsic<T:FieldProjectionSource>(&mut self,source:&T,path:&mut[usize;64],depth:usize,control:&mut NativeEncodeControl<'_>)->Result<(),ValueError>{
-  if depth>=path.len(){return Err(ValueError::new(ValueRefusalKind::DepthLimit,"borrowed intrinsic Text exceeds path frontier"))}
+  if depth>=path.len(){return Err(ValueError::new(ValueRefusalKind::DepthLimit,"borrowed Text intrinsic exceeds path depth"))}
   control.scoped_depth(64,|control|{control.checkpoint()?;match source.projection_view(&path[..depth])?{
-   V::IntrinsicNull=>self.intrinsic(&DslValue::Null,control),V::IntrinsicBool(value)=>self.intrinsic(&DslValue::Bool(value),control),V::IntrinsicNumber(value)=>self.intrinsic(&DslValue::Number(value),control),
+   V::IntrinsicNull=>self.atom("null",control),V::IntrinsicBool(value)=>self.atom(if value{"true"}else{"false"},control),V::IntrinsicNumber(value)=>self.intrinsic_number(value,control),
    V::IntrinsicText(text)=>{self.begin_atom(control)?;self.quoted(text,control)},
    V::IntrinsicBytes(bytes)=>{self.begin_atom(control)?;self.raw("bytes64(",control)?;self.octets(bytes,control)?;self.raw(")",control)},
-   V::IntrinsicArray(length)=>{self.atom("[",control)?;control.scoped_stage(|control|{control.begin_stage(length)?;for index in 0..length{path[depth]=index;self.borrowed_intrinsic(source,path,depth+1,control)?;control.step()?;}Ok::<_,ValueError>(())})?;self.atom("]",control)},
-   V::IntrinsicObject(length)=>{self.open(control)?;control.scoped_stage(|control|{control.begin_stage(length)?;for index in 0..length{let key=source.projection_key(&path[..depth],index)?;self.key(key,control)?;path[depth]=index;self.borrowed_intrinsic(source,path,depth+1,control)?;control.step()?;}Ok::<_,ValueError>(())})?;self.close(control)},
-   _=>Err(invalid())
+   V::IntrinsicArray(length)=>{self.atom("[",control)?;control.scoped_stage(|control|{control.begin_stage(length)?;for index in 0..length{path[depth]=index;control.scoped_stage(|control|self.borrowed_intrinsic(source,path,depth+1,control))?;control.step()?;}Ok::<_,ValueError>(())})?;self.atom("]",control)},
+   V::IntrinsicObject(length)=>{self.open(control)?;control.scoped_stage(|control|{control.begin_stage(length)?;for index in 0..length{control.scoped_stage(|control|{self.key(source.projection_key(&path[..depth],index)?,control)?;path[depth]=index;self.borrowed_intrinsic(source,path,depth+1,control)})?;control.step()?;}Ok::<_,ValueError>(())})?;self.close(control)},
+   _=>Err(ValueError::new(ValueRefusalKind::InvariantViolated,"borrowed Text intrinsic projection changed"))
   }})
- }
-}
+ }}

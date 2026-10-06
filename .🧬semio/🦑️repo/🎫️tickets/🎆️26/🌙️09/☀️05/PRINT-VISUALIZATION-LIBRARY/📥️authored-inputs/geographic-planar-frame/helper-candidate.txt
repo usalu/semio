@@ -1,0 +1,64 @@
+/** 🐝️ Checks planar binning and KDE separately from fitted native rendering and authored paint controls. */
+export async function compileNativeGeoPlanarGrammar(workDir:string):Promise<void>{
+  const control=fixture.nativeGeoPlanar,before=JSON.stringify(control),failures:string[]=[];
+  const rawBins=hexbin<[number,number]>().radius(control.radius)(control.points as [number,number][]);
+  const vertices=rawBins.map(bin=>[30,90,150,210,270,330].map(angle=>[bin.x+.92*control.radius*Math.cos(angle*Math.PI/180),bin.y+.92*control.radius*Math.sin(angle*Math.PI/180)]));
+  const values=Array.from({length:176},(_,index)=>sum(control.points,point=>Math.exp(-((index%16*5-point[0]!)**2+(Math.floor(index/16)*5-point[1]!)**2)/(2*control.bandwidth**2))/(2*Math.PI*control.bandwidth**2)));
+  const thresholds=[1,2].map(index=>Math.min(...values)+index/3*(Math.max(...values)-Math.min(...values)));
+  const rings=contours().size([16,11]).thresholds(thresholds)(values).flatMap(shape=>shape.coordinates.flatMap(polygon=>polygon.map(ring=>ring.map(point=>[(point[0]!-.5)*5,(point[1]!-.5)*5]))));
+  const bounds=(points:number[][])=>[Math.min(...points.map(point=>point[0]!)),Math.min(...points.map(point=>point[1]!)),Math.max(...points.map(point=>point[0]!)),Math.max(...points.map(point=>point[1]!))];
+  const references=control.cases.map((_,index)=>[100+index,90+index]);
+  for(const appearance of ["light","dark"] as const){
+    const body:{raw:string}[]=[],expected:{entry:typeof control.cases[number];paths:number[][][];bounds:number[]}[]=[];
+    for(const[index,entry]of control.cases.entries()){
+      const base={chart:{...control.snapshot.chart,language:entry.language,theme:{appearance},tables:[control.table],presets:[{kind:entry.kind,options:{points:control.table.name,radius:control.radius,bandwidth:control.bandwidth,levels:2,width:entry.width,height:entry.height,opacity:1,lineWidth:".1mm"}}]}} as unknown as VizChartSnapshot;
+      let current=base;
+      for(const mutation of [{path:["presets","0","options","opacity"],value:entry.opacity},{path:["presets","0","options","lineWidth"],value:entry.lineWidth}]){
+        const outcome=changeVizChartValue(current,mutation);if(outcome.messages.length||outcome.diff.edits.length!==1)throw Error(entry.id+" planar mutation rejected");const replay=applyVizChartDiff(current,outcome.diff);if(replay.messages.length)throw Error(entry.id+" planar replay rejected");current=replay.snapshot;
+      }
+      const result=await inferVizChart(current);if(!result.complete)throw Error(entry.id+" planar inference rejected: "+JSON.stringify(result.diagnostics));
+      const paths=entry.render==="hex"?vertices:rings,extent=bounds(paths.flat()),scale=Math.min(entry.width/(extent[2]!-extent[0]!),entry.height/(extent[3]!-extent[1]!)),x=scaleLinear([extent[0]!,extent[2]!],[(entry.width-scale*(extent[2]!-extent[0]!))/2,(entry.width+scale*(extent[2]!-extent[0]!))/2]),y=scaleLinear([extent[1]!,extent[3]!],[(entry.height-scale*(extent[3]!-extent[1]!))/2,(entry.height+scale*(extent[3]!-extent[1]!))/2]);
+      const fitted=paths.map(path=>path.map(point=>[x(point[0]!),y(point[1]!)]));expected.push({entry,paths:fitted,bounds:bounds(fitted.flat())});
+      const marker=`\\draw[line width=.01mm] (0,0) rectangle (${references[index]![0]},${references[index]![1]});`;
+      body.push({raw:"\\SemioVizProbeBegin{geo-planar}{"+entry.id+"}\n"+result.tikz.replace(/(\\begin\{VizFigure\}[^\n]*\n)/,"$1"+marker+"\n")+"\\ExplSyntaxOn\\seq_map_inline:Nn\\g_semio_viz_spatial_bins_seq{\\semio_viz_control_planar_bin:nnn#1}\\ExplSyntaxOff"});
+    }
+    const records=await compileVizProbeDocument({case:"geo-planar",scenario:appearance,documentClass:"semio",documentClassOptions:"type=paper,language=en,theme="+appearance,packages:["semio-viz"],preamble:["\\title{Planar Geographic Controls}","\\author{Semio}","\\date{}","\\ExplSyntaxOn\\cs_new_protected:Npn\\semio_viz_control_planar_bin:nnn#1#2#3{\\semio_viz_probe_values:nx{geo-planar/bin}{#2,#3,\\semio_viz_spatial_bin_count:n{#1}}}\\ExplSyntaxOff"],body},{workDir:join(workDir,appearance),scenario:undefined,keepWorkDir:true});
+    for(const entry of control.cases.filter(entry=>entry.render==="hex")){
+      const actual=records.filter(record=>record.scenario===entry.id&&record.key==="geo-planar/bin").map(record=>record.values.map(Number)).sort((a,b)=>a[0]!-b[0]!||a[1]!-b[1]!);
+      const bins=rawBins.map(bin=>[bin.x,bin.y,bin.length]).sort((a,b)=>a[0]!-b[0]!||a[1]!-b[1]!);equal(actual.flat(),bins.flat(),entry.id+" raw D3 hexbin geometry");
+    }
+    const pdf=await getDocument({data:new Uint8Array(readFileSync(join(workDir,appearance,"🧪️probe-out",appearance+".pdf"))),useSystemFonts:true}).promise;
+    const paths=new Map<number,{points:number[][];width:number;opacity:number}[]>();
+    try{for(let page=1;page<=pdf.numPages;page++)nativeGeoPlanarPdfPaths(await(await pdf.getPage(page)).getOperatorList(),references,paths);}finally{await pdf.destroy();}
+    for(const[index,reference]of expected.entries()){
+      const actual=paths.get(index)??[];
+      try{if(actual.length!==reference.paths.length)throw Error(reference.entry.id+" PDF path count "+actual.length+" expected "+reference.paths.length);equal(bounds(actual.flatMap(path=>path.points)),reference.bounds,reference.entry.id+" fitted PDF frame",.02);for(const path of actual){equal([path.width,path.opacity],[Number.parseFloat(reference.entry.lineWidth),reference.entry.opacity],reference.entry.id+" actual lineWidth/opacity",.002);}}catch(error){failures.push(appearance+" "+String(error));}
+    }
+  }
+  if(JSON.stringify(control)!==before)throw Error("Planar controls mutated authored input");
+  if(failures.length)throw Error("Planar frame/paint failures:\n"+failures.join("\n"));
+  console.log("[DEBUG] Geo planar "+control.cases.length*2+" actual EN/de light/dark controls matched raw D3 hexbin and fitted contour/PDF frame/paint outputs");
+}
+
+/** 📐️ Reads straight closed PDF paths relative to declared per-case physical canvas markers. */
+function nativeGeoPlanarPdfPaths(operators:Awaited<ReturnType<PDFPageProxy["getOperatorList"]>>,references:number[][],result:Map<number,{points:number[][];width:number;opacity:number}[]>):void{
+  let matrix=[1,0,0,1,0,0],width=1,opacity=1,reference:number[]|undefined,owner:number|undefined;
+  const stack:{matrix:number[];width:number;opacity:number}[]=[],mm=72/25.4;
+  for(const[index,id]of operators.fnArray.entries()){
+    const args=operators.argsArray[index];
+    if(id===OPS.save||id===OPS.paintFormXObjectBegin){stack.push({matrix:[...matrix],width,opacity});if(id===OPS.paintFormXObjectBegin&&args[0])matrix=Util.transform(matrix,args[0]);}
+    else if(id===OPS.restore||id===OPS.paintFormXObjectEnd){const value=stack.pop();if(!value)throw Error("Planar PDF stack underflow");matrix=value.matrix;width=value.width;opacity=value.opacity;}
+    else if(id===OPS.transform)matrix=Util.transform(matrix,args);
+    else if(id===OPS.setLineWidth)width=Number(args[0]);
+    else if(id===OPS.setGState){for(const item of args[0]){if(item[0]==="LW")width=Number(item[1]);if(item[0]==="CA")opacity=Number(item[1]);}}
+    else if(id===OPS.constructPath&&args[2]){
+      const packed=Array.from(args[1]?.[0]??[],Number),points:number[][]=[];let cursor=0,closed=0,valid=true;
+      while(cursor<packed.length){const command=packed[cursor++]!;if(command===0||command===1)points.push([packed[cursor++]!,packed[cursor++]!]);else if(command===4)closed++;else{valid=false;break;}}
+      if(!valid||closed!==1)continue;
+      const found=points.length===4&&Math.abs(width-.01*mm)<.002?references.findIndex(canvas=>Array.from(args[2],Number).every((value,axis)=>Math.abs(value-[0,0,canvas[0]!*mm,canvas[1]!*mm][axis]!)<.03)):-1;
+      if(found>=0){owner=found;reference=[...matrix];if(result.has(owner))throw Error("Planar duplicate canvas marker");result.set(owner,[]);}
+      else if(owner!==undefined&&reference&&points.length>4){const transform=Util.transform(Util.inverseTransform(reference),matrix);points.forEach(point=>Util.applyTransform(point,transform));result.get(owner)!.push({points:points.map(point=>point.map(value=>value/mm)),width:width/mm,opacity});}
+    }
+  }
+  if(stack.length)throw Error("Planar unbalanced PDF stack");
+}

@@ -317,8 +317,9 @@ pub struct GpuContext {
 }
 
 impl GpuContext {
-    #[cfg(not(target_os = "wasi"))]
-    pub async fn from_window(window: Arc<winit::window::Window>) -> Result<Self, String> {
+    /// 🪟️ Captures the event-thread window surface before asynchronous device preparation.
+    #[cfg(all(not(target_arch = "wasm32"), not(target_os = "wasi")))]
+    pub fn from_window(window: Arc<winit::window::Window>) -> Result<impl std::future::Future<Output = Result<Self, String>> + Send, String> {
         let dpr = window.scale_factor() as f32;
         let size = window.inner_size();
         let css_width = size.width as f32 / dpr;
@@ -328,7 +329,7 @@ impl GpuContext {
             ..wgpu::InstanceDescriptor::new_with_display_handle(Box::new(window.clone()))
         });
         let surface = instance.create_surface(wgpu::SurfaceTarget::Window(Box::new(window))).map_err(|err| format!("surface: {err:?}"))?;
-        Self::from_surface(instance, surface, css_width, css_height, dpr).await
+        Ok(Self::from_surface(instance, surface, css_width, css_height, dpr))
     }
 
     /// 🧵️ Creates the browser GPU surface directly in a dedicated Worker from a transferred canvas.

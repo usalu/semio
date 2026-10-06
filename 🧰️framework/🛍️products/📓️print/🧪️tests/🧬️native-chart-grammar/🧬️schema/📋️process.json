@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["tolerancePt", "cards", "board", "participants", "messages", "fragments", "profile"],
+  "properties": {
+    "tolerancePt": { "type": "number", "exclusiveMinimum": 0 },
+    "cards": { "allOf": [{ "$ref": "#/definitions/table" }], "required": ["values"], "properties": { "values": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "type": "string" } } } },
+    "board": { "allOf": [{ "$ref": "#/definitions/table" }], "required": ["files", "ranks", "labels"], "properties": { "files": { "type": "integer", "minimum": 1 }, "ranks": { "type": "integer", "minimum": 1 }, "labels": { "type": "array", "items": { "type": "string" } } } },
+    "participants": { "$ref": "#/definitions/table" },
+    "messages": { "$ref": "#/definitions/table" },
+    "fragments": { "allOf": [{ "$ref": "#/definitions/table" }], "required": ["step", "boundsMm"], "properties": { "step": { "type": "number", "exclusiveMinimum": 0 }, "boundsMm": { "type": "array", "minItems": 4, "maxItems": 4, "items": { "type": "number" } } } },
+    "profile": { "allOf": [{ "$ref": "#/definitions/table" }], "required": ["orders", "expected"], "properties": { "orders": { "type": "array", "items": { "enum": ["none", "value", "label"] }, "minItems": 3, "maxItems": 3, "uniqueItems": true }, "expected": { "type": "object", "additionalProperties": false, "required": ["none", "value", "label"], "properties": { "none": { "$ref": "#/definitions/labels" }, "value": { "$ref": "#/definitions/labels" }, "label": { "$ref": "#/definitions/labels" } } } } }
+  },
+  "definitions": {
+    "table": { "type": "object", "required": ["columns", "rows"], "properties": { "columns": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } }, "rows": { "type": "array", "minItems": 1, "items": { "type": "array", "items": { "type": ["string", "number"] } } } } },
+    "labels": { "type": "array", "minItems": 3, "items": { "type": "string" } }
+  }
+}

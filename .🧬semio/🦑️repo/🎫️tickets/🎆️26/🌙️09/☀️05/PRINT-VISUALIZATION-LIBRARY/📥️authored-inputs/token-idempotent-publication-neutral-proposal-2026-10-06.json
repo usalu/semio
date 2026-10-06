@@ -1,0 +1,98 @@
+{
+  "contract": {
+    "oracles": [
+      "Node Buffer.from(next,utf8) exact equality",
+      "AJV strict neutral schema",
+      "Node bigint lstat mtimeNs/ino/dev"
+    ],
+    "portableInode": "Compare ino/dev only when exposed stably; mtimeNs and exact bytes mandatory",
+    "integration": "Call both token GenerateScript and exported writer twice; second call must retain file metadata and final LF. Concurrent read during identical runs must never observe empty/partial bytes.",
+    "bytes": "Initial is exact bytesBase64; next is UTF8 string without normalization or BOM",
+    "changed": "return true; exact UTF8(next) bytes; mtime differs from artificially old initial timestamp",
+    "noOp": "return false; exact bytes, mtimeNs, inode/dev and file identity unchanged; no truncation"
+  },
+  "vectors": {
+    "cases": [
+      {
+        "rewritten": false,
+        "next": "abc\n",
+        "id": "identical-ascii",
+        "initial": "YWJjCg=="
+      },
+      {
+        "rewritten": true,
+        "next": "abcd\n",
+        "id": "changed",
+        "initial": "YWJjCg=="
+      },
+      {
+        "rewritten": false,
+        "next": "根 🧬 ä\n",
+        "id": "identical-unicode",
+        "initial": "5qC5IPCfp6wgw6QK"
+      },
+      {
+        "rewritten": true,
+        "next": "a\n",
+        "id": "crlf-to-lf",
+        "initial": "YQ0K"
+      },
+      {
+        "rewritten": true,
+        "next": "a\n",
+        "id": "final-newline-change",
+        "initial": "YQ=="
+      },
+      {
+        "rewritten": false,
+        "next": "",
+        "id": "empty",
+        "initial": ""
+      },
+      {
+        "rewritten": true,
+        "next": "�",
+        "id": "invalid-utf8-replacement",
+        "initial": "/w=="
+      }
+    ]
+  },
+  "schema": {
+    "type": "object",
+    "required": [
+      "cases"
+    ],
+    "properties": {
+      "cases": {
+        "items": {
+          "type": "object",
+          "required": [
+            "id",
+            "initial",
+            "next",
+            "rewritten"
+          ],
+          "properties": {
+            "rewritten": {
+              "type": "boolean"
+            },
+            "next": {
+              "type": "string"
+            },
+            "id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "initial": {
+              "type": "string",
+              "contentEncoding": "base64"
+            }
+          },
+          "additionalProperties": false
+        },
+        "type": "array"
+      }
+    },
+    "additionalProperties": false
+  }
+}

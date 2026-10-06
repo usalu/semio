@@ -42,15 +42,16 @@ export function cargoTargetRoot(repoRoot: string): string {
   return cargoTargetDirectory(repoRoot);
 }
 
-/** 🛠️ Resolves the debug-profile binary path for the current platform, after ensuring it is built (cargo's incremental cache makes a no-op rebuild fast — never exec a possibly-stale binary). */
-export function ensureBuiltBin(repoRoot: string, budgetMs = buildBudgetMs()): string {
-  runCmd("cargo", ["build", "-p", CRATE_NAME], { cwd: repoRoot, env: devToolingEnv(), budgetMs });
-  const binName = process.platform === "win32" ? `${CRATE_NAME}.exe` : CRATE_NAME;
-  return join(cargoTargetRoot(repoRoot), "debug", binName);
+/** 🛠️ Consumes the descriptor emitter published by its declared Nx build prerequisite. */
+export function publishedDescriptorEmitter(repoRoot: string): string {
+  const binName = process.platform === "win32" ? CRATE_NAME + ".exe" : CRATE_NAME;
+  const binary = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust/dist/build", binName);
+  if (!existsSync(binary) || !lstatSync(binary).isFile() || lstatSync(binary).isSymbolicLink()) throw new Error("Missing descriptor emitter Nx prerequisite: @semio-tech/os-plugin-describe-rs:build");
+  return binary;
 }
 
 /** 🎯️ WASI-development artifact path cargo just built for `packageName`, resolved through
- * the same {@link cargoTargetRoot} cargo used in {@link ensureBuiltBin}. */
+ * the same {@link cargoTargetRoot} publishes through its declared build prerequisite. */
 export function pluginWasmArtifactPath(repoRoot: string, packageName: string, profile = "wasm-dev", targetRoot = cargoTargetRoot(repoRoot)): string {
   return join(targetRoot, "wasm32-wasip2", profile, `${packageName.replace(/-/g, "_")}.wasm`);
 }

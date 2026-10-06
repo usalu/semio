@@ -1,0 +1,412 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-viz-diagram-concept}[2026/09/05 v0.2.0 semio viz conceptual, educational and relationship diagram families]
+
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+\RequirePackage{semio-viz-diagram-flowchart}
+
+\ExplSyntaxOn
+
+%region 🔖️Keys-concept-map
+% 🗝️ `concept-map` places a parent/child idea table radially or as a free graph and links it.
+%   data      tl   node table (default demo-concept-map), columns id/label/parent/tone
+%   parent    tl   parent column, empty for a root (default parent)
+%   layout    choice radial|balanced|tree  radial rings, left/right mind map, or a top-down tree (default radial)
+%   start     fp    degrees of the first first-level branch (default 90)
+%   sweep     fp    degrees covered by the first level (default 360)
+%   ring      fp    millimetre distance between depth rings, 0 fits the frame (default 0)
+%   node      choice pill|box|plain  branch node rendering (default pill)
+%   link      choice curved|straight|orthogonal (default curved)
+%   width/height fp frame size in millimetres
+%endregion 🔖️Keys-concept-map
+\tl_new:N \l_semio_viz_cm_parent_tl
+\tl_new:N \l_semio_viz_cm_layout_tl
+\tl_new:N \l_semio_viz_cm_node_tl
+\fp_new:N \l_semio_viz_cm_start_fp
+\fp_new:N \l_semio_viz_cm_sweep_fp
+\fp_new:N \l_semio_viz_cm_ring_fp
+\int_new:N \l_semio_viz_cm_n_int
+\int_new:N \l_semio_viz_cm_i_int
+\int_new:N \l_semio_viz_cm_depth_int
+\int_new:N \l_semio_viz_cm_leaves_int
+\prop_new:N \l_semio_viz_cm_depth_prop
+\prop_new:N \l_semio_viz_cm_kids_prop
+\tl_new:N \l_semio_viz_cm_id_tl
+\tl_new:N \l_semio_viz_cm_par_tl
+\tl_new:N \l_semio_viz_cm_val_tl
+
+% 🎛️ Binds the `concept-map` keys onto the node table and its columns, the radial geometry, the node and link rendering and the frame size.
+\keys_define:nn { semio / viz / family / concept-map } {
+  data   .tl_set:N = \l_semio_viz_dg_nodes_tl,
+  id     .tl_set:N = \l_semio_viz_dg_col_id_tl,
+  label  .tl_set:N = \l_semio_viz_dg_col_label_tl,
+  tone   .tl_set:N = \l_semio_viz_dg_col_tone_tl,
+  parent .tl_set:N = \l_semio_viz_cm_parent_tl,
+  layout .tl_set:N = \l_semio_viz_cm_layout_tl,
+  start  .fp_set:N = \l_semio_viz_cm_start_fp,
+  sweep  .fp_set:N = \l_semio_viz_cm_sweep_fp,
+  ring   .fp_set:N = \l_semio_viz_cm_ring_fp,
+  node   .tl_set:N = \l_semio_viz_cm_node_tl,
+  link   .tl_set:N = \l_semio_viz_dg_routing_tl,
+  arrow  .tl_set:N = \l_semio_viz_dg_arrow_tl,
+  width  .fp_set:N = \l_semio_viz_dg_w_fp,
+  height .fp_set:N = \l_semio_viz_dg_h_fp,
+}
+
+% 🚪 Entry point of `concept-map`: demands a frame, resets the diagram state, installs the radial defaults, reads the caller's keys and runs the named table.
+\cs_new_protected:Npn \semio_viz_cm_map:n #1 {
+  \semio_viz_frame_require:n { concept-map }
+  \semio_viz_dg_reset:
+  \tl_set:Nn \l_semio_viz_dg_nodes_tl { demo-concept-map }
+  \tl_set:Nn \l_semio_viz_cm_parent_tl { parent }
+  \tl_set:Nn \l_semio_viz_cm_layout_tl { radial }
+  \tl_set:Nn \l_semio_viz_cm_node_tl { pill }
+  \tl_set:Nn \l_semio_viz_dg_routing_tl { curved }
+  \tl_set:Nn \l_semio_viz_dg_arrow_tl { none }
+  \fp_set:Nn \l_semio_viz_cm_start_fp { 90 }
+  \fp_set:Nn \l_semio_viz_cm_sweep_fp { 360 }
+  \fp_zero:N \l_semio_viz_cm_ring_fp
+  \keys_set:nn { semio / viz / family / concept-map } {#1}
+  \exp_args:NV \semio_viz_cm_map_run:n \l_semio_viz_dg_nodes_tl
+}
+
+% 🌳 One pass over the rows derives every node's depth and child count, from which the ring spacing and node size follow, then places, links and draws them in three further passes.
+\cs_new_protected:Npn \semio_viz_cm_map_run:n #1 {
+  \prop_clear:N \l_semio_viz_cm_depth_prop
+  \prop_clear:N \l_semio_viz_cm_kids_prop
+  \prop_clear:N \l_semio_viz_dg_node_prop
+  \semio_viz_table_nrows:nN {#1} \l_semio_viz_cm_n_int
+  \int_set:Nn \l_semio_viz_cm_depth_int { 1 }
+  \int_step_inline:nn { \l_semio_viz_cm_n_int } {
+    \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_dg_col_id_tl } \l_semio_viz_cm_id_tl
+    \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_cm_parent_tl } \l_semio_viz_cm_par_tl
+    \tl_if_empty:NTF \l_semio_viz_cm_par_tl
+      { \prop_put:NVn \l_semio_viz_cm_depth_prop \l_semio_viz_cm_id_tl { 1 } }
+      {
+        \prop_get:NVNTF \l_semio_viz_cm_depth_prop \l_semio_viz_cm_par_tl \l_semio_viz_cm_val_tl
+          { \prop_put:NVx \l_semio_viz_cm_depth_prop \l_semio_viz_cm_id_tl { \int_eval:n { \l_semio_viz_cm_val_tl + 1 } } }
+          { \prop_put:NVn \l_semio_viz_cm_depth_prop \l_semio_viz_cm_id_tl { 2 } }
+        \prop_get:NVNTF \l_semio_viz_cm_kids_prop \l_semio_viz_cm_par_tl \l_semio_viz_cm_val_tl
+          { \prop_put:NVx \l_semio_viz_cm_kids_prop \l_semio_viz_cm_par_tl { \int_eval:n { \l_semio_viz_cm_val_tl + 1 } } }
+          { \prop_put:NVn \l_semio_viz_cm_kids_prop \l_semio_viz_cm_par_tl { 1 } }
+      }
+    \prop_get:NVN \l_semio_viz_cm_depth_prop \l_semio_viz_cm_id_tl \l_semio_viz_cm_val_tl
+    \int_compare:nNnT { \l_semio_viz_cm_val_tl } > { \l_semio_viz_cm_depth_int }
+      { \int_set:Nn \l_semio_viz_cm_depth_int { \l_semio_viz_cm_val_tl } }
+  }
+  \fp_compare:nT { \l_semio_viz_cm_ring_fp <= 0 }
+    {
+      \fp_set:Nn \l_semio_viz_cm_ring_fp
+        { ( min( \l_semio_viz_dg_w_fp , \l_semio_viz_dg_h_fp ) / 2 - 5 ) / max( \l_semio_viz_cm_depth_int - 1 , 1 ) }
+    }
+  \fp_set:Nn \l_semio_viz_dg_nw_fp { min( \l_semio_viz_dg_w_fp / 5 , 20 ) }
+  \fp_set:Nn \l_semio_viz_dg_nh_fp { 6 }
+  \int_zero:N \l_semio_viz_cm_leaves_int
+  \int_step_inline:nn { \l_semio_viz_cm_n_int } { \semio_viz_cm_place:nn {#1} {##1} }
+  \int_step_inline:nn { \l_semio_viz_cm_n_int } { \semio_viz_cm_link:nn {#1} {##1} }
+  \int_step_inline:nn { \l_semio_viz_cm_n_int } { \semio_viz_cm_draw:nn {#1} {##1} }
+}
+
+% 📍 Gives one node its place: the root sits at the centre, every other node is dealt the next slot of the tree, balanced or radial layout, and the record is stored and probed.
+\cs_new_protected:Npn \semio_viz_cm_place:nn #1#2 {
+  \semio_viz_table_cell_opt:nnnN {#1} {#2} { \l_semio_viz_dg_col_id_tl } \l_semio_viz_cm_id_tl
+  \prop_get:NVN \l_semio_viz_cm_depth_prop \l_semio_viz_cm_id_tl \l_semio_viz_cm_val_tl
+  \int_compare:nNnTF { \l_semio_viz_cm_val_tl } = { 1 }
+    {
+      \fp_set:Nn \l_semio_viz_dg_x_fp { \l_semio_viz_dg_w_fp / 2 }
+      \fp_set:Nn \l_semio_viz_dg_y_fp { \l_semio_viz_dg_h_fp / 2 }
+    }
+    {
+      \int_incr:N \l_semio_viz_cm_leaves_int
+      \str_case:VnF \l_semio_viz_cm_layout_tl {
+        { tree } {
+          \fp_set:Nn \l_semio_viz_dg_x_fp
+            { 3 + ( \l_semio_viz_cm_leaves_int - 0.5 ) * ( \l_semio_viz_dg_w_fp - 6 ) / max( \l_semio_viz_cm_n_int - 1 , 1 ) }
+          \fp_set:Nn \l_semio_viz_dg_y_fp
+            { \l_semio_viz_dg_h_fp - 4 - ( \l_semio_viz_cm_val_tl - 1 ) * ( \l_semio_viz_dg_h_fp - 8 ) / max( \l_semio_viz_cm_depth_int - 1 , 1 ) }
+        }
+        { balanced } {
+          \fp_set:Nn \l_semio_viz_dg_xa_fp
+            { \int_mod:nn { \l_semio_viz_cm_leaves_int } { 2 } = 0 ? 1 : -1 }
+          \fp_set:Nn \l_semio_viz_dg_x_fp
+            { \l_semio_viz_dg_w_fp / 2 + \l_semio_viz_dg_xa_fp * ( \l_semio_viz_cm_val_tl - 1 ) * \l_semio_viz_cm_ring_fp }
+          \fp_set:Nn \l_semio_viz_dg_y_fp
+            { \l_semio_viz_dg_h_fp - 4 - ( \l_semio_viz_cm_leaves_int - 0.5 ) * ( \l_semio_viz_dg_h_fp - 8 ) / max( \l_semio_viz_cm_n_int - 1 , 1 ) }
+        }
+      }
+      {
+        \fp_set:Nn \l_semio_viz_dg_ya_fp
+          {
+            \l_semio_viz_cm_start_fp -
+            \l_semio_viz_cm_sweep_fp * ( \l_semio_viz_cm_leaves_int - 1 ) / max( \l_semio_viz_cm_n_int - 1 , 1 )
+          }
+        \fp_set:Nn \l_semio_viz_dg_x_fp
+          { \l_semio_viz_dg_w_fp / 2 + ( \l_semio_viz_cm_val_tl - 1 ) * \l_semio_viz_cm_ring_fp * cosd( \l_semio_viz_dg_ya_fp ) }
+        \fp_set:Nn \l_semio_viz_dg_y_fp
+          { \l_semio_viz_dg_h_fp / 2 + ( \l_semio_viz_cm_val_tl - 1 ) * \l_semio_viz_cm_ring_fp * sind( \l_semio_viz_dg_ya_fp ) }
+      }
+    }
+  \tl_set:Nx \l_semio_viz_dg_rec_tl
+    {
+      \semio_viz_format_mm:n { \l_semio_viz_dg_x_fp } , \semio_viz_format_mm:n { \l_semio_viz_dg_y_fp } ,
+      \semio_viz_format_mm:n { \l_semio_viz_dg_nw_fp } , \semio_viz_format_mm:n { \l_semio_viz_dg_nh_fp } , pill
+    }
+  \prop_put:NVV \l_semio_viz_dg_node_prop \l_semio_viz_cm_id_tl \l_semio_viz_dg_rec_tl
+  \semio_viz_probe_geometry:nx { diagram-node }
+    {
+      \semio_viz_format_mm:n { \l_semio_viz_dg_x_fp } , \semio_viz_format_mm:n { \l_semio_viz_dg_y_fp } ,
+      \semio_viz_format_mm:n { \l_semio_viz_dg_nw_fp } , \semio_viz_format_mm:n { \l_semio_viz_dg_nh_fp }
+    }
+}
+
+% 🔗 Routes a hairline from a node's parent to the node itself, in the chosen arrow style, skipping rows that have no parent.
+\cs_new_protected:Npn \semio_viz_cm_link:nn #1#2 {
+  \semio_viz_table_cell_opt:nnnN {#1} {#2} { \l_semio_viz_dg_col_id_tl } \l_semio_viz_cm_id_tl
+  \semio_viz_table_cell_opt:nnnN {#1} {#2} { \l_semio_viz_cm_parent_tl } \l_semio_viz_cm_par_tl
+  \tl_if_empty:NF \l_semio_viz_cm_par_tl {
+    \semio_viz_dg_arrow_style:N \l_semio_viz_dg_arrowstyle_tl
+    \semio_viz_dg_route:nn { \l_semio_viz_cm_par_tl } { \l_semio_viz_cm_id_tl }
+    \use:x { \exp_not:N \semio_viz_dg_route_draw:nn
+      { semio-chrome-border-normal , line~width=\semio@stroke@hairline , \exp_not:V \l_semio_viz_dg_arrowstyle_tl } { } }
+  }
+}
+
+% 🖌️ Paints one placed node: its tone comes from the row or from the row number, its outline is a box, a pill or nothing, and its label is set inside.
+\cs_new_protected:Npn \semio_viz_cm_draw:nn #1#2 {
+  \semio_viz_table_cell_opt:nnnN {#1} {#2} { \l_semio_viz_dg_col_id_tl } \l_semio_viz_cm_id_tl
+  \semio_viz_table_cell_opt:nnnN {#1} {#2} { \l_semio_viz_dg_col_tone_tl } \l_semio_viz_dg_cell_tl
+  \tl_if_empty:NTF \l_semio_viz_dg_cell_tl
+    { \semio_viz_dg_tone:n {#2} } { \exp_args:NV \semio_viz_dg_tone:n \l_semio_viz_dg_cell_tl }
+  \semio_viz_dg_get:n { \l_semio_viz_cm_id_tl }
+  \str_case:VnF \l_semio_viz_cm_node_tl {
+    { box } { \semio_viz_dg_shape_named:n { process } }
+    { plain } { }
+  } { \semio_viz_dg_shape_named:n { terminator } }
+  \semio_viz_table_cell_opt:nnnN {#1} {#2} { \l_semio_viz_dg_col_label_tl } \l_semio_viz_dg_label_tl
+  \semio_viz_dg_label:nnnn { \l_semio_viz_dg_a_fp } { \l_semio_viz_dg_b_fp } { \l_semio_viz_dg_c_fp }
+    { \tl_use:N \l_semio_viz_dg_label_tl }
+}
+% 🕸️ Registers `concept-map` as a viz family, so a key list in the document body draws the idea map.
+\SemioVizFamily { concept-map } { \semio_viz_cm_map:n {#1} }
+
+%region 🔖️Keys-concept-shape
+% 🗝️ `concept-shape` is the family of stacked conceptual figures built from one ordered level table.
+%   data     tl   level table (default demo-concept-levels), columns label/value/tone
+%   value    tl   optional weight column driving the level width (default value)
+%   shape    choice pyramid|inverted-pyramid|layer|onion|stair|continuum|spectrum|comparison
+%                  (default pyramid)
+%   arrows   bool draw the direction arrow along the sequence (default false)
+%   labels-outside bool put the level captions beside instead of inside the figure (default false)
+%   width/height fp frame size in millimetres
+%endregion 🔖️Keys-concept-shape
+\tl_new:N \l_semio_viz_cm_shape_tl
+\tl_new:N \l_semio_viz_cm_value_tl
+\bool_new:N \l_semio_viz_cm_arrows_bool
+\bool_new:N \l_semio_viz_cm_outside_bool
+\fp_new:N \l_semio_viz_cm_max_fp
+
+% 🎚️ Binds the `concept-shape` keys onto the level table and its columns, the chosen figure, the arrow and outside-label switches and the frame size.
+\keys_define:nn { semio / viz / family / concept-shape } {
+  data   .tl_set:N = \l_semio_viz_dg_nodes_tl,
+  label  .tl_set:N = \l_semio_viz_dg_col_label_tl,
+  tone   .tl_set:N = \l_semio_viz_dg_col_tone_tl,
+  value  .tl_set:N = \l_semio_viz_cm_value_tl,
+  shape  .tl_set:N = \l_semio_viz_cm_shape_tl,
+  arrows .bool_set:N = \l_semio_viz_cm_arrows_bool,
+  labels-outside .bool_set:N = \l_semio_viz_cm_outside_bool,
+  width  .fp_set:N = \l_semio_viz_dg_w_fp,
+  height .fp_set:N = \l_semio_viz_dg_h_fp,
+}
+
+% 🛎️ Entry point of `concept-shape`: demands a frame, resets the diagram state, defaults to a pyramid over the demo levels and runs the named table.
+\cs_new_protected:Npn \semio_viz_cm_shape:n #1 {
+  \semio_viz_frame_require:n { concept-shape }
+  \semio_viz_dg_reset:
+  \tl_set:Nn \l_semio_viz_dg_nodes_tl { demo-concept-levels }
+  \tl_set:Nn \l_semio_viz_cm_value_tl { value }
+  \tl_set:Nn \l_semio_viz_cm_shape_tl { pyramid }
+  \bool_set_false:N \l_semio_viz_cm_arrows_bool
+  \bool_set_false:N \l_semio_viz_cm_outside_bool
+  \keys_set:nn { semio / viz / family / concept-shape } {#1}
+  \exp_args:NV \semio_viz_cm_shape_run:n \l_semio_viz_dg_nodes_tl
+}
+
+% 📏 Counts the levels and takes the largest weight, both floored at one so an empty table cannot divide by zero, then renders every level in order.
+\cs_new_protected:Npn \semio_viz_cm_shape_run:n #1 {
+  \semio_viz_table_nrows:nN {#1} \l_semio_viz_cm_n_int
+  \int_compare:nNnT { \l_semio_viz_cm_n_int } < { 1 } { \int_set:Nn \l_semio_viz_cm_n_int { 1 } }
+  \semio_viz_table_col_max:nnN {#1} { \l_semio_viz_cm_value_tl } \l_semio_viz_cm_max_fp
+  \fp_compare:nT { \l_semio_viz_cm_max_fp <= 0 } { \fp_set:Nn \l_semio_viz_cm_max_fp { 1 } }
+  \int_step_inline:nn { \l_semio_viz_cm_n_int } { \semio_viz_cm_shape_level:nn {#1} {##1} }
+}
+
+% 🪜 Reads one level's weight, tone and label, gives it an equal band of the frame counted from the top, and hands it to the renderer of the selected figure.
+\cs_new_protected:Npn \semio_viz_cm_shape_level:nn #1#2 {
+  \semio_viz_table_cell_opt:nnnN {#1} {#2} { \l_semio_viz_cm_value_tl } \l_semio_viz_cm_val_tl
+  \tl_if_empty:NT \l_semio_viz_cm_val_tl { \tl_set:Nn \l_semio_viz_cm_val_tl { 1 } }
+  \semio_viz_table_cell_opt:nnnN {#1} {#2} { \l_semio_viz_dg_col_tone_tl } \l_semio_viz_dg_cell_tl
+  \tl_if_empty:NTF \l_semio_viz_dg_cell_tl
+    { \semio_viz_dg_tone:n {#2} } { \exp_args:NV \semio_viz_dg_tone:n \l_semio_viz_dg_cell_tl }
+  \semio_viz_table_cell_opt:nnnN {#1} {#2} { \l_semio_viz_dg_col_label_tl } \l_semio_viz_dg_label_tl
+  \fp_set:Nn \l_semio_viz_dg_nh_fp { ( \l_semio_viz_dg_h_fp - 4 ) / \l_semio_viz_cm_n_int }
+  \fp_set:Nn \l_semio_viz_dg_y_fp
+    { \l_semio_viz_dg_h_fp - 2 - ( (#2) - 0.5 ) * \l_semio_viz_dg_nh_fp }
+  \fp_set:Nn \l_semio_viz_dg_x_fp { \l_semio_viz_dg_w_fp / 2 }
+  \str_case:VnF \l_semio_viz_cm_shape_tl {
+    { pyramid } { \semio_viz_cm_trapezoid:nn {#2} { down } }
+    { inverted-pyramid } { \semio_viz_cm_trapezoid:nn {#2} { up } }
+    { layer } { \semio_viz_cm_layer:n {#2} }
+    { onion } { \semio_viz_cm_onion:n {#2} }
+    { stair } { \semio_viz_cm_stair:n {#2} }
+    { continuum } { \semio_viz_cm_continuum:n {#2} }
+    { spectrum } { \semio_viz_cm_spectrum:n {#2} }
+    { comparison } { \semio_viz_cm_comparison:n {#2} }
+  } { \semio_viz_cm_layer:n {#2} }
+}
+
+% 🔻 One slice of a pyramid: the top and bottom half-widths grow with the level index, or shrink with it when the pyramid points up.
+\cs_new_protected:Npn \semio_viz_cm_trapezoid:nn #1#2 {
+  \fp_set:Nn \l_semio_viz_dg_xa_fp
+    {
+      ( \l_semio_viz_dg_w_fp - 6 ) / 2 *
+      ( \str_if_eq_p:nn {#2} { down } ? ( (#1) - 1 ) / \l_semio_viz_cm_n_int : ( \l_semio_viz_cm_n_int - (#1) + 1 ) / \l_semio_viz_cm_n_int )
+    }
+  \fp_set:Nn \l_semio_viz_dg_xb_fp
+    {
+      ( \l_semio_viz_dg_w_fp - 6 ) / 2 *
+      ( \str_if_eq_p:nn {#2} { down } ? (#1) / \l_semio_viz_cm_n_int : ( \l_semio_viz_cm_n_int - (#1) ) / \l_semio_viz_cm_n_int )
+    }
+  \draw [ \l_semio_viz_dg_draw_tl , fill=\l_semio_viz_dg_fill_tl , line~width=\semio@stroke@hairline ]
+    ( \fp_eval:n { \l_semio_viz_dg_x_fp - \l_semio_viz_dg_xa_fp } , \fp_eval:n { \l_semio_viz_dg_y_fp + \l_semio_viz_dg_nh_fp / 2 } ) --
+    ( \fp_eval:n { \l_semio_viz_dg_x_fp + \l_semio_viz_dg_xa_fp } , \fp_eval:n { \l_semio_viz_dg_y_fp + \l_semio_viz_dg_nh_fp / 2 } ) --
+    ( \fp_eval:n { \l_semio_viz_dg_x_fp + \l_semio_viz_dg_xb_fp } , \fp_eval:n { \l_semio_viz_dg_y_fp - \l_semio_viz_dg_nh_fp / 2 } ) --
+    ( \fp_eval:n { \l_semio_viz_dg_x_fp - \l_semio_viz_dg_xb_fp } , \fp_eval:n { \l_semio_viz_dg_y_fp - \l_semio_viz_dg_nh_fp / 2 } ) -- cycle ;
+  \semio_viz_cm_caption:
+}
+
+% 🥞 A centred slab whose width runs from two fifths of the frame to all of it as the level's weight approaches the largest one.
+\cs_new_protected:Npn \semio_viz_cm_layer:n #1 {
+  \fp_set:Nn \l_semio_viz_dg_nw_fp
+    { ( \l_semio_viz_dg_w_fp - 6 ) * ( 0.4 + 0.6 * \l_semio_viz_cm_val_tl / \l_semio_viz_cm_max_fp ) }
+  \semio_viz_dg_shape:nnnnn { process } { \l_semio_viz_dg_x_fp } { \l_semio_viz_dg_y_fp }
+    { \l_semio_viz_dg_nw_fp } { \fp_eval:n { \l_semio_viz_dg_nh_fp - 1 } }
+  \fp_set:Nn \l_semio_viz_dg_xa_fp { \l_semio_viz_dg_nw_fp / 2 }
+  \semio_viz_cm_caption:
+}
+
+% 🧅 Concentric rings about the frame centre, the first level outermost, each labelled on the crown of its own circle.
+\cs_new_protected:Npn \semio_viz_cm_onion:n #1 {
+  \fp_set:Nn \l_semio_viz_dg_xa_fp
+    {
+      ( min( \l_semio_viz_dg_w_fp , \l_semio_viz_dg_h_fp ) / 2 - 2 ) *
+      ( \l_semio_viz_cm_n_int - (#1) + 1 ) / \l_semio_viz_cm_n_int
+    }
+  \draw [ \l_semio_viz_dg_draw_tl , fill=\l_semio_viz_dg_fill_tl , line~width=\semio@stroke@hairline ]
+    ( \fp_eval:n { \l_semio_viz_dg_w_fp / 2 } , \fp_eval:n { \l_semio_viz_dg_h_fp / 2 } )
+    circle [ radius=\fp_eval:n { \l_semio_viz_dg_xa_fp } ] ;
+  \node [ font=\c_semio_viz_theme_font_chip_tl , text=semio-chrome-foreground , anchor=north , inner~sep=0.4mm ]
+    at ( \fp_eval:n { \l_semio_viz_dg_w_fp / 2 } , \fp_eval:n { \l_semio_viz_dg_h_fp / 2 + \l_semio_viz_dg_xa_fp - 0.4 } )
+    { \tl_use:N \l_semio_viz_dg_label_tl } ;
+}
+
+% 📶 A rising flight of steps: every level is a column of the frame width whose height grows by one share per level, captioned above its tread.
+\cs_new_protected:Npn \semio_viz_cm_stair:n #1 {
+  \fp_set:Nn \l_semio_viz_dg_nw_fp { ( \l_semio_viz_dg_w_fp - 4 ) / \l_semio_viz_cm_n_int }
+  \fp_set:Nn \l_semio_viz_dg_x_fp { 2 + ( (#1) - 0.5 ) * \l_semio_viz_dg_nw_fp }
+  \fp_set:Nn \l_semio_viz_dg_ya_fp { 2 + (#1) * ( \l_semio_viz_dg_h_fp - 4 ) / \l_semio_viz_cm_n_int }
+  \draw [ \l_semio_viz_dg_draw_tl , fill=\l_semio_viz_dg_fill_tl , line~width=\semio@stroke@hairline ]
+    ( \fp_eval:n { \l_semio_viz_dg_x_fp - \l_semio_viz_dg_nw_fp / 2 } , 2 )
+    rectangle ( \fp_eval:n { \l_semio_viz_dg_x_fp + \l_semio_viz_dg_nw_fp / 2 } , \fp_eval:n { \l_semio_viz_dg_ya_fp } ) ;
+  \node [ font=\c_semio_viz_theme_font_chip_tl , text=semio-chrome-foreground , anchor=south , inner~sep=0.4mm ,
+          align=center , text~width=\fp_eval:n { \l_semio_viz_dg_nw_fp - 1 } mm ]
+    at ( \fp_eval:n { \l_semio_viz_dg_x_fp } , \fp_eval:n { \l_semio_viz_dg_ya_fp + 0.4 } )
+    { \tl_use:N \l_semio_viz_dg_label_tl } ;
+}
+
+% ↔️ Levels as stops on one double-headed axis, the axis itself drawn once with the first level, each stop a dot with its caption above.
+\cs_new_protected:Npn \semio_viz_cm_continuum:n #1 {
+  \fp_set:Nn \l_semio_viz_dg_x_fp
+    { 4 + ( (#1) - 1 ) * ( \l_semio_viz_dg_w_fp - 8 ) / max( \l_semio_viz_cm_n_int - 1 , 1 ) }
+  \fp_set:Nn \l_semio_viz_dg_y_fp { \l_semio_viz_dg_h_fp / 2 }
+  \int_compare:nNnT {#1} = { 1 } {
+    \draw [ semio-chrome-border-emphasized , line~width=\semio@stroke@default , {Latex[length=1.6mm]}-{Latex[length=1.6mm]} ]
+      ( 3 , \fp_eval:n { \l_semio_viz_dg_y_fp } ) -- ( \fp_eval:n { \l_semio_viz_dg_w_fp - 3 } , \fp_eval:n { \l_semio_viz_dg_y_fp } ) ;
+  }
+  \fill [ \l_semio_viz_dg_draw_tl ]
+    ( \fp_eval:n { \l_semio_viz_dg_x_fp } , \fp_eval:n { \l_semio_viz_dg_y_fp } ) circle [ radius=1.2 ] ;
+  \node [ font=\c_semio_viz_theme_font_chip_tl , text=semio-chrome-foreground , anchor=south , inner~sep=0.6mm ,
+          align=center , text~width=16mm ]
+    at ( \fp_eval:n { \l_semio_viz_dg_x_fp } , \fp_eval:n { \l_semio_viz_dg_y_fp + 1 } )
+    { \tl_use:N \l_semio_viz_dg_label_tl } ;
+}
+
+% 🌈 Levels as abutting bands of one horizontal strip, each in its own tone and captioned under the strip.
+\cs_new_protected:Npn \semio_viz_cm_spectrum:n #1 {
+  \fp_set:Nn \l_semio_viz_dg_nw_fp { ( \l_semio_viz_dg_w_fp - 4 ) / \l_semio_viz_cm_n_int }
+  \fp_set:Nn \l_semio_viz_dg_x_fp { 2 + ( (#1) - 0.5 ) * \l_semio_viz_dg_nw_fp }
+  \fill [ \l_semio_viz_dg_draw_tl ]
+    ( \fp_eval:n { \l_semio_viz_dg_x_fp - \l_semio_viz_dg_nw_fp / 2 } , \fp_eval:n { \l_semio_viz_dg_h_fp / 2 - 4 } )
+    rectangle ( \fp_eval:n { \l_semio_viz_dg_x_fp + \l_semio_viz_dg_nw_fp / 2 } , \fp_eval:n { \l_semio_viz_dg_h_fp / 2 + 4 } ) ;
+  \node [ font=\c_semio_viz_theme_font_chip_tl , text=semio-chrome-foreground , anchor=north , inner~sep=0.6mm ,
+          align=center , text~width=\fp_eval:n { \l_semio_viz_dg_nw_fp } mm ]
+    at ( \fp_eval:n { \l_semio_viz_dg_x_fp } , \fp_eval:n { \l_semio_viz_dg_h_fp / 2 - 4.4 } )
+    { \tl_use:N \l_semio_viz_dg_label_tl } ;
+}
+
+% ⚖️ Two columns facing each other: odd levels go left and even levels right, paired rows sharing a line of the frame.
+\cs_new_protected:Npn \semio_viz_cm_comparison:n #1 {
+  \fp_set:Nn \l_semio_viz_dg_nw_fp { ( \l_semio_viz_dg_w_fp - 6 ) / 2 }
+  \fp_set:Nn \l_semio_viz_dg_x_fp
+    { \int_mod:nn {#1} { 2 } = 1 ? 2 + \l_semio_viz_dg_nw_fp / 2 : \l_semio_viz_dg_w_fp - 2 - \l_semio_viz_dg_nw_fp / 2 }
+  \fp_set:Nn \l_semio_viz_dg_y_fp
+    {
+      \l_semio_viz_dg_h_fp - 2 -
+      ( ( (#1) + 1 ) / 2 - 0.5 ) * 2 * ( \l_semio_viz_dg_h_fp - 4 ) / \l_semio_viz_cm_n_int
+    }
+  \semio_viz_dg_shape:nnnnn { terminator } { \l_semio_viz_dg_x_fp } { \l_semio_viz_dg_y_fp }
+    { \l_semio_viz_dg_nw_fp } { \fp_eval:n { 2 * \l_semio_viz_dg_nh_fp - 1.5 } }
+  \semio_viz_dg_label:nnnn { \l_semio_viz_dg_x_fp } { \l_semio_viz_dg_y_fp } { \l_semio_viz_dg_nw_fp }
+    { \tl_use:N \l_semio_viz_dg_label_tl }
+}
+
+% 🏷️ Sets the level's caption, either just outside the figure's right edge or centred within its current half-width.
+\cs_new_protected:Npn \semio_viz_cm_caption: {
+  \bool_if:NTF \l_semio_viz_cm_outside_bool
+    {
+      \node [ font=\c_semio_viz_theme_font_chip_tl , text=semio-chrome-foreground , anchor=west , inner~sep=0.6mm ]
+        at ( \fp_eval:n { \l_semio_viz_dg_x_fp + \l_semio_viz_dg_xa_fp + 0.6 } , \fp_eval:n { \l_semio_viz_dg_y_fp } )
+        { \tl_use:N \l_semio_viz_dg_label_tl } ;
+    }
+    {
+      \semio_viz_dg_label:nnnn { \l_semio_viz_dg_x_fp } { \l_semio_viz_dg_y_fp }
+        { 2 * \l_semio_viz_dg_xa_fp } { \tl_use:N \l_semio_viz_dg_label_tl }
+    }
+}
+% 🏛️ Registers `concept-shape` as a viz family, so a key list in the document body draws the chosen stacked figure.
+\SemioVizFamily { concept-shape } { \semio_viz_cm_shape:n {#1} }
+
+%region 🔖️DemoData
+% 🧪 Conceptual fixtures every family in this package defaults to.
+\cs_new_protected:Npn \semio_viz_cm_demo: {
+  \seq_if_in:NnF \g_semio_viz_table_names_seq { demo-concept-map } {
+    \semio_viz_table_new:nn { demo-concept-map } { id, label, parent, tone }
+    \semio_viz_table_row:nn { demo-concept-map } { core, {Building}, , 0 }
+    \semio_viz_table_row:nn { demo-concept-map } { struct, {Structure}, core, 1 }
+    \semio_viz_table_row:nn { demo-concept-map } { skin, {Envelope}, core, 2 }
+    \semio_viz_table_row:nn { demo-concept-map } { serv, {Services}, core, 3 }
+    \semio_viz_table_row:nn { demo-concept-map } { use, {Use}, core, 4 }
+    \semio_viz_table_row:nn { demo-concept-map } { beam, {Beams}, struct, 1 }
+    \semio_viz_table_row:nn { demo-concept-map } { glass, {Glazing}, skin, 2 }
+  }
+  \seq_if_in:NnF \g_semio_viz_table_names_seq { demo-concept-levels } {
+    \semio_viz_table_new:nn { demo-concept-levels } { label, value, tone }
+    \semio_viz_table_row:nn { demo-concept-levels } { {Vision}, 2, 1 }
+    \semio_viz_table_row:nn { demo-concept-levels } { {Strategy}, 4, 2 }
+    \semio_viz_table_row:nn { demo-concept-levels } { {Tactics}, 7, 3 }
+    \semio_viz_table_row:nn { demo-concept-levels } { {Operations}, 10, 4 }
+  }
+}
+\semio_viz_cm_demo:
+%endregion 🔖️DemoData
+
+\ExplSyntaxOff

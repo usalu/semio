@@ -1,0 +1,155 @@
+{
+  "owner": "SCIENTIFIC",
+  "options": {
+    "axes": {
+      "syntax": "scalar",
+      "type": "boolean",
+      "default": true,
+      "description": {
+        "en": "Draw the frame and the tick labels.",
+        "de": "Rahmen und Achsenbeschriftungen zeichnen."
+      }
+    },
+    "coverage": {
+      "syntax": "number-list",
+      "type": "string",
+      "description": {
+        "en": "The per-bin depth of the coverage track.",
+        "de": "Die Abdeckungstiefe je Klasse der Spur."
+      }
+    },
+    "data": {
+      "syntax": "identifier",
+      "type": "string",
+      "description": {
+        "en": "Name of the source table. A scientific family usually carries its own literal vectors instead, so the table name is recorded for the kinds that do read one rather than refused for the kinds that do not.",
+        "de": "Name der Quelltabelle. Eine wissenschaftliche Familie trägt ihre Vektoren meist selbst als Literale, daher wird der Tabellenname für die Arten festgehalten, die eine Tabelle lesen, statt für die anderen zurückgewiesen zu werden."
+      }
+    },
+    "domain": {
+      "syntax": "number-list",
+      "type": "string",
+      "description": {
+        "en": "Input domain `min,max` of the scale or function.",
+        "de": "Eingabebereich `min,max` der Skala bzw. Funktion."
+      }
+    },
+    "features": {
+      "syntax": "records",
+      "type": "string",
+      "description": {
+        "en": "The differential-expression table.",
+        "de": "Die Tabelle der differenziellen Expression."
+      }
+    },
+    "grid": {
+      "syntax": "scalar",
+      "type": "boolean",
+      "default": true,
+      "description": {
+        "en": "Draw the background grid behind the family.",
+        "de": "Das Hintergrundgitter hinter der Familie zeichnen."
+      }
+    },
+    "height": {
+      "syntax": "expression",
+      "type": "number",
+      "default": 40,
+      "description": {
+        "en": "Canvas height in millimetres.",
+        "de": "Zeichenflächenhöhe in Millimetern."
+      }
+    },
+    "laneHeight": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Track height in millimetres.",
+        "de": "Spurhöhe in Millimetern."
+      }
+    },
+    "mode": {
+      "syntax": "identifier",
+      "type": "string",
+      "description": {
+        "en": "Which member of the family the preset renders.",
+        "de": "Welches Mitglied der Familie die Voreinstellung zeichnet."
+      }
+    },
+    "range": {
+      "syntax": "number-list",
+      "type": "string",
+      "description": {
+        "en": "Output range `min,max` of the scale or sweep.",
+        "de": "Ausgabebereich `min,max` der Skala bzw. des Durchlaufs."
+      }
+    },
+    "seed": {
+      "syntax": "expression",
+      "type": "integer",
+      "default": 20260905,
+      "description": {
+        "en": "Seed of the pseudo-random stream, so a sampled family draws the same picture on every run.",
+        "de": "Startwert des Pseudozufallsstroms, damit eine abgetastete Familie bei jedem Lauf dasselbe Bild zeichnet."
+      }
+    },
+    "span": {
+      "syntax": "number-list",
+      "type": "string",
+      "description": {
+        "en": "The genomic window.",
+        "de": "Das Genomfenster."
+      }
+    },
+    "ticks": {
+      "syntax": "expression",
+      "type": "integer",
+      "default": 4,
+      "description": {
+        "en": "Tick divisions per axis.",
+        "de": "Teilstriche je Achse."
+      }
+    },
+    "title": {
+      "syntax": "text",
+      "type": "string",
+      "description": {
+        "en": "Caption printed above the canvas.",
+        "de": "Über der Zeichenfläche gesetzte Überschrift."
+      }
+    },
+    "variant": {
+      "syntax": "identifier",
+      "type": "string",
+      "description": {
+        "en": "Sub-kind the family renders; the catalogue slug of the chart kind. The family must draw a different geometry for every variant it declares.",
+        "de": "Untertyp, den die Familie zeichnet; der Katalog-Slug der Diagrammart. Die Familie muss für jede deklarierte Variante eine andere Geometrie zeichnen."
+      }
+    },
+    "width": {
+      "syntax": "expression",
+      "type": "number",
+      "default": 60,
+      "description": {
+        "en": "Canvas width in millimetres.",
+        "de": "Zeichenflächenbreite in Millimetern."
+      }
+    },
+    "xlabel": {
+      "syntax": "text",
+      "type": "string",
+      "description": {
+        "en": "Caption of the horizontal axis.",
+        "de": "Beschriftung der waagerechten Achse."
+      }
+    },
+    "ylabel": {
+      "syntax": "text",
+      "type": "string",
+      "description": {
+        "en": "Caption of the vertical axis.",
+        "de": "Beschriftung der senkrechten Achse."
+      }
+    }
+  }
+}

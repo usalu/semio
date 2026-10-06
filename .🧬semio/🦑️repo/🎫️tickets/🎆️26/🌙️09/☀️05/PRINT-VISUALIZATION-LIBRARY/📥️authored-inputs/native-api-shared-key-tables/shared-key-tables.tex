@@ -1,0 +1,129 @@
+%region 🔖️SharedKeyTables
+\section{\ApiText{Shared key scopes}{Gemeinsame Schlüsselbereiche}}
+
+\subsection{\Key{api-helper-sci-keys-canvas}}
+\ApiScopeSource{api-helper-sci-keys-canvas}{helper:semio_viz_sci_keys_canvas}
+\SemioTableLong[text-size=8pt]{\Key{api-helper-sci-keys-canvas}}{0.17,0.18,0.20,0.45}{\ApiKey & \ApiType & \ApiDefault & \ApiMeaning}{%
+  \SemioTableRow{\Key{data} & string & \ApiText{inherited}{übernommen} & \ApiText{Source table name; the canvas reset leaves the selection unchanged.}{Name der Quelltabelle; der Zeichenflächenreset erhält die Auswahl.}}
+  \SemioTableRow{\Key{width} & number & 60 & \ApiText{Canvas width in millimetres before family overrides.}{Breite der Zeichenfläche in Millimetern vor Familienvorgaben.}}
+  \SemioTableRow{\Key{height} & number & 40 & \ApiText{Canvas height in millimetres before family overrides.}{Höhe der Zeichenfläche in Millimetern vor Familienvorgaben.}}
+  \SemioTableRow{\Key{domain} & string & \ApiText{empty}{leer} & \ApiText{Two comma-separated x endpoints in data units; empty preserves the family window.}{Zwei kommaseparierte x-Endpunkte in Dateneinheiten; leer erhält das Familienfenster.}}
+  \SemioTableRow{\Key{range} & string & \ApiText{empty}{leer} & \ApiText{Two comma-separated y endpoints in data units; empty preserves the family window.}{Zwei kommaseparierte y-Endpunkte in Dateneinheiten; leer erhält das Familienfenster.}}
+  \SemioTableRow{\Key{ticks} & integer & 4 & \ApiText{Tick divisions per axis.}{Teilungen je Achse.}}
+  \SemioTableRow{\Key{grid} & boolean & true & \ApiText{Draw the background grid.}{Hintergrundgitter zeichnen.}}
+  \SemioTableRow{\Key{axes} & boolean & true & \ApiText{Draw the frame and tick captions.}{Rahmen und Teilstrichbeschriftungen zeichnen.}}
+  \SemioTableRow{\Key{title} & string & \ApiText{empty}{leer} & \ApiText{Caption above the canvas.}{Beschriftung über der Zeichenfläche.}}
+  \SemioTableRow{\Key{xlabel} & string & \ApiText{empty}{leer} & \ApiText{Horizontal axis caption.}{Beschriftung der waagerechten Achse.}}
+  \SemioTableRow{\Key{ylabel} & string & \ApiText{empty}{leer} & \ApiText{Vertical axis caption.}{Beschriftung der senkrechten Achse.}}
+  \SemioTableRow{\Key{seed} & integer & 20260905 & \ApiText{Seed of the deterministic pseudo-random stream.}{Startwert des deterministischen Pseudozufallsstroms.}}
+}
+
+\subsection{\Key{api-helper-cart-family-keys}}
+\ApiScopeSource{api-helper-cart-family-keys}{helper:semio_viz_cart_family_keys}
+\SemioTableLong[text-size=8pt]{\Key{api-helper-cart-family-keys}}{0.17,0.18,0.20,0.45}{\ApiKey & \ApiType & \ApiDefault & \ApiMeaning}{%
+  \SemioTableRow{\Key{data} & string & \Key{demo-cartesian} & \ApiText{Source table.}{Quelltabelle.}}
+  \SemioTableRow{\Key{x} & string & \Key{cat} & \ApiText{Independent or category column.}{Spalte für unabhängige Werte oder Kategorien.}}
+  \SemioTableRow{\Key{y} & string & \Key{val} & \ApiText{Value column.}{Wertespalte.}}
+  \SemioTableRow{\Key{y2} & string & \ApiText{empty}{leer} & \ApiText{Second value column for spans.}{Zweite Wertespalte für Intervalle.}}
+  \SemioTableRow{\Key{group} & string & \ApiText{empty}{leer} & \ApiText{Column separating series.}{Spalte zur Trennung der Reihen.}}
+  \SemioTableRow{\Key{series} & string & \ApiText{empty}{leer} & \ApiText{Alias of group.}{Alias von group.}}
+  \SemioTableRow{\Key{label} & string & \ApiText{empty}{leer} & \ApiText{Column supplying mark captions.}{Spalte mit Markenbeschriftungen.}}
+  \SemioTableRow{\Key{padLeft} & number & 10 & \ApiText{Left canvas inset in millimetres.}{Linker Innenabstand in Millimetern.}}
+  \SemioTableRow{\Key{padRight} & number & 4 & \ApiText{Right canvas inset in millimetres.}{Rechter Innenabstand in Millimetern.}}
+  \SemioTableRow{\Key{padTop} & number & 4 & \ApiText{Top canvas inset in millimetres.}{Oberer Innenabstand in Millimetern.}}
+  \SemioTableRow{\Key{padBottom} & number & 8 & \ApiText{Bottom canvas inset in millimetres.}{Unterer Innenabstand in Millimetern.}}
+  \SemioTableRow{\Key{yMin} & number & \ApiText{from data}{aus Daten} & \ApiText{Explicit lower value-axis bound.}{Explizite untere Grenze der Wertachse.}}
+  \SemioTableRow{\Key{yMax} & number & \ApiText{from data}{aus Daten} & \ApiText{Explicit upper value-axis bound.}{Explizite obere Grenze der Wertachse.}}
+  \SemioTableRow{\Key{axes} & boolean & true & \ApiText{Draw the axes.}{Achsen zeichnen.}}
+  \SemioTableRow{\Key{grid} & string & \Key{none} & \ApiText{Grid directions: none, x, y or both.}{Gitterrichtungen: none, x, y oder both.}}
+  \SemioTableRow{\Key{gridLines} & integer & 5 & \ApiText{Grid division count.}{Anzahl der Gitterteilungen.}}
+  \SemioTableRow{\Key{ticks} & integer & 5 & \ApiText{Tick division count, at least two.}{Anzahl der Teilstrichteilungen, mindestens zwei.}}
+  \SemioTableRow{\Key{labels} & string & \Key{none} & \ApiText{Mark captions: none, value or category.}{Markenbeschriftungen: none, value oder category.}}
+  \SemioTableRow{\Key{sort} & string & \Key{none} & \ApiText{Category order: none, ascending or descending.}{Kategorienreihenfolge: none, ascending oder descending.}}
+  \SemioTableRow{\Key{curve} & string & \Key{linear} & \ApiText{Curve interpolator connecting the samples.}{Kurveninterpolator zwischen den Stützstellen.}}
+}
+
+\subsection{\Key{api-path-family-common}}
+\ApiScopeSource{api-path-family-common}{semio / viz / family / common}
+\SemioTableLong[text-size=8pt]{\Key{api-path-family-common}}{0.17,0.18,0.20,0.45}{\ApiKey & \ApiType & \ApiDefault & \ApiMeaning}{%
+  \SemioTableRow{\Key{data} & string & \Key{demo-distribution} & \ApiText{Source table for distribution families.}{Quelltabelle der Verteilungsfamilien.}}
+  \SemioTableRow{\Key{value} & string & \Key{value} & \ApiText{Numeric observation column.}{Spalte der numerischen Beobachtungen.}}
+  \SemioTableRow{\Key{group} & string & \Key{grp} & \ApiText{Grouping column.}{Gruppierungsspalte.}}
+  \SemioTableRow{\Key{label} & string & \ApiText{empty}{leer} & \ApiText{Optional observation caption column.}{Optionale Spalte der Beobachtungsbeschriftungen.}}
+  \SemioTableRow{\Key{width} & number & 60 & \ApiText{Canvas width in millimetres.}{Breite der Zeichenfläche in Millimetern.}}
+  \SemioTableRow{\Key{height} & number & 40 & \ApiText{Canvas height in millimetres.}{Höhe der Zeichenfläche in Millimetern.}}
+  \SemioTableRow{\Key{pad} & number & 3 & \ApiText{Inset from the canvas boundary in millimetres.}{Innenabstand zur Zeichengrenze in Millimetern.}}
+}
+
+\subsection{\Key{api-helper-space-keys-camera}}
+\ApiScopeSource{api-helper-space-keys-camera}{helper:semio_viz_space_keys_camera}
+\ApiText{This helper declares camera storage without a reset. The defaults below are the explicit sci-3d family initialization; public camera arguments may override them. Isometric and orthographic presets override their angles after options are read.}{Dieser Helfer deklariert Kameraspeicher ohne Reset. Die folgenden Vorgaben stammen aus der expliziten Initialisierung von sci-3d; öffentliche Kameraargumente können sie überschreiben. Isometrische und orthografische Voreinstellungen überschreiben ihre Winkel nach dem Lesen der Optionen.}
+\SemioTableLong[text-size=8pt]{\Key{api-helper-space-keys-camera}}{0.17,0.18,0.20,0.45}{\ApiKey & \ApiType & \ApiDefault & \ApiMeaning}{%
+  \SemioTableRow{\Key{projection} & string & \Key{isometric} & \ApiText{Camera projection: orthographic, isometric, axonometric, perspective or oblique.}{Kameraprojektion: orthographic, isometric, axonometric, perspective oder oblique.}}
+  \SemioTableRow{\Key{azimuth} & number & 45 & \ApiText{Azimuth in degrees; a preset may replace it.}{Azimut in Grad; eine Voreinstellung kann ihn ersetzen.}}
+  \SemioTableRow{\Key{elevation} & number & 35.26438968275465 & \ApiText{Elevation in degrees; a preset may replace it.}{Höhenwinkel in Grad; eine Voreinstellung kann ihn ersetzen.}}
+  \SemioTableRow{\Key{distance} & number & 60 & \ApiText{Perspective camera distance in world units.}{Abstand der perspektivischen Kamera in Welteinheiten.}}
+  \SemioTableRow{\Key{obliqueAngle} & number & 45 & \ApiText{Oblique projection angle in degrees.}{Winkel der schiefen Projektion in Grad.}}
+  \SemioTableRow{\Key{obliqueScale} & number & 0.5 & \ApiText{Dimensionless oblique depth multiplier.}{Dimensionsloser Tiefenfaktor der schiefen Projektion.}}
+  \SemioTableRow{\Key{zoom} & number & 6 & \ApiText{Screen millimetres per projected world unit.}{Bildschirmmillimeter je projizierter Welteinheit.}}
+}
+
+\subsection{\Key{api-path-hierarchy}}
+\ApiScopeSource{api-path-hierarchy}{semio / viz / hierarchy}
+\SemioTableLong[text-size=8pt]{\Key{api-path-hierarchy}}{0.17,0.18,0.20,0.45}{\ApiKey & \ApiType & \ApiDefault & \ApiMeaning}{%
+  \SemioTableRow{\Key{data} & string & \ApiText{empty}{leer} & \ApiText{Table from which the hierarchy is constructed.}{Tabelle, aus der die Hierarchie entsteht.}}
+  \SemioTableRow{\Key{id} & string & \ApiText{empty}{leer} & \ApiText{Node identifier column; empty selects the table role.}{Spalte der Knotenkennung; leer wählt die Tabellenrolle.}}
+  \SemioTableRow{\Key{parent} & string & \ApiText{empty}{leer} & \ApiText{Parent identifier column; empty selects the table role.}{Spalte der Elternkennung; leer wählt die Tabellenrolle.}}
+  \SemioTableRow{\Key{value} & string & \ApiText{empty}{leer} & \ApiText{Stored node value column; empty selects its role and none disables it.}{Spalte des Knotenwerts; leer wählt ihre Rolle, none deaktiviert sie.}}
+  \SemioTableRow{\Key{path} & string & \ApiText{empty}{leer} & \ApiText{Path column replacing the explicit id and parent columns.}{Pfadspalte anstelle expliziter Kennungs- und Elternspalten.}}
+  \SemioTableRow{\Key{delimiter} & string & / & \ApiText{Separator between path components.}{Trennzeichen zwischen Pfadkomponenten.}}
+  \SemioTableRow{\Key{aggregate} & string & \Key{sum} & \ApiText{Aggregate child values by sum, count or none.}{Kindwerte durch sum, count oder none zusammenfassen.}}
+  \SemioTableRow{\Key{sort} & string & \Key{none} & \ApiText{Sibling ordering applied after aggregation.}{Geschwisterreihenfolge nach der Aggregation.}}
+}
+
+\subsection{\Key{api-path-hierarchy-layout}}
+\ApiScopeSource{api-path-hierarchy-layout}{semio / viz / hierarchy / layout}
+\SemioTableLong[text-size=8pt]{\Key{api-path-hierarchy-layout}}{0.17,0.18,0.20,0.45}{\ApiKey & \ApiType & \ApiDefault & \ApiMeaning}{%
+  \SemioTableRow{\Key{size} & string & \ApiText{unset (1,1 storage)}{nicht gesetzt (Speicher 1,1)} & \ApiText{Layout extent w,h; explicit use selects a fixed layout box.}{Layoutausdehnung w,h; explizite Verwendung wählt einen festen Layoutrahmen.}}
+  \SemioTableRow{\Key{nodeSize} & string & \ApiText{unset}{nicht gesetzt} & \ApiText{Repeated node spacing w,h, replacing the fixed box mode.}{Wiederholter Knotenabstand w,h anstelle des festen Rahmenmodus.}}
+  \SemioTableRow{\Key{separationSame} & number & 1 & \ApiText{Separation between siblings in layout units.}{Abstand zwischen Geschwistern in Layouteinheiten.}}
+  \SemioTableRow{\Key{separationOther} & number & 2 & \ApiText{Separation between nodes with different parents.}{Abstand zwischen Knoten mit verschiedenen Eltern.}}
+  \SemioTableRow{\Key{separationDepth} & boolean & false & \ApiText{Divide tree separation by depth.}{Baumabstand durch die Tiefe teilen.}}
+  \SemioTableRow{\Key{tile} & string & \Key{squarify} & \ApiText{Treemap tiling algorithm.}{Algorithmus der Treemap-Kachelung.}}
+  \SemioTableRow{\Key{ratio} & number & \ensuremath{(1+\sqrt{5})/2} & \ApiText{Desired dimensionless tile aspect ratio.}{Gewünschtes dimensionsloses Seitenverhältnis der Kacheln.}}
+  \SemioTableRow{\Key{padding} & number & 0 & \ApiText{Set inner and all outer padding in layout units.}{Inneren und alle äußeren Abstände in Layouteinheiten setzen.}}
+  \SemioTableRow{\Key{paddingInner} & number & 0 & \ApiText{Padding between sibling tiles.}{Abstand zwischen Geschwisterkacheln.}}
+  \SemioTableRow{\Key{paddingOuter} & number & 0 & \ApiText{Set all four outer padding values.}{Alle vier äußeren Abstände setzen.}}
+  \SemioTableRow{\Key{paddingTop} & number & 0 & \ApiText{Top outer padding.}{Oberer äußerer Abstand.}}
+  \SemioTableRow{\Key{paddingRight} & number & 0 & \ApiText{Right outer padding.}{Rechter äußerer Abstand.}}
+  \SemioTableRow{\Key{paddingBottom} & number & 0 & \ApiText{Bottom outer padding.}{Unterer äußerer Abstand.}}
+  \SemioTableRow{\Key{paddingLeft} & number & 0 & \ApiText{Left outer padding.}{Linker äußerer Abstand.}}
+  \SemioTableRow{\Key{round} & boolean & false & \ApiText{Snap rectangular tile positions to integer layout units.}{Rechteckige Kachelpositionen auf ganze Layouteinheiten runden.}}
+  \SemioTableRow{\Key{radius} & string & \Key{auto} & \ApiText{Packing radius: auto derives square-root value; value uses the stored value, or supply a constant.}{Packradius: auto nutzt die Quadratwurzel des Werts; value nutzt den gespeicherten Wert, oder eine Konstante angeben.}}
+  \SemioTableRow{\Key{relaxation} & integer & 24 & \ApiText{Relaxation passes for the Voronoi tiler.}{Relaxationsdurchläufe der Voronoi-Kachelung.}}
+  \SemioTableRow{\Key{radial} & boolean & false & \ApiText{Convert layout positions to radial coordinates.}{Layoutpositionen in Radialkoordinaten umrechnen.}}
+  \SemioTableRow{\Key{radialOffset} & number & 0 & \ApiText{Angular offset added before radial conversion, in degrees.}{Winkelversatz vor der radialen Umrechnung in Grad.}}
+}
+
+\subsection{\Key{api-path-hierarchy-render}}
+\ApiScopeSource{api-path-hierarchy-render}{semio / viz / hierarchy / render}
+\SemioTableLong[text-size=8pt]{\Key{api-path-hierarchy-render}}{0.17,0.18,0.20,0.45}{\ApiKey & \ApiType & \ApiDefault & \ApiMeaning}{%
+  \SemioTableRow{\Key{width} & number & \ApiText{frame; otherwise 80}{Rahmen; sonst 80} & \ApiText{Renderer width in millimetres.}{Rendererbreite in Millimetern.}}
+  \SemioTableRow{\Key{height} & number & \ApiText{frame; otherwise 45}{Rahmen; sonst 45} & \ApiText{Renderer height in millimetres.}{Rendererhöhe in Millimetern.}}
+  \SemioTableRow{\Key{inset} & number & 4 & \ApiText{Reserved canvas margin in millimetres.}{Reservierter Zeichenrand in Millimetern.}}
+  \SemioTableRow{\Key{orientation} & string & \Key{top-down} & \ApiText{Top-down, bottom-up, left-right, right-left or radial placement.}{Platzierung top-down, bottom-up, left-right, right-left oder radial.}}
+  \SemioTableRow{\Key{link} & string & \Key{straight} & \ApiText{Connection drawing: straight, curved, orthogonal, radial or none.}{Verbindungszeichnung: straight, curved, orthogonal, radial oder none.}}
+  \SemioTableRow{\Key{node} & string & \Key{circle} & \ApiText{Node drawing: circle, square, box, dot or none.}{Knotenzeichnung: circle, square, box, dot oder none.}}
+  \SemioTableRow{\Key{nodeRadius} & number & 1.4 & \ApiText{Node radius in millimetres.}{Knotenradius in Millimetern.}}
+  \SemioTableRow{\Key{nodeWidth} & number & 16 & \ApiText{Box node width in millimetres.}{Breite eines Kastenknotens in Millimetern.}}
+  \SemioTableRow{\Key{nodeHeight} & number & 6 & \ApiText{Box node height in millimetres.}{Höhe eines Kastenknotens in Millimetern.}}
+  \SemioTableRow{\Key{labels} & boolean & true & \ApiText{Draw node captions.}{Knotenbeschriftungen zeichnen.}}
+  \SemioTableRow{\Key{leafLabels} & boolean & false & \ApiText{Restrict captions to leaves.}{Beschriftungen auf Blätter begrenzen.}}
+  \SemioTableRow{\Key{labelColumn} & string & \ApiText{empty}{leer} & \ApiText{Caption column; empty selects the table label role.}{Beschriftungsspalte; leer wählt die Beschriftungsrolle der Tabelle.}}
+  \SemioTableRow{\Key{fill} & string & \Key{depth} & \ApiText{Fill encoding: depth, value, index, leaf or none.}{Füllkodierung: depth, value, index, leaf oder none.}}
+  \SemioTableRow{\Key{opacity} & number & 1 & \ApiText{Dimensionless fill opacity.}{Dimensionslose Fülldeckkraft.}}
+  \SemioTableRow{\Key{stroke} & string & \Key{semio-chrome-foreground} & \ApiText{Outline colour.}{Umrissfarbe.}}
+  \SemioTableRow{\Key{strokeWidth} & string & \Key{semio@stroke@hairline} & \ApiText{Outline width as a TeX dimension from the theme hairline token.}{Umrissbreite als TeX-Dimension aus dem Haarlinienwert des Themas.}}
+  \SemioTableRow{\Key{innerRadius} & number & 6 & \ApiText{Sunburst hole radius in millimetres.}{Radius des Sunburst-Lochs in Millimetern.}}
+}
+%endregion 🔖️SharedKeyTables

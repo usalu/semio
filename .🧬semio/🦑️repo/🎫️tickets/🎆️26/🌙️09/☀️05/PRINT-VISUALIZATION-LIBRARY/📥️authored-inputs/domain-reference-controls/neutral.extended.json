@@ -1,0 +1,431 @@
+{
+  "schema": {
+    "type": "object",
+    "required": [
+      "frame",
+      "padding",
+      "rowGap",
+      "modes",
+      "cases"
+    ],
+    "additionalProperties": false,
+    "properties": {
+      "frame": {
+        "type": "array",
+        "minItems": 2,
+        "maxItems": 2,
+        "items": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      },
+      "padding": {
+        "type": "number",
+        "minimum": 0
+      },
+      "rowGap": {
+        "type": "number",
+        "minimum": 0
+      },
+      "modes": {
+        "type": "array",
+        "items": {
+          "enum": [
+            "flame",
+            "tree"
+          ]
+        }
+      },
+      "cases": {
+        "type": "array",
+        "minItems": 17,
+        "maxItems": 17,
+        "items": {
+          "type": "object",
+          "required": [
+            "id",
+            "valid",
+            "rows"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "valid": {
+              "type": "boolean"
+            },
+            "rows": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "parent",
+                  "value",
+                  "label"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "parent": {
+                    "type": "string"
+                  },
+                  "value": {
+                    "type": [
+                      "number",
+                      "string"
+                    ]
+                  },
+                  "label": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "vectors": {
+    "frame": [
+      80,
+      48
+    ],
+    "padding": 3,
+    "rowGap": 0.4,
+    "modes": [
+      "flame",
+      "tree"
+    ],
+    "cases": [
+      {
+        "id": "ordered",
+        "valid": true,
+        "rows": [
+          {
+            "id": "R",
+            "parent": "",
+            "value": 5,
+            "label": "Root"
+          },
+          {
+            "id": "P",
+            "parent": "R",
+            "value": 3,
+            "label": "Parent"
+          },
+          {
+            "id": "G",
+            "parent": "P",
+            "value": 2,
+            "label": "Grandchild"
+          }
+        ]
+      },
+      {
+        "id": "reversed",
+        "valid": true,
+        "rows": [
+          {
+            "id": "G",
+            "parent": "P",
+            "value": 2,
+            "label": "Grandchild"
+          },
+          {
+            "id": "P",
+            "parent": "R",
+            "value": 3,
+            "label": "Parent"
+          },
+          {
+            "id": "R",
+            "parent": "",
+            "value": 5,
+            "label": "Root"
+          }
+        ]
+      },
+      {
+        "id": "unicode",
+        "valid": true,
+        "rows": [
+          {
+            "id": "根",
+            "parent": "",
+            "value": 5,
+            "label": "Root"
+          },
+          {
+            "id": "子",
+            "parent": "根",
+            "value": 3,
+            "label": "Parent"
+          },
+          {
+            "id": "葉",
+            "parent": "子",
+            "value": 2,
+            "label": "Grandchild"
+          }
+        ]
+      },
+      {
+        "id": "unicode-reversed",
+        "valid": true,
+        "rows": [
+          {
+            "id": "葉",
+            "parent": "子",
+            "value": 2,
+            "label": "Grandchild"
+          },
+          {
+            "id": "子",
+            "parent": "根",
+            "value": 3,
+            "label": "Parent"
+          },
+          {
+            "id": "根",
+            "parent": "",
+            "value": 5,
+            "label": "Root"
+          }
+        ]
+      },
+      {
+        "id": "forest",
+        "valid": true,
+        "rows": [
+          {
+            "id": "B",
+            "parent": "",
+            "value": 2,
+            "label": "Second"
+          },
+          {
+            "id": "L",
+            "parent": "A",
+            "value": 3,
+            "label": "Leaf"
+          },
+          {
+            "id": "A",
+            "parent": "",
+            "value": 4,
+            "label": "First"
+          }
+        ]
+      },
+      {
+        "id": "empty",
+        "valid": true,
+        "rows": []
+      },
+      {
+        "id": "missing-parent",
+        "valid": false,
+        "rows": [
+          {
+            "id": "A",
+            "parent": "Z",
+            "value": 2,
+            "label": "Missing"
+          }
+        ]
+      },
+      {
+        "id": "cycle",
+        "valid": false,
+        "rows": [
+          {
+            "id": "A",
+            "parent": "B",
+            "value": 2,
+            "label": "A"
+          },
+          {
+            "id": "B",
+            "parent": "A",
+            "value": 3,
+            "label": "B"
+          }
+        ]
+      },
+      {
+        "id": "disconnected-cycle",
+        "valid": false,
+        "rows": [
+          {
+            "id": "R",
+            "parent": "",
+            "value": 1,
+            "label": "Root"
+          },
+          {
+            "id": "A",
+            "parent": "B",
+            "value": 2,
+            "label": "A"
+          },
+          {
+            "id": "B",
+            "parent": "A",
+            "value": 3,
+            "label": "B"
+          }
+        ]
+      },
+      {
+        "id": "duplicate",
+        "valid": false,
+        "rows": [
+          {
+            "id": "A",
+            "parent": "",
+            "value": 2,
+            "label": "First"
+          },
+          {
+            "id": "A",
+            "parent": "",
+            "value": 3,
+            "label": "Second"
+          }
+        ]
+      },
+      {
+        "id": "blank-id",
+        "valid": false,
+        "rows": [
+          {
+            "id": "",
+            "parent": "",
+            "value": 2,
+            "label": "Blank"
+          }
+        ]
+      },
+      {
+        "id": "negative-value",
+        "valid": false,
+        "rows": [
+          {
+            "id": "A",
+            "parent": "",
+            "value": -1,
+            "label": "Negative"
+          }
+        ]
+      },
+      {
+        "id": "nonfinite-value",
+        "valid": false,
+        "rows": [
+          {
+            "id": "A",
+            "parent": "",
+            "value": "inf",
+            "label": "Infinite"
+          }
+        ]
+      },
+      {
+        "id": "siblings",
+        "valid": true,
+        "rows": [
+          {
+            "id": "R",
+            "parent": "",
+            "value": 2,
+            "label": "  Root Payload  "
+          },
+          {
+            "id": "B",
+            "parent": "R",
+            "value": 3,
+            "label": "First Child"
+          },
+          {
+            "id": "A",
+            "parent": "R",
+            "value": 1,
+            "label": "a,b"
+          }
+        ]
+      },
+      {
+        "id": "siblings-reversed",
+        "valid": true,
+        "rows": [
+          {
+            "id": "A",
+            "parent": "R",
+            "value": 1,
+            "label": "a,b"
+          },
+          {
+            "id": "B",
+            "parent": "R",
+            "value": 3,
+            "label": "First Child"
+          },
+          {
+            "id": "R",
+            "parent": "",
+            "value": 2,
+            "label": "  Root Payload  "
+          }
+        ]
+      },
+      {
+        "id": "zero-forest",
+        "valid": true,
+        "rows": [
+          {
+            "id": "A",
+            "parent": "",
+            "value": 0,
+            "label": "A"
+          },
+          {
+            "id": "B",
+            "parent": "A",
+            "value": 0,
+            "label": "B"
+          },
+          {
+            "id": "C",
+            "parent": "",
+            "value": 0,
+            "label": "C"
+          }
+        ]
+      },
+      {
+        "id": "sentinel-collision",
+        "valid": true,
+        "rows": [
+          {
+            "id": "__neutral_forest__",
+            "parent": "",
+            "value": 2,
+            "label": "Authored Sentinel"
+          },
+          {
+            "id": "L",
+            "parent": "__neutral_forest__",
+            "value": 3,
+            "label": "Leaf"
+          }
+        ]
+      }
+    ]
+  }
+}

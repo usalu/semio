@@ -1,0 +1,10 @@
+{
+  "scope": "font-neutral-18fallback-30primary",
+  "exitCode": 1,
+  "completedUtc": "2026-10-06T00:33:22.2006552Z",
+  "session": 54117,
+  "checks": 54,
+  "passed": 38,
+  "numericalFailures": 16,
+  "errors": 0
+}

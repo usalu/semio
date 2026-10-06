@@ -1,0 +1,56 @@
+% 🎨 A TikZ colour expression for the palette at normalised position #1 in [0,1], quantised to `paletteSteps` final colours.
+\cs_new:Npn \semio_viz_geo_ramp:n #1
+  {
+    \str_case:VnF \l_semio_viz_geo_f_palette_tl
+      {
+        { diverging }
+          {
+            \semio_viz_theme_color:n
+              { \fp_compare:nTF { ( \semio_viz_geo_ramp_quant:n {#1} ) < 0.5 } { 1 } { 0 } }
+            ! \semio_viz_geo_ramp_pct:n {#1} ! semio-chrome-canvas
+          }
+        { terrain }
+          {
+            \semio_viz_theme_color:n { 2 }
+            ! \semio_viz_geo_ramp_pct:n {#1} ! \semio_viz_theme_color:n { 3 }
+          }
+        { bathymetric }
+          { \semio_viz_theme_color:n { 1 } ! \semio_viz_geo_ramp_pct:n {#1} ! semio-chrome-canvas }
+        { neutral }
+          { semio-chrome-text-normal ! \semio_viz_geo_ramp_pct:n {#1} ! semio-chrome-canvas }
+      }
+      { \semio_viz_theme_color:n { 0 } ! \semio_viz_geo_ramp_pct:n {#1} ! semio-chrome-canvas }
+  }
+
+% 🧮️ Maps the whole-palette quantised position to mixing percentage, diverging from its midpoint.
+\cs_new:Npn \semio_viz_geo_ramp_pct:n #1
+  {
+    \fp_eval:n
+      {
+        floor
+          (
+            18 + 82 *
+            \str_if_eq:VnTF \l_semio_viz_geo_f_palette_tl { diverging }
+              { abs ( 2 * ( \semio_viz_geo_ramp_quant:n {#1} ) - 1 ) }
+              { \semio_viz_geo_ramp_quant:n {#1} }
+            + 0.5
+          )
+      }
+  }
+
+% 🪜️ Snaps the normalised whole-palette position to `paletteSteps` levels, or the midpoint for one level.
+\cs_new:Npn \semio_viz_geo_ramp_quant:n #1
+  {
+    \int_compare:nNnTF { \l_semio_viz_geo_f_palette_steps_int } > { 1 }
+      {
+        \fp_eval:n
+          {
+            floor
+              ( min ( 1 , max ( 0 , #1 ) )
+                * ( \l_semio_viz_geo_f_palette_steps_int - 1 ) + 0.5 )
+            / ( \l_semio_viz_geo_f_palette_steps_int - 1 )
+          }
+      }
+      { 0.5 }
+  }
+

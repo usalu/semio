@@ -1,0 +1,10 @@
+{
+  "defaults": { "language": "en", "appearance": "dark", "terminology": "native", "renderer": "react", "layout": "tabs" },
+  "valid": [{"language":"de"},{"appearance":"light"},{"terminology":"reuse"},{"renderer":"wgpu-native","layout":"columns"},{"renderer":"wgpu-wasm","layout":"rows"}],
+  "invalid": [{},{"language":"fr"},{"appearance":"auto"},{"terminology":"legacy"},{"renderer":"wgpu"},{"layout":"unknown"},{"language":"en","surprise":true},{"appearance":null}],
+  "cases": [
+    {"layers":[],"expected":{"language":"en","appearance":"dark","terminology":"native","renderer":"react","layout":"tabs"}},
+    {"layers":[{"language":"de","renderer":"wgpu-native"},{"appearance":"light"},{"language":"en"},{"renderer":"wgpu-wasm","layout":"rows"}],"expected":{"language":"en","appearance":"light","terminology":"native","renderer":"wgpu-wasm","layout":"rows"}},
+    {"layers":[{"language":"de","terminology":"reuse"},{"terminology":"native"}],"expected":{"language":"de","appearance":"dark","terminology":"native","renderer":"react","layout":"tabs"}}
+  ]
+}

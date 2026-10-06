@@ -16205,11 +16205,58 @@
       "name": "🛠️dev🎛️dashboard🌳️command-tree",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust/📜️script.ts run command-tree --dump-tree",
+      "command": "bun nx run @semio-tech/repo-cli-rs:run -- command-tree --dump-tree",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
         "order": 1.4
+      }
+    },
+    {
+      "name": "🛠️dev🎛️dashboard📦️install",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-cli-rs:install --outputStyle=stream",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 1.5
+      }
+    },
+    {
+      "name": "🛠️dev🎛️dashboard⚙️preferences",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-cli-rs:preferences --outputStyle=stream -- show",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 1.6
+      }
+    },
+    {
+      "name": "⚖️test🎛️dashboard🧊️execution",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-cli-rs:test -- execution",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_test",
+        "order": 1.4
+      }
+    },
+    {
+      "name": "⚖️test🕸️graph🧩️native-prerequisites",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-graph:test-manifest-contract -- native-prerequisites",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "9_gates",
+        "order": 900.05713
+      },
+      "env": {
+        "SEMIO_TEST_ARTIFACTS_DIR": "${workspaceFolder}/${input:graphContractArtifacts}"
       }
     },
     "@generated:cad:react",
@@ -19158,6 +19205,14 @@
         "group": "4_build",
         "order": 206.1775
       }
+    },
+    {
+      "name": "📦️test🦀️cargo📚️library-search-path",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-cargo-library-search-path",
+      "cwd": "${workspaceFolder}",
+      "presentation": {"group":"4_build","order":206.1779}
     },
     {
       "name": "📦️test🦀️cargo🧾️provenance",
@@ -25282,6 +25337,34 @@
       }
     },
     {
+      "name": "⚖️test📓️print🧱️command-boundaries",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test --args=command-boundaries",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.0371103
+      }
+    },
+    {
+      "name": "⚖️test📓️print📖️api-publication",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test --args=api-publication",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.0371104
+      }
+    },
+    {
       "name": "⚖️test📓️print🦀️chart-inference",
       "type": "node-terminal",
       "request": "launch",
@@ -25307,6 +25390,843 @@
       "presentation": {
         "group": "4_gate",
         "order": 900.03712
+      }
+    },
+    {
+      "name": "⚖️test📓️print🎛️family-customization",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "family-customization"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.037125
+      }
+    },
+    {
+      "name": "⚖️test📓️print✨️scale-options",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "scale-options"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.037126
+      }
+    },
+    {
+      "name": "⚖️test📓️print🎨️geo-palette",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "geo-palette"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.037127
+      }
+    },
+{
+  "name": "⚖️test📓️print🎏️vector-paint-controls",
+  "type": "node-terminal",
+  "request": "launch",
+  "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+  "cwd": "${workspaceFolder}",
+  "env": {
+    "NX_DAEMON": "false",
+    "PRINT_NATIVE_GRAMMAR_PHASE": "geo-palette",
+    "PRINT_NATIVE_GEO_PALETTE_PHASE": "vector-paint"
+  },
+  "presentation": {
+    "group": "4_gate",
+    "order": 900.0371271
+  }
+},
+{
+  "name": "⚖️test📓️print🧭️vector-base-admission",
+  "type": "node-terminal",
+  "request": "launch",
+  "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+  "cwd": "${workspaceFolder}",
+  "env": {
+    "NX_DAEMON": "false",
+    "PRINT_NATIVE_GRAMMAR_PHASE": "geo-palette",
+    "PRINT_NATIVE_GEO_PALETTE_PHASE": "vector-admission"
+  },
+  "presentation": {
+    "group": "4_gate",
+    "order": 900.0371272
+  }
+},
+{
+  "name": "⚖️test📓️print🌊️geo-flow-admission",
+  "type": "node-terminal",
+  "request": "launch",
+  "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+  "cwd": "${workspaceFolder}",
+  "env": {
+    "NX_DAEMON": "false",
+    "PRINT_NATIVE_GRAMMAR_PHASE": "geo-palette",
+    "PRINT_NATIVE_GEO_PALETTE_PHASE": "flow-admission"
+  },
+  "presentation": {
+    "group": "4_gate",
+    "order": 900.0371273
+  }
+},
+    {
+      "name": "⚖️test📓️print🗺️spatial-data",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "spatial-data"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.037128
+      }
+    },
+    {
+      "name": "⚖️test📓️print🐝️geo-planar",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": { "NX_DAEMON": "false", "PRINT_NATIVE_GRAMMAR_PHASE": "geo-planar" },
+      "presentation": { "group": "4_gate", "order": 900.037129 }
+    },
+    {
+      "name": "⚖️test📓️print🐝️geo-planar-admission",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": { "NX_DAEMON": "false", "PRINT_NATIVE_GRAMMAR_PHASE": "geo-planar", "PRINT_NATIVE_GEO_PLANAR_PHASE": "admission" },
+      "presentation": { "group": "4_gate", "order": 900.0371291 }
+    },
+    {
+      "name": "⚖️test📓️print🐝️geo-planar-guard",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": { "NX_DAEMON": "false", "PRINT_NATIVE_GRAMMAR_PHASE": "geo-planar", "PRINT_NATIVE_GEO_PLANAR_PHASE": "guard" },
+      "presentation": { "group": "4_gate", "order": 900.0371292 }
+    },
+    {
+      "name": "⚖️test📓️print🐝️geo-planar-rust",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": { "NX_DAEMON": "false", "PRINT_NATIVE_GRAMMAR_PHASE": "geo-planar", "PRINT_NATIVE_GEO_PLANAR_SOURCE": "rust" },
+      "presentation": { "group": "4_gate", "order": 900.0371293 }
+    },
+    {
+      "name": "⚖️test📓️print🐝️geo-planar-rust-producer",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print-rs:test --args=\"long --lib tests::canonical_planar_frame_mutation_vectors\" --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": { "NX_DAEMON": "false" },
+      "presentation": { "group": "4_gate", "order": 900.0371294 }
+    },
+    {
+      "name": "⚖️test📓️print🧩️meaningful-controls",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "meaningful-controls"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.0371295
+      }
+    },
+{
+  "name": "⚖️test📓️print🧩️process-controls",
+  "type": "node-terminal",
+  "request": "launch",
+  "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+  "cwd": "${workspaceFolder}",
+  "env": {
+    "NX_DAEMON": "false",
+    "PRINT_NATIVE_GRAMMAR_PHASE": "process-controls"
+  },
+  "presentation": {
+    "group": "4_gate",
+    "order": 900.037129501
+  }
+},
+    {
+      "name": "⚖️test📓️print🧩️diagram-controls",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "diagram-controls"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.0371296
+      }
+    },
+    {
+      "name": "⚖️test📓️print🧩️concept-controls",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "diagram-controls",
+        "PRINT_NATIVE_DIAGRAM_FAMILY": "concept-shape"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.0371297
+      }
+    },
+    {
+      "name": "⚖️test📓️print🧩️logic-controls",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "diagram-controls",
+        "PRINT_NATIVE_DIAGRAM_FAMILY": "logic-tree"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.0371298
+      }
+    },
+    {
+      "name": "⚖️test📓️print🧩️neural-controls",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "diagram-controls",
+        "PRINT_NATIVE_DIAGRAM_FAMILY": "neural-network"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.0371299
+      }
+    },
+    {
+      "name": "⚖️test📓️print🧊️geo-contour-boundary",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "geo-contour-boundary"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.03712995
+      }
+    },
+    {
+      "name": "⚖️test📓️print🌫️density-controls",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "density-controls"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.03712996
+      }
+    },
+    {
+      "name": "⚖️test📓️print🌡️thermodynamic-controls",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "thermodynamic-controls"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.03712997
+      }
+    },
+    {
+      "name": "⚖️test📓️print🧫️scientific-controls",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "scientific-controls"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.037129971
+      }
+    },
+    {
+      "name": "⚖️test📓️print🧾️scientific-defaults",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "scientific-defaults"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.037129972
+      }
+    },
+    {
+      "name": "⚖️test📓️print🪟️scientific-canvas",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "scientific-canvas"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.037129973
+      }
+    },
+    {
+      "name": "⚖️test📓️print🎨️spatial-controls",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {"NX_DAEMON":"false","PRINT_NATIVE_GRAMMAR_PHASE":"spatial-controls"},
+      "presentation": {"group":"4_gate","order":900.037129974}
+    },
+    {
+      "name": "⚖️test📓️print🗓️timeline-controls",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {"NX_DAEMON":"false","PRINT_NATIVE_GRAMMAR_PHASE":"timeline-controls"},
+      "presentation": {"group":"4_gate","order":900.037129975}
+    },
+    {
+      "name": "⚖️test📓️print🛤️planning-controls",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {"NX_DAEMON":"false","PRINT_NATIVE_GRAMMAR_PHASE":"planning-controls"},
+      "presentation": {"group":"4_gate","order":900.037129976}
+    },
+    {
+      "name": "⚖️test📓️print🪢️hull-controls",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {"NX_DAEMON":"false","PRINT_NATIVE_GRAMMAR_PHASE":"hull-controls"},
+      "presentation": {"group":"4_gate","order":900.037129977}
+    },
+    {
+      "name": "⚖️test📓️print📋️list-seating-controls",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {"NX_DAEMON":"false","PRINT_NATIVE_GRAMMAR_PHASE":"list-seating-controls"},
+      "presentation": {"group":"4_gate","order":900.037129978}
+    },
+    {
+      "name": "⚖️test📓️print🪟️scientific-mixed-controls",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "scientific-mixed-controls"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.037129979
+      }
+    },
+      {
+        "name": "⚖️test📓️print🔤️logo-controls",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+        "cwd": "${workspaceFolder}",
+        "env": {"NX_DAEMON":"false","PRINT_NATIVE_GRAMMAR_PHASE":"logo-controls"},
+        "presentation": {"group":"4_gate","order":900.03712998}
+      },
+      {
+        "name": "⚖️test📓️print🕸️radar-controls",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+        "cwd": "${workspaceFolder}",
+        "env": {"NX_DAEMON":"false","PRINT_NATIVE_GRAMMAR_PHASE":"radar-controls"},
+        "presentation": {"group":"4_gate","order":900.037129981}
+      },
+      {
+        "name": "⚖️test📓️print🏷️inherited-caption-controls",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+        "cwd": "${workspaceFolder}",
+        "env": {"NX_DAEMON":"false","PRINT_NATIVE_GRAMMAR_PHASE":"inherited-caption-controls"},
+        "presentation": {"group":"4_gate","order":900.037129982}
+      },
+      {
+        "name": "⚖️test📓️print🧾️scientific-admission",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+        "cwd": "${workspaceFolder}",
+        "env": {"NX_DAEMON":"false","PRINT_NATIVE_GRAMMAR_PHASE":"scientific-admission"},
+        "presentation": {"group":"4_gate","order":900.037129982}
+      },
+    {
+      "name": "⚖️test📓️print🧬️scientific-modes",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "scientific-modes"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.037129983
+      }
+    },
+    {
+      "name": "⚖️test📓️print🧬️scientific-stock-semantics",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "scientific-stocks"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.037129986
+      }
+    },
+    {
+      "name": "⚖️test📓️print🛡️scientific-record-domain",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "scientific-record-domain"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.037129987
+      }
+    },
+    {
+      "name": "⚖️test📓️print📐️scientific-construction-window",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "scientific-construction-window"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.0371299832
+      }
+    },
+    {
+      "name": "⚖️test📓️print🪟️scientific-decision-window",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "scientific-decision-window"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.0371299831
+      }
+    },
+      {
+        "name": "⚖️test📓️print🧶️biofabric-matrix-controls",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+        "cwd": "${workspaceFolder}",
+        "env": {"NX_DAEMON":"false","PRINT_NATIVE_GRAMMAR_PHASE":"biofabric-matrix-controls"},
+        "presentation": {"group":"4_gate","order":900.037129984}
+      },
+{
+  "name": "⚖️test📓️print🧭️specialized-placement-controls",
+  "type": "node-terminal",
+  "request": "launch",
+  "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+  "cwd": "${workspaceFolder}",
+  "env": {
+    "NX_DAEMON": "false",
+    "PRINT_NATIVE_GRAMMAR_PHASE": "specialized-placement-controls"
+  },
+  "presentation": {
+    "group": "4_gate",
+    "order": 900.037129988
+  }
+},
+{
+  "name": "⚖️test📓️print🌦️meteogram-window-controls",
+  "type": "node-terminal",
+  "request": "launch",
+  "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+  "cwd": "${workspaceFolder}",
+  "env": {
+    "NX_DAEMON": "false",
+    "PRINT_NATIVE_GRAMMAR_PHASE": "meteogram-window-controls"
+  },
+  "presentation": {
+    "group": "4_gate",
+    "order": 900.0371299891
+  }
+},
+{
+  "name": "⚖️test📓️print🎹️music-window-controls",
+  "type": "node-terminal",
+  "request": "launch",
+  "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+  "cwd": "${workspaceFolder}",
+  "env": {
+    "NX_DAEMON": "false",
+    "PRINT_NATIVE_GRAMMAR_PHASE": "music-window-controls"
+  },
+  "presentation": {
+    "group": "4_gate",
+    "order": 900.0371299892
+  }
+},
+{
+  "name": "⚖️test📓️print🧬️genome-window-controls",
+  "type": "node-terminal",
+  "request": "launch",
+  "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+  "cwd": "${workspaceFolder}",
+  "env": {
+    "NX_DAEMON": "false",
+    "PRINT_NATIVE_GRAMMAR_PHASE": "genome-window-controls"
+  },
+  "presentation": {
+    "group": "4_gate",
+    "order": 900.0371299893
+  }
+},
+{
+  "name": "⚖️test📓️print🌧️surface-window-controls",
+  "type": "node-terminal",
+  "request": "launch",
+  "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+  "cwd": "${workspaceFolder}",
+  "env": {
+    "NX_DAEMON": "false",
+    "PRINT_NATIVE_GRAMMAR_PHASE": "surface-window-controls"
+  },
+  "presentation": {
+    "group": "4_gate",
+    "order": 900.03712998935
+  }
+},
+{
+  "name": "⚖️test📓️print🌊️surface-range-controls",
+  "type": "node-terminal", "request": "launch",
+  "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+  "cwd": "${workspaceFolder}",
+  "env": {"NX_DAEMON": "false", "PRINT_NATIVE_GRAMMAR_PHASE": "surface-range-controls"},
+  "presentation": {"group": "4_gate", "order": 900.03712998936}
+},
+{
+  "name": "⚖️test📓️print🚀️physics-window-controls",
+  "type": "node-terminal", "request": "launch",
+  "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+  "cwd": "${workspaceFolder}",
+  "env": {"NX_DAEMON": "false", "PRINT_NATIVE_GRAMMAR_PHASE": "physics-window-controls"},
+  "presentation": {"group": "4_gate", "order": 900.03712998937}
+},
+{
+  "name": "⚖️test📓️print🐝️hive-controls",
+  "type": "node-terminal",
+  "request": "launch",
+  "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+  "cwd": "${workspaceFolder}",
+  "env": {
+    "NX_DAEMON": "false",
+    "PRINT_NATIVE_GRAMMAR_PHASE": "hive-controls"
+  },
+  "presentation": {
+    "group": "4_gate",
+    "order": 900.0371299894
+  }
+},
+{
+  "name": "⚖️test📓️print🎯️directed-graph-controls",
+  "type": "node-terminal",
+  "request": "launch",
+  "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+  "cwd": "${workspaceFolder}",
+  "env": {
+    "NX_DAEMON": "false",
+    "PRINT_NATIVE_GRAMMAR_PHASE": "directed-graph-controls"
+  },
+  "presentation": {
+    "group": "4_gate",
+    "order": 900.0371299895
+  }
+},
+{
+  "name": "⚖️test📓️print🖼️actual-mark-controls",
+  "type": "node-terminal",
+  "request": "launch",
+  "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+  "cwd": "${workspaceFolder}",
+  "env": {
+    "NX_DAEMON": "false",
+    "PRINT_NATIVE_GRAMMAR_PHASE": "actual-mark-controls"
+  },
+  "presentation": {
+    "group": "4_gate",
+    "order": 900.037129990
+  }
+},
+    {
+      "name": "⚖️test📓️print🕸️upset-controls",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {"NX_DAEMON":"false","PRINT_NATIVE_GRAMMAR_PHASE":"upset-controls"},
+      "presentation": {"group":"4_gate","order":900.037129985}
+    },    {
+      "name": "⚖️test📓️print🪝️scientific-styles",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "scientific-styles"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.037129989
+      }
+    },
+    {
+      "name": "⚖️test📓️print🛡️scientific-scalar-admission",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "scientific-scalar-admission"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.03712999
+      }
+    },
+    {
+      "name": "⚖️test📓️print🛡️scientific-mode-domain",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "scientific-mode-domain"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.037129991
+      }
+    },
+    {
+      "name": "⚖️test📓️print⚙️engineering-exploded",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {"NX_DAEMON":"false","PRINT_NATIVE_GRAMMAR_PHASE":"engineering-exploded"},
+      "presentation": {"group":"4_gate","order":900.037129992}
+    },
+    {
+  "name": "⚖️test📓️print🌲️domain-scalar-controls",
+  "type": "node-terminal",
+  "request": "launch",
+  "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+  "cwd": "${workspaceFolder}",
+  "env": {
+    "NX_DAEMON": "false",
+    "PRINT_NATIVE_GRAMMAR_PHASE": "domain-scalar-controls"
+  },
+  "presentation": {
+    "group": "4_gate",
+    "order": 900.0371299939
+  }
+},
+{
+      "name": "⚖️test📓️print🌲️domain-reference-controls",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "domain-reference-controls"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.037129994
+      }
+    },
+    {
+      "name": "⚖️test📓️print🪶️token-publication",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "token-publication"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.037129999
+      }
+    },
+    {
+      "name": "⚖️test📓️print🧠️neural-architecture",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {"NX_DAEMON":"false","PRINT_NATIVE_GRAMMAR_PHASE":"neural-architecture"},
+      "presentation": {"group":"4_gate","order":900.037129993}
+    },
+    {
+      "name": "⚖️test📓️print🧠️neural-topology",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {"NX_DAEMON":"false","PRINT_NATIVE_GRAMMAR_PHASE":"neural-topology"},
+      "presentation": {"group":"4_gate","order":900.037129995}
+    },
+    {
+      "name": "⚖️test📓️print🛡️neural-reference",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {"NX_DAEMON":"false","PRINT_NATIVE_GRAMMAR_PHASE":"neural-reference"},
+      "presentation": {"group":"4_gate","order":900.0371299951}
+    },
+    {
+      "name": "⚖️test📓️print🎯️neural-visible-tips",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {"NX_DAEMON":"false","PRINT_NATIVE_GRAMMAR_PHASE":"neural-tip"},
+      "presentation": {"group":"4_gate","order":900.0371299952}
+    },
+    {
+      "name": "⚖️test📓️print🎯️neural-self-loops",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {"NX_DAEMON":"false","PRINT_NATIVE_GRAMMAR_PHASE":"neural-self"},
+      "presentation": {"group":"4_gate","order":900.0371299953}
+    },
+    {
+      "name": "⚖️test📓️print🕸️graph-reference",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {"NX_DAEMON":"false","PRINT_NATIVE_GRAMMAR_PHASE":"graph-reference"},
+      "presentation": {"group":"4_gate","order":900.037129996}
+    },
+    {
+      "name": "⚖️test📓️print🛡️neural-admission",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {"NX_DAEMON":"false","PRINT_NATIVE_GRAMMAR_PHASE":"neural-admission"},
+      "presentation": {"group":"4_gate","order":900.037129997}
+    },
+    {
+      "name": "⚖️test📓️print🕓️critical-path-controls",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "critical-path-controls"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.037129998
       }
     },
     {
@@ -29300,6 +30220,9 @@
       "default": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/consumer-os-native/replay-9/plan-1.json"
     }
   ],
+
+  // 🎮️devLaunchers — per-playground-variant dev-launcher metadata (not part of the generated
+  // output); see 🚀️launch/🟦️.ts readSeed() for the exact split contract this marker line supports.
   "devLaunchers": {
     "aggregator": {
       "namePrefix": "♻️mit-bestand🧩️puzzle🧊️3d",

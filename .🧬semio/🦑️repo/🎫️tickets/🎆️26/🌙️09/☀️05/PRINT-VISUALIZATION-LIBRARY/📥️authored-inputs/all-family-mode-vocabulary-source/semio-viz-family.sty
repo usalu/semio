@@ -1,0 +1,75 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-viz-family}[2026/09/05 v0.2.0 semio viz family registry]
+
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+\RequirePackage{semio-viz-data}
+
+\ExplSyntaxOn
+
+%region 🔖️Diagnostics
+\msg_new:nnn { semio-viz } { unknown-family }
+  { Unknown~viz~family~'#1'.~Register~it~with~\SemioVizFamily~before~use. }
+\msg_new:nnn { semio-viz } { duplicate-family }
+  { Viz~family~'#1'~is~already~registered;~each~family~has~exactly~one~owner~package. }
+%endregion 🔖️Diagnostics
+
+%region 🔖️Registry
+\seq_new:N \g_semio_viz_family_names_seq
+\prop_new:N \g_semio_viz_family_package_prop
+\tl_new:N \l_semio_viz_family_options_tl
+
+% 🏷️ The sub-kind a catalogue entry asks a family to draw. Architecture §4 requires it on every
+% entry, so every family module must accept it; a family that switches on it declares its own
+% `variant` key and keeps it, a family whose variants differ only in their other options records
+% it here and nowhere else.
+\tl_new:N \l_semio_viz_family_variant_tl
+
+% 🔑 Gives family #1 the shared `variant` key, unless it already declares one of its own.
+\cs_new_protected:Npn \semio_viz_family_variant_key:n #1 {
+  \keys_if_exist:nnF { semio / viz / family / #1 } { variant }
+    {
+      \keys_define:nn { semio / viz / family / #1 }
+        { variant .tl_set:N = \l_semio_viz_family_variant_tl }
+    }
+}
+
+% 🏷️ Registers a family renderer under a global name; the code receives the option list as #1.
+\cs_new_protected:Npn \semio_viz_family_define:nn #1#2 {
+  \seq_if_in:NnTF \g_semio_viz_family_names_seq {#1}
+    { \msg_error:nnn { semio-viz } { duplicate-family } {#1} }
+    {
+      \seq_gput_right:Nn \g_semio_viz_family_names_seq {#1}
+      \prop_gput:Nnx \g_semio_viz_family_package_prop {#1} { \@currname }
+      \semio_viz_family_variant_key:n {#1}
+      \cs_gset_protected:cpn { semio_viz_family_ \tl_to_str:n {#1} :n } ##1 {#2}
+    }
+}
+
+% ❓ True when a family name is registered.
+\prg_new_protected_conditional:Npnn \semio_viz_family_if_exist:n #1 { T, F, TF } {
+  \seq_if_in:NnTF \g_semio_viz_family_names_seq {#1} { \prg_return_true: } { \prg_return_false: }
+}
+
+% ▶️ Runs a registered family with an option list.
+\cs_new_protected:Npn \semio_viz_family_run:nn #1#2 {
+  \semio_viz_family_if_exist:nTF {#1}
+    { \use:c { semio_viz_family_ \tl_to_str:n {#1} :n } {#2} }
+    { \msg_error:nnn { semio-viz } { unknown-family } {#1} }
+}
+\cs_generate_variant:Nn \semio_viz_family_run:nn { VV, nV, Vn }
+
+% 📇 Maps a callback over every registered family name.
+\cs_new_protected:Npn \semio_viz_family_map_inline:n #1 {
+  \seq_map_inline:Nn \g_semio_viz_family_names_seq {#1}
+}
+%endregion 🔖️Registry
+
+%region 🔖️PublicApi
+% 🏷️ \SemioVizFamily{name}{code}: registers a family renderer; inside code, #1 is the option list.
+\NewDocumentCommand \SemioVizFamily { m +m } { \semio_viz_family_define:nn {#1} {#2} }
+% ▶️ \SemioVizRunFamily{name}[options]: renders a family directly, bypassing the catalogue.
+\NewDocumentCommand \SemioVizRunFamily { m O{} } { \semio_viz_family_run:nn {#1} {#2} }
+%endregion 🔖️PublicApi
+
+\ExplSyntaxOff

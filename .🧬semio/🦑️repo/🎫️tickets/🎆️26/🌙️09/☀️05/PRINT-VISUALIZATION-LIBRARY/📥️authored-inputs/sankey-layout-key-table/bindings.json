@@ -1,0 +1,21 @@
+{
+  "file": "C:/git/semio/🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-api/🔓️viz-api.tex",
+  "before": "F6DD0F532E5467A39B01500564A70A10BD23667E0640D5E17A3372B5109E4616",
+  "after": "8FFB47574FA9B3FA5BC565D7ADB32C49B4CCB1E258DB2F8FF2998FE80925789A",
+  "source": {
+    "file": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-flow.sty",
+    "hash": "0E79C84406EB9EC79E9D82628A7EBBA9F63B9351B64A8C2E1A3F96AFD32411F9",
+    "declaration": 65,
+    "defaults": 78,
+    "entrypoints": [
+      656,
+      667,
+      679
+    ]
+  },
+  "oldRows": 7,
+  "rows": 10,
+  "scope": "semio / viz / layout / sankey",
+  "table": "api-path-sankey",
+  "semantics": "Replaced existing unnamed flow table; no redundant table or altered native runtime."
+}

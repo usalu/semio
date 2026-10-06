@@ -1,0 +1,30 @@
+[
+  {
+    "before": "\\SemioTableRow{\\Key{width} & \\Key{number} & \\Key{76} & \\ApiText{Maximum fitted display width in millimetres. Raw planar coordinates are scaled uniformly.}{Maximale angepasste Darstellungsbreite in Millimetern. Rohe planare Koordinaten werden gleichmäßig skaliert.}}",
+    "after": "\\SemioTableRow{\\Key{width} & \\Key{number} & \\Key{76} & \\ApiText{Positive maximum fitted display width in millimetres. Raw planar coordinates are scaled uniformly.}{Positive maximale angepasste Darstellungsbreite in Millimetern. Rohe planare Koordinaten werden gleichmäßig skaliert.}}"
+  },
+  {
+    "before": "\\SemioTableRow{\\Key{height} & \\Key{number} & \\Key{44} & \\ApiText{Maximum fitted display height in millimetres. Raw planar coordinates are scaled uniformly.}{Maximale angepasste Darstellungshöhe in Millimetern. Rohe planare Koordinaten werden gleichmäßig skaliert.}}",
+    "after": "\\SemioTableRow{\\Key{height} & \\Key{number} & \\Key{44} & \\ApiText{Positive maximum fitted display height in millimetres. Raw planar coordinates are scaled uniformly.}{Positive maximale angepasste Darstellungshöhe in Millimetern. Rohe planare Koordinaten werden gleichmäßig skaliert.}}"
+  },
+  {
+    "before": "\\SemioTableRow{\\Key{opacity} & \\Key{number} & \\Key{1} & \\ApiText{Drawing opacity; hex fill uses the same value, heat fill uses 0.3 times it.}{Zeichendeckkraft; Sechseckfüllungen nutzen denselben Wert, Wärmefüllungen das 0,3-Fache.}}",
+    "after": "\\SemioTableRow{\\Key{opacity} & \\Key{number} & \\Key{1} & \\ApiText{Drawing opacity; hex fill uses the same value, heat fill multiplies it by heatOpacity (default 0.3).}{Zeichendeckkraft; Sechseckfüllungen nutzen denselben Wert, Wärmefüllungen multiplizieren ihn mit heatOpacity (Standard 0,3).}}"
+  },
+  {
+    "before": "\\SemioTableRow{\\Key{radius} & \\Key{number} & \\Key{5} & \\ApiText{Numeric binning radius in raw planar units. Uniform display fitting scales the visible hexagons.}{Numerischer Bündelungsradius in rohen planaren Einheiten. Gleichmäßige Darstellungsanpassung skaliert die sichtbaren Sechsecke.}}",
+    "after": "\\SemioTableRow{\\Key{radius} & \\Key{number} & \\Key{5} & \\ApiText{Positive numeric binning radius in raw planar units. Uniform display fitting scales the visible hexagons.}{Positiver numerischer Bündelungsradius in rohen planaren Einheiten. Gleichmäßige Darstellungsanpassung skaliert die sichtbaren Sechsecke.}}"
+  },
+  {
+    "before": "\\SemioTableRow{\\Key{bandwidth} & \\Key{number} & \\Key{7} & \\ApiText{Gaussian kernel standard deviation in raw planar units.}{Standardabweichung des Gaußschen Kerns in rohen planaren Einheiten.}}",
+    "after": "\\SemioTableRow{\\Key{bandwidth} & \\Key{number} & \\Key{7} & \\ApiText{Positive Gaussian kernel standard deviation in raw planar units.}{Positive Standardabweichung des Gaußschen Kerns in rohen planaren Einheiten.}}"
+  },
+  {
+    "before": "\\SemioTableRow{\\Key{levels} & \\Key{integer} & \\Key{4} & \\ApiText{Number of contour levels for density and heat rendering.}{Anzahl der Höhenlinienniveaus für Dichte- und Wärmedarstellung.}}",
+    "after": "\\SemioTableRow{\\Key{levels} & \\Key{integer} & \\Key{4} & \\ApiText{Nonnegative contour level count; zero draws no contours with the default schedule. Explicit thresholds take precedence.}{Nichtnegative Anzahl der Höhenlinienniveaus; null zeichnet keine Höhenlinien mit dem Standardschema. Explizite Schwellen haben Vorrang.}}"
+  },
+  {
+    "before": "\\SemioTableRow{\\Key{thresholds} & \\Key{string} & --- & \\ApiText{Optional finite contour thresholds, sorted numerically; an empty list uses the requested level count.}{Optionale endliche Höhenlinienschwellen, numerisch sortiert; eine leere Liste nutzt die angeforderte Niveauanzahl.}}",
+    "after": "\\SemioTableRow{\\Key{thresholds} & \\Key{string} & --- & \\ApiText{Optional finite raw density thresholds, sorted numerically; an empty list uses the requested level count.}{Optionale endliche rohe Dichteschwellen, numerisch sortiert; eine leere Liste nutzt die angeforderte Niveauanzahl.}}"
+  }
+]

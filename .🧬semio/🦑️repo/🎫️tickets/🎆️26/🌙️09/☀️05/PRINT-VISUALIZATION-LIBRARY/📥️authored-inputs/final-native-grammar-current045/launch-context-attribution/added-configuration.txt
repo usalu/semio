@@ -1,0 +1,9 @@
+{
+      "name": "📦️test🦀️cargo📚️library-search-path",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-cargo-library-search-path",
+      "cwd": "${workspaceFolder}",
+      "presentation": {"group":"4_build","order":206.1779}
+    },
+    

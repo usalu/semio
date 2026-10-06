@@ -1,0 +1,698 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-viz-scientific-3d}[2026/09/05 v0.2.0 semio viz namespace scientific-3d families]
+
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+\RequirePackage{semio-viz-scientific-field}
+
+\ExplSyntaxOn
+
+%region 🔖️Parsing
+\cs_generate_variant:Nn \seq_set_split:Nnn { Nnx }
+\cs_generate_variant:Nn \prop_item:Nn { NV }
+\seq_new:N \l_semio_viz_space_rec_seq
+% ✂️ Splits one `/`-delimited record of a family key into the shared field sequence.
+\cs_new_protected:Npn \semio_viz_space_record:n #1
+  { \seq_set_split:Nnx \l_semio_viz_space_rec_seq { / } {#1} }
+% 🔢 Expands to the n-th field of the record read last.
+\cs_new:Npn \semio_viz_space_field:n #1
+  { \seq_item:Nn \l_semio_viz_space_rec_seq {#1} }
+%endregion 🔖️Parsing
+
+%region 🔖️Camera
+% 🎥 Camera state of the 3D-to-2D projection, the scientific namespace's own: semio-viz-coordinate
+% owns the planar coordinate systems of taxonomy 79 and carries no third axis. Every renderer below
+% goes through \semio_viz_space_project:nnn.
+\tl_new:N \l_semio_viz_space_projection_tl
+\fp_new:N \l_semio_viz_space_azimuth_fp
+\fp_new:N \l_semio_viz_space_elevation_fp
+\fp_new:N \l_semio_viz_space_distance_fp
+\fp_new:N \l_semio_viz_space_oblique_fp
+\fp_new:N \l_semio_viz_space_obliquescale_fp
+\fp_new:N \l_semio_viz_space_zoom_fp
+\fp_new:N \l_semio_viz_space_px_fp
+\fp_new:N \l_semio_viz_space_py_fp
+\fp_new:N \l_semio_viz_space_pz_fp
+
+% 🎥 Projects the world point (#1,#2,#3): screen coordinates land in \l_semio_viz_space_px_fp / _py_fp, the camera depth in _pz_fp.
+\cs_new_protected:Npn \semio_viz_space_project:nnn #1#2#3
+  {
+    \str_case:VnF \l_semio_viz_space_projection_tl
+      {
+        { oblique }
+          {
+            \fp_set:Nn \l_semio_viz_space_px_fp
+              { #1 + \l_semio_viz_space_obliquescale_fp * ( #3 ) * cosd ( \l_semio_viz_space_oblique_fp ) }
+            \fp_set:Nn \l_semio_viz_space_py_fp
+              { #2 + \l_semio_viz_space_obliquescale_fp * ( #3 ) * sind ( \l_semio_viz_space_oblique_fp ) }
+            \fp_set:Nn \l_semio_viz_space_pz_fp { #3 }
+          }
+      }
+      {
+        \fp_set:Nn \l_semio_viz_space_px_fp
+          { - ( #1 ) * sind ( \l_semio_viz_space_azimuth_fp ) + ( #2 ) * cosd ( \l_semio_viz_space_azimuth_fp ) }
+        \fp_set:Nn \l_semio_viz_space_py_fp
+          {
+            - ( ( #1 ) * cosd ( \l_semio_viz_space_azimuth_fp ) + ( #2 ) * sind ( \l_semio_viz_space_azimuth_fp ) )
+              * sind ( \l_semio_viz_space_elevation_fp )
+            + ( #3 ) * cosd ( \l_semio_viz_space_elevation_fp )
+          }
+        \fp_set:Nn \l_semio_viz_space_pz_fp
+          {
+            ( ( #1 ) * cosd ( \l_semio_viz_space_azimuth_fp ) + ( #2 ) * sind ( \l_semio_viz_space_azimuth_fp ) )
+              * cosd ( \l_semio_viz_space_elevation_fp )
+            + ( #3 ) * sind ( \l_semio_viz_space_elevation_fp )
+          }
+        \str_if_eq:VnT \l_semio_viz_space_projection_tl { perspective }
+          {
+            \fp_set:Nn \l_semio_viz_sci_g_fp
+              { \l_semio_viz_space_distance_fp
+                / max ( 0.2 , \l_semio_viz_space_distance_fp - \l_semio_viz_space_pz_fp ) }
+            \fp_set:Nn \l_semio_viz_space_px_fp { \l_semio_viz_space_px_fp * \l_semio_viz_sci_g_fp }
+            \fp_set:Nn \l_semio_viz_space_py_fp { \l_semio_viz_space_py_fp * \l_semio_viz_sci_g_fp }
+          }
+      }
+    \fp_set:Nn \l_semio_viz_space_px_fp { \l_semio_viz_space_zoom_fp * \l_semio_viz_space_px_fp }
+    \fp_set:Nn \l_semio_viz_space_py_fp { \l_semio_viz_space_zoom_fp * \l_semio_viz_space_py_fp }
+  }
+
+% 🎥 Camera keys shared by every 3D family:
+%    projection (orthographic|isometric|axonometric|perspective|oblique, isometric).
+%    azimuth (fp, 45), elevation (fp, 35.264): the view angles in degrees; `isometric` fixes them.
+%    distance (fp, 60): perspective eye distance. obliqueAngle (fp, 45), obliqueScale (fp, 0.5): cabinet parameters.
+%    zoom (fp, 1): millimetres per world unit.
+\cs_new_protected:Npn \semio_viz_space_keys_camera:n #1
+  {
+    \keys_define:nn { semio / viz / family / #1 }
+      {
+        projection   .tl_set:N = \l_semio_viz_space_projection_tl ,
+        azimuth      .fp_set:N = \l_semio_viz_space_azimuth_fp ,
+        elevation    .fp_set:N = \l_semio_viz_space_elevation_fp ,
+        distance     .fp_set:N = \l_semio_viz_space_distance_fp ,
+        obliqueAngle .fp_set:N = \l_semio_viz_space_oblique_fp ,
+        obliqueScale .fp_set:N = \l_semio_viz_space_obliquescale_fp ,
+        zoom         .fp_set:N = \l_semio_viz_space_zoom_fp ,
+      }
+  }
+% 🎥 `isometric` and `orthographic` are camera presets, applied after the option list is read.
+\cs_new_protected:Npn \semio_viz_space_camera_apply:
+  {
+    \str_case:VnF \l_semio_viz_space_projection_tl
+      {
+        { isometric }
+          {
+            \fp_set:Nn \l_semio_viz_space_azimuth_fp { 45 }
+            \fp_set:Nn \l_semio_viz_space_elevation_fp { 35.26438968275465 }
+          }
+        { orthographic }
+          {
+            \fp_set:Nn \l_semio_viz_space_azimuth_fp { 0 }
+            \fp_set:Nn \l_semio_viz_space_elevation_fp { 0 }
+          }
+      }
+      { }
+  }
+%endregion 🔖️Camera
+
+%region 🔖️PaintersAlgorithm
+% 🖌️ Facet buffer: each item is `depth/style/x1,y1 x2,y2 …`; the buffer is drawn back to front so nearer facets cover farther ones.
+\seq_new:N \l_semio_viz_space_facets_seq
+\tl_new:N \l_semio_viz_space_poly_tl
+\cs_new_protected:Npn \semio_viz_space_facet_begin:
+  { \tl_clear:N \l_semio_viz_space_poly_tl \fp_zero:N \l_semio_viz_sci_e_fp \int_zero:N \l_tmpb_int }
+% 📌 Projects one corner of the facet under construction, appends its screen coordinates to the polygon and accumulates the camera depth for the average.
+\cs_new_protected:Npn \semio_viz_space_facet_point:nnn #1#2#3
+  {
+    \semio_viz_space_project:nnn {#1} {#2} {#3}
+    \tl_put_right:Nx \l_semio_viz_space_poly_tl
+      {
+        \tl_if_empty:NF \l_semio_viz_space_poly_tl { \c_space_tl }
+        \fp_to_decimal:N \l_semio_viz_space_px_fp , \fp_to_decimal:N \l_semio_viz_space_py_fp
+      }
+    \fp_add:Nn \l_semio_viz_sci_e_fp { \l_semio_viz_space_pz_fp }
+    \int_incr:N \l_tmpb_int
+  }
+% 📦 Closes the facet and files it in the buffer as `mean depth / style / points`, the mean being the accumulated depth over the corner count.
+\cs_new_protected:Npn \semio_viz_space_facet_end:n #1
+  {
+    \seq_put_right:Nx \l_semio_viz_space_facets_seq
+      {
+        \fp_to_decimal:n { \l_semio_viz_sci_e_fp / max ( 1 , \l_tmpb_int ) } /
+        \exp_not:n {#1} / \exp_not:V \l_semio_viz_space_poly_tl
+      }
+  }
+% 🖌️ Sorts the buffer by camera depth and strokes it; the sort is the painter's algorithm itself.
+\cs_new_protected:Npn \semio_viz_space_facets_paint:
+  {
+    \seq_sort:Nn \l_semio_viz_space_facets_seq
+      {
+        \fp_compare:nNnTF
+          { \semio_viz_space_depth_of:n {##1} } > { \semio_viz_space_depth_of:n {##2} }
+          { \sort_return_swapped: } { \sort_return_same: }
+      }
+    \seq_map_inline:Nn \l_semio_viz_space_facets_seq { \semio_viz_space_facet_draw:n {##1} }
+    \seq_clear:N \l_semio_viz_space_facets_seq
+  }
+% 🖌️ Camera depth of a buffered facet: the leading field of its `depth/style/points` record.
+\cs_new:Npn \semio_viz_space_slash_first:w #1 / #2 \q_stop { #1 }
+% 📏 Wraps the delimited scanner so the sort comparison can ask a whole facet record for its depth.
+\cs_new:Npn \semio_viz_space_depth_of:n #1 { \semio_viz_space_slash_first:w #1 \q_stop }
+% 🖍️ Unpacks one buffered facet, rebuilds its space-separated corners into a closed path, strokes it in its own style and reports its depth.
+\cs_new_protected:Npn \semio_viz_space_facet_draw:n #1
+  {
+    \seq_set_split:Nnn \l_tmpa_seq { / } {#1}
+    \tl_clear:N \l_semio_viz_sci_path_tl
+    \seq_set_split:Nnx \l_tmpb_seq { ~ } { \seq_item:Nn \l_tmpa_seq { 3 } }
+    \seq_map_inline:Nn \l_tmpb_seq
+      {
+        \tl_if_empty:NF \l_semio_viz_sci_path_tl { \tl_put_right:Nn \l_semio_viz_sci_path_tl { -- } }
+        \tl_put_right:Nn \l_semio_viz_sci_path_tl { ( ##1 ) }
+      }
+    \use:x
+      {
+        \exp_not:N \draw [ \seq_item:Nn \l_tmpa_seq { 2 } ]
+          \exp_not:V \l_semio_viz_sci_path_tl ~ -- ~ cycle ;
+      }
+    \semio_viz_sci_report_values:nn { space/facet } { \seq_item:Nn \l_tmpa_seq { 1 } }
+  }
+%endregion 🔖️PaintersAlgorithm
+
+%region 🔖️Solids
+% 🧊 Platonic solids as vertex and face tables; the coordinates are the standard unit constructions, not sketches.
+\prop_new:N \g_semio_viz_space_solid_vertices_prop
+\prop_new:N \g_semio_viz_space_solid_faces_prop
+\prop_gput:Nnn \g_semio_viz_space_solid_vertices_prop { tetrahedron }
+  { 1/1/1 , 1/-1/-1 , -1/1/-1 , -1/-1/1 }
+\prop_gput:Nnn \g_semio_viz_space_solid_faces_prop { tetrahedron }
+  { 1+2+3 , 1+2+4 , 1+3+4 , 2+3+4 }
+\prop_gput:Nnn \g_semio_viz_space_solid_vertices_prop { cube }
+  { -1/-1/-1 , 1/-1/-1 , 1/1/-1 , -1/1/-1 , -1/-1/1 , 1/-1/1 , 1/1/1 , -1/1/1 }
+\prop_gput:Nnn \g_semio_viz_space_solid_faces_prop { cube }
+  { 1+2+3+4 , 5+6+7+8 , 1+2+6+5 , 2+3+7+6 , 3+4+8+7 , 4+1+5+8 }
+\prop_gput:Nnn \g_semio_viz_space_solid_vertices_prop { octahedron }
+  { 1/0/0 , -1/0/0 , 0/1/0 , 0/-1/0 , 0/0/1 , 0/0/-1 }
+\prop_gput:Nnn \g_semio_viz_space_solid_faces_prop { octahedron }
+  { 1+3+5 , 3+2+5 , 2+4+5 , 4+1+5 , 3+1+6 , 2+3+6 , 4+2+6 , 1+4+6 }
+\prop_gput:Nnn \g_semio_viz_space_solid_vertices_prop { icosahedron }
+  {
+    0/1/1.618033988749895 , 0/-1/1.618033988749895 , 0/1/-1.618033988749895 , 0/-1/-1.618033988749895 ,
+    1/1.618033988749895/0 , -1/1.618033988749895/0 , 1/-1.618033988749895/0 , -1/-1.618033988749895/0 ,
+    1.618033988749895/0/1 , -1.618033988749895/0/1 , 1.618033988749895/0/-1 , -1.618033988749895/0/-1
+  }
+\prop_gput:Nnn \g_semio_viz_space_solid_faces_prop { icosahedron }
+  {
+    1+2+9 , 1+9+5 , 1+5+6 , 1+6+10 , 1+10+2 , 2+10+8 , 2+8+7 , 2+7+9 , 9+7+11 , 9+11+5 ,
+    5+11+3 , 5+3+6 , 6+3+12 , 6+12+10 , 10+12+8 , 4+3+11 , 4+11+7 , 4+7+8 , 4+8+12 , 4+12+3
+  }
+\prop_gput:Nnn \g_semio_viz_space_solid_vertices_prop { dodecahedron }
+  {
+    1/1/1 , 1/1/-1 , 1/-1/1 , 1/-1/-1 , -1/1/1 , -1/1/-1 , -1/-1/1 , -1/-1/-1 ,
+    0/0.618033988749895/1.618033988749895 , 0/0.618033988749895/-1.618033988749895 ,
+    0/-0.618033988749895/1.618033988749895 , 0/-0.618033988749895/-1.618033988749895 ,
+    0.618033988749895/1.618033988749895/0 , 0.618033988749895/-1.618033988749895/0 ,
+    -0.618033988749895/1.618033988749895/0 , -0.618033988749895/-1.618033988749895/0 ,
+    1.618033988749895/0/0.618033988749895 , 1.618033988749895/0/-0.618033988749895 ,
+    -1.618033988749895/0/0.618033988749895 , -1.618033988749895/0/-0.618033988749895
+  }
+\prop_gput:Nnn \g_semio_viz_space_solid_faces_prop { dodecahedron }
+  {
+    1+9+11+3+17 , 1+17+18+2+13 , 1+13+15+5+9 , 9+5+19+7+11 , 11+7+16+14+3 ,
+    3+14+4+18+17 , 2+18+4+12+10 , 2+10+6+15+13 , 15+6+20+19+5 , 19+20+8+16+7 ,
+    16+8+12+4+14 , 10+12+8+20+6
+  }
+%endregion 🔖️Solids
+
+%region 🔖️Families
+
+%region 🔖️Keys
+% 🔑 Keys of `sci-3d` (§29 three-dimensional views):
+%    mode (scatter|line|trajectory|bar|surface|wireframe|mesh|contour|vector-field|quiver|point-cloud|
+%          voxel|volume|isosurface|network|tree|solid|polyhedron|exploded, scatter).
+%    points (clist of `x/y/z/label`), edges (clist of `i/j`): the discrete geometry.
+%    expr (l3fp over \SemioX,\SemioY): the surface height, also the volume field of the voxel modes.
+%    columns, rows (int, 14): surface lattice. extent (fp, 3): world half-extent of the sampled domain.
+%    levels (int, 5): contour or isosurface levels. explode (fp, 0): radial offset of the exploded assembly.
+%    solid (tetrahedron|cube|octahedron|icosahedron|dodecahedron, cube): the polyhedron drawn in the solid modes.
+%    faces (bool, true): fill facets; false leaves a wireframe.
+\tl_new:N \l_semio_viz_space_mode_tl
+\tl_new:N \l_semio_viz_space_expr_tl
+\tl_new:N \l_semio_viz_space_solid_tl
+\clist_new:N \l_semio_viz_space_points_clist
+\clist_new:N \l_semio_viz_space_edges_clist
+\int_new:N \l_semio_viz_space_cols_int
+\int_new:N \l_semio_viz_space_rows_int
+\int_new:N \l_semio_viz_space_levels_int
+\fp_new:N \l_semio_viz_space_extent_fp
+\fp_new:N \l_semio_viz_space_explode_fp
+\bool_new:N \l_semio_viz_space_faces_bool
+%endregion 🔖️Keys
+
+\semio_viz_sci_keys_canvas:n { sci-3d }
+\semio_viz_space_keys_camera:n { sci-3d }
+% 🎛️ Binds the `sci-3d` keys onto the view mode, the field expression and chosen solid, the point and edge lists, the lattice and level counts, the world extent, the explode offset and the facet-fill switch.
+\keys_define:nn { semio / viz / family / sci-3d }
+  {
+    mode    .tl_set:N    = \l_semio_viz_space_mode_tl ,
+    expr    .tl_set:N    = \l_semio_viz_space_expr_tl ,
+    solid   .tl_set:N    = \l_semio_viz_space_solid_tl ,
+    points  .clist_set:N = \l_semio_viz_space_points_clist ,
+    edges   .clist_set:N = \l_semio_viz_space_edges_clist ,
+    columns .int_set:N   = \l_semio_viz_space_cols_int ,
+    rows    .int_set:N   = \l_semio_viz_space_rows_int ,
+    levels  .int_set:N   = \l_semio_viz_space_levels_int ,
+    extent  .fp_set:N    = \l_semio_viz_space_extent_fp ,
+    explode .fp_set:N    = \l_semio_viz_space_explode_fp ,
+    faces   .bool_set:N  = \l_semio_viz_space_faces_bool ,
+  }
+
+% 🧊 §29 three-dimensional views: every mode goes through one projection helper and one painter's-algorithm buffer.
+\SemioVizFamily { sci-3d }
+  {
+    \semio_viz_sci_enter:nnn { sci-3d }
+      {
+        mode=scatter , projection=isometric , azimuth=45 , elevation=35.26438968275465 ,
+        distance=60 , obliqueAngle=45 , obliqueScale=0.5 , zoom=6 , solid=cube ,
+        expr={ 1.2 * sin ( \SemioX ) * cos ( \SemioY ) } , columns=14 , rows=14 , levels=5 ,
+        extent=3 , explode=0 , faces=true , axes=false , grid=false ,
+        points={ -1/-1/0.4/a , 1/-1/1.2/b , 1/1/0.2/c , -1/1/1.6/d , 0/0/2.2/e } ,
+        edges={ 1/2 , 2/3 , 3/4 , 4/1 , 1/5 , 2/5 , 3/5 , 4/5 }
+      }
+      {#1}
+    \semio_viz_space_camera_apply:
+    \seq_clear:N \l_semio_viz_space_facets_seq
+    \semio_viz_space_axes:
+    \str_case:VnF \l_semio_viz_space_mode_tl
+      {
+        { surface }     { \semio_viz_space_surface:n { true } }
+        { wireframe }   { \semio_viz_space_surface:n { false } }
+        { mesh }        { \semio_viz_space_surface:n { false } }
+        { contour }     { \semio_viz_space_contour: }
+        { isosurface }  { \semio_viz_space_contour: }
+        { volume }      { \semio_viz_space_volume: }
+        { voxel }       { \semio_viz_space_voxel: }
+        { bar }         { \semio_viz_space_bars: }
+        { solid }       { \semio_viz_space_solid: }
+        { polyhedron }  { \semio_viz_space_solid: }
+        { exploded }    { \semio_viz_space_solid: }
+        { vector-field } { \semio_viz_space_vectors: }
+        { quiver }      { \semio_viz_space_vectors: }
+        { line }        { \semio_viz_space_polyline: }
+        { trajectory }  { \semio_viz_space_trajectory: }
+        { network }     { \semio_viz_space_network: }
+        { tree }        { \semio_viz_space_network: }
+        { point-cloud } { \semio_viz_space_cloud: }
+      }
+      { \semio_viz_space_scatter: }
+    \semio_viz_space_facets_paint:
+  }
+
+% 🧭 World axes drawn once, so every mode shares one frame of reference.
+\cs_new_protected:Npn \semio_viz_space_axes:
+  {
+    \int_step_inline:nnnn { 1 } { 1 } { 3 }
+      {
+        \semio_viz_space_project:nnn { 0 } { 0 } { 0 }
+        \fp_set:Nn \l_semio_viz_sci_a_fp { \l_semio_viz_space_px_fp }
+        \fp_set:Nn \l_semio_viz_sci_b_fp { \l_semio_viz_space_py_fp }
+        \semio_viz_space_project:nnn
+          { ##1 == 1 ? \l_semio_viz_space_extent_fp : 0 }
+          { ##1 == 2 ? \l_semio_viz_space_extent_fp : 0 }
+          { ##1 == 3 ? \l_semio_viz_space_extent_fp : 0 }
+        \draw [ semio~sci~axis ]
+          ( \fp_eval:n { \l_semio_viz_sci_a_fp } , \fp_eval:n { \l_semio_viz_sci_b_fp } ) --
+          ( \fp_eval:n { \l_semio_viz_space_px_fp } , \fp_eval:n { \l_semio_viz_space_py_fp } ) ;
+      }
+  }
+
+% ⚪ Marks a world point: projected, then filled as a disc whose radius grows with camera depth so nearer points read larger, and reported.
+\cs_new_protected:Npn \semio_viz_space_dot:nnnn #1#2#3#4
+  {
+    \semio_viz_space_project:nnn {#1} {#2} {#3}
+    \fill [ fill=#4 ]
+      ( \fp_eval:n { \l_semio_viz_space_px_fp } , \fp_eval:n { \l_semio_viz_space_py_fp } )
+      circle [ radius=\fp_eval:n { 0.6 + 0.3 * ( 1 + \l_semio_viz_space_pz_fp / max ( 1 , \l_semio_viz_space_extent_fp ) ) } ] ;
+    \semio_viz_sci_report_values:nn { space/point }
+      { \fp_to_decimal:N \l_semio_viz_space_px_fp , \fp_to_decimal:N \l_semio_viz_space_py_fp ,
+        \fp_to_decimal:N \l_semio_viz_space_pz_fp }
+  }
+% ✨ Plots the `points` list as accented dots, the default mode of the family.
+\cs_new_protected:Npn \semio_viz_space_scatter:
+  {
+    \clist_map_inline:Nn \l_semio_viz_space_points_clist
+      {
+        \semio_viz_space_record:n {##1}
+        \semio_viz_space_dot:nnnn
+          { \semio_viz_space_field:n { 1 } } { \semio_viz_space_field:n { 2 } }
+          { \semio_viz_space_field:n { 3 } } { semio-primary }
+      }
+  }
+% ☁️ A hundred and sixty synthetic points drawn from a Gaussian, flattened in the vertical, as a point cloud.
+\cs_new_protected:Npn \semio_viz_space_cloud:
+  {
+    \int_step_inline:nnnn { 1 } { 1 } { 160 }
+      {
+        \semio_viz_sci_random_normal:N \l_semio_viz_sci_c_fp
+        \semio_viz_sci_random_normal:N \l_semio_viz_sci_d_fp
+        \semio_viz_sci_random_normal:N \l_semio_viz_sci_f_fp
+        \semio_viz_space_dot:nnnn
+          { 0.8 * \l_semio_viz_sci_c_fp } { 0.8 * \l_semio_viz_sci_d_fp } { 0.5 * \l_semio_viz_sci_f_fp }
+          { semio-primary }
+      }
+  }
+% 🪡 Threads the `points` list into one open curve, each point projected as the path is built.
+\cs_new_protected:Npn \semio_viz_space_polyline:
+  {
+    \tl_clear:N \l_semio_viz_sci_path_tl
+    \clist_map_inline:Nn \l_semio_viz_space_points_clist
+      {
+        \semio_viz_space_record:n {##1}
+        \semio_viz_space_project:nnn
+          { \semio_viz_space_field:n { 1 } } { \semio_viz_space_field:n { 2 } } { \semio_viz_space_field:n { 3 } }
+        \tl_if_empty:NF \l_semio_viz_sci_path_tl { \tl_put_right:Nn \l_semio_viz_sci_path_tl { -- } }
+        \tl_put_right:Nx \l_semio_viz_sci_path_tl
+          { ( \fp_to_decimal:N \l_semio_viz_space_px_fp , \fp_to_decimal:N \l_semio_viz_space_py_fp ) }
+      }
+    \use:x { \exp_not:N \draw [ semio~sci~curve ] \exp_not:V \l_semio_viz_sci_path_tl ; }
+  }
+% 🌪️ A synthetic flight path: four turns of a helix whose radius decays as it climbs through the world extent, sampled in two hundred and forty steps.
+\cs_new_protected:Npn \semio_viz_space_trajectory:
+  {
+    \tl_clear:N \l_semio_viz_sci_path_tl
+    \int_step_inline:nnnn { 0 } { 1 } { 240 }
+      {
+        \fp_set:Nn \SemioT { 8 * pi * ##1 / 240 }
+        \semio_viz_space_project:nnn
+          { \l_semio_viz_space_extent_fp * 0.7 * cos ( \SemioT ) * ( 1 - ##1 / 300 ) }
+          { \l_semio_viz_space_extent_fp * 0.7 * sin ( \SemioT ) * ( 1 - ##1 / 300 ) }
+          { \l_semio_viz_space_extent_fp * ( ##1 / 240 - 0.5 ) }
+        \tl_if_empty:NF \l_semio_viz_sci_path_tl { \tl_put_right:Nn \l_semio_viz_sci_path_tl { -- } }
+        \tl_put_right:Nx \l_semio_viz_sci_path_tl
+          { ( \fp_to_decimal:N \l_semio_viz_space_px_fp , \fp_to_decimal:N \l_semio_viz_space_py_fp ) }
+      }
+    \use:x { \exp_not:N \draw [ semio~sci~curve ] \exp_not:V \l_semio_viz_sci_path_tl ; }
+  }
+% 🕸️ Draws every edge of the `edges` list first and lays the scattered nodes over them.
+\cs_new_protected:Npn \semio_viz_space_network:
+  {
+    \clist_map_inline:Nn \l_semio_viz_space_edges_clist
+      {
+        \semio_viz_space_record:n {##1}
+        \semio_viz_space_edge:nn { \semio_viz_space_field:n { 1 } } { \semio_viz_space_field:n { 2 } }
+      }
+    \semio_viz_space_scatter:
+  }
+% 🔗 Looks the two endpoints up in the `points` list by index, projects both and strokes a thin segment between them.
+\cs_new_protected:Npn \semio_viz_space_edge:nn #1#2
+  {
+    \seq_set_split:Nnx \l_tmpb_seq { / } { \clist_item:Nn \l_semio_viz_space_points_clist {#1} }
+    \semio_viz_space_project:nnn
+      { \seq_item:Nn \l_tmpb_seq { 1 } } { \seq_item:Nn \l_tmpb_seq { 2 } } { \seq_item:Nn \l_tmpb_seq { 3 } }
+    \fp_set:Nn \l_semio_viz_sci_a_fp { \l_semio_viz_space_px_fp }
+    \fp_set:Nn \l_semio_viz_sci_b_fp { \l_semio_viz_space_py_fp }
+    \seq_set_split:Nnx \l_tmpb_seq { / } { \clist_item:Nn \l_semio_viz_space_points_clist {#2} }
+    \semio_viz_space_project:nnn
+      { \seq_item:Nn \l_tmpb_seq { 1 } } { \seq_item:Nn \l_tmpb_seq { 2 } } { \seq_item:Nn \l_tmpb_seq { 3 } }
+    \draw [ semio~sci~thin ]
+      ( \fp_eval:n { \l_semio_viz_sci_a_fp } , \fp_eval:n { \l_semio_viz_sci_b_fp } ) --
+      ( \fp_eval:n { \l_semio_viz_space_px_fp } , \fp_eval:n { \l_semio_viz_space_py_fp } ) ;
+  }
+% 🧊 Surface patches pushed into the painter's buffer, one quad per lattice cell.
+\cs_new_protected:Npn \semio_viz_space_surface:n #1
+  {
+    \int_step_inline:nnnn { 0 } { 1 } { \l_semio_viz_space_cols_int - 1 }
+      {
+        \int_step_inline:nnnn { 0 } { 1 } { \l_semio_viz_space_rows_int - 1 }
+          { \semio_viz_space_patch:nnn {##1} {####1} {#1} }
+      }
+  }
+% 🗺️ Turns a lattice column and row into world coordinates, spreading the lattice symmetrically over the extent in both directions.
+\cs_new_protected:Npn \semio_viz_space_world:nn #1#2
+  {
+    \fp_set:Nn \SemioX
+      { \l_semio_viz_space_extent_fp * ( 2 * (#1) / \l_semio_viz_space_cols_int - 1 ) }
+    \fp_set:Nn \SemioY
+      { \l_semio_viz_space_extent_fp * ( 2 * (#2) / \l_semio_viz_space_rows_int - 1 ) }
+  }
+% 🔲 One lattice cell as a quad of four sampled corners, filled from the ramp at the near corner's height or left hollow for the wireframe modes.
+\cs_new_protected:Npn \semio_viz_space_patch:nnn #1#2#3
+  {
+    \semio_viz_space_facet_begin:
+    \semio_viz_space_world:nn {#1} {#2}
+    \semio_viz_space_facet_point:nnn { \SemioX } { \SemioY } { \l_semio_viz_space_expr_tl }
+    \fp_set:Nn \l_semio_viz_sci_f_fp { \l_semio_viz_space_expr_tl }
+    \semio_viz_space_world:nn { #1 + 1 } {#2}
+    \semio_viz_space_facet_point:nnn { \SemioX } { \SemioY } { \l_semio_viz_space_expr_tl }
+    \semio_viz_space_world:nn { #1 + 1 } { #2 + 1 }
+    \semio_viz_space_facet_point:nnn { \SemioX } { \SemioY } { \l_semio_viz_space_expr_tl }
+    \semio_viz_space_world:nn {#1} { #2 + 1 }
+    \semio_viz_space_facet_point:nnn { \SemioX } { \SemioY } { \l_semio_viz_space_expr_tl }
+    \str_if_eq:nnTF {#3} { true }
+      {
+        \use:x
+          {
+            \semio_viz_space_facet_end:n
+              {
+                semio~sci~thin , fill=\semio_viz_sci_ramp:n
+                  { ( \l_semio_viz_sci_f_fp + 1.5 ) / 3 }
+              }
+          }
+      }
+      { \semio_viz_space_facet_end:n { semio~sci~thin , fill=none } }
+  }
+% 🧊 Level curves of the surface, each lifted to its own height and projected.
+\cs_new_protected:Npn \semio_viz_space_contour:
+  {
+    \int_step_inline:nnnn { 1 } { 1 } { \l_semio_viz_space_levels_int }
+      {
+        \fp_set:Nn \l_semio_viz_sci_g_fp
+          { -1.2 + 2.4 * ##1 / ( \l_semio_viz_space_levels_int + 1 ) }
+        \semio_viz_space_contour_level:
+      }
+  }
+% 🌐 Sweeps the whole lattice for the level currently set, cell by cell.
+\cs_new_protected:Npn \semio_viz_space_contour_level:
+  {
+    \int_step_inline:nnnn { 0 } { 1 } { \l_semio_viz_space_cols_int - 1 }
+      {
+        \int_step_inline:nnnn { 0 } { 1 } { \l_semio_viz_space_rows_int - 1 }
+          { \semio_viz_space_contour_cell:nn {##1} {####1} }
+      }
+  }
+% 🎯 Compares the field against the level at a cell and its right-hand neighbour; where the sign flips, the crossing is interpolated, lifted to the level height and marked with a ramp-coloured dot.
+\cs_new_protected:Npn \semio_viz_space_contour_cell:nn #1#2
+  {
+    \semio_viz_space_world:nn {#1} {#2}
+    \fp_set:Nn \l_semio_viz_sci_a_fp { ( \l_semio_viz_space_expr_tl ) - \l_semio_viz_sci_g_fp }
+    \fp_set:Nn \l_semio_viz_sci_c_fp { \SemioX }
+    \fp_set:Nn \l_semio_viz_sci_d_fp { \SemioY }
+    \semio_viz_space_world:nn { #1 + 1 } {#2}
+    \fp_set:Nn \l_semio_viz_sci_b_fp { ( \l_semio_viz_space_expr_tl ) - \l_semio_viz_sci_g_fp }
+    \fp_compare:nNnT { \l_semio_viz_sci_a_fp * \l_semio_viz_sci_b_fp } < { 0 }
+      {
+        \semio_viz_space_project:nnn
+          { \l_semio_viz_sci_c_fp + ( \SemioX - \l_semio_viz_sci_c_fp )
+            * \l_semio_viz_sci_a_fp / ( \l_semio_viz_sci_a_fp - \l_semio_viz_sci_b_fp ) }
+          { \l_semio_viz_sci_d_fp } { \l_semio_viz_sci_g_fp }
+        \fill [ fill=\semio_viz_sci_ramp:n { ( \l_semio_viz_sci_g_fp + 1.5 ) / 3 } ]
+          ( \fp_eval:n { \l_semio_viz_space_px_fp } , \fp_eval:n { \l_semio_viz_space_py_fp } )
+          circle [ radius=0.4 ] ;
+      }
+  }
+% 🧊 Volume slices: the field sampled on parallel planes and drawn back to front as translucent quads.
+\cs_new_protected:Npn \semio_viz_space_volume:
+  {
+    \int_step_inline:nnnn { 1 } { 1 } { \l_semio_viz_space_levels_int }
+      {
+        \fp_set:Nn \l_semio_viz_sci_g_fp
+          { \l_semio_viz_space_extent_fp * ( 2 * ##1 / ( \l_semio_viz_space_levels_int + 1 ) - 1 ) }
+        \semio_viz_space_facet_begin:
+        \semio_viz_space_facet_point:nnn { - \l_semio_viz_space_extent_fp } { - \l_semio_viz_space_extent_fp } { \l_semio_viz_sci_g_fp }
+        \semio_viz_space_facet_point:nnn { \l_semio_viz_space_extent_fp } { - \l_semio_viz_space_extent_fp } { \l_semio_viz_sci_g_fp }
+        \semio_viz_space_facet_point:nnn { \l_semio_viz_space_extent_fp } { \l_semio_viz_space_extent_fp } { \l_semio_viz_sci_g_fp }
+        \semio_viz_space_facet_point:nnn { - \l_semio_viz_space_extent_fp } { \l_semio_viz_space_extent_fp } { \l_semio_viz_sci_g_fp }
+        \use:x
+          {
+            \semio_viz_space_facet_end:n
+              { semio~sci~thin , fill=\semio_viz_sci_ramp:n { ##1 / \l_semio_viz_space_levels_int } ,
+                fill~opacity=0.35 }
+          }
+      }
+  }
+% 🧊 Voxels: one cube per lattice site whose field value clears the threshold.
+\cs_new_protected:Npn \semio_viz_space_voxel:
+  {
+    \int_step_inline:nnnn { 0 } { 1 } { \l_semio_viz_space_levels_int }
+      {
+        \int_step_inline:nnnn { 0 } { 1 } { \l_semio_viz_space_levels_int }
+          { \semio_viz_space_voxel_cell:nn {##1} {####1} }
+      }
+  }
+% 🧱 Samples the field at one voxel site and, only where it is positive, plants a cube sized to the lattice spacing.
+\cs_new_protected:Npn \semio_viz_space_voxel_cell:nn #1#2
+  {
+    \fp_set:Nn \SemioX
+      { \l_semio_viz_space_extent_fp * ( 2 * (#1) / \l_semio_viz_space_levels_int - 1 ) }
+    \fp_set:Nn \SemioY
+      { \l_semio_viz_space_extent_fp * ( 2 * (#2) / \l_semio_viz_space_levels_int - 1 ) }
+    \fp_set:Nn \l_semio_viz_sci_f_fp { \l_semio_viz_space_expr_tl }
+    \fp_compare:nNnT { \l_semio_viz_sci_f_fp } > { 0 }
+      {
+        \semio_viz_space_cube:nnnn { \SemioX } { \SemioY } { 0 }
+          { \fp_eval:n { 0.8 * \l_semio_viz_space_extent_fp / ( \l_semio_viz_space_levels_int + 1 ) } }
+      }
+  }
+% 🧊 An axis-aligned box centred on a world point, pushed as three visible facets.
+\cs_new_protected:Npn \semio_viz_space_cube:nnnn #1#2#3#4
+  {
+    \semio_viz_space_facet_begin:
+    \semio_viz_space_facet_point:nnn { #1 - #4 } { #2 - #4 } { #3 + #4 }
+    \semio_viz_space_facet_point:nnn { #1 + #4 } { #2 - #4 } { #3 + #4 }
+    \semio_viz_space_facet_point:nnn { #1 + #4 } { #2 + #4 } { #3 + #4 }
+    \semio_viz_space_facet_point:nnn { #1 - #4 } { #2 + #4 } { #3 + #4 }
+    \semio_viz_space_facet_end:n { semio~sci~thin , fill=semio-primary , fill~opacity=0.75 }
+    \semio_viz_space_facet_begin:
+    \semio_viz_space_facet_point:nnn { #1 + #4 } { #2 - #4 } { #3 - #4 }
+    \semio_viz_space_facet_point:nnn { #1 + #4 } { #2 + #4 } { #3 - #4 }
+    \semio_viz_space_facet_point:nnn { #1 + #4 } { #2 + #4 } { #3 + #4 }
+    \semio_viz_space_facet_point:nnn { #1 + #4 } { #2 - #4 } { #3 + #4 }
+    \semio_viz_space_facet_end:n { semio~sci~thin , fill=semio-primary , fill~opacity=0.5 }
+    \semio_viz_space_facet_begin:
+    \semio_viz_space_facet_point:nnn { #1 - #4 } { #2 + #4 } { #3 - #4 }
+    \semio_viz_space_facet_point:nnn { #1 + #4 } { #2 + #4 } { #3 - #4 }
+    \semio_viz_space_facet_point:nnn { #1 + #4 } { #2 + #4 } { #3 + #4 }
+    \semio_viz_space_facet_point:nnn { #1 - #4 } { #2 + #4 } { #3 + #4 }
+    \semio_viz_space_facet_end:n { semio~sci~thin , fill=semio-primary , fill~opacity=0.32 }
+  }
+% 📊 Raises one three-dimensional bar per entry of the `points` list, the third field giving its height.
+\cs_new_protected:Npn \semio_viz_space_bars:
+  {
+    \clist_map_inline:Nn \l_semio_viz_space_points_clist
+      {
+        \semio_viz_space_record:n {##1}
+        \semio_viz_space_bar:nnn
+          { \semio_viz_space_field:n { 1 } } { \semio_viz_space_field:n { 2 } }
+          { \semio_viz_space_field:n { 3 } }
+      }
+  }
+% 🏗️ One column standing on the ground plane, pushed as its front, side and top facets at falling opacities to fake the shading.
+\cs_new_protected:Npn \semio_viz_space_bar:nnn #1#2#3
+  {
+    \semio_viz_space_facet_begin:
+    \semio_viz_space_facet_point:nnn { #1 - 0.35 } { #2 - 0.35 } { 0 }
+    \semio_viz_space_facet_point:nnn { #1 + 0.35 } { #2 - 0.35 } { 0 }
+    \semio_viz_space_facet_point:nnn { #1 + 0.35 } { #2 - 0.35 } {#3}
+    \semio_viz_space_facet_point:nnn { #1 - 0.35 } { #2 - 0.35 } {#3}
+    \semio_viz_space_facet_end:n { semio~sci~thin , fill=semio-primary , fill~opacity=0.7 }
+    \semio_viz_space_facet_begin:
+    \semio_viz_space_facet_point:nnn { #1 + 0.35 } { #2 - 0.35 } { 0 }
+    \semio_viz_space_facet_point:nnn { #1 + 0.35 } { #2 + 0.35 } { 0 }
+    \semio_viz_space_facet_point:nnn { #1 + 0.35 } { #2 + 0.35 } {#3}
+    \semio_viz_space_facet_point:nnn { #1 + 0.35 } { #2 - 0.35 } {#3}
+    \semio_viz_space_facet_end:n { semio~sci~thin , fill=semio-primary , fill~opacity=0.5 }
+    \semio_viz_space_facet_begin:
+    \semio_viz_space_facet_point:nnn { #1 - 0.35 } { #2 - 0.35 } {#3}
+    \semio_viz_space_facet_point:nnn { #1 + 0.35 } { #2 - 0.35 } {#3}
+    \semio_viz_space_facet_point:nnn { #1 + 0.35 } { #2 + 0.35 } {#3}
+    \semio_viz_space_facet_point:nnn { #1 - 0.35 } { #2 + 0.35 } {#3}
+    \semio_viz_space_facet_end:n { semio~sci~thin , fill=semio-primary , fill~opacity=0.35 }
+  }
+% 🌬️ Puts an arrow at every site of a four-by-four grid across the ground plane.
+\cs_new_protected:Npn \semio_viz_space_vectors:
+  {
+    \int_step_inline:nnnn { 0 } { 1 } { 3 }
+      {
+        \int_step_inline:nnnn { 0 } { 1 } { 3 }
+          { \semio_viz_space_vector_cell:nn {##1} {####1} }
+      }
+  }
+% ➡️ One field arrow: it leaves the ground site and ends at a point swirled tangentially in the plane and lifted by the field value there.
+\cs_new_protected:Npn \semio_viz_space_vector_cell:nn #1#2
+  {
+    \fp_set:Nn \SemioX { \l_semio_viz_space_extent_fp * ( 2 * (#1) / 3 - 1 ) }
+    \fp_set:Nn \SemioY { \l_semio_viz_space_extent_fp * ( 2 * (#2) / 3 - 1 ) }
+    \fp_set:Nn \l_semio_viz_sci_f_fp { \l_semio_viz_space_expr_tl }
+    \semio_viz_space_project:nnn { \SemioX } { \SemioY } { 0 }
+    \fp_set:Nn \l_semio_viz_sci_a_fp { \l_semio_viz_space_px_fp }
+    \fp_set:Nn \l_semio_viz_sci_b_fp { \l_semio_viz_space_py_fp }
+    \semio_viz_space_project:nnn
+      { \SemioX + 0.35 * \SemioY } { \SemioY - 0.35 * \SemioX } { \l_semio_viz_sci_f_fp }
+    \draw [ semio~sci~vector ]
+      ( \fp_eval:n { \l_semio_viz_sci_a_fp } , \fp_eval:n { \l_semio_viz_sci_b_fp } ) --
+      ( \fp_eval:n { \l_semio_viz_space_px_fp } , \fp_eval:n { \l_semio_viz_space_py_fp } ) ;
+  }
+% 🧊 A Platonic solid from its own vertex and face tables; `explode` pushes every facet along its outward centroid.
+\cs_new_protected:Npn \semio_viz_space_solid:
+  {
+    \clist_set:Nx \l_tmpa_clist
+      { \prop_item:NV \g_semio_viz_space_solid_vertices_prop \l_semio_viz_space_solid_tl }
+    \clist_set:Nx \l_tmpb_clist
+      { \prop_item:NV \g_semio_viz_space_solid_faces_prop \l_semio_viz_space_solid_tl }
+    \int_zero:N \l_tmpa_int
+    \clist_map_inline:Nn \l_tmpb_clist
+      {
+        \int_incr:N \l_tmpa_int
+        \semio_viz_space_face:nn {##1} { \l_tmpa_int }
+      }
+  }
+% 💠 One face of the solid: its vertex indices are averaged into a centroid, every corner is pushed outward along that centroid by the explode factor, and the facet is filled in the face's own hue or left hollow.
+\cs_new_protected:Npn \semio_viz_space_face:nn #1#2
+  {
+    \seq_set_split:Nnn \l_tmpa_seq { + } {#1}
+    \fp_zero:N \l_semio_viz_sci_c_fp
+    \fp_zero:N \l_semio_viz_sci_d_fp
+    \fp_zero:N \l_semio_viz_sci_f_fp
+    \seq_map_inline:Nn \l_tmpa_seq
+      {
+        \seq_set_split:Nnx \l_tmpb_seq { / } { \clist_item:Nn \l_tmpa_clist {##1} }
+        \fp_add:Nn \l_semio_viz_sci_c_fp { \seq_item:Nn \l_tmpb_seq { 1 } }
+        \fp_add:Nn \l_semio_viz_sci_d_fp { \seq_item:Nn \l_tmpb_seq { 2 } }
+        \fp_add:Nn \l_semio_viz_sci_f_fp { \seq_item:Nn \l_tmpb_seq { 3 } }
+      }
+    \fp_set:Nn \l_semio_viz_sci_c_fp { \l_semio_viz_sci_c_fp / \seq_count:N \l_tmpa_seq }
+    \fp_set:Nn \l_semio_viz_sci_d_fp { \l_semio_viz_sci_d_fp / \seq_count:N \l_tmpa_seq }
+    \fp_set:Nn \l_semio_viz_sci_f_fp { \l_semio_viz_sci_f_fp / \seq_count:N \l_tmpa_seq }
+    \semio_viz_space_facet_begin:
+    \seq_map_inline:Nn \l_tmpa_seq
+      {
+        \seq_set_split:Nnx \l_tmpb_seq { / } { \clist_item:Nn \l_tmpa_clist {##1} }
+        \semio_viz_space_facet_point:nnn
+          { \seq_item:Nn \l_tmpb_seq { 1 } + \l_semio_viz_space_explode_fp * \l_semio_viz_sci_c_fp }
+          { \seq_item:Nn \l_tmpb_seq { 2 } + \l_semio_viz_space_explode_fp * \l_semio_viz_sci_d_fp }
+          { \seq_item:Nn \l_tmpb_seq { 3 } + \l_semio_viz_space_explode_fp * \l_semio_viz_sci_f_fp }
+      }
+    \bool_if:NTF \l_semio_viz_space_faces_bool
+      {
+        \use:x
+          {
+            \semio_viz_space_facet_end:n
+              { semio~sci~thin , fill=\semio_viz_sci_hue:n {#2} , fill~opacity=0.55 }
+          }
+      }
+      { \semio_viz_space_facet_end:n { semio~sci~thin , fill=none } }
+  }
+%endregion 🔖️Families
+
+%region 🔖️PublicApi
+% 🧪 SemioVizSpaceCamera{projection}{azimuth}{elevation}{distance}{zoom}: fixes the camera for the next projections.
+\NewDocumentCommand \SemioVizSpaceCamera { m m m m m }
+  {
+    \tl_set:Nn \l_semio_viz_space_projection_tl {#1}
+    \fp_set:Nn \l_semio_viz_space_azimuth_fp {#2}
+    \fp_set:Nn \l_semio_viz_space_elevation_fp {#3}
+    \fp_set:Nn \l_semio_viz_space_distance_fp {#4}
+    \fp_set:Nn \l_semio_viz_space_zoom_fp {#5}
+    \fp_set:Nn \l_semio_viz_space_oblique_fp { 45 }
+    \fp_set:Nn \l_semio_viz_space_obliquescale_fp { 0.5 }
+    \semio_viz_space_camera_apply:
+  }
+% 🧪 SemioVizSpacePushProject{x}{y}{z}: appends the screen x, screen y and camera depth of a world point.
+\NewDocumentCommand \SemioVizSpacePushProject { m m m }
+  {
+    \semio_viz_space_project:nnn {#1} {#2} {#3}
+    \clist_put_right:Nx \l_semio_viz_sci_out_clist { \fp_to_decimal:N \l_semio_viz_space_px_fp }
+    \clist_put_right:Nx \l_semio_viz_sci_out_clist { \fp_to_decimal:N \l_semio_viz_space_py_fp }
+    \clist_put_right:Nx \l_semio_viz_sci_out_clist { \fp_to_decimal:N \l_semio_viz_space_pz_fp }
+  }
+%endregion 🔖️PublicApi
+
+\ExplSyntaxOff

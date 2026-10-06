@@ -1,0 +1,77 @@
+[
+  {
+    "id": "10/bathymetric-map",
+    "family": "geo-basemap",
+    "value": 6
+  },
+  {
+    "id": "10/bivariate-choropleth",
+    "family": "geo-choropleth",
+    "value": 3
+  },
+  {
+    "id": "10/choropleth-map",
+    "family": "geo-choropleth",
+    "value": 5
+  },
+  {
+    "id": "10/dasymetric-map",
+    "family": "geo-choropleth",
+    "value": 4
+  },
+  {
+    "id": "10/ecological-range-map",
+    "family": "geo-basemap",
+    "value": 3
+  },
+  {
+    "id": "10/electoral-map",
+    "family": "geo-basemap",
+    "value": 3
+  },
+  {
+    "id": "10/epidemiological-map",
+    "family": "geo-basemap",
+    "value": 6
+  },
+  {
+    "id": "10/geological-map",
+    "family": "geo-basemap",
+    "value": 5
+  },
+  {
+    "id": "10/linguistic-map",
+    "family": "geo-basemap",
+    "value": 4
+  },
+  {
+    "id": "10/multivariate-choropleth",
+    "family": "geo-choropleth",
+    "value": 4
+  },
+  {
+    "id": "10/relief-map",
+    "family": "geo-basemap",
+    "value": 9
+  },
+  {
+    "id": "10/terrain-map",
+    "family": "geo-basemap",
+    "value": 5
+  },
+  {
+    "id": "10/topographic-map",
+    "family": "geo-basemap",
+    "value": 7
+  },
+  {
+    "id": "28/voxel-plot",
+    "family": "spatial-scalar-field",
+    "value": 4
+  },
+  {
+    "id": "35/tectonic-map",
+    "family": "geo-basemap",
+    "value": 5
+  }
+]

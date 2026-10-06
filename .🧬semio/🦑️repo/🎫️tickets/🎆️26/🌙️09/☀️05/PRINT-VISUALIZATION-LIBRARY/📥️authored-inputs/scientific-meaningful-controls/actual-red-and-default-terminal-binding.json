@@ -1,0 +1,130 @@
+{
+  "capturedAt": "2026-10-05T14:24:54.7575450Z",
+  "gates": [
+    {
+      "log": "scientific-meaningful-controls-red.log",
+      "verdict": "HARNESS: actual PDF generated, missing geometry probe stream",
+      "exitCode": 1,
+      "session": 10057,
+      "logSha256": "CE9CFC3E2C709BCDDC1C516CB37EAD28399788F8EB611E8612CE5EABD86DDBDD"
+    },
+    {
+      "log": "scientific-meaningful-controls-red-consumer.log",
+      "verdict": "VALID_PDF_RED:26effect failures in unchanged lightPDF",
+      "exitCode": 1,
+      "session": 17508,
+      "logSha256": "8342CDADB4E4AC37EC9D86F408091CC32E8C1159489CCEDAFF965910DFDB7D24"
+    },
+    {
+      "log": "scientific-defaults-red.log",
+      "verdict": "VALID_DEFAULT_RED:91native/schema contradictions",
+      "exitCode": 1,
+      "session": 28298,
+      "logSha256": "F9E138E8D888EA02CF22A28D41851C1148DFD37CD6F8787BBF645A005C678E80"
+    },
+    {
+      "log": "scientific-defaults-green.log",
+      "verdict": "DEFAULT_GREEN:91AJVandnative default contracts",
+      "exitCode": 0,
+      "session": 40013,
+      "logSha256": "E0CF21104022C1D2552B38F40C2740C044FD7B52E167436DED98C3CA771ABBFB"
+    }
+  ],
+  "unchangedSourceBindings": [
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧪️tests\\🧬️native-chart-grammar\\🔣️.json",
+      "sha256": "FA2BD97100F0D182F45E1150A0073D4CB90BC9D15DF2A3D06CB935DF04EA2239"
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧪️tests\\🧬️native-chart-grammar\\🟦️.ts",
+      "sha256": "F75D4D5BF87F13816F694FE98E3368140D0F1810304C8EB90F56ABC86E8F73C1"
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🖋️latex\\semio-viz-scientific-geometry.sty",
+      "sha256": "A8A7210D6F0159D1353CE169F482F389AEFC4D6487E48364DAAE82B44058601A"
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🖋️latex\\semio-viz-scientific-physics.sty",
+      "sha256": "52DFB58BEB621CD36EACECFB727CB9D41E9DC2C7509709FCD86EB986A59CB994"
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🖋️latex\\semio-viz-scientific-signal.sty",
+      "sha256": "3F6D3B9B3433BEC7EA2137959767F5363547DDB350D1E00158DB979EA8DFE892"
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🖋️latex\\semio-viz-scientific-engineering.sty",
+      "sha256": "05225652A914073F07F80383960AC8475D7D02F1031A436799CB37A107A447D2"
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🖋️latex\\semio-viz-scientific-field.sty",
+      "sha256": "3087D2FF69C4CB68DE6AD32B8B8AE8E7F8D5E23C13A9B503E23FD87F33FEB62F"
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\🔣️.json",
+      "sha256": "EAC7C86E37BE89CB78BEAA406974289B585D08F11BB54711928950C923D9D446"
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\🧬️mutations\\🟦️.ts",
+      "sha256": "5731A4203352C98A23FCCB3B46F2D5CE798B57A380F508DA59EF2927DB135415"
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\🔀️diff\\🟦️.ts",
+      "sha256": "5DAF3F5FB336BD95FE7C6C8F65BD743BC77CF9A05518FC4423320E1B5D338D4F"
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\💡️inferences\\🟦️.ts",
+      "sha256": "EDB3DFE3639B08A14EF87D750E3AEE277A6DD08ABB647F91708A177224620DD9"
+    }
+  ],
+  "currentSourceBindings": [
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧪️tests\\🧬️native-chart-grammar\\🔣️.json",
+      "sha256": "19A22AB49C11E9C1BC2EEC79BA3D8AC23B2FE0D06E70A6771297137D127125DB"
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧪️tests\\🧬️native-chart-grammar\\🟦️.ts",
+      "sha256": "DD261FCF015CD1B0B1C11A15D10549A35815A5EE986A46BE5D2E3C49589DA899"
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🖋️latex\\semio-viz-scientific-geometry.sty",
+      "sha256": "3F7DBB1669980032398A5105056480A58E906147ED92AA9029803733D6545364"
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🖋️latex\\semio-viz-scientific-physics.sty",
+      "sha256": "8C17EC5E516D8A06713D53269C6075DEA1DA273B3AAB3F23ADE0FAB8150B3C19"
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🖋️latex\\semio-viz-scientific-signal.sty",
+      "sha256": "6DE788EB7FCF4E5D1E3E9CF3EFBF7B12B3A9729573420F71823432FEABC17E82"
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🖋️latex\\semio-viz-scientific-engineering.sty",
+      "sha256": "660A1321BEBA2AE1D379757389B1094C9E61D1225DD86CBC1187ABD96A567969"
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🖋️latex\\semio-viz-scientific-field.sty",
+      "sha256": "3087D2FF69C4CB68DE6AD32B8B8AE8E7F8D5E23C13A9B503E23FD87F33FEB62F"
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\🔣️.json",
+      "sha256": "66FCC53971BD815D9FE307EE482E69A2549BDB38FBABD8BB4EA89D503127AF26"
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\🧬️mutations\\🟦️.ts",
+      "sha256": "5731A4203352C98A23FCCB3B46F2D5CE798B57A380F508DA59EF2927DB135415"
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\🔀️diff\\🟦️.ts",
+      "sha256": "5DAF3F5FB336BD95FE7C6C8F65BD743BC77CF9A05518FC4423320E1B5D338D4F"
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\💡️inferences\\🟦️.ts",
+      "sha256": "EDB3DFE3639B08A14EF87D750E3AEE277A6DD08ABB647F91708A177224620DD9"
+    }
+  ],
+  "freshScientificCompiler": {
+    "status": "RUNNING",
+    "verdict": null,
+    "session": 33210
+  }
+}

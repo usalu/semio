@@ -1,0 +1,21 @@
+\SemioTableLong[text-size=8pt]{\ApiText{Axis options}{Achsenoptionen}}{0.20,0.14,0.16,0.50}{\ApiKey & \ApiType & \ApiDefault & \ApiMeaning}{%
+  \SemioTableRow{\Key{scale} & \Key{name} & \Key{x} & \ApiText{The scale whose domain the axis describes.}{Die Skala, deren Bereich die Achse beschreibt.}}
+  \SemioTableRow{\Key{orient} & \Key{choice} & \Key{bottom} & \ApiText{\Key{bottom}, \Key{top}, \Key{left}, \Key{right}, \Key{segment}, \Key{angular} or \Key{radial}.}{\Key{bottom}, \Key{top}, \Key{left}, \Key{right}, \Key{segment}, \Key{angular} oder \Key{radial}.}}
+  \SemioTableRow{\Key{at} & \Key{mm} & --- & \ApiText{Cross-axis position of the axis line; empty means the frame edge.}{Position der Achsenlinie quer zur Achse; leer bedeutet die Rahmenkante.}}
+  \SemioTableRow{\Key{offset} & \Key{mm} & \Key{0} & \ApiText{Outward shift of the axis line, for dual axes.}{Verschiebung der Achsenlinie nach außen, für Doppelachsen.}}
+  \SemioTableRow{\Key{from}, \Key{to} & \Key{x,y} & --- & \ApiText{Segment endpoints when \Key{orient=segment}.}{Endpunkte der Strecke bei \Key{orient=segment}.}}
+  \SemioTableRow{\Key{center} & \Key{x,y} & \ApiText{frame centre}{Rahmenmitte} & \ApiText{Polar centre for \Key{angular} and \Key{radial}.}{Polarmittelpunkt für \Key{angular} und \Key{radial}.}}
+  \SemioTableRow{\Key{innerRadius}, \Key{outerRadius} & \Key{mm} & \Key{0}, \ApiText{fitted}{eingepasst} & \ApiText{Polar radii of the axis.}{Polarradien der Achse.}}
+  \SemioTableRow{\Key{startAngle}, \Key{endAngle} & \Key{deg} & \Key{0}, \Key{360} & \ApiText{Angular sweep.}{Winkelbereich.}}
+  \SemioTableRow{\Key{angle} & \Key{deg} & \Key{90} & \ApiText{Direction of a radial axis.}{Richtung einer radialen Achse.}}
+  \SemioTableRow{\Key{title}, \Key{titleAnchor}, \Key{titleGap} & \Key{text}, \Key{choice}, \Key{mm} & ---, \Key{middle}, \Key{5} & \ApiText{Axis title, its anchor and its distance from the tick labels.}{Achsentitel, sein Anker und sein Abstand zur Teilstrichbeschriftung.}}
+  \SemioTableRow{\Key{ticks} & \Key{integer} & \Key{5} & \ApiText{Target tick count for continuous scales.}{Angestrebte Teilstrichzahl bei stetigen Skalen.}}
+  \SemioTableRow{\Key{tickValues} & \Key{clist} & --- & \ApiText{Explicit tick values; overrides \Key{ticks}.}{Explizite Teilstrichwerte; übergeht \Key{ticks}.}}
+  \SemioTableRow{\Key{tickFormat} & \Key{spec} & --- & \ApiText{Format specifier for the tick labels.}{Formatangabe für die Teilstrichbeschriftung.}}
+  \SemioTableRow{\Key{tickSize}, \Key{tickSizeOuter}, \Key{tickPadding} & \Key{mm} & \Key{1.4}, \Key{1.4}, \Key{0.8} & \ApiText{Inner tick length, end caps of the domain line, gap to the label.}{Innere Teilstrichlänge, Endkappen der Achsenlinie, Abstand zur Beschriftung.}}
+  \SemioTableRow{\Key{minor}, \Key{minorTicks}, \Key{minorSize} & \Key{boolean}, \Key{integer}, \Key{mm} & \Key{false}, \Key{4}, \Key{0.7} & \ApiText{Minor ticks and their subdivision.}{Nebenteilstriche und ihre Unterteilung.}}
+  \SemioTableRow{\Key{grid}, \Key{gridLength} & \Key{boolean}, \Key{mm} & \Key{false}, --- & \ApiText{A grid line at every major tick; empty length spans the plot area.}{Eine Gitterlinie an jedem Hauptteilstrich; leere Länge überspannt die Zeichenfläche.}}
+  \SemioTableRow{\Key{domainLine} & \Key{boolean} & \Key{true} & \ApiText{Draws the axis line itself.}{Zeichnet die Achsenlinie selbst.}}
+  \SemioTableRow{\Key{labels}, \Key{labelRotate}, \Key{labelAlign} & \Key{boolean}, \Key{deg}, \Key{choice} & \Key{true}, \Key{0}, \Key{auto} & \ApiText{Tick labels, their rotation and their alignment.}{Teilstrichbeschriftung, ihre Drehung und ihre Ausrichtung.}}
+  \SemioTableRow{\Key{broken}, \Key{breakGap} & \Key{lo,hi}, \Key{mm} & ---, \Key{2} & \ApiText{A data interval removed from the axis, and the width it collapses to.}{Ein aus der Achse entferntes Datenintervall und die Breite, auf die es zusammenfällt.}}
+}

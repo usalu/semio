@@ -1,0 +1,982 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-viz-composition}[2026/09/05 v0.2.0 semio viz composition: layer, overlay, concat, inset, shared guides]
+
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+\RequirePackage{semio-viz-facet}\RequirePackage{semio-viz-annotation}\RequirePackage{semio-viz-label}
+\RequirePackage{semio-viz-data}\RequirePackage{semio-viz-scale}\RequirePackage{semio-viz-mark}\RequirePackage{semio-viz-theme}
+
+\ExplSyntaxOn
+
+%region 🔖️Diagnostics
+\msg_new:nnn { semio-viz } { concat-outside }
+  { \iow_char:N\\SemioVizConcatItem~needs~an~enclosing~VizConcat. }
+%endregion 🔖️Diagnostics
+
+%region 🔖️Frame
+% 🧱 Every composition operator does the same thing: it hands a sub-region of the
+% current frame to its body by shifting the origin and rebinding the frame
+% variables, so a plot drawn in a concat cell, a dashboard cell or an inset is
+% the same code as a plot drawn in the whole figure. The saved values are kept on
+% a stack, because compositions nest.
+\seq_new:N \l_semio_viz_comp_stack_seq
+\fp_new:N \l_semio_viz_comp_x_fp
+\fp_new:N \l_semio_viz_comp_y_fp
+\fp_new:N \l_semio_viz_comp_w_fp
+\fp_new:N \l_semio_viz_comp_h_fp
+
+\cs_new_protected:Npn \semio_viz_comp_push:nnnn #1#2#3#4 {
+  \seq_push:Nx \l_semio_viz_comp_stack_seq {
+    { \fp_use:N \l_semio_viz_width_fp } { \fp_use:N \l_semio_viz_height_fp }
+    { \fp_use:N \l_semio_viz_pad_fp }
+  }
+  \fp_set:Nn \l_semio_viz_width_fp {#3}
+  \fp_set:Nn \l_semio_viz_height_fp {#4}
+  \use:x {
+    \exp_not:N \begin { scope } [ shift={( \fp_eval:n {#1} , \fp_eval:n {#2} )} ]
+  }
+}
+
+% ⤴️ Closes the sub-frame opened last and gives the enclosing frame its own extent back.
+\cs_new_protected:Npn \semio_viz_comp_pop: {
+  \end { scope }
+  \seq_pop:NN \l_semio_viz_comp_stack_seq \l_semio_viz_comp_restore_tl
+  \exp_last_unbraced:NV \semio_viz_comp_restore:nnn \l_semio_viz_comp_restore_tl
+}
+\tl_new:N \l_semio_viz_comp_restore_tl
+
+% ♻️ Restores width #1, height #2 and padding #3 from one entry of the frame stack.
+\cs_new_protected:Npn \semio_viz_comp_restore:nnn #1#2#3 {
+  \fp_set:Nn \l_semio_viz_width_fp {#1}
+  \fp_set:Nn \l_semio_viz_height_fp {#2}
+  \fp_set:Nn \l_semio_viz_pad_fp {#3}
+}
+%endregion 🔖️Frame
+
+%region 🔖️Layer
+% 🍰 A layer shares the frame and the scales with its siblings: nothing is
+% shifted and nothing is re-ranged, only the drawing style is scoped, so two
+% layers of one plot land in the same coordinate system by construction.
+\tl_new:N \l_semio_viz_layer_style_tl
+\tl_new:N \l_semio_viz_layer_name_tl
+\fp_new:N \l_semio_viz_layer_opacity_fp
+
+\keys_define:nn { semio / viz / layer } {
+  style .tl_set:N = \l_semio_viz_layer_style_tl,
+  name .tl_set:N = \l_semio_viz_layer_name_tl,
+  opacity .fp_set:N = \l_semio_viz_layer_opacity_fp,
+}
+
+% 🗂️ Opens a layer under the option list #1: a TikZ scope with the layer's opacity and style,
+% numbered so the probe can tell one layer of a figure from the next.
+\cs_new_protected:Npn \semio_viz_layer_open:n #1 {
+  \semio_viz_frame_require:n { SemioVizLayer }
+  \tl_clear:N \l_semio_viz_layer_style_tl
+  \tl_clear:N \l_semio_viz_layer_name_tl
+  \fp_set:Nn \l_semio_viz_layer_opacity_fp { 1 }
+  \keys_set:nn { semio / viz / layer } {#1}
+  \use:x {
+    \exp_not:N \begin { scope } [ opacity=\fp_eval:n { \l_semio_viz_layer_opacity_fp }
+                                  \tl_if_empty:NF \l_semio_viz_layer_style_tl
+                                    { , \exp_not:V \l_semio_viz_layer_style_tl } ]
+  }
+  \semio_viz_probe_geometry:nx { layer }
+    {
+      \int_use:N \g_semio_viz_comp_layer_int ,
+      \tl_if_empty:NTF \l_semio_viz_layer_name_tl { - } { \l_semio_viz_layer_name_tl }
+    }
+  \int_gincr:N \g_semio_viz_comp_layer_int
+}
+\int_new:N \g_semio_viz_comp_layer_int
+
+% 🗂️ Closes the layer opened last.
+\cs_new_protected:Npn \semio_viz_layer_close: { \end { scope } }
+%endregion 🔖️Layer
+
+%region 🔖️Concat
+% 🧮 Concatenation places its items along one direction, each item taking the
+% width (horizontal) or height (vertical) it declares, the remaining extent
+% being the frame's. The cursor is the only state, so an item never needs to
+% know where its predecessors ended.
+\tl_new:N \l_semio_viz_concat_direction_tl
+\fp_new:N \l_semio_viz_concat_gap_fp
+\fp_new:N \g_semio_viz_concat_cursor_fp
+\fp_new:N \l_semio_viz_concat_item_w_fp
+\fp_new:N \l_semio_viz_concat_item_h_fp
+\tl_new:N \l_semio_viz_concat_item_width_tl
+\tl_new:N \l_semio_viz_concat_item_height_tl
+\bool_new:N \l_semio_viz_concat_active_bool
+\int_new:N \g_semio_viz_concat_index_int
+
+\keys_define:nn { semio / viz / concat } {
+  direction .tl_set:N = \l_semio_viz_concat_direction_tl,
+  gap .fp_set:N = \l_semio_viz_concat_gap_fp,
+}
+% 🔑 One concatenation item, `semio / viz / concat / item`: the extent it claims along the
+% concatenation's own direction; the other extent is always the enclosing frame's.
+\keys_define:nn { semio / viz / concat / item } {
+  width .tl_set:N = \l_semio_viz_concat_item_width_tl,
+  height .tl_set:N = \l_semio_viz_concat_item_height_tl,
+}
+
+% 🧮 Opens a concatenation under the option list #1 and puts its cursor back to the frame's origin.
+\cs_new_protected:Npn \semio_viz_concat_open:n #1 {
+  \semio_viz_frame_require:n { VizConcat }
+  \tl_set:Nn \l_semio_viz_concat_direction_tl { horizontal }
+  \fp_set:Nn \l_semio_viz_concat_gap_fp { 4 }
+  \keys_set:nn { semio / viz / concat } {#1}
+  \fp_gzero:N \g_semio_viz_concat_cursor_fp
+  \int_gzero:N \g_semio_viz_concat_index_int
+  \bool_set_true:N \l_semio_viz_concat_active_bool
+}
+
+% 🧮 Closes the concatenation, so a stray item outside one is reported instead of drawn.
+\cs_new_protected:Npn \semio_viz_concat_close: {
+  \bool_set_false:N \l_semio_viz_concat_active_bool
+}
+
+% 📦 One concatenation item: options #1 give its extent, body #2 is drawn in a sub-frame at the
+% cursor, and the cursor then moves on by that extent plus the gap.
+\cs_new_protected:Npn \semio_viz_concat_item:nn #1#2 {
+  \bool_if:NF \l_semio_viz_concat_active_bool
+    { \msg_error:nn { semio-viz } { concat-outside } }
+  \tl_clear:N \l_semio_viz_concat_item_width_tl
+  \tl_clear:N \l_semio_viz_concat_item_height_tl
+  \keys_set:nn { semio / viz / concat / item } {#1}
+  \str_if_eq:VnTF \l_semio_viz_concat_direction_tl { vertical }
+    {
+      \fp_set_eq:NN \l_semio_viz_concat_item_w_fp \l_semio_viz_width_fp
+      \tl_if_empty:NTF \l_semio_viz_concat_item_height_tl
+        { \fp_set:Nn \l_semio_viz_concat_item_h_fp { \l_semio_viz_height_fp / 2 } }
+        { \fp_set:Nn \l_semio_viz_concat_item_h_fp { \l_semio_viz_concat_item_height_tl } }
+      \fp_set:Nn \l_semio_viz_comp_x_fp { 0 }
+      \fp_set:Nn \l_semio_viz_comp_y_fp
+        { \l_semio_viz_height_fp - \g_semio_viz_concat_cursor_fp - \l_semio_viz_concat_item_h_fp }
+      \fp_gadd:Nn \g_semio_viz_concat_cursor_fp
+        { \l_semio_viz_concat_item_h_fp + \l_semio_viz_concat_gap_fp }
+    }
+    {
+      \tl_if_empty:NTF \l_semio_viz_concat_item_width_tl
+        { \fp_set:Nn \l_semio_viz_concat_item_w_fp { \l_semio_viz_width_fp / 2 } }
+        { \fp_set:Nn \l_semio_viz_concat_item_w_fp { \l_semio_viz_concat_item_width_tl } }
+      \tl_if_empty:NTF \l_semio_viz_concat_item_height_tl
+        { \fp_set_eq:NN \l_semio_viz_concat_item_h_fp \l_semio_viz_height_fp }
+        { \fp_set:Nn \l_semio_viz_concat_item_h_fp { \l_semio_viz_concat_item_height_tl } }
+      \fp_set_eq:NN \l_semio_viz_comp_x_fp \g_semio_viz_concat_cursor_fp
+      \fp_set:Nn \l_semio_viz_comp_y_fp { 0 }
+      \fp_gadd:Nn \g_semio_viz_concat_cursor_fp
+        { \l_semio_viz_concat_item_w_fp + \l_semio_viz_concat_gap_fp }
+    }
+  \semio_viz_probe_geometry:nx { concat-item } {
+    \int_use:N \g_semio_viz_concat_index_int ,
+    \fp_eval:n { \l_semio_viz_comp_x_fp } , \fp_eval:n { \l_semio_viz_comp_y_fp } ,
+    \fp_eval:n { \l_semio_viz_concat_item_w_fp } , \fp_eval:n { \l_semio_viz_concat_item_h_fp }
+  }
+  \int_gincr:N \g_semio_viz_concat_index_int
+  \semio_viz_comp_push:nnnn
+    { \l_semio_viz_comp_x_fp } { \l_semio_viz_comp_y_fp }
+    { \l_semio_viz_concat_item_w_fp } { \l_semio_viz_concat_item_h_fp }
+  #2
+  \semio_viz_comp_pop:
+}
+%endregion 🔖️Concat
+
+%region 🔖️Inset
+% 🔍 An inset is a sub-frame with its own pad and, optionally, a frame rule and a
+% zoom rectangle drawn on the host: `zoom={x1,y1,x2,y2}` marks the host region
+% the inset magnifies and links the two, which is what makes an inset readable
+% instead of merely small.
+\clist_new:N \l_semio_viz_inset_at_clist
+\clist_new:N \l_semio_viz_inset_zoom_clist
+\tl_new:N \l_semio_viz_inset_width_tl
+\tl_new:N \l_semio_viz_inset_height_tl
+\fp_new:N \l_semio_viz_inset_pad_fp
+\bool_new:N \l_semio_viz_inset_frame_bool
+\bool_new:N \l_semio_viz_inset_link_bool
+
+\keys_define:nn { semio / viz / inset } {
+  at .clist_set:N = \l_semio_viz_inset_at_clist,
+  zoom .clist_set:N = \l_semio_viz_inset_zoom_clist,
+  width .tl_set:N = \l_semio_viz_inset_width_tl,
+  height .tl_set:N = \l_semio_viz_inset_height_tl,
+  pad .fp_set:N = \l_semio_viz_inset_pad_fp,
+  frame .bool_set:N = \l_semio_viz_inset_frame_bool,
+  link .bool_set:N = \l_semio_viz_inset_link_bool,
+}
+
+% 🔍 An inset under the option list #1 with the body #2: a sub-frame placed at `at`, optionally
+% framed and joined to the region of the parent figure it magnifies.
+\cs_new_protected:Npn \semio_viz_inset_draw:nn #1#2 {
+  \semio_viz_frame_require:n { SemioVizInset }
+  \clist_set:Nn \l_semio_viz_inset_at_clist { 0 , 0 }
+  \clist_clear:N \l_semio_viz_inset_zoom_clist
+  \tl_clear:N \l_semio_viz_inset_width_tl
+  \tl_clear:N \l_semio_viz_inset_height_tl
+  \fp_set:Nn \l_semio_viz_inset_pad_fp { 4 }
+  \bool_set_true:N \l_semio_viz_inset_frame_bool
+  \bool_set_true:N \l_semio_viz_inset_link_bool
+  \keys_set:nn { semio / viz / inset } {#1}
+  \fp_set:Nn \l_semio_viz_comp_x_fp { \clist_item:Nn \l_semio_viz_inset_at_clist { 1 } }
+  \fp_set:Nn \l_semio_viz_comp_y_fp { \clist_item:Nn \l_semio_viz_inset_at_clist { 2 } }
+  \tl_if_empty:NTF \l_semio_viz_inset_width_tl
+    { \fp_set:Nn \l_semio_viz_comp_w_fp { \l_semio_viz_width_fp / 3 } }
+    { \fp_set:Nn \l_semio_viz_comp_w_fp { \l_semio_viz_inset_width_tl } }
+  \tl_if_empty:NTF \l_semio_viz_inset_height_tl
+    { \fp_set:Nn \l_semio_viz_comp_h_fp { \l_semio_viz_height_fp / 3 } }
+    { \fp_set:Nn \l_semio_viz_comp_h_fp { \l_semio_viz_inset_height_tl } }
+  \int_compare:nNnT { \clist_count:N \l_semio_viz_inset_zoom_clist } = { 4 } {
+    \semio_viz_guide_style:nN { tick-minor } \l_semio_viz_guide_style_tl
+    \use:x {
+      \exp_not:N \draw [ \exp_not:V \l_semio_viz_guide_style_tl ]
+        ( \fp_eval:n { \clist_item:Nn \l_semio_viz_inset_zoom_clist { 1 } } ,
+          \fp_eval:n { \clist_item:Nn \l_semio_viz_inset_zoom_clist { 2 } } )
+        rectangle ( \fp_eval:n { \clist_item:Nn \l_semio_viz_inset_zoom_clist { 3 } } ,
+                    \fp_eval:n { \clist_item:Nn \l_semio_viz_inset_zoom_clist { 4 } } ) ;
+    }
+    \bool_if:NT \l_semio_viz_inset_link_bool {
+      \use:x {
+        \exp_not:N \draw [ \exp_not:V \l_semio_viz_guide_style_tl ]
+          ( \fp_eval:n { \clist_item:Nn \l_semio_viz_inset_zoom_clist { 3 } } ,
+            \fp_eval:n { \clist_item:Nn \l_semio_viz_inset_zoom_clist { 4 } } )
+          -- ( \fp_eval:n { \l_semio_viz_comp_x_fp } ,
+               \fp_eval:n { \l_semio_viz_comp_y_fp + \l_semio_viz_comp_h_fp } ) ;
+      }
+    }
+  }
+  \semio_viz_probe_geometry:nx { inset } {
+    \fp_eval:n { \l_semio_viz_comp_x_fp } , \fp_eval:n { \l_semio_viz_comp_y_fp } ,
+    \fp_eval:n { \l_semio_viz_comp_w_fp } , \fp_eval:n { \l_semio_viz_comp_h_fp }
+  }
+  \semio_viz_comp_push:nnnn
+    { \l_semio_viz_comp_x_fp } { \l_semio_viz_comp_y_fp }
+    { \l_semio_viz_comp_w_fp } { \l_semio_viz_comp_h_fp }
+  \fp_set_eq:NN \l_semio_viz_pad_fp \l_semio_viz_inset_pad_fp
+  \bool_if:NT \l_semio_viz_inset_frame_bool {
+    \use:x {
+      \exp_not:N \semio_viz_plot_frame:nn
+        { \fp_eval:n { \l_semio_viz_width_fp } } { \fp_eval:n { \l_semio_viz_height_fp } }
+    }
+  }
+  #2
+  \semio_viz_comp_pop:
+}
+%endregion 🔖️Inset
+
+%region 🔖️Dashboard
+% 🗂️ A dashboard is a fixed grid of cells a report's KPI blocks drop into: the
+% cell rectangle comes from the grid, never from a hand-placed origin, so adding
+% a row moves nothing by hand.
+\int_new:N \l_semio_viz_dash_columns_int
+\int_new:N \l_semio_viz_dash_rows_int
+\int_new:N \g_semio_viz_dash_index_int
+\int_new:N \l_semio_viz_dash_colspan_int
+\int_new:N \l_semio_viz_dash_rowspan_int
+\fp_new:N \l_semio_viz_dash_gap_fp
+\fp_new:N \l_semio_viz_dash_cell_w_fp
+\fp_new:N \l_semio_viz_dash_cell_h_fp
+\bool_new:N \l_semio_viz_dash_active_bool
+
+\keys_define:nn { semio / viz / dashboard } {
+  columns .int_set:N = \l_semio_viz_dash_columns_int,
+  rows .int_set:N = \l_semio_viz_dash_rows_int,
+  gap .fp_set:N = \l_semio_viz_dash_gap_fp,
+}
+% 🔑 One dashboard cell, `semio / viz / dashboard / cell`: how many columns and rows it spans.
+\keys_define:nn { semio / viz / dashboard / cell } {
+  colspan .int_set:N = \l_semio_viz_dash_colspan_int,
+  rowspan .int_set:N = \l_semio_viz_dash_rowspan_int,
+}
+
+% 🎛️ Opens a dashboard under the option list #1 and works out one cell's extent from the frame,
+% the column and row counts and the gap.
+\cs_new_protected:Npn \semio_viz_dash_open:n #1 {
+  \semio_viz_frame_require:n { VizDashboard }
+  \int_set:Nn \l_semio_viz_dash_columns_int { 3 }
+  \int_set:Nn \l_semio_viz_dash_rows_int { 2 }
+  \fp_set:Nn \l_semio_viz_dash_gap_fp { 3 }
+  \keys_set:nn { semio / viz / dashboard } {#1}
+  \fp_set:Nn \l_semio_viz_dash_cell_w_fp {
+    ( \l_semio_viz_width_fp - ( \l_semio_viz_dash_columns_int - 1 ) * \l_semio_viz_dash_gap_fp )
+      / \l_semio_viz_dash_columns_int
+  }
+  \fp_set:Nn \l_semio_viz_dash_cell_h_fp {
+    ( \l_semio_viz_height_fp - ( \l_semio_viz_dash_rows_int - 1 ) * \l_semio_viz_dash_gap_fp )
+      / \l_semio_viz_dash_rows_int
+  }
+  \int_gzero:N \g_semio_viz_dash_index_int
+  \bool_set_true:N \l_semio_viz_dash_active_bool
+}
+
+% 🎛️ Closes the dashboard, so a stray cell outside one is reported instead of drawn.
+\cs_new_protected:Npn \semio_viz_dash_close: { \bool_set_false:N \l_semio_viz_dash_active_bool }
+
+% 🧱 One dashboard cell: options #1 give its span, body #2 is drawn in a sub-frame at the next
+% free position of the grid, which the running index alone determines.
+\cs_new_protected:Npn \semio_viz_dash_cell:nn #1#2 {
+  \int_set:Nn \l_semio_viz_dash_colspan_int { 1 }
+  \int_set:Nn \l_semio_viz_dash_rowspan_int { 1 }
+  \keys_set:nn { semio / viz / dashboard / cell } {#1}
+  \fp_set:Nn \l_semio_viz_comp_x_fp {
+    \int_mod:nn { \g_semio_viz_dash_index_int } { \l_semio_viz_dash_columns_int }
+      * ( \l_semio_viz_dash_cell_w_fp + \l_semio_viz_dash_gap_fp )
+  }
+  \fp_set:Nn \l_semio_viz_comp_y_fp {
+    \l_semio_viz_height_fp
+      - ( \int_div_truncate:nn { \g_semio_viz_dash_index_int } { \l_semio_viz_dash_columns_int } + 1 )
+        * \l_semio_viz_dash_cell_h_fp
+      - \int_div_truncate:nn { \g_semio_viz_dash_index_int } { \l_semio_viz_dash_columns_int }
+        * \l_semio_viz_dash_gap_fp
+  }
+  \fp_set:Nn \l_semio_viz_comp_w_fp {
+    \l_semio_viz_dash_colspan_int * \l_semio_viz_dash_cell_w_fp
+      + ( \l_semio_viz_dash_colspan_int - 1 ) * \l_semio_viz_dash_gap_fp
+  }
+  \fp_set:Nn \l_semio_viz_comp_h_fp {
+    \l_semio_viz_dash_rowspan_int * \l_semio_viz_dash_cell_h_fp
+      + ( \l_semio_viz_dash_rowspan_int - 1 ) * \l_semio_viz_dash_gap_fp
+  }
+  \fp_sub:Nn \l_semio_viz_comp_y_fp
+    { ( \l_semio_viz_dash_rowspan_int - 1 ) * ( \l_semio_viz_dash_cell_h_fp + \l_semio_viz_dash_gap_fp ) }
+  \semio_viz_probe_geometry:nx { dashboard-cell } {
+    \int_use:N \g_semio_viz_dash_index_int ,
+    \fp_eval:n { \l_semio_viz_comp_x_fp } , \fp_eval:n { \l_semio_viz_comp_y_fp } ,
+    \fp_eval:n { \l_semio_viz_comp_w_fp } , \fp_eval:n { \l_semio_viz_comp_h_fp }
+  }
+  \int_gadd:Nn \g_semio_viz_dash_index_int { \l_semio_viz_dash_colspan_int }
+  \semio_viz_comp_push:nnnn
+    { \l_semio_viz_comp_x_fp } { \l_semio_viz_comp_y_fp }
+    { \l_semio_viz_comp_w_fp } { \l_semio_viz_comp_h_fp }
+  #2
+  \semio_viz_comp_pop:
+}
+%endregion 🔖️Dashboard
+
+%region 🔖️CrossReference
+% ↔️ A cross-panel reference line is drawn on the composition's own canvas, not
+% inside a panel, so a threshold that holds for every small multiple is one line
+% rather than one per panel.
+\cs_new_protected:Npn \semio_viz_comp_cross:nnnn #1#2#3#4 {
+  \semio_viz_guide_style:nN { grid } \l_semio_viz_guide_style_tl
+  \use:x {
+    \exp_not:N \draw [ \exp_not:V \l_semio_viz_guide_style_tl , dash~pattern=on~1.2pt~off~1pt ]
+      ( \fp_eval:n {#1} , \fp_eval:n {#2} ) -- ( \fp_eval:n {#3} , \fp_eval:n {#4} ) ;
+  }
+  \semio_viz_probe_geometry:nx { cross-reference }
+    { \fp_eval:n {#1} , \fp_eval:n {#2} , \fp_eval:n {#3} , \fp_eval:n {#4} }
+}
+%endregion 🔖️CrossReference
+
+%region 🔖️Keys
+% 🔑 semio / viz / family / composition — the §77 composition kinds.
+%   variant  (choice) one §77 slug; selects which operator the kind demonstrates
+%   data     (table)  bound table, default `demo`
+%   x, y     (column) bound columns, default `cat` and `val`
+%   y2       (column) second series for repeat and overlay, default `val2`
+%   groups   (clist)  panel groups for the facet-shaped variants, default A,B,C,D
+%   columns  (int)    panel columns, default 2
+%   gap      (mm)     gap between panels or items, default 4
+%   ticks    (int)    tick count inside each panel, default 3
+%   panels        (int) cells the dashboard-shaped variants lay out, default 6
+%   panelColumns  (int) columns of that dashboard grid, default 3
+\tl_new:N \l_semio_viz_fcomp_variant_tl
+\tl_new:N \l_semio_viz_fcomp_data_tl
+\tl_new:N \l_semio_viz_fcomp_x_tl
+\tl_new:N \l_semio_viz_fcomp_y_tl
+\tl_new:N \l_semio_viz_fcomp_ytwo_tl
+\clist_new:N \l_semio_viz_fcomp_groups_clist
+\int_new:N \l_semio_viz_fcomp_columns_int
+\int_new:N \l_semio_viz_fcomp_ticks_int
+\int_new:N \l_semio_viz_fcomp_panels_int
+\int_new:N \l_semio_viz_fcomp_pancols_int
+\fp_new:N \l_semio_viz_fcomp_gap_fp
+
+% ⚙️ Declares the composition family's option vocabulary documented above.
+\keys_define:nn { semio / viz / family / composition } {
+  variant .tl_set:N = \l_semio_viz_fcomp_variant_tl,
+  data .tl_set:N = \l_semio_viz_fcomp_data_tl,
+  x .tl_set:N = \l_semio_viz_fcomp_x_tl,
+  y .tl_set:N = \l_semio_viz_fcomp_y_tl,
+  y2 .tl_set:N = \l_semio_viz_fcomp_ytwo_tl,
+  groups .clist_set:N = \l_semio_viz_fcomp_groups_clist,
+  columns .int_set:N = \l_semio_viz_fcomp_columns_int,
+  gap .fp_set:N = \l_semio_viz_fcomp_gap_fp,
+  ticks .int_set:N = \l_semio_viz_fcomp_ticks_int,
+  panels .int_set:N = \l_semio_viz_fcomp_panels_int,
+  panelColumns .int_set:N = \l_semio_viz_fcomp_pancols_int,
+}
+
+% 🧹 Restores every composition key to its documented default before a kind reads its options.
+\cs_new_protected:Npn \semio_viz_fcomp_keys_reset: {
+  \tl_set:Nn \l_semio_viz_fcomp_variant_tl { layer }
+  \tl_set:Nn \l_semio_viz_fcomp_data_tl { demo }
+  \tl_set:Nn \l_semio_viz_fcomp_x_tl { cat }
+  \tl_set:Nn \l_semio_viz_fcomp_y_tl { val }
+  \tl_set:Nn \l_semio_viz_fcomp_ytwo_tl { val2 }
+  \clist_set:Nn \l_semio_viz_fcomp_groups_clist { A , B , C , D }
+  \int_set:Nn \l_semio_viz_fcomp_columns_int { 2 }
+  \int_set:Nn \l_semio_viz_fcomp_ticks_int { 3 }
+  \int_set:Nn \l_semio_viz_fcomp_panels_int { 6 }
+  \int_set:Nn \l_semio_viz_fcomp_pancols_int { 3 }
+  \fp_set:Nn \l_semio_viz_fcomp_gap_fp { 4 }
+}
+%endregion 🔖️Keys
+
+%region 🔖️Family
+
+% 🧩 The unit every composition variant repeats: a cartesian mini plot of the
+% bound columns, drawn by the axis family so a panel is a real plot, not a box.
+\cs_new_protected:Npn \semio_viz_fcomp_panel:n #1 {
+  \use:x {
+    \exp_not:N \semio_viz_faxis_render:n {
+      variant = cartesian , data = \exp_not:V \l_semio_viz_fcomp_data_tl ,
+      x = \exp_not:V \l_semio_viz_fcomp_x_tl , y = #1 ,
+      ticks = \int_use:N \l_semio_viz_fcomp_ticks_int
+    }
+  }
+}
+
+% 🪟 The faceted variants: one panel per level of the grouping columns, with the extra options #1.
+\cs_new_protected:Npn \semio_viz_fcomp_facet:nn #1#2 {
+  \use:x {
+    \exp_not:N \semio_viz_facet_run:n {
+      wrap = { \clist_use:Nn \l_semio_viz_fcomp_groups_clist { , } } ,
+      columns = \int_use:N \l_semio_viz_fcomp_columns_int ,
+      gap = \fp_eval:n { \l_semio_viz_fcomp_gap_fp } ,
+      xScale = family-x , yScale = family-y , \exp_not:n {#1}
+    }
+  }
+}
+
+% 🖼️ What every facet panel draws: its own pair of axes, so the panels are comparable.
+\cs_new_protected:Npn \semio_viz_fcomp_facet_body: {
+  \tl_set:Nn \l_semio_viz_facet_body_tl {
+    \SemioVizFacetAxes[ticks=3]
+  }
+}
+
+% 🧮 The concatenated variants: the two value columns side by side or one above the other,
+% depending on the direction #1.
+\cs_new_protected:Npn \semio_viz_fcomp_concat:n #1 {
+  \semio_viz_concat_open:n { direction = #1 , gap = \fp_eval:n { \l_semio_viz_fcomp_gap_fp } }
+  \str_if_eq:nnTF {#1} { vertical }
+    {
+      \semio_viz_concat_item:nn { height = \fp_eval:n { ( \l_semio_viz_height_fp - \l_semio_viz_fcomp_gap_fp ) / 2 } }
+        { \semio_viz_fcomp_panel:n { \l_semio_viz_fcomp_y_tl } }
+      \semio_viz_concat_item:nn { height = \fp_eval:n { ( \l_semio_viz_height_fp - \l_semio_viz_fcomp_gap_fp ) / 2 } }
+        { \semio_viz_fcomp_panel:n { \l_semio_viz_fcomp_ytwo_tl } }
+    }
+    {
+      \semio_viz_concat_item:nn { width = \fp_eval:n { ( \l_semio_viz_width_fp - \l_semio_viz_fcomp_gap_fp ) / 2 } }
+        { \semio_viz_fcomp_panel:n { \l_semio_viz_fcomp_y_tl } }
+      \semio_viz_concat_item:nn { width = \fp_eval:n { ( \l_semio_viz_width_fp - \l_semio_viz_fcomp_gap_fp ) / 2 } }
+        { \semio_viz_fcomp_panel:n { \l_semio_viz_fcomp_ytwo_tl } }
+    }
+  \semio_viz_concat_close:
+}
+
+% ▶️ The whole family run: defaults, the option list #1, then the composition the `variant` names
+% — overlay, concatenation, facet grid, inset or dashboard.
+\cs_new_protected:Npn \semio_viz_fcomp_render:n #1 {
+  \semio_viz_frame_require:n { SemioVizChart }
+  \semio_viz_fcomp_keys_reset:
+  \keys_set:nn { semio / viz / family / composition } {#1}
+  \semio_viz_fcomp_facet_body:
+  \str_case:VnF \l_semio_viz_fcomp_variant_tl {
+    { overlay } {
+      \semio_viz_layer_open:n { opacity = 0.45 }
+      \semio_viz_fcomp_panel:n { \l_semio_viz_fcomp_ytwo_tl }
+      \semio_viz_layer_close:
+      \semio_viz_layer_open:n { }
+      \semio_viz_fcomp_panel:n { \l_semio_viz_fcomp_y_tl }
+      \semio_viz_layer_close:
+    }
+    { facet } { \semio_viz_fcomp_panel:n { \l_semio_viz_fcomp_y_tl } \semio_viz_fcomp_facet:nn { header = true } { } }
+    { repeat } {
+      \semio_viz_fcomp_panel:n { \l_semio_viz_fcomp_y_tl }
+      \semio_viz_fcomp_facet:nn { header = false , sharedY = false } { }
+    }
+    { small-multiples } {
+      \semio_viz_fcomp_panel:n { \l_semio_viz_fcomp_y_tl }
+      \semio_viz_fcomp_facet:nn { header = false , columns = 4 , gap = 2 } { }
+    }
+    { shared-axes } {
+      \semio_viz_fcomp_panel:n { \l_semio_viz_fcomp_y_tl }
+      \semio_viz_fcomp_facet:nn { sharedX = true , sharedY = true , header = false } { }
+    }
+    { independent-axes } {
+      \semio_viz_fcomp_panel:n { \l_semio_viz_fcomp_y_tl }
+      \semio_viz_fcomp_facet:nn { sharedX = false , sharedY = false , header = false } { }
+    }
+    { shared-legend } {
+      \semio_viz_fcomp_panel:n { \l_semio_viz_fcomp_y_tl }
+      \semio_viz_fcomp_facet:nn { header = false } { }
+      \semio_viz_legend_draw:n { scale = family-x , kind = swatch , orient = horizontal ,
+                                 at = { \fp_eval:n { \l_semio_viz_pad_fp } , \fp_eval:n { \l_semio_viz_pad_fp - 2 } } }
+    }
+    { independent-legends } {
+      \semio_viz_fcomp_panel:n { \l_semio_viz_fcomp_y_tl }
+      \tl_set:Nn \l_semio_viz_facet_body_tl {
+        \SemioVizFacetAxes[ticks=2]
+        \SemioVizLegend[scale=family-x,kind=swatch,orient=vertical,swatchSize=1.4,itemGap=0.6]
+      }
+      \semio_viz_fcomp_facet:nn { header = false } { }
+    }
+    { concatenate-horizontally } { \semio_viz_fcomp_concat:n { horizontal } }
+    { concatenate-vertically } { \semio_viz_fcomp_concat:n { vertical } }
+    { cross-panel-reference-lines } {
+      \semio_viz_fcomp_concat:n { horizontal }
+      \semio_viz_comp_cross:nnnn { 0 } { \l_semio_viz_height_fp / 2 }
+        { \l_semio_viz_width_fp } { \l_semio_viz_height_fp / 2 }
+    }
+    { figure-subfigure-assembly } {
+      \semio_viz_fcomp_concat:n { horizontal }
+      \semio_viz_ann_draw:nn { badge } { at = { 1 , 1 } , text = { a } , span = false }
+      \use:x {
+        \exp_not:N \semio_viz_ann_draw:nn { badge }
+          { at = { \fp_eval:n { ( \l_semio_viz_width_fp + \l_semio_viz_fcomp_gap_fp ) / 2 } , 1 } ,
+            text = { b } , span = false }
+      }
+    }
+    { grid-composition } { \semio_viz_fcomp_dashboard:n { false } }
+    { dashboard-assembly } { \semio_viz_fcomp_dashboard:n { true } }
+    { nested-composition } {
+      \semio_viz_concat_open:n { direction = horizontal , gap = \fp_eval:n { \l_semio_viz_fcomp_gap_fp } }
+      \semio_viz_concat_item:nn { width = \fp_eval:n { ( \l_semio_viz_width_fp - \l_semio_viz_fcomp_gap_fp ) / 2 } }
+        { \semio_viz_fcomp_panel:n { \l_semio_viz_fcomp_y_tl } }
+      \semio_viz_concat_item:nn { width = \fp_eval:n { ( \l_semio_viz_width_fp - \l_semio_viz_fcomp_gap_fp ) / 2 } }
+        {
+          \semio_viz_fcomp_panel:n { \l_semio_viz_fcomp_y_tl }
+          \semio_viz_fcomp_facet:nn { header = false , columns = 2 , gap = 2 } { }
+        }
+      \semio_viz_concat_close:
+    }
+    { inset } {
+      \semio_viz_fcomp_panel:n { \l_semio_viz_fcomp_y_tl }
+      \use:x {
+        \exp_not:N \semio_viz_inset_draw:nn
+          { at = { \fp_eval:n { \l_semio_viz_width_fp * 0.55 } , \fp_eval:n { \l_semio_viz_height_fp * 0.5 } } ,
+            width = \fp_eval:n { \l_semio_viz_width_fp * 0.4 } ,
+            height = \fp_eval:n { \l_semio_viz_height_fp * 0.4 } , pad = 3 }
+          { \exp_not:N \semio_viz_fcomp_panel:n { \exp_not:V \l_semio_viz_fcomp_ytwo_tl } }
+      }
+    }
+    { zoom-inset } {
+      \semio_viz_fcomp_panel:n { \l_semio_viz_fcomp_y_tl }
+      \use:x {
+        \exp_not:N \semio_viz_inset_draw:nn
+          { at = { \fp_eval:n { \l_semio_viz_width_fp * 0.55 } , \fp_eval:n { \l_semio_viz_height_fp * 0.5 } } ,
+            width = \fp_eval:n { \l_semio_viz_width_fp * 0.4 } ,
+            height = \fp_eval:n { \l_semio_viz_height_fp * 0.4 } , pad = 3 ,
+            zoom = { \fp_eval:n { \l_semio_viz_pad_fp } , \fp_eval:n { \l_semio_viz_pad_fp } ,
+                     \fp_eval:n { \l_semio_viz_width_fp * 0.35 } , \fp_eval:n { \l_semio_viz_height_fp * 0.45 } } }
+          { \exp_not:N \semio_viz_fcomp_panel:n { \exp_not:V \l_semio_viz_fcomp_ytwo_tl } }
+      }
+    }
+    { linked-annotations } {
+      \semio_viz_fcomp_concat:n { horizontal }
+      \use:x {
+        \exp_not:N \semio_viz_ann_draw:nn { leader }
+          { at = { \fp_eval:n { \l_semio_viz_width_fp * 0.25 } , \fp_eval:n { \l_semio_viz_height_fp * 0.6 } } ,
+            to = { \fp_eval:n { \l_semio_viz_width_fp * 0.75 } , \fp_eval:n { \l_semio_viz_height_fp * 0.8 } } ,
+            span = false }
+      }
+    }
+  } {
+    \semio_viz_layer_open:n { opacity = 0.5 }
+    \semio_viz_fcomp_panel:n { \l_semio_viz_fcomp_ytwo_tl }
+    \semio_viz_layer_close:
+    \semio_viz_layer_open:n { }
+    \semio_viz_fcomp_panel:n { \l_semio_viz_fcomp_y_tl }
+    \semio_viz_layer_close:
+  }
+}
+
+% 🗂️ The dashboard-shaped variants: a plain grid, or a grid with a spanning cell.
+\cs_new_protected:Npn \semio_viz_fcomp_dashboard:n #1 {
+  \semio_viz_dash_open:n {
+    columns = \int_use:N \l_semio_viz_fcomp_pancols_int ,
+    rows = \int_eval:n
+      { \int_div_truncate:nn
+          { \l_semio_viz_fcomp_panels_int + \l_semio_viz_fcomp_pancols_int - 1 }
+          { \l_semio_viz_fcomp_pancols_int } } ,
+    gap = \fp_eval:n { \l_semio_viz_fcomp_gap_fp }
+  }
+  \str_if_eq:nnTF {#1} { true }
+    {
+      \semio_viz_dash_cell:nn { colspan = 2 } { \semio_viz_fcomp_panel:n { \l_semio_viz_fcomp_y_tl } }
+      \semio_viz_dash_cell:nn { } { \semio_viz_fcomp_panel:n { \l_semio_viz_fcomp_ytwo_tl } }
+      \semio_viz_dash_cell:nn { } { \semio_viz_fcomp_panel:n { \l_semio_viz_fcomp_y_tl } }
+      \semio_viz_dash_cell:nn { colspan = 2 } { \semio_viz_fcomp_panel:n { \l_semio_viz_fcomp_ytwo_tl } }
+    }
+    {
+      \int_step_inline:nn { \l_semio_viz_fcomp_panels_int } {
+        \semio_viz_dash_cell:nn { } { \semio_viz_fcomp_panel:n { \l_semio_viz_fcomp_y_tl } }
+      }
+    }
+  \semio_viz_dash_close:
+}
+
+% 🧩 The §77 composition kinds, one family over the composition operators.
+\SemioVizFamily{composition}{ \semio_viz_fcomp_render:n {#1} }
+%endregion 🔖️Family
+
+%region 🔖️TableBlocks
+% 🧱 Three composition blocks of taxonomy §77 that read a data table directly: a grid of labelled
+% cells, a chain of stage boxes, and a row of spans on a shared band scale. They are what a
+% systems map is made of — a chart family answers "how does this value look", these answer "where
+% on the page does this row go" — and they place every box through the mark kernel's text marks
+% and the scale kernel's band geometry, never through arithmetic at the call site.
+\tl_new:N \l_semio_viz_block_table_tl
+\tl_new:N \l_semio_viz_block_label_tl
+\tl_new:N \l_semio_viz_block_key_tl
+\tl_new:N \l_semio_viz_block_from_tl
+\tl_new:N \l_semio_viz_block_to_tl
+\tl_new:N \l_semio_viz_block_chip_tl
+\tl_new:N \l_semio_viz_block_scale_tl
+\tl_new:N \l_semio_viz_block_cell_tl
+\clist_new:N \l_semio_viz_block_stages_clist
+\tl_new:N \l_semio_viz_block_accent_tl
+\int_new:N \l_semio_viz_block_columns_int
+\int_new:N \l_semio_viz_block_rows_int
+\int_new:N \l_semio_viz_block_col_int
+\int_new:N \l_semio_viz_block_row_int
+\fp_new:N \l_semio_viz_block_height_fp
+\fp_new:N \l_semio_viz_block_gutter_fp
+\fp_new:N \l_semio_viz_block_labelwidth_fp
+\fp_new:N \l_semio_viz_block_width_fp
+\fp_new:N \l_semio_viz_block_x_fp
+\fp_new:N \l_semio_viz_block_y_fp
+\fp_new:N \l_semio_viz_block_xb_fp
+\fp_new:N \l_semio_viz_block_step_fp
+
+% 🔑 semio / viz / block — the vocabulary the three blocks share.
+%   label      (column, default `label`)   the column whose text a box carries
+%   key        (column, default empty)     the column naming the band a box sits on
+%   scale      (scale name, default empty) the band scale `key` and `from`/`to` refer to
+%   from / to  (column, default `von`/`bis`) the two ends of a span, as band names
+%   chip       (column, default `chip`)    the source chip a stage chain starts with
+%   stages     (clist, default empty)      the columns that carry the chain's stages
+%   columns    (int, default 0)            boxes per row; 0 puts every row of the table in one line
+%   boxHeight  (mm, default 7)             height of one box
+%   gutter     (mm, default 1.6)           gap between two boxes
+%   labelWidth (mm, default 25)            width of the leading label column of a span row
+\keys_define:nn { semio / viz / block } {
+  label      .tl_set:N = \l_semio_viz_block_label_tl,
+  key        .tl_set:N = \l_semio_viz_block_key_tl,
+  scale      .tl_set:N = \l_semio_viz_block_scale_tl,
+  from       .tl_set:N = \l_semio_viz_block_from_tl,
+  to         .tl_set:N = \l_semio_viz_block_to_tl,
+  chip       .tl_set:N = \l_semio_viz_block_chip_tl,
+  stages     .clist_set:N = \l_semio_viz_block_stages_clist,
+  columns    .int_set:N = \l_semio_viz_block_columns_int,
+  boxHeight  .fp_set:N = \l_semio_viz_block_height_fp,
+  gutter     .fp_set:N = \l_semio_viz_block_gutter_fp,
+  labelWidth .fp_set:N = \l_semio_viz_block_labelwidth_fp,
+}
+
+% ♻️ Puts every block key back to its documented default, reads the option list #2, and counts the
+% rows of table #1 — floored at one, so an empty table still lays out.
+\cs_new_protected:Npn \semio_viz_block_reset:nn #1#2 {
+  \tl_set:Nn \l_semio_viz_block_table_tl {#1}
+  \tl_set:Nn \l_semio_viz_block_label_tl { label }
+  \tl_clear:N \l_semio_viz_block_key_tl
+  \tl_clear:N \l_semio_viz_block_scale_tl
+  \tl_set:Nn \l_semio_viz_block_from_tl { von }
+  \tl_set:Nn \l_semio_viz_block_to_tl { bis }
+  \tl_set:Nn \l_semio_viz_block_chip_tl { chip }
+  \clist_clear:N \l_semio_viz_block_stages_clist
+  \int_zero:N \l_semio_viz_block_columns_int
+  \fp_set:Nn \l_semio_viz_block_height_fp { 7 }
+  \fp_set:Nn \l_semio_viz_block_gutter_fp { 1.6 }
+  \fp_set:Nn \l_semio_viz_block_labelwidth_fp { 25 }
+  \keys_set:nn { semio / viz / block } {#2}
+  \semio_viz_theme_chrome:nN { border-emphasized } \l_semio_viz_block_accent_tl
+  \semio_viz_table_nrows:VN \l_semio_viz_block_table_tl \l_semio_viz_block_rows_int
+  \int_compare:nNnT { \l_semio_viz_block_rows_int } = { 0 }
+    { \int_set:Nn \l_semio_viz_block_rows_int { 1 } }
+}
+
+% 🧱 One labelled cell, given its top-left corner and its width.
+\cs_new_protected:Npn \semio_viz_block_box:nnnn #1#2#3#4 {
+  \use:x
+    {
+      \exp_not:N \semio_viz_text_draw:nnnn { cell }
+        {
+          width = \fp_to_decimal:n { (#3) - 2 } ,
+          height = \fp_to_decimal:n { \l_semio_viz_block_height_fp } ,
+          anchor = north~west
+        }
+        { \fp_to_decimal:n {#1} , \fp_to_decimal:n {#2} } { \exp_not:n {#4} }
+    }
+}
+
+% 🔳 \SemioVizCellGrid{table}[keys]: one labelled cell per table row, wrapped into `columns`
+% columns across the current frame — or, with `scale=` and `key=`, one cell per named band of
+% that scale, so a backbone of processes is laid out by its own scale and not by index
+% arithmetic. Reordering the scale's domain moves the cells with it.
+\cs_new_protected:Npn \semio_viz_block_grid:nn #1#2 {
+  \semio_viz_block_reset:nn {#1} {#2}
+  \tl_if_empty:NTF \l_semio_viz_block_scale_tl
+    { \semio_viz_block_grid_wrapped: }
+    { \semio_viz_block_grid_banded: }
+}
+
+% 🔳 The wrapped grid: `columns` cells per row across the frame, or the whole table in one row.
+\cs_new_protected:Npn \semio_viz_block_grid_wrapped: {
+  \int_compare:nNnT { \l_semio_viz_block_columns_int } = { 0 }
+    { \int_set_eq:NN \l_semio_viz_block_columns_int \l_semio_viz_block_rows_int }
+  \fp_set:Nn \l_semio_viz_block_width_fp
+    {
+      ( \l_semio_viz_width_fp
+        - ( \l_semio_viz_block_columns_int - 1 ) * \l_semio_viz_block_gutter_fp )
+      / \l_semio_viz_block_columns_int
+    }
+  \int_step_inline:nn { \l_semio_viz_block_rows_int } { \semio_viz_block_grid_cell:n {##1} }
+}
+
+% 🧱 One cell of the wrapped grid: table row #1 at the column and row its index puts it in.
+\cs_new_protected:Npn \semio_viz_block_grid_cell:n #1 {
+  \int_set:Nn \l_semio_viz_block_col_int
+    { \int_mod:nn { (#1) - 1 } { \l_semio_viz_block_columns_int } }
+  \int_set:Nn \l_semio_viz_block_row_int
+    { \int_div_truncate:nn { (#1) - 1 } { \l_semio_viz_block_columns_int } }
+  \semio_viz_table_cell:VnVN \l_semio_viz_block_table_tl {#1}
+    \l_semio_viz_block_label_tl \l_semio_viz_block_cell_tl
+  \use:x
+    {
+      \exp_not:N \semio_viz_block_box:nnnn
+        {
+          \fp_to_decimal:n
+            {
+              \l_semio_viz_block_col_int
+              * ( \l_semio_viz_block_width_fp + \l_semio_viz_block_gutter_fp )
+            }
+        }
+        {
+          \fp_to_decimal:n
+            {
+              - \l_semio_viz_block_row_int
+              * ( \l_semio_viz_block_height_fp + \l_semio_viz_block_gutter_fp )
+            }
+        }
+        { \fp_to_decimal:n { \l_semio_viz_block_width_fp } }
+        { \exp_not:V \l_semio_viz_block_cell_tl }
+    }
+}
+
+% 🎚️ The banded grid: one cell per table row, placed on the band its `key` column names, so the
+% scale's own domain order decides the layout.
+\cs_new_protected:Npn \semio_viz_block_grid_banded: {
+  \int_step_inline:nn { \l_semio_viz_block_rows_int } { \semio_viz_block_grid_band:n {##1} }
+}
+
+% 🧱 One cell of the banded grid: table row #1 across the full width of its own band.
+\cs_new_protected:Npn \semio_viz_block_grid_band:n #1 {
+  \semio_viz_table_cell:VnVN \l_semio_viz_block_table_tl {#1}
+    \l_semio_viz_block_key_tl \l_semio_viz_block_cell_tl
+  \semio_viz_scale_band_edges:VVNN \l_semio_viz_block_scale_tl \l_semio_viz_block_cell_tl
+    \l_semio_viz_block_x_fp \l_semio_viz_block_xb_fp
+  \semio_viz_table_cell:VnVN \l_semio_viz_block_table_tl {#1}
+    \l_semio_viz_block_label_tl \l_semio_viz_block_cell_tl
+  \use:x
+    {
+      \exp_not:N \semio_viz_block_box:nnnn
+        {
+          \fp_to_decimal:n
+            { \l_semio_viz_block_x_fp + \l_semio_viz_block_gutter_fp / 2 }
+        }
+        { 0 }
+        {
+          \fp_to_decimal:n
+            {
+              \l_semio_viz_block_xb_fp - \l_semio_viz_block_x_fp
+              - \l_semio_viz_block_gutter_fp
+            }
+        }
+        { \exp_not:V \l_semio_viz_block_cell_tl }
+    }
+}
+
+% ▭ \SemioVizSpanRows{table}[keys]: one row per table entry, its bar reaching from the `from`
+% band through the `to` band of the named scale, with the row's label to the left of it. The two
+% ends are band NAMES, so reordering the scale's domain can never silently move a span.
+\cs_new_protected:Npn \semio_viz_block_spans:nn #1#2 {
+  \semio_viz_block_reset:nn {#1} {#2}
+  \int_step_inline:nn { \l_semio_viz_block_rows_int } { \semio_viz_block_span_row:n {##1} }
+}
+
+% ↔️ One span row: table row #1's label in the leading column, and its box stretched from the
+% `from` band to the `to` band of the named scale.
+\cs_new_protected:Npn \semio_viz_block_span_row:n #1 {
+  \fp_set:Nn \l_semio_viz_block_y_fp
+    { - ( (#1) - 0.5 ) * \l_semio_viz_block_height_fp }
+  \semio_viz_table_cell:VnVN \l_semio_viz_block_table_tl {#1}
+    \l_semio_viz_block_label_tl \l_semio_viz_block_cell_tl
+  \use:x
+    {
+      \exp_not:N \semio_viz_text_draw:nnnn { label }
+        {
+          width = \fp_to_decimal:n { \l_semio_viz_block_labelwidth_fp - 2 } ,
+          anchor = west , align = left
+        }
+        { 0 , \fp_to_decimal:N \l_semio_viz_block_y_fp }
+        { \exp_not:V \l_semio_viz_block_cell_tl }
+    }
+  \semio_viz_table_cell:VnVN \l_semio_viz_block_table_tl {#1}
+    \l_semio_viz_block_from_tl \l_semio_viz_block_cell_tl
+  \semio_viz_scale_band_edges:VVNN \l_semio_viz_block_scale_tl \l_semio_viz_block_cell_tl
+    \l_semio_viz_block_x_fp \l_tmpa_fp
+  \semio_viz_table_cell:VnVN \l_semio_viz_block_table_tl {#1}
+    \l_semio_viz_block_to_tl \l_semio_viz_block_cell_tl
+  \semio_viz_scale_band_edges:VVNN \l_semio_viz_block_scale_tl \l_semio_viz_block_cell_tl
+    \l_tmpa_fp \l_semio_viz_block_xb_fp
+  \fp_set:Nn \l_semio_viz_block_step_fp { 0.8 * \l_semio_viz_block_height_fp }
+  \use:x
+    {
+      \exp_not:N \semio_viz_mark_draw:nnn { rectangle }
+        {
+          fill = \exp_not:V \l_semio_viz_block_accent_tl , stroke = none ,
+          size = \fp_to_decimal:n
+            {
+              ( \l_semio_viz_block_xb_fp - \l_semio_viz_block_x_fp - 1 )
+              * \l_semio_viz_block_step_fp
+            } ,
+          aspect = \fp_to_decimal:n
+            {
+              ( \l_semio_viz_block_xb_fp - \l_semio_viz_block_x_fp - 1 )
+              / \l_semio_viz_block_step_fp
+            }
+        }
+        {
+          \fp_to_decimal:n
+            { ( \l_semio_viz_block_x_fp + \l_semio_viz_block_xb_fp ) / 2 } ,
+          \fp_to_decimal:N \l_semio_viz_block_y_fp
+        }
+    }
+}
+
+% 🔗 \SemioVizStageChain{table}[keys]: a source chip followed by the stage boxes the `stages`
+% columns name, joined by arrows. The LAST edge is dashed: in an evidence path the closing step
+% is the analytic assignment, not a quotation, and the figure has to say which is which.
+
+\cs_new_protected:Npn \semio_viz_block_chain:nn #1#2 {
+  \semio_viz_block_reset:nn {#1} {#2}
+  \int_set:Nn \l_semio_viz_block_columns_int
+    { \clist_count:N \l_semio_viz_block_stages_clist + 1 }
+  \fp_set:Nn \l_semio_viz_block_width_fp
+    {
+      ( \l_semio_viz_width_fp
+        - ( \l_semio_viz_block_columns_int - 1 ) * \l_semio_viz_block_gutter_fp * 3 )
+      / \l_semio_viz_block_columns_int
+    }
+  \fp_set:Nn \l_semio_viz_block_step_fp
+    { \l_semio_viz_block_width_fp + 3 * \l_semio_viz_block_gutter_fp }
+  \int_step_inline:nn { \l_semio_viz_block_rows_int } { \semio_viz_block_chain_row:n {##1} }
+}
+
+% 🔗 One chain row: table row #1's source chip, then one box per stage column, left to right.
+\cs_new_protected:Npn \semio_viz_block_chain_row:n #1 {
+  \fp_set:Nn \l_semio_viz_block_y_fp
+    {
+      - ( (#1) - 1 )
+      * ( \l_semio_viz_block_height_fp + \l_semio_viz_block_gutter_fp )
+    }
+  \semio_viz_table_cell:VnVN \l_semio_viz_block_table_tl {#1}
+    \l_semio_viz_block_chip_tl \l_semio_viz_block_cell_tl
+  \use:x
+    {
+      \exp_not:N \semio_viz_text_draw:nnnn { chip }
+        {
+          width = \fp_to_decimal:n { \l_semio_viz_block_width_fp - 2 } ,
+          height = \fp_to_decimal:n { \l_semio_viz_block_height_fp } ,
+          anchor = north~west
+        }
+        { 0 , \fp_to_decimal:N \l_semio_viz_block_y_fp }
+        { \exp_not:V \l_semio_viz_block_cell_tl }
+    }
+  \int_zero:N \l_semio_viz_block_col_int
+  \clist_map_inline:Nn \l_semio_viz_block_stages_clist
+    { \semio_viz_block_chain_stage:nn {#1} {##1} }
+}
+
+% 🧱 One stage of a chain: the arrow into it, then the box holding row #1's column #2.
+\cs_new_protected:Npn \semio_viz_block_chain_stage:nn #1#2 {
+  \int_incr:N \l_semio_viz_block_col_int
+  \fp_set:Nn \l_semio_viz_block_x_fp
+    { \l_semio_viz_block_col_int * \l_semio_viz_block_step_fp }
+  \semio_viz_block_chain_arrow:
+  \semio_viz_table_cell:VnnN \l_semio_viz_block_table_tl {#1} {#2}
+    \l_semio_viz_block_cell_tl
+  \use:x
+    {
+      \exp_not:N \semio_viz_text_draw:nnnn { cell }
+        {
+          width = \fp_to_decimal:n { \l_semio_viz_block_width_fp - 2 } ,
+          height = \fp_to_decimal:n { \l_semio_viz_block_height_fp } ,
+          anchor = north~west
+        }
+        { \fp_to_decimal:N \l_semio_viz_block_x_fp ,
+          \fp_to_decimal:N \l_semio_viz_block_y_fp }
+        { \exp_not:V \l_semio_viz_block_cell_tl }
+    }
+}
+
+% ➡️ The arrow into the current stage; the last one is dashed, because the closing step of an
+% evidence path is the analytic assignment and not a quotation.
+\cs_new_protected:Npn \semio_viz_block_chain_arrow: {
+  \use:x
+    {
+      \exp_not:N \semio_viz_path_draw:nn { arrow }
+        {
+          stroke = \exp_not:V \l_semio_viz_block_accent_tl , arrow = end ,
+          dash =
+            \int_compare:nNnTF { \l_semio_viz_block_col_int }
+              = { \clist_count:N \l_semio_viz_block_stages_clist } { dashed } { none } ,
+          points =
+            {
+              \fp_to_decimal:n
+                { \l_semio_viz_block_x_fp - 3 * \l_semio_viz_block_gutter_fp } ,
+              \fp_to_decimal:n
+                { \l_semio_viz_block_y_fp - \l_semio_viz_block_height_fp / 2 } ;
+              \fp_to_decimal:n { \l_semio_viz_block_x_fp - 0.4 } ,
+              \fp_to_decimal:n
+                { \l_semio_viz_block_y_fp - \l_semio_viz_block_height_fp / 2 }
+            }
+        }
+    }
+}
+%endregion 🔖️TableBlocks
+
+%region 🔖️PublicApi
+% 🍰 One drawing layer of a plot: same frame, same scales, its own style and opacity.
+\NewDocumentEnvironment { VizLayer } { O{} }
+  { \semio_viz_layer_open:n {#1} } { \semio_viz_layer_close: }
+% 🗻 Superimposed layers sharing one frame: the environment is the shared frame itself.
+\NewDocumentEnvironment { VizOverlay } { O{} }
+  { \semio_viz_layer_open:n {#1} } { \semio_viz_layer_close: }
+% 🗻 Command form: \SemioVizOverlay[keys]{layers}.
+\NewDocumentCommand \SemioVizOverlay { O{} +m }
+  { \semio_viz_layer_open:n {#1} #2 \semio_viz_layer_close: }
+% 🧮 Items placed side by side or stacked; each item declares only its own size.
+\NewDocumentEnvironment { VizConcat } { O{} }
+  { \semio_viz_concat_open:n {#1} } { \semio_viz_concat_close: }
+% 🧮 One item of a VizConcat.
+\NewDocumentCommand \SemioVizConcatItem { O{} +m } { \semio_viz_concat_item:nn {#1} {#2} }
+% 🔍 A sub-frame inside the current one, optionally marking and linking the host region it magnifies.
+\NewDocumentCommand \SemioVizInset { O{} +m } { \semio_viz_inset_draw:nn {#1} {#2} }
+% 🗂️ A fixed cell grid for dashboard compositions.
+\NewDocumentEnvironment { VizDashboard } { O{} }
+  { \semio_viz_dash_open:n {#1} } { \semio_viz_dash_close: }
+% 🗂️ One cell of a VizDashboard, optionally spanning columns or rows.
+\NewDocumentCommand \SemioVizCell { O{} +m } { \semio_viz_dash_cell:nn {#1} {#2} }
+% ↔️ A reference line across the whole composition, in composition millimetres.
+\NewDocumentCommand \SemioVizCrossLine { m m m m } { \semio_viz_comp_cross:nnnn {#1}{#2}{#3}{#4} }
+% ▦ \SemioVizCellGrid{table}[keys]: a grid of labelled cells, one per table row.
+\NewDocumentCommand \SemioVizCellGrid { m O{} } { \semio_viz_block_grid:nn {#1} {#2} }
+% ▭ \SemioVizSpanRows{table}[keys]: one labelled span row per table entry, on a band scale.
+\NewDocumentCommand \SemioVizSpanRows { m O{} } { \semio_viz_block_spans:nn {#1} {#2} }
+% 🔗 \SemioVizStageChain{table}[keys]: a source chip followed by the chain of stage boxes.
+\NewDocumentCommand \SemioVizStageChain { m O{} } { \semio_viz_block_chain:nn {#1} {#2} }
+%endregion 🔖️PublicApi
+
+\ExplSyntaxOff

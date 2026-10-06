@@ -8,11 +8,18 @@ export { PLAYGROUND_SESSION_ARTIFACT_KEY } from "../../../../🧑‍💻dev/♻�
 import type { PluginHostMetadata } from "../../🔎️discovery/🟦️.ts";
 import { type GeneratedCatalogProjection, filterProjectedPluginRegistry, projectedHostPluginFilter, readGeneratedCatalogProjection, registryModuleDirectories } from "../../📖️catalog-view/🟦️.ts";
 
+import { generatePluginRegistry, TAXONOMY } from "../../🔎️discovery/🟦️.ts";
+import { generatePlaygroundRegistry } from "../🔎️discovery/🟦️.ts";
+import { discoverCatalogPackages, registryCatalogInputView } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+
 export class SessionScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     const variant = args[0];
     if (args.length !== 1 || !variant || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(variant)) throw new Error("Usage: session <variant>");
-    const { session } = await stagePlaygroundSession(variant, join(this.root, "dist", "sessions"));
+    const view=registryCatalogInputView(this.repoRoot,TAXONOMY), packages=discoverCatalogPackages(this.repoRoot,TAXONOMY,view), options={packages,view,staleChannel:"exclude" as const};
+    const projection={entries:generatePluginRegistry(this.repoRoot,options),playgrounds:generatePlaygroundRegistry(this.repoRoot,options)};
+    if(!projection.playgrounds.some(row => row.variant===variant)) throw new Error("Selected playground requires current compiled descriptors: "+variant);
+    const { session } = await stagePlaygroundSession(variant, join(this.root, "dist", "sessions"), projection);
     console.log(`Playground session ${variant}: ${session.plugins.length} plugins staged`);
   }
 }
@@ -128,7 +135,9 @@ export async function stagePlaygroundSession(variant: string, sessionsRoot = joi
   try {
     const file = playgroundSessionOutputPath(temporary);
     const session = writePlaygroundSession(variant, file, projection);
-    await stageRepositoryArtifacts(output, `playground-session:${variant}`, new Map([[PLAYGROUND_SESSION_ARTIFACT_KEY, file]]));
+    await stageRepositoryArtifacts(output, `playground-session:${variant}`, new Map([[PLAYGROUND_SESSION_ARTIFACT_KEY, file], ...Object.entries({"🔌️plugins.json": projection.entries,"🎠️playgrounds.json": projection.playgrounds}).map(([name, rows]) => {
+      const path = join(temporary,name);writeFileSync(path,JSON.stringify(rows)+"\n");return [name,path] as [string,string];
+    })]));
     return { path: playgroundSessionStagedOutputPath(sessionsRoot, variant), session };
   } finally { rmSync(temporary, { recursive: true, force: true }); }
 }

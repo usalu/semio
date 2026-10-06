@@ -1,0 +1,7 @@
+\ApiScopeSource{api-path-section}{semio / viz / section}
+\SemioTableLong[text-size=8pt]{\Key{api-path-section} \ApiText{Section options}{Abschnittsoptionen}}{0.20,0.14,0.16,0.50}{\ApiKey & \ApiType & \ApiDefault & \ApiMeaning}{%
+  \SemioTableRow{\Key{title} & \Key{text} & --- & \ApiText{Heading at the section's upper-left corner; empty omits it.}{Überschrift an der linken oberen Abschnittsecke; leer unterdrückt sie.}}
+  \SemioTableRow{\Key{aside} & \Key{text} & --- & \ApiText{Right-aligned annotation on the heading line; empty omits it.}{Rechtsbündige Anmerkung in der Überschriftszeile; leer unterdrückt sie.}}
+  \SemioTableRow{\Key{rule} & \Key{boolean} & \Key{true} & \ApiText{Draws the section's separating hairline across the active figure width.}{Zeichnet die trennende Haarlinie des Abschnitts über die aktive Figurenbreite.}}
+}
+

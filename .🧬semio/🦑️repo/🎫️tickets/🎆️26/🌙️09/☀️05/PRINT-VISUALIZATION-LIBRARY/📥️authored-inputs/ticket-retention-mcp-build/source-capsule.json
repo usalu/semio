@@ -1,0 +1,113 @@
+{
+  "capturedAt": "2026-10-05T06:43:20.219Z",
+  "purpose": "Prospective canonical Go MCP source projection and explicit control inputs before actual registered build; separate current ticket-retention owner contract; no print source edits.",
+  "module": "C:\\git\\semio\\🧰️framework\\🛍️products\\🦑️repo\\🔨️modules\\💻️client\\🔌️mcp",
+  "binary": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\tools\\repo-ticket-retention.exe",
+  "packages": [
+    "."
+  ],
+  "sourceReplacements": {
+    "C:\\git\\semio\\🧰️framework\\🛍️products\\🦑️repo\\🔨️modules\\💻️client\\⌨️cli\\zz_semio_33b2adc1c0e29f9d.go": "C:\\git\\semio\\🧰️framework\\🛍️products\\🦑️repo\\🔨️modules\\💻️client\\⌨️cli\\🧵️executor\\🐹️.go",
+    "C:\\git\\semio\\🧰️framework\\🛍️products\\🦑️repo\\🔨️modules\\💻️client\\⌨️cli\\zz_semio_59df32ab1c6840f8.go": "C:\\git\\semio\\🧰️framework\\🛍️products\\🦑️repo\\🔨️modules\\💻️client\\⌨️cli\\📤️event-export\\🐹️.go",
+    "C:\\git\\semio\\🧰️framework\\🛍️products\\🦑️repo\\🔨️modules\\💻️client\\⌨️cli\\zz_semio_712f264a73cb30de.go": "C:\\git\\semio\\🧰️framework\\🛍️products\\🦑️repo\\🔨️modules\\💻️client\\⌨️cli\\🏷️entity-kinds\\🐹️.go",
+    "C:\\git\\semio\\🧰️framework\\🛍️products\\🦑️repo\\🔨️modules\\💻️client\\⌨️cli\\zz_semio_e259d40c19300cc1.go": "C:\\git\\semio\\🧰️framework\\🛍️products\\🦑️repo\\🔨️modules\\💻️client\\⌨️cli\\🧩️component\\🐹️.go",
+    "C:\\git\\semio\\🧰️framework\\🛍️products\\🦑️repo\\🔨️modules\\💻️client\\🔌️mcp\\zz_semio_09cd942a50c77e84.go": "C:\\git\\semio\\🧰️framework\\🛍️products\\🦑️repo\\🔨️modules\\💻️client\\🔌️mcp\\📜️protocol\\🐹️.go",
+    "C:\\git\\semio\\🧰️framework\\🛍️products\\🦑️repo\\🔨️modules\\💻️client\\🔌️mcp\\zz_semio_61f8a2788b2c84dc.go": "C:\\git\\semio\\🧰️framework\\🛍️products\\🦑️repo\\🔨️modules\\💻️client\\🔌️mcp\\🚚️transport\\🐹️.go",
+    "C:\\git\\semio\\🧰️framework\\🛍️products\\🦑️repo\\🔨️modules\\💻️client\\🔌️mcp\\zz_semio_711cb4e5115312d5.go": "C:\\git\\semio\\🧰️framework\\🛍️products\\🦑️repo\\🔨️modules\\💻️client\\🔌️mcp\\🖥️server\\🐹️.go",
+    "C:\\git\\semio\\🧰️framework\\🛍️products\\🦑️repo\\🔨️modules\\💻️client\\🔌️mcp\\zz_semio_7c787f0d095c33c8.go": "C:\\git\\semio\\🧰️framework\\🛍️products\\🦑️repo\\🔨️modules\\💻️client\\🔌️mcp\\📡️event\\🐹️.go",
+    "C:\\git\\semio\\🧰️framework\\🛍️products\\🦑️repo\\🔨️modules\\💻️client\\🔌️mcp\\zz_semio_b9eb5045fe1def4f.go": "C:\\git\\semio\\🧰️framework\\🛍️products\\🦑️repo\\🔨️modules\\💻️client\\🔌️mcp\\🗄️repository\\🐹️.go",
+    "C:\\git\\semio\\🧰️framework\\🛍️products\\🦑️repo\\🔨️modules\\💻️client\\🔌️mcp\\zz_semio_e259d40c19300cc1.go": "C:\\git\\semio\\🧰️framework\\🛍️products\\🦑️repo\\🔨️modules\\💻️client\\🔌️mcp\\🧩️component\\🐹️.go"
+  },
+  "inputs": [
+    {
+      "path": "bun.lock",
+      "bytes": 656752,
+      "sha256": "4c51675539193eaa04660271516cdbcd3e96857108b38e4ec18469483d7d6a43"
+    },
+    {
+      "path": "bunfig.toml",
+      "bytes": 115,
+      "sha256": "fe7201b28409aaadc5169c4c76aced6df67e6a280164a8053da8f486b3bc82f2"
+    },
+    {
+      "path": "go.work",
+      "bytes": 2915,
+      "sha256": "10e30da119d45d6f5f42452bde2142b82ac9e994f76a55603325b59e38ddbdb0"
+    },
+    {
+      "path": "go.work.sum",
+      "bytes": 12205,
+      "sha256": "26ddeea28cef7b0788f5023a5d7e21e998f18953a2f98e88ca42c9f0b5295eaf"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/go.mod",
+      "bytes": 433,
+      "sha256": "7c4c1603f7df14358ca82e83abdf62587b085333437b6ff48e2f512ea650583f"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🏷️entity-kinds/🐹️.go",
+      "bytes": 7067,
+      "sha256": "16f2e8cab7bc7629cd73bf028f39cb87188f96d883098b7e0565ad1737a091ee"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/📤️event-export/🐹️.go",
+      "bytes": 4990,
+      "sha256": "d69effc399d2dae560f12decbd4f2ea518975ae9cd2d57d894bff3b3fe8ac055"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🧩️component/🐹️.go",
+      "bytes": 1517720,
+      "sha256": "a5a2717b3fc2d061ce143a80f601081088a3cab1284f735e9ab3acc9c63b17c3"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🧵️executor/🐹️.go",
+      "bytes": 2487,
+      "sha256": "27927fbeba214d945f5061b197e91677b01540fb2e3b286a9a3995e0c384d736"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/go.mod",
+      "bytes": 282,
+      "sha256": "cb39ba53a141ba16b05362ecfaf468fe2e49854cc4ca343d68f003f5eeab2335"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📜️protocol/🐹️.go",
+      "bytes": 11166,
+      "sha256": "c3d0e33d28e9e710e76798135dbf597a65fad518c5e7ff627d029b75d5e99f05"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📜️script.ts",
+      "bytes": 1943,
+      "sha256": "87f4d7d82f1b298f5b478becf4ae779103bd5c21a97387b387229287fbfcee69"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📡️event/🐹️.go",
+      "bytes": 4768,
+      "sha256": "45f40be49e96f472b993fd51397ae7ee448b6de7f2641d48742524eadba7047c"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/🖥️server/🐹️.go",
+      "bytes": 28016,
+      "sha256": "926623f82ef443b32a4a6eed8d0c18076590a095a8719576723012de2d8750c2"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/🗄️repository/🐹️.go",
+      "bytes": 17382,
+      "sha256": "f371af58b082a540e9df10c66999d35f63a217a05d9e4a737423d323e9abf896"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/🚚️transport/🐹️.go",
+      "bytes": 3234,
+      "sha256": "9a16218b30601ff68868d2b82629f7163e56f9d58b3ec95a8b88341878af895e"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/🧩️component/🐹️.go",
+      "bytes": 2084,
+      "sha256": "29a1875fa300aad1a6cbce657715975c77e24572b6822fe1f094ab091ce93005"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟦️.ts",
+      "bytes": 251390,
+      "sha256": "36a43d03e3ea30a636e7c2e9d6ce14429a54a3626b3bd322ccd5e8437fa035c6"
+    }
+  ]
+}

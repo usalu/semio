@@ -1,0 +1,11 @@
+import { readFileSync, writeFileSync, copyFileSync, renameSync } from "node:fs";
+import { createHash } from "node:crypto";
+const ticket=process.env.SEMIO_TICKET_DIR!,path="C:/git/semio/🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-api/🔓️viz-api.tex",before=readFileSync(path,"utf8"),rows=JSON.parse(readFileSync(ticket+"/📥️authored-inputs/gallery-intrinsic-carrier/sampling-source-contracts.json","utf8")).keys;
+const start=before.indexOf('\\subsection{\\Key{geo-hexbin}}'),end=before.indexOf('\\subsection{',start+15),section=before.slice(start,end),closing=/\r?\n}\r?\n/;
+if(start<0||end<0||section.includes('\\Key{gridWidth}')||[...section.matchAll(/\r?\n}\r?\n/g)].length!==1)throw Error("API family boundary");
+const rowTex=rows.map((row:any)=>'  \\SemioTableRow{\\Key{'+row.key+'} & \\Key{'+row.type+'} & '+(String(row.default)===''?'---':'\\Key{'+row.default+'}')+' & \\ApiText{'+row.description.en+'}{'+row.description.de+'}}').join('\n');
+const afterSection=section.replace('\\ApiKeyScope{api-registry}','\\ApiKeyScope{api-registry}\n\\ApiScopeSource{geo-hexbin}{semio / viz / family / geo-hexbin}').replace(closing,match=>'\n'+rowTex+match),after=before.slice(0,start)+afterSection+before.slice(end);
+copyFileSync(path,ticket+"/📥️authored-inputs/gallery-intrinsic-carrier/sampling-api-before.tex");
+const candidate=ticket+"/🗑️generated/gallery-sampling-api/api-candidate.tex";writeFileSync(candidate,after);if(readFileSync(path,"utf8")!==before)throw Error("concurrent API write");renameSync(candidate,path);
+writeFileSync(ticket+"/📥️authored-inputs/gallery-intrinsic-carrier/sampling-api-row-delta.json",JSON.stringify({before:section,after:afterSection},null,2));
+const sha=(text:string)=>createHash("sha256").update(text).digest("hex");console.log("[DEBUG] Seven local API rows "+sha(before)+" -> "+sha(after)+"; every other byte preserved.");

@@ -141,6 +141,15 @@
         "command": "bun ./📜️script.ts test-snapshot-sqlite source",
         "forwardAllArgs": true
       }
+    },
+    "preview-generated": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts preview-generated"
+      }
     }
   }
 }

@@ -1,0 +1,50 @@
+[
+  [
+    "none keeps a constant size; degree scales by node degree. The current weight branch also uses degree rather than a weighted sum.",
+    "none keeps a constant size; degree scales by node degree; weight scales by the sum of absolute incident edge weights, counting both ends of a self-loop."
+  ],
+  [
+    "none erhält eine konstante Größe; degree skaliert nach Knotengrad. Der derzeitige weight-Zweig verwendet ebenfalls den Grad statt einer gewichteten Summe.",
+    "none erhält eine konstante Größe; degree skaliert nach Knotengrad; weight skaliert nach der Summe der absoluten Gewichte aller inzidenten Kanten, wobei eine Selbstkante zweimal zählt."
+  ],
+  [
+    "Stored split flag; current matrix rendering does not branch on it. The hybrid family sets it to true but uses its fixed split independently.",
+    "true shares the canvas between the matrix and its ordered node-link column; false fills the canvas with the matrix. The hybrid family starts with true."
+  ],
+  [
+    "Gespeicherter Teilungsmerker; die derzeitige Matrixdarstellung verzweigt nicht danach. Die Hybridfamilie setzt ihn auf true, verwendet ihre feste Teilung jedoch unabhängig davon.",
+    "true teilt die Leinwand zwischen Matrix und geordneter Knoten-Kanten-Spalte; false füllt die Leinwand mit der Matrix. Die Hybridfamilie beginnt mit true."
+  ],
+  [
+    "Stored lane header text; the current lane renderer does not consume this key.",
+    "Optional lane heading above the frame; a literal caption is shared, while English//German selects the explicitly configured language."
+  ],
+  [
+    "Gespeicherter Bahnüberschrifttext; der derzeitige Bahnrenderer verwendet diesen Schlüssel nicht.",
+    "Optionale Bahnüberschrift über dem Rahmen; ein einzelner Text gilt gemeinsam, Englisch//Deutsch wählt die ausdrücklich konfigurierte Sprache."
+  ],
+  [
+    "auto leaves the current height; a numeric expression sets it. Automatic width currently recalculates both dimensions and overrides this height.",
+    "auto fits node height into the grid independently of width; a numeric expression fixes only height."
+  ],
+  [
+    "auto erhält die aktuelle Höhe; ein numerischer Ausdruck setzt sie. Automatische Breite berechnet derzeit beide Maße neu und überschreibt diese Höhe.",
+    "auto passt die Knotenhöhe unabhängig von der Breite in das Gitter ein; ein numerischer Ausdruck legt nur die Höhe fest."
+  ],
+  [
+    "auto fits both node dimensions into the grid; a numeric expression sets width and disables both automatic dimensions.",
+    "auto fits node width into the grid independently of height; a numeric expression fixes only width."
+  ],
+  [
+    "auto passt beide Knotenmaße in das Gitter ein; ein numerischer Ausdruck setzt die Breite und deaktiviert beide automatischen Maße.",
+    "auto passt die Knotenbreite unabhängig von der Höhe in das Gitter ein; ein numerischer Ausdruck legt nur die Breite fest."
+  ],
+  [
+    "The current data mapping uses an internal 80 by 40 mm rectangle with 6 mm padding.",
+    "Data coordinates inherit the enclosing figure width, height and padding."
+  ],
+  [
+    "Die derzeitige Datenabbildung verwendet ein internes Rechteck von 80 mal 40 mm mit 6 mm Innenabstand.",
+    "Datenkoordinaten übernehmen Breite, Höhe und Innenabstand der umschließenden Abbildung."
+  ]
+]

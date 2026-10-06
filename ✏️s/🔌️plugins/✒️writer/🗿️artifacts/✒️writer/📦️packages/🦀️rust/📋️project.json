@@ -154,6 +154,15 @@
       "dependsOn": [
         "graph-generate"
       ]
+    },
+    "preview-generated": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts preview-generated"
+      }
     }
   }
 }

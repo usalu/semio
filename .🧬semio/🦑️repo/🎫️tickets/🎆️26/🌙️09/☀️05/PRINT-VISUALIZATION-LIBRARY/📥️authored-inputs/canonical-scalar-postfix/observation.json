@@ -1,0 +1,356 @@
+[
+  {
+    "id": "string-null-root",
+    "expectedAccept": true,
+    "actualAccept": true,
+    "nativeExitCode": 0,
+    "records": [
+      {
+        "case": "canonical-scalar-postfix",
+        "scenario": "string-null-root",
+        "key": "actual/completed",
+        "values": [
+          1
+        ]
+      }
+    ],
+    "tikz": "\\begingroup\n\\ExplSyntaxOn\\tl_set:Nn\\l_semio_language_tl{en}\\ExplSyntaxOff\n\\begin{VizFigure}[width=80,height=48,title={}]\n\\SemioVizTable{scalar-probe}{id,pred,duration,label}\n\\SemioVizRow{scalar-probe}{{\\SemioVizString{null}},{\\SemioVizString{}},{1},{\\SemioVizString{String null}}}\n\\SemioVizTheme{default}[appearance=light]\n\\SemioVizChart{critical-path-network}[data={scalar-probe},id={id},label={label},mode={critical-path},pred={pred},value={duration}]\n% 80mm × 48mm, light appearance\n\\end{VizFigure}\n\\endgroup\n",
+    "canonicalSourceSha256": "06ec015664aa446341bd0efc174a20ece14f2e4353b54d142cacf25b7370897c",
+    "sourceBindings": {
+      "semio-viz-data.sty": {
+        "stagedPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/canonical-scalar-postfix/string-null-root/🧪️probe-source/.semio-library/semio-latex/semio-viz-data.sty",
+        "sha256": "6551eae29d19c287a975073a638d8c0047c3dff97f831b8b03fa3ba066fbba3a",
+        "pinnedPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/📥️authored-inputs/canonical-scalar-postfix/sources/6551eae29d19c287a975073a638d8c0047c3dff97f831b8b03fa3ba066fbba3a-semio-viz-data.sty"
+      },
+      "semio-viz-domain.sty": {
+        "stagedPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/canonical-scalar-postfix/string-null-root/🧪️probe-source/.semio-library/semio-latex/semio-viz-domain.sty",
+        "sha256": "3df7e0aaacc2420b0652cccb4c3ac1d5a9d47b8a3a8b4acd0a4e3939b5cd070a",
+        "pinnedPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/📥️authored-inputs/canonical-scalar-postfix/sources/3df7e0aaacc2420b0652cccb4c3ac1d5a9d47b8a3a8b4acd0a4e3939b5cd070a-semio-viz-domain.sty"
+      }
+    },
+    "logPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/canonical-scalar-postfix/string-null-root/🧪️probe-out/string-null-root.log",
+    "logSha256": "32a52d08e9809860dbadc9008f98ae4ad45977f8eeae85fe0ef091b7d42cdc81",
+    "hierarchyDiagnostic": false,
+    "diagnosticTail": "ng-null-root.out)\n\\@outlinefile=\\write6\n\\openout6 = `string-null-root.out'.\n\nClass scrartcl Info: loading recommended package `bookmark'.\n(scrartcl)           Using `bookmark' together with `hyperref' is recommended,\n(scrartcl)           because of handling of possible bookmark level gaps.\n(scrartcl)           You can avoid loading `bookmark' with KOMA-Script option\n(scrartcl)           `bookmarkpackage=false' before \\begin{document} and\n(scrartcl)           you can avoid this message adding:\n(scrartcl)             \\usepackage{bookmark}\n(scrartcl)           before \\begin{document} on input line 7.\n\n(bookmark.sty\nPackage: bookmark 2020-11-06 v1.29 PDF bookmarks (HO)\n (bkm-dvipdfm.def\nFile: bkm-dvipdfm.def 2020-11-06 v1.29 bookmark driver for dvipdfm (HO)\n\\BKM@id=\\count1027\n))\n\\g_semio_viz_probe_iow=\\write7\n\\openout7 = `string-null-root.probe.jsonl'.\n\n\\g_semio_window_break_iow=\\write8\n\\openout8 = `string-null-root.window-breaks'.\n\nPackage microtype Info: Loading generic protrusion settings for font family\n(microtype)             `ShareTechMono-Regular.ttf' (encoding: TU).\n(microtype)             For optimal results, create family-specific settings.\n(microtype)             See the microtype manual for details.\n [1\n\n] [2\n\n] [3\n\n] [4\n\n] (string-null-root.aux)\nPackage rerunfilecheck Info: File `string-null-root.out' has not changed.\n(rerunfilecheck)             Checksum: D41D8CD98F00B204E9800998ECF8427E;0.\nPackage logreq Info: Writing requests to 'string-null-root.run.xml'.\n\\openout1 = `string-null-root.run.xml'.\n\n )\nOutput written on string-null-root.xdv (4 pages, 12696 bytes).\n"
+  },
+  {
+    "id": "string-undefined-root",
+    "expectedAccept": true,
+    "actualAccept": true,
+    "nativeExitCode": 0,
+    "records": [
+      {
+        "case": "canonical-scalar-postfix",
+        "scenario": "string-undefined-root",
+        "key": "actual/completed",
+        "values": [
+          1
+        ]
+      }
+    ],
+    "tikz": "\\begingroup\n\\ExplSyntaxOn\\tl_set:Nn\\l_semio_language_tl{en}\\ExplSyntaxOff\n\\begin{VizFigure}[width=80,height=48,title={}]\n\\SemioVizTable{scalar-probe}{id,pred,duration,label}\n\\SemioVizRow{scalar-probe}{{\\SemioVizString{undefined}},{\\SemioVizString{}},{1},{\\SemioVizString{String undefined}}}\n\\SemioVizTheme{default}[appearance=light]\n\\SemioVizChart{critical-path-network}[data={scalar-probe},id={id},label={label},mode={critical-path},pred={pred},value={duration}]\n% 80mm × 48mm, light appearance\n\\end{VizFigure}\n\\endgroup\n",
+    "canonicalSourceSha256": "cb7fccf138ef21de258ad41f4dcf1712c8ce38de97df27a47b99c1793367435f",
+    "sourceBindings": {
+      "semio-viz-data.sty": {
+        "stagedPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/canonical-scalar-postfix/string-undefined-root/🧪️probe-source/.semio-library/semio-latex/semio-viz-data.sty",
+        "sha256": "6551eae29d19c287a975073a638d8c0047c3dff97f831b8b03fa3ba066fbba3a",
+        "pinnedPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/📥️authored-inputs/canonical-scalar-postfix/sources/6551eae29d19c287a975073a638d8c0047c3dff97f831b8b03fa3ba066fbba3a-semio-viz-data.sty"
+      },
+      "semio-viz-domain.sty": {
+        "stagedPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/canonical-scalar-postfix/string-undefined-root/🧪️probe-source/.semio-library/semio-latex/semio-viz-domain.sty",
+        "sha256": "3df7e0aaacc2420b0652cccb4c3ac1d5a9d47b8a3a8b4acd0a4e3939b5cd070a",
+        "pinnedPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/📥️authored-inputs/canonical-scalar-postfix/sources/3df7e0aaacc2420b0652cccb4c3ac1d5a9d47b8a3a8b4acd0a4e3939b5cd070a-semio-viz-domain.sty"
+      }
+    },
+    "logPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/canonical-scalar-postfix/string-undefined-root/🧪️probe-out/string-undefined-root.log",
+    "logSha256": "03aa691cb7edc67724be311d08f048104c3b2579ebbe1372e0b3f44f2cdfa42f",
+    "hierarchyDiagnostic": false,
+    "diagnosticTail": "\\openout6 = `string-undefined-root.out'.\n\nClass scrartcl Info: loading recommended package `bookmark'.\n(scrartcl)           Using `bookmark' together with `hyperref' is recommended,\n(scrartcl)           because of handling of possible bookmark level gaps.\n(scrartcl)           You can avoid loading `bookmark' with KOMA-Script option\n(scrartcl)           `bookmarkpackage=false' before \\begin{document} and\n(scrartcl)           you can avoid this message adding:\n(scrartcl)             \\usepackage{bookmark}\n(scrartcl)           before \\begin{document} on input line 7.\n (bookmark.sty\nPackage: bookmark 2020-11-06 v1.29 PDF bookmarks (HO)\n (bkm-dvipdfm.def\nFile: bkm-dvipdfm.def 2020-11-06 v1.29 bookmark driver for dvipdfm (HO)\n\\BKM@id=\\count1027\n))\n\\g_semio_viz_probe_iow=\\write7\n\\openout7 = `string-undefined-root.probe.jsonl'.\n\n\\g_semio_window_break_iow=\\write8\n\\openout8 = `string-undefined-root.window-breaks'.\n\nPackage microtype Info: Loading generic protrusion settings for font family\n(microtype)             `ShareTechMono-Regular.ttf' (encoding: TU).\n(microtype)             For optimal results, create family-specific settings.\n(microtype)             See the microtype manual for details.\n [1\n\n] [2\n\n] [3\n\n]\n[4\n\n] (string-undefined-root.aux)\nPackage rerunfilecheck Info: File `string-undefined-root.out' has not changed.\n(rerunfilecheck)             Checksum: D41D8CD98F00B204E9800998ECF8427E;0.\nPackage logreq Info: Writing requests to 'string-undefined-root.run.xml'.\n\\openout1 = `string-undefined-root.run.xml'.\n\n )\nOutput written on string-undefined-root.xdv (4 pages, 12776 bytes).\n"
+  },
+  {
+    "id": "string-true-root",
+    "expectedAccept": true,
+    "actualAccept": true,
+    "nativeExitCode": 0,
+    "records": [
+      {
+        "case": "canonical-scalar-postfix",
+        "scenario": "string-true-root",
+        "key": "actual/completed",
+        "values": [
+          1
+        ]
+      }
+    ],
+    "tikz": "\\begingroup\n\\ExplSyntaxOn\\tl_set:Nn\\l_semio_language_tl{en}\\ExplSyntaxOff\n\\begin{VizFigure}[width=80,height=48,title={}]\n\\SemioVizTable{scalar-probe}{id,pred,duration,label}\n\\SemioVizRow{scalar-probe}{{\\SemioVizString{true}},{\\SemioVizString{}},{1},{\\SemioVizString{String true}}}\n\\SemioVizTheme{default}[appearance=light]\n\\SemioVizChart{critical-path-network}[data={scalar-probe},id={id},label={label},mode={critical-path},pred={pred},value={duration}]\n% 80mm × 48mm, light appearance\n\\end{VizFigure}\n\\endgroup\n",
+    "canonicalSourceSha256": "730e37b037114fc4aecc7878dd65c1042e9a71ed46a263aabd1071da84f28b5c",
+    "sourceBindings": {
+      "semio-viz-data.sty": {
+        "stagedPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/canonical-scalar-postfix/string-true-root/🧪️probe-source/.semio-library/semio-latex/semio-viz-data.sty",
+        "sha256": "6551eae29d19c287a975073a638d8c0047c3dff97f831b8b03fa3ba066fbba3a",
+        "pinnedPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/📥️authored-inputs/canonical-scalar-postfix/sources/6551eae29d19c287a975073a638d8c0047c3dff97f831b8b03fa3ba066fbba3a-semio-viz-data.sty"
+      },
+      "semio-viz-domain.sty": {
+        "stagedPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/canonical-scalar-postfix/string-true-root/🧪️probe-source/.semio-library/semio-latex/semio-viz-domain.sty",
+        "sha256": "3df7e0aaacc2420b0652cccb4c3ac1d5a9d47b8a3a8b4acd0a4e3939b5cd070a",
+        "pinnedPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/📥️authored-inputs/canonical-scalar-postfix/sources/3df7e0aaacc2420b0652cccb4c3ac1d5a9d47b8a3a8b4acd0a4e3939b5cd070a-semio-viz-domain.sty"
+      }
+    },
+    "logPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/canonical-scalar-postfix/string-true-root/🧪️probe-out/string-true-root.log",
+    "logSha256": "adce8fa6ff85c3d2407efe0b20287a0076dd660abdd39f5357d1c9e5ded43f28",
+    "hierarchyDiagnostic": false,
+    "diagnosticTail": "ng-true-root.out)\n\\@outlinefile=\\write6\n\\openout6 = `string-true-root.out'.\n\nClass scrartcl Info: loading recommended package `bookmark'.\n(scrartcl)           Using `bookmark' together with `hyperref' is recommended,\n(scrartcl)           because of handling of possible bookmark level gaps.\n(scrartcl)           You can avoid loading `bookmark' with KOMA-Script option\n(scrartcl)           `bookmarkpackage=false' before \\begin{document} and\n(scrartcl)           you can avoid this message adding:\n(scrartcl)             \\usepackage{bookmark}\n(scrartcl)           before \\begin{document} on input line 7.\n\n(bookmark.sty\nPackage: bookmark 2020-11-06 v1.29 PDF bookmarks (HO)\n (bkm-dvipdfm.def\nFile: bkm-dvipdfm.def 2020-11-06 v1.29 bookmark driver for dvipdfm (HO)\n\\BKM@id=\\count1027\n))\n\\g_semio_viz_probe_iow=\\write7\n\\openout7 = `string-true-root.probe.jsonl'.\n\n\\g_semio_window_break_iow=\\write8\n\\openout8 = `string-true-root.window-breaks'.\n\nPackage microtype Info: Loading generic protrusion settings for font family\n(microtype)             `ShareTechMono-Regular.ttf' (encoding: TU).\n(microtype)             For optimal results, create family-specific settings.\n(microtype)             See the microtype manual for details.\n [1\n\n] [2\n\n] [3\n\n] [4\n\n] (string-true-root.aux)\nPackage rerunfilecheck Info: File `string-true-root.out' has not changed.\n(rerunfilecheck)             Checksum: D41D8CD98F00B204E9800998ECF8427E;0.\nPackage logreq Info: Writing requests to 'string-true-root.run.xml'.\n\\openout1 = `string-true-root.run.xml'.\n\n )\nOutput written on string-true-root.xdv (4 pages, 12696 bytes).\n"
+  },
+  {
+    "id": "actual-null-id",
+    "expectedAccept": false,
+    "actualAccept": false,
+    "nativeExitCode": 1,
+    "error": "Error: Tectonic compilation failed: 1",
+    "tikz": "\\begingroup\n\\ExplSyntaxOn\\tl_set:Nn\\l_semio_language_tl{en}\\ExplSyntaxOff\n\\begin{VizFigure}[width=80,height=48,title={}]\n\\SemioVizTable{scalar-probe}{id,pred,duration,label}\n\\SemioVizRow{scalar-probe}{{\\SemioVizNull{}},{\\SemioVizString{}},{1},{\\SemioVizString{Actual null}}}\n\\SemioVizTheme{default}[appearance=light]\n\\SemioVizChart{critical-path-network}[data={scalar-probe},id={id},label={label},mode={critical-path},pred={pred},value={duration}]\n% 80mm × 48mm, light appearance\n\\end{VizFigure}\n\\endgroup\n",
+    "canonicalSourceSha256": "e678ca86edb0c6952c0047a57b7636f4e03db2adcc458b3ce6e3bf9de1d12baf",
+    "sourceBindings": {
+      "semio-viz-data.sty": {
+        "stagedPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/canonical-scalar-postfix/actual-null-id/🧪️probe-source/.semio-library/semio-latex/semio-viz-data.sty",
+        "sha256": "6551eae29d19c287a975073a638d8c0047c3dff97f831b8b03fa3ba066fbba3a",
+        "pinnedPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/📥️authored-inputs/canonical-scalar-postfix/sources/6551eae29d19c287a975073a638d8c0047c3dff97f831b8b03fa3ba066fbba3a-semio-viz-data.sty"
+      },
+      "semio-viz-domain.sty": {
+        "stagedPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/canonical-scalar-postfix/actual-null-id/🧪️probe-source/.semio-library/semio-latex/semio-viz-domain.sty",
+        "sha256": "3df7e0aaacc2420b0652cccb4c3ac1d5a9d47b8a3a8b4acd0a4e3939b5cd070a",
+        "pinnedPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/📥️authored-inputs/canonical-scalar-postfix/sources/3df7e0aaacc2420b0652cccb4c3ac1d5a9d47b8a3a8b4acd0a4e3939b5cd070a-semio-viz-domain.sty"
+      }
+    },
+    "logPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/canonical-scalar-postfix/actual-null-id/🧪️probe-out/actual-null-id.log",
+    "logSha256": "92299db041f55544fd9f27103d9df27cf337e2373654a6242587b052b6793f0e",
+    "hierarchyDiagnostic": true,
+    "diagnosticTail": "019/12/15 v3.6 Data extraction from label references (HO)\n) (gettitlestring.sty\nPackage: gettitlestring 2019/12/15 v1.6 Cleanup title references (HO)\n)\n\\c@section@level=\\count1026\n)\nLaTeX Info: Redefining \\ref on input line 7.\nLaTeX Info: Redefining \\pageref on input line 7.\nLaTeX Info: Redefining \\nameref on input line 7.\n\\@outlinefile=\\write6\n\\openout6 = `actual-null-id.out'.\n\n\n\nPackage hyperref Warning: Rerun to get /PageLabels entry.\n\nClass scrartcl Info: loading recommended package `bookmark'.\n(scrartcl)           Using `bookmark' together with `hyperref' is recommended,\n(scrartcl)           because of handling of possible bookmark level gaps.\n(scrartcl)           You can avoid loading `bookmark' with KOMA-Script option\n(scrartcl)           `bookmarkpackage=false' before \\begin{document} and\n(scrartcl)           you can avoid this message adding:\n(scrartcl)             \\usepackage{bookmark}\n(scrartcl)           before \\begin{document} on input line 7.\n(bookmark.sty\nPackage: bookmark 2020-11-06 v1.29 PDF bookmarks (HO)\n (bkm-dvipdfm.def\nFile: bkm-dvipdfm.def 2020-11-06 v1.29 bookmark driver for dvipdfm (HO)\n\\BKM@id=\\count1027\n))\n\\g_semio_viz_probe_iow=\\write7\n\\openout7 = `actual-null-id.probe.jsonl'.\n\n\n\n! Package semio-viz-dom Error: Domain hierarchy 'scalar-probe': node IDs must\n(semio-viz-dom)                be strings.\n\nType <return> to continue.\n ...                                              \n                                                  \nl.16 ...itical-path},pred={pred},value={duration}]\n                                                  \nNo pages of output.\n"
+  },
+  {
+    "id": "boolean-id",
+    "expectedAccept": false,
+    "actualAccept": false,
+    "nativeExitCode": 1,
+    "error": "Error: Tectonic compilation failed: 1",
+    "tikz": "\\begingroup\n\\ExplSyntaxOn\\tl_set:Nn\\l_semio_language_tl{en}\\ExplSyntaxOff\n\\begin{VizFigure}[width=80,height=48,title={}]\n\\SemioVizTable{scalar-probe}{id,pred,duration,label}\n\\SemioVizRow{scalar-probe}{{\\SemioVizBoolean{true}},{\\SemioVizString{}},{1},{\\SemioVizString{Boolean}}}\n\\SemioVizTheme{default}[appearance=light]\n\\SemioVizChart{critical-path-network}[data={scalar-probe},id={id},label={label},mode={critical-path},pred={pred},value={duration}]\n% 80mm × 48mm, light appearance\n\\end{VizFigure}\n\\endgroup\n",
+    "canonicalSourceSha256": "df2d321581de3133a53e68ca750a5ec25edbb8dc346c76fc1923bad367590d9a",
+    "sourceBindings": {
+      "semio-viz-data.sty": {
+        "stagedPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/canonical-scalar-postfix/boolean-id/🧪️probe-source/.semio-library/semio-latex/semio-viz-data.sty",
+        "sha256": "6551eae29d19c287a975073a638d8c0047c3dff97f831b8b03fa3ba066fbba3a",
+        "pinnedPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/📥️authored-inputs/canonical-scalar-postfix/sources/6551eae29d19c287a975073a638d8c0047c3dff97f831b8b03fa3ba066fbba3a-semio-viz-data.sty"
+      },
+      "semio-viz-domain.sty": {
+        "stagedPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/canonical-scalar-postfix/boolean-id/🧪️probe-source/.semio-library/semio-latex/semio-viz-domain.sty",
+        "sha256": "3df7e0aaacc2420b0652cccb4c3ac1d5a9d47b8a3a8b4acd0a4e3939b5cd070a",
+        "pinnedPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/📥️authored-inputs/canonical-scalar-postfix/sources/3df7e0aaacc2420b0652cccb4c3ac1d5a9d47b8a3a8b4acd0a4e3939b5cd070a-semio-viz-domain.sty"
+      }
+    },
+    "logPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/canonical-scalar-postfix/boolean-id/🧪️probe-out/boolean-id.log",
+    "logSha256": "199231516eccc8a2ffd452eee502462b3f9cd7a668de0c79245efe3346d6f7f0",
+    "hierarchyDiagnostic": true,
+    "diagnosticTail": "fcount 2019/12/15 v3.6 Data extraction from label references (HO)\n) (gettitlestring.sty\nPackage: gettitlestring 2019/12/15 v1.6 Cleanup title references (HO)\n)\n\\c@section@level=\\count1026\n)\nLaTeX Info: Redefining \\ref on input line 7.\nLaTeX Info: Redefining \\pageref on input line 7.\nLaTeX Info: Redefining \\nameref on input line 7.\n\\@outlinefile=\\write6\n\\openout6 = `boolean-id.out'.\n\n\n\nPackage hyperref Warning: Rerun to get /PageLabels entry.\n\nClass scrartcl Info: loading recommended package `bookmark'.\n(scrartcl)           Using `bookmark' together with `hyperref' is recommended,\n(scrartcl)           because of handling of possible bookmark level gaps.\n(scrartcl)           You can avoid loading `bookmark' with KOMA-Script option\n(scrartcl)           `bookmarkpackage=false' before \\begin{document} and\n(scrartcl)           you can avoid this message adding:\n(scrartcl)             \\usepackage{bookmark}\n(scrartcl)           before \\begin{document} on input line 7.\n(bookmark.sty\nPackage: bookmark 2020-11-06 v1.29 PDF bookmarks (HO)\n (bkm-dvipdfm.def\nFile: bkm-dvipdfm.def 2020-11-06 v1.29 bookmark driver for dvipdfm (HO)\n\\BKM@id=\\count1027\n))\n\\g_semio_viz_probe_iow=\\write7\n\\openout7 = `boolean-id.probe.jsonl'.\n\n\n\n! Package semio-viz-dom Error: Domain hierarchy 'scalar-probe': node IDs must\n(semio-viz-dom)                be strings.\n\nType <return> to continue.\n ...                                              \n                                                  \nl.16 ...itical-path},pred={pred},value={duration}]\n                                                  \nNo pages of output.\n"
+  },
+  {
+    "id": "missing-id",
+    "expectedAccept": false,
+    "actualAccept": false,
+    "nativeExitCode": 1,
+    "error": "Error: Tectonic compilation failed: 1",
+    "tikz": "\\begingroup\n\\ExplSyntaxOn\\tl_set:Nn\\l_semio_language_tl{en}\\ExplSyntaxOff\n\\begin{VizFigure}[width=80,height=48,title={}]\n\\SemioVizTable{scalar-probe}{id,pred,duration,label}\n\\SemioVizRow{scalar-probe}{{\\SemioVizUndefined{}},{\\SemioVizString{}},{1},{\\SemioVizString{Missing ID}}}\n\\SemioVizTheme{default}[appearance=light]\n\\SemioVizChart{critical-path-network}[data={scalar-probe},id={id},label={label},mode={critical-path},pred={pred},value={duration}]\n% 80mm × 48mm, light appearance\n\\end{VizFigure}\n\\endgroup\n",
+    "canonicalSourceSha256": "db89004ab8f5fdf71fe4bed059d5efa4d630efcb9bacbdf3ecc9f58b6fa18571",
+    "sourceBindings": {
+      "semio-viz-data.sty": {
+        "stagedPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/canonical-scalar-postfix/missing-id/🧪️probe-source/.semio-library/semio-latex/semio-viz-data.sty",
+        "sha256": "6551eae29d19c287a975073a638d8c0047c3dff97f831b8b03fa3ba066fbba3a",
+        "pinnedPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/📥️authored-inputs/canonical-scalar-postfix/sources/6551eae29d19c287a975073a638d8c0047c3dff97f831b8b03fa3ba066fbba3a-semio-viz-data.sty"
+      },
+      "semio-viz-domain.sty": {
+        "stagedPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/canonical-scalar-postfix/missing-id/🧪️probe-source/.semio-library/semio-latex/semio-viz-domain.sty",
+        "sha256": "3df7e0aaacc2420b0652cccb4c3ac1d5a9d47b8a3a8b4acd0a4e3939b5cd070a",
+        "pinnedPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/📥️authored-inputs/canonical-scalar-postfix/sources/3df7e0aaacc2420b0652cccb4c3ac1d5a9d47b8a3a8b4acd0a4e3939b5cd070a-semio-viz-domain.sty"
+      }
+    },
+    "logPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/canonical-scalar-postfix/missing-id/🧪️probe-out/missing-id.log",
+    "logSha256": "3b0926434c6dd9a79aebe412530b9614bea5e4ad352fd694991fc6e10ec7a491",
+    "hierarchyDiagnostic": true,
+    "diagnosticTail": "fcount 2019/12/15 v3.6 Data extraction from label references (HO)\n) (gettitlestring.sty\nPackage: gettitlestring 2019/12/15 v1.6 Cleanup title references (HO)\n)\n\\c@section@level=\\count1026\n)\nLaTeX Info: Redefining \\ref on input line 7.\nLaTeX Info: Redefining \\pageref on input line 7.\nLaTeX Info: Redefining \\nameref on input line 7.\n\\@outlinefile=\\write6\n\\openout6 = `missing-id.out'.\n\n\n\nPackage hyperref Warning: Rerun to get /PageLabels entry.\n\nClass scrartcl Info: loading recommended package `bookmark'.\n(scrartcl)           Using `bookmark' together with `hyperref' is recommended,\n(scrartcl)           because of handling of possible bookmark level gaps.\n(scrartcl)           You can avoid loading `bookmark' with KOMA-Script option\n(scrartcl)           `bookmarkpackage=false' before \\begin{document} and\n(scrartcl)           you can avoid this message adding:\n(scrartcl)             \\usepackage{bookmark}\n(scrartcl)           before \\begin{document} on input line 7.\n(bookmark.sty\nPackage: bookmark 2020-11-06 v1.29 PDF bookmarks (HO)\n (bkm-dvipdfm.def\nFile: bkm-dvipdfm.def 2020-11-06 v1.29 bookmark driver for dvipdfm (HO)\n\\BKM@id=\\count1027\n))\n\\g_semio_viz_probe_iow=\\write7\n\\openout7 = `missing-id.probe.jsonl'.\n\n\n\n! Package semio-viz-dom Error: Domain hierarchy 'scalar-probe': node IDs must\n(semio-viz-dom)                be strings.\n\nType <return> to continue.\n ...                                              \n                                                  \nl.16 ...itical-path},pred={pred},value={duration}]\n                                                  \nNo pages of output.\n"
+  },
+  {
+    "id": "null-parent",
+    "expectedAccept": false,
+    "actualAccept": false,
+    "nativeExitCode": 1,
+    "error": "Error: Tectonic compilation failed: 1",
+    "tikz": "\\begingroup\n\\ExplSyntaxOn\\tl_set:Nn\\l_semio_language_tl{en}\\ExplSyntaxOff\n\\begin{VizFigure}[width=80,height=48,title={}]\n\\SemioVizTable{scalar-probe}{id,pred,duration,label}\n\\SemioVizRow{scalar-probe}{{\\SemioVizString{child}},{\\SemioVizNull{}},{1},{\\SemioVizString{Null parent}}}\n\\SemioVizTheme{default}[appearance=light]\n\\SemioVizChart{critical-path-network}[data={scalar-probe},id={id},label={label},mode={critical-path},pred={pred},value={duration}]\n% 80mm × 48mm, light appearance\n\\end{VizFigure}\n\\endgroup\n",
+    "canonicalSourceSha256": "7c8e7a8b9700acdb087c03a62a970bb9418cfcad8ecaf76772327ce4ef3f56fc",
+    "sourceBindings": {
+      "semio-viz-data.sty": {
+        "stagedPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/canonical-scalar-postfix/null-parent/🧪️probe-source/.semio-library/semio-latex/semio-viz-data.sty",
+        "sha256": "6551eae29d19c287a975073a638d8c0047c3dff97f831b8b03fa3ba066fbba3a",
+        "pinnedPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/📥️authored-inputs/canonical-scalar-postfix/sources/6551eae29d19c287a975073a638d8c0047c3dff97f831b8b03fa3ba066fbba3a-semio-viz-data.sty"
+      },
+      "semio-viz-domain.sty": {
+        "stagedPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/canonical-scalar-postfix/null-parent/🧪️probe-source/.semio-library/semio-latex/semio-viz-domain.sty",
+        "sha256": "3df7e0aaacc2420b0652cccb4c3ac1d5a9d47b8a3a8b4acd0a4e3939b5cd070a",
+        "pinnedPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/📥️authored-inputs/canonical-scalar-postfix/sources/3df7e0aaacc2420b0652cccb4c3ac1d5a9d47b8a3a8b4acd0a4e3939b5cd070a-semio-viz-domain.sty"
+      }
+    },
+    "logPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/canonical-scalar-postfix/null-parent/🧪️probe-out/null-parent.log",
+    "logSha256": "8faa69d55db629ba5390c4d1bf1f3904b3ac6b092b6f77f52e592b07a22efa44",
+    "hierarchyDiagnostic": true,
+    "diagnosticTail": "15 v3.6 Data extraction from label references (HO)\n) (gettitlestring.sty\nPackage: gettitlestring 2019/12/15 v1.6 Cleanup title references (HO)\n)\n\\c@section@level=\\count1026\n)\nLaTeX Info: Redefining \\ref on input line 7.\nLaTeX Info: Redefining \\pageref on input line 7.\nLaTeX Info: Redefining \\nameref on input line 7.\n\\@outlinefile=\\write6\n\\openout6 = `null-parent.out'.\n\n\n\nPackage hyperref Warning: Rerun to get /PageLabels entry.\n\nClass scrartcl Info: loading recommended package `bookmark'.\n(scrartcl)           Using `bookmark' together with `hyperref' is recommended,\n(scrartcl)           because of handling of possible bookmark level gaps.\n(scrartcl)           You can avoid loading `bookmark' with KOMA-Script option\n(scrartcl)           `bookmarkpackage=false' before \\begin{document} and\n(scrartcl)           you can avoid this message adding:\n(scrartcl)             \\usepackage{bookmark}\n(scrartcl)           before \\begin{document} on input line 7.\n(bookmark.sty\nPackage: bookmark 2020-11-06 v1.29 PDF bookmarks (HO)\n (bkm-dvipdfm.def\nFile: bkm-dvipdfm.def 2020-11-06 v1.29 bookmark driver for dvipdfm (HO)\n\\BKM@id=\\count1027\n))\n\\g_semio_viz_probe_iow=\\write7\n\\openout7 = `null-parent.probe.jsonl'.\n\n\n\n! Package semio-viz-dom Error: Domain hierarchy 'scalar-probe': parent\n(semio-viz-dom)                reference does not name a node.\n\nType <return> to continue.\n ...                                              \n                                                  \nl.16 ...itical-path},pred={pred},value={duration}]\n                                                  \nNo pages of output.\n"
+  },
+  {
+    "id": "missing-parent",
+    "expectedAccept": false,
+    "actualAccept": false,
+    "nativeExitCode": 1,
+    "error": "Error: Tectonic compilation failed: 1",
+    "tikz": "\\begingroup\n\\ExplSyntaxOn\\tl_set:Nn\\l_semio_language_tl{en}\\ExplSyntaxOff\n\\begin{VizFigure}[width=80,height=48,title={}]\n\\SemioVizTable{scalar-probe}{id,pred,duration,label}\n\\SemioVizRow{scalar-probe}{{\\SemioVizString{child}},{\\SemioVizUndefined{}},{1},{\\SemioVizString{Missing parent}}}\n\\SemioVizTheme{default}[appearance=light]\n\\SemioVizChart{critical-path-network}[data={scalar-probe},id={id},label={label},mode={critical-path},pred={pred},value={duration}]\n% 80mm × 48mm, light appearance\n\\end{VizFigure}\n\\endgroup\n",
+    "canonicalSourceSha256": "34a63dec250fb6741768b55417b520b5319db9cde8a10f0f028189969eb7aefc",
+    "sourceBindings": {
+      "semio-viz-data.sty": {
+        "stagedPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/canonical-scalar-postfix/missing-parent/🧪️probe-source/.semio-library/semio-latex/semio-viz-data.sty",
+        "sha256": "6551eae29d19c287a975073a638d8c0047c3dff97f831b8b03fa3ba066fbba3a",
+        "pinnedPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/📥️authored-inputs/canonical-scalar-postfix/sources/6551eae29d19c287a975073a638d8c0047c3dff97f831b8b03fa3ba066fbba3a-semio-viz-data.sty"
+      },
+      "semio-viz-domain.sty": {
+        "stagedPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/canonical-scalar-postfix/missing-parent/🧪️probe-source/.semio-library/semio-latex/semio-viz-domain.sty",
+        "sha256": "3df7e0aaacc2420b0652cccb4c3ac1d5a9d47b8a3a8b4acd0a4e3939b5cd070a",
+        "pinnedPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/📥️authored-inputs/canonical-scalar-postfix/sources/3df7e0aaacc2420b0652cccb4c3ac1d5a9d47b8a3a8b4acd0a4e3939b5cd070a-semio-viz-domain.sty"
+      }
+    },
+    "logPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/canonical-scalar-postfix/missing-parent/🧪️probe-out/missing-parent.log",
+    "logSha256": "e38a1dbf11f1616f539c4a63a63ad6347fd96aeaab26223569b24545df5b5bb7",
+    "hierarchyDiagnostic": true,
+    "diagnosticTail": "6 Data extraction from label references (HO)\n) (gettitlestring.sty\nPackage: gettitlestring 2019/12/15 v1.6 Cleanup title references (HO)\n)\n\\c@section@level=\\count1026\n)\nLaTeX Info: Redefining \\ref on input line 7.\nLaTeX Info: Redefining \\pageref on input line 7.\nLaTeX Info: Redefining \\nameref on input line 7.\n\\@outlinefile=\\write6\n\\openout6 = `missing-parent.out'.\n\n\n\nPackage hyperref Warning: Rerun to get /PageLabels entry.\n\nClass scrartcl Info: loading recommended package `bookmark'.\n(scrartcl)           Using `bookmark' together with `hyperref' is recommended,\n(scrartcl)           because of handling of possible bookmark level gaps.\n(scrartcl)           You can avoid loading `bookmark' with KOMA-Script option\n(scrartcl)           `bookmarkpackage=false' before \\begin{document} and\n(scrartcl)           you can avoid this message adding:\n(scrartcl)             \\usepackage{bookmark}\n(scrartcl)           before \\begin{document} on input line 7.\n(bookmark.sty\nPackage: bookmark 2020-11-06 v1.29 PDF bookmarks (HO)\n (bkm-dvipdfm.def\nFile: bkm-dvipdfm.def 2020-11-06 v1.29 bookmark driver for dvipdfm (HO)\n\\BKM@id=\\count1027\n))\n\\g_semio_viz_probe_iow=\\write7\n\\openout7 = `missing-parent.probe.jsonl'.\n\n\n\n! Package semio-viz-dom Error: Domain hierarchy 'scalar-probe': parent\n(semio-viz-dom)                reference does not name a node.\n\nType <return> to continue.\n ...                                              \n                                                  \nl.16 ...itical-path},pred={pred},value={duration}]\n                                                  \nNo pages of output.\n"
+  },
+  {
+    "id": "literal-null-parent",
+    "expectedAccept": true,
+    "actualAccept": true,
+    "nativeExitCode": 0,
+    "records": [
+      {
+        "case": "canonical-scalar-postfix",
+        "scenario": "literal-null-parent",
+        "key": "actual/completed",
+        "values": [
+          1
+        ]
+      }
+    ],
+    "tikz": "\\begingroup\n\\ExplSyntaxOn\\tl_set:Nn\\l_semio_language_tl{en}\\ExplSyntaxOff\n\\begin{VizFigure}[width=80,height=48,title={}]\n\\SemioVizTable{scalar-probe}{id,pred,duration,label}\n\\SemioVizRow{scalar-probe}{{\\SemioVizString{null}},{\\SemioVizString{}},{1},{\\SemioVizString{Root}}}\n\\SemioVizRow{scalar-probe}{{\\SemioVizString{child}},{\\SemioVizString{null}},{1},{\\SemioVizString{Child}}}\n\\SemioVizTheme{default}[appearance=light]\n\\SemioVizChart{critical-path-network}[data={scalar-probe},id={id},label={label},mode={critical-path},pred={pred},value={duration}]\n% 80mm × 48mm, light appearance\n\\end{VizFigure}\n\\endgroup\n",
+    "canonicalSourceSha256": "8bac36bfc9e828965bb522146ecd20946df689369503468994ecfcc321543e09",
+    "sourceBindings": {
+      "semio-viz-data.sty": {
+        "stagedPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/canonical-scalar-postfix/literal-null-parent/🧪️probe-source/.semio-library/semio-latex/semio-viz-data.sty",
+        "sha256": "6551eae29d19c287a975073a638d8c0047c3dff97f831b8b03fa3ba066fbba3a",
+        "pinnedPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/📥️authored-inputs/canonical-scalar-postfix/sources/6551eae29d19c287a975073a638d8c0047c3dff97f831b8b03fa3ba066fbba3a-semio-viz-data.sty"
+      },
+      "semio-viz-domain.sty": {
+        "stagedPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/canonical-scalar-postfix/literal-null-parent/🧪️probe-source/.semio-library/semio-latex/semio-viz-domain.sty",
+        "sha256": "3df7e0aaacc2420b0652cccb4c3ac1d5a9d47b8a3a8b4acd0a4e3939b5cd070a",
+        "pinnedPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/📥️authored-inputs/canonical-scalar-postfix/sources/3df7e0aaacc2420b0652cccb4c3ac1d5a9d47b8a3a8b4acd0a4e3939b5cd070a-semio-viz-domain.sty"
+      }
+    },
+    "logPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/canonical-scalar-postfix/literal-null-parent/🧪️probe-out/literal-null-parent.log",
+    "logSha256": "67de2618b62db7220af31fa86ecbfded7447c506ad84fa9b2f8bf4d420b98a41",
+    "hierarchyDiagnostic": false,
+    "diagnosticTail": "inefile=\\write6\n\\openout6 = `literal-null-parent.out'.\n\nClass scrartcl Info: loading recommended package `bookmark'.\n(scrartcl)           Using `bookmark' together with `hyperref' is recommended,\n(scrartcl)           because of handling of possible bookmark level gaps.\n(scrartcl)           You can avoid loading `bookmark' with KOMA-Script option\n(scrartcl)           `bookmarkpackage=false' before \\begin{document} and\n(scrartcl)           you can avoid this message adding:\n(scrartcl)             \\usepackage{bookmark}\n(scrartcl)           before \\begin{document} on input line 7.\n\n(bookmark.sty\nPackage: bookmark 2020-11-06 v1.29 PDF bookmarks (HO)\n (bkm-dvipdfm.def\nFile: bkm-dvipdfm.def 2020-11-06 v1.29 bookmark driver for dvipdfm (HO)\n\\BKM@id=\\count1027\n))\n\\g_semio_viz_probe_iow=\\write7\n\\openout7 = `literal-null-parent.probe.jsonl'.\n\n\\g_semio_window_break_iow=\\write8\n\\openout8 = `literal-null-parent.window-breaks'.\n\nPackage microtype Info: Loading generic protrusion settings for font family\n(microtype)             `ShareTechMono-Regular.ttf' (encoding: TU).\n(microtype)             For optimal results, create family-specific settings.\n(microtype)             See the microtype manual for details.\n [1\n\n] [2\n\n] [3\n\n] [4\n\n] (literal-null-parent.aux)\nPackage rerunfilecheck Info: File `literal-null-parent.out' has not changed.\n(rerunfilecheck)             Checksum: D41D8CD98F00B204E9800998ECF8427E;0.\nPackage logreq Info: Writing requests to 'literal-null-parent.run.xml'.\n\\openout1 = `literal-null-parent.run.xml'.\n\n )\nOutput written on literal-null-parent.xdv (4 pages, 14256 bytes).\n"
+  },
+  {
+    "id": "string-seven",
+    "expectedAccept": true,
+    "actualAccept": true,
+    "nativeExitCode": 0,
+    "records": [
+      {
+        "case": "canonical-scalar-postfix",
+        "scenario": "string-seven",
+        "key": "actual/completed",
+        "values": [
+          1
+        ]
+      }
+    ],
+    "tikz": "\\begingroup\n\\ExplSyntaxOn\\tl_set:Nn\\l_semio_language_tl{en}\\ExplSyntaxOff\n\\begin{VizFigure}[width=80,height=48,title={}]\n\\SemioVizTable{numeric-id}{id,pred,duration,label}\n\\SemioVizRow{numeric-id}{{\\SemioVizString{7}},{\\SemioVizString{}},{1},{\\SemioVizString{String seven}}}\n\\SemioVizTheme{default}[appearance=light]\n\\SemioVizChart{critical-path-network}[data={numeric-id},id={id},label={label},mode={critical-path},pred={pred},value={duration}]\n% 80mm × 48mm, light appearance\n\\end{VizFigure}\n\\endgroup\n",
+    "canonicalSourceSha256": "41f9166162a184e27e74e479e07768ae831c32c5a84eeefd6b4ff52f56445de2",
+    "sourceBindings": {
+      "semio-viz-data.sty": {
+        "stagedPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/canonical-scalar-postfix/string-seven/🧪️probe-source/.semio-library/semio-latex/semio-viz-data.sty",
+        "sha256": "6551eae29d19c287a975073a638d8c0047c3dff97f831b8b03fa3ba066fbba3a",
+        "pinnedPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/📥️authored-inputs/canonical-scalar-postfix/sources/6551eae29d19c287a975073a638d8c0047c3dff97f831b8b03fa3ba066fbba3a-semio-viz-data.sty"
+      },
+      "semio-viz-domain.sty": {
+        "stagedPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/canonical-scalar-postfix/string-seven/🧪️probe-source/.semio-library/semio-latex/semio-viz-domain.sty",
+        "sha256": "3df7e0aaacc2420b0652cccb4c3ac1d5a9d47b8a3a8b4acd0a4e3939b5cd070a",
+        "pinnedPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/📥️authored-inputs/canonical-scalar-postfix/sources/3df7e0aaacc2420b0652cccb4c3ac1d5a9d47b8a3a8b4acd0a4e3939b5cd070a-semio-viz-domain.sty"
+      }
+    },
+    "logPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/canonical-scalar-postfix/string-seven/🧪️probe-out/string-seven.log",
+    "logSha256": "aade246685e6c56ea5035a2d9f95050262c74dbfddc23481bdb274056b002227",
+    "hierarchyDiagnostic": false,
+    "diagnosticTail": "ut line 7.\n\n(string-seven.out) (string-seven.out)\n\\@outlinefile=\\write6\n\\openout6 = `string-seven.out'.\n\nClass scrartcl Info: loading recommended package `bookmark'.\n(scrartcl)           Using `bookmark' together with `hyperref' is recommended,\n(scrartcl)           because of handling of possible bookmark level gaps.\n(scrartcl)           You can avoid loading `bookmark' with KOMA-Script option\n(scrartcl)           `bookmarkpackage=false' before \\begin{document} and\n(scrartcl)           you can avoid this message adding:\n(scrartcl)             \\usepackage{bookmark}\n(scrartcl)           before \\begin{document} on input line 7.\n (bookmark.sty\nPackage: bookmark 2020-11-06 v1.29 PDF bookmarks (HO)\n (bkm-dvipdfm.def\nFile: bkm-dvipdfm.def 2020-11-06 v1.29 bookmark driver for dvipdfm (HO)\n\\BKM@id=\\count1027\n))\n\\g_semio_viz_probe_iow=\\write7\n\\openout7 = `string-seven.probe.jsonl'.\n\n\\g_semio_window_break_iow=\\write8\n\\openout8 = `string-seven.window-breaks'.\n\nPackage microtype Info: Loading generic protrusion settings for font family\n(microtype)             `ShareTechMono-Regular.ttf' (encoding: TU).\n(microtype)             For optimal results, create family-specific settings.\n(microtype)             See the microtype manual for details.\n [1\n\n]\n[2\n\n] [3\n\n] [4\n\n] (string-seven.aux)\nPackage rerunfilecheck Info: File `string-seven.out' has not changed.\n(rerunfilecheck)             Checksum: D41D8CD98F00B204E9800998ECF8427E;0.\nPackage logreq Info: Writing requests to 'string-seven.run.xml'.\n\\openout1 = `string-seven.run.xml'.\n\n )\nOutput written on string-seven.xdv (4 pages, 12668 bytes).\n"
+  },
+  {
+    "id": "number-seven",
+    "expectedAccept": false,
+    "actualAccept": false,
+    "nativeExitCode": 1,
+    "error": "Error: Tectonic compilation failed: 1",
+    "tikz": "\\begingroup\n\\ExplSyntaxOn\\tl_set:Nn\\l_semio_language_tl{en}\\ExplSyntaxOff\n\\begin{VizFigure}[width=80,height=48,title={}]\n\\SemioVizTable{numeric-id}{id,pred,duration,label}\n\\SemioVizRow{numeric-id}{{7},{\\SemioVizString{}},{1},{\\SemioVizString{Number seven}}}\n\\SemioVizTheme{default}[appearance=light]\n\\SemioVizChart{critical-path-network}[data={numeric-id},id={id},label={label},mode={critical-path},pred={pred},value={duration}]\n% 80mm × 48mm, light appearance\n\\end{VizFigure}\n\\endgroup\n",
+    "canonicalSourceSha256": "97230788686f10ea911aa5ff96360bc52b6f09649eb3600cef594cfab76a5914",
+    "sourceBindings": {
+      "semio-viz-data.sty": {
+        "stagedPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/canonical-scalar-postfix/number-seven/🧪️probe-source/.semio-library/semio-latex/semio-viz-data.sty",
+        "sha256": "6551eae29d19c287a975073a638d8c0047c3dff97f831b8b03fa3ba066fbba3a",
+        "pinnedPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/📥️authored-inputs/canonical-scalar-postfix/sources/6551eae29d19c287a975073a638d8c0047c3dff97f831b8b03fa3ba066fbba3a-semio-viz-data.sty"
+      },
+      "semio-viz-domain.sty": {
+        "stagedPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/canonical-scalar-postfix/number-seven/🧪️probe-source/.semio-library/semio-latex/semio-viz-domain.sty",
+        "sha256": "3df7e0aaacc2420b0652cccb4c3ac1d5a9d47b8a3a8b4acd0a4e3939b5cd070a",
+        "pinnedPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/📥️authored-inputs/canonical-scalar-postfix/sources/3df7e0aaacc2420b0652cccb4c3ac1d5a9d47b8a3a8b4acd0a4e3939b5cd070a-semio-viz-domain.sty"
+      }
+    },
+    "logPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/canonical-scalar-postfix/number-seven/🧪️probe-out/number-seven.log",
+    "logSha256": "cef081bd5d4ef06aefddeb3f54f25d33ddf763a6fcffe9c1d2a9e91ab890f02a",
+    "hierarchyDiagnostic": true,
+    "diagnosticTail": "ount 2019/12/15 v3.6 Data extraction from label references (HO)\n) (gettitlestring.sty\nPackage: gettitlestring 2019/12/15 v1.6 Cleanup title references (HO)\n)\n\\c@section@level=\\count1026\n)\nLaTeX Info: Redefining \\ref on input line 7.\nLaTeX Info: Redefining \\pageref on input line 7.\nLaTeX Info: Redefining \\nameref on input line 7.\n\\@outlinefile=\\write6\n\\openout6 = `number-seven.out'.\n\n\n\nPackage hyperref Warning: Rerun to get /PageLabels entry.\n\nClass scrartcl Info: loading recommended package `bookmark'.\n(scrartcl)           Using `bookmark' together with `hyperref' is recommended,\n(scrartcl)           because of handling of possible bookmark level gaps.\n(scrartcl)           You can avoid loading `bookmark' with KOMA-Script option\n(scrartcl)           `bookmarkpackage=false' before \\begin{document} and\n(scrartcl)           you can avoid this message adding:\n(scrartcl)             \\usepackage{bookmark}\n(scrartcl)           before \\begin{document} on input line 7.\n(bookmark.sty\nPackage: bookmark 2020-11-06 v1.29 PDF bookmarks (HO)\n (bkm-dvipdfm.def\nFile: bkm-dvipdfm.def 2020-11-06 v1.29 bookmark driver for dvipdfm (HO)\n\\BKM@id=\\count1027\n))\n\\g_semio_viz_probe_iow=\\write7\n\\openout7 = `number-seven.probe.jsonl'.\n\n\n\n! Package semio-viz-dom Error: Domain hierarchy 'numeric-id': node IDs must be\n(semio-viz-dom)                strings.\n\nType <return> to continue.\n ...                                              \n                                                  \nl.16 ...itical-path},pred={pred},value={duration}]\n                                                  \nNo pages of output.\n"
+  },
+  {
+    "id": "carrier-command-strings",
+    "expectedAccept": true,
+    "actualAccept": true,
+    "nativeExitCode": 0,
+    "records": [
+      {
+        "case": "canonical-scalar-postfix",
+        "scenario": "carrier-command-strings",
+        "key": "actual/completed",
+        "values": [
+          1
+        ]
+      }
+    ],
+    "tikz": "\\begingroup\n\\ExplSyntaxOn\\tl_set:Nn\\l_semio_language_tl{en}\\ExplSyntaxOff\n\\begin{VizFigure}[width=80,height=48,title={}]\n\\SemioVizTable{numeric-id}{id,pred,duration,label}\n\\SemioVizRow{numeric-id}{{\\SemioVizString{\\textbackslash{}SemioVizNull\\{\\}}},{\\SemioVizString{}},{1},{\\SemioVizString{Literal Null command}}}\n\\SemioVizRow{numeric-id}{{\\SemioVizString{\\textbackslash{}SemioVizUndefined\\{\\}}},{\\SemioVizString{\\textbackslash{}SemioVizNull\\{\\}}},{1},{\\SemioVizString{Literal Undefined command}}}\n\\SemioVizRow{numeric-id}{{\\SemioVizString{\\textbackslash{}SemioVizBoolean\\{true\\}}},{\\SemioVizString{\\textbackslash{}SemioVizUndefined\\{\\}}},{1},{\\SemioVizString{Literal Boolean command}}}\n\\SemioVizTheme{default}[appearance=light]\n\\SemioVizChart{critical-path-network}[data={numeric-id},id={id},label={label},mode={critical-path},pred={pred},value={duration}]\n% 80mm × 48mm, light appearance\n\\end{VizFigure}\n\\endgroup\n",
+    "canonicalSourceSha256": "7b0431d1af389c1fdba9b1b1c34463b014b0ef33e58d4e3fdc432a2eb9a14e93",
+    "sourceBindings": {
+      "semio-viz-data.sty": {
+        "stagedPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/canonical-scalar-postfix/carrier-command-strings/🧪️probe-source/.semio-library/semio-latex/semio-viz-data.sty",
+        "sha256": "6551eae29d19c287a975073a638d8c0047c3dff97f831b8b03fa3ba066fbba3a",
+        "pinnedPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/📥️authored-inputs/canonical-scalar-postfix/sources/6551eae29d19c287a975073a638d8c0047c3dff97f831b8b03fa3ba066fbba3a-semio-viz-data.sty"
+      },
+      "semio-viz-domain.sty": {
+        "stagedPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/canonical-scalar-postfix/carrier-command-strings/🧪️probe-source/.semio-library/semio-latex/semio-viz-domain.sty",
+        "sha256": "3df7e0aaacc2420b0652cccb4c3ac1d5a9d47b8a3a8b4acd0a4e3939b5cd070a",
+        "pinnedPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/📥️authored-inputs/canonical-scalar-postfix/sources/3df7e0aaacc2420b0652cccb4c3ac1d5a9d47b8a3a8b4acd0a4e3939b5cd070a-semio-viz-domain.sty"
+      }
+    },
+    "logPath": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/canonical-scalar-postfix/carrier-command-strings/🧪️probe-out/carrier-command-strings.log",
+    "logSha256": "fa04732fb208414a840f7e299e701b1ea94cebe00d53bfc5da589030b3ee494f",
+    "hierarchyDiagnostic": false,
+    "diagnosticTail": "ier-command-strings.out'.\n\nClass scrartcl Info: loading recommended package `bookmark'.\n(scrartcl)           Using `bookmark' together with `hyperref' is recommended,\n(scrartcl)           because of handling of possible bookmark level gaps.\n(scrartcl)           You can avoid loading `bookmark' with KOMA-Script option\n(scrartcl)           `bookmarkpackage=false' before \\begin{document} and\n(scrartcl)           you can avoid this message adding:\n(scrartcl)             \\usepackage{bookmark}\n(scrartcl)           before \\begin{document} on input line 7.\n (bookmark.sty\nPackage: bookmark 2020-11-06 v1.29 PDF bookmarks (HO)\n (bkm-dvipdfm.def\nFile: bkm-dvipdfm.def 2020-11-06 v1.29 bookmark driver for dvipdfm (HO)\n\\BKM@id=\\count1027\n))\n\\g_semio_viz_probe_iow=\\write7\n\\openout7 = `carrier-command-strings.probe.jsonl'.\n\n\\g_semio_window_break_iow=\\write8\n\\openout8 = `carrier-command-strings.window-breaks'.\n\nPackage microtype Info: Loading generic protrusion settings for font family\n(microtype)             `ShareTechMono-Regular.ttf' (encoding: TU).\n(microtype)             For optimal results, create family-specific settings.\n(microtype)             See the microtype manual for details.\n [1\n\n] [2\n\n]\n[3\n\n] [4\n\n] (carrier-command-strings.aux)\nPackage rerunfilecheck Info: File `carrier-command-strings.out' has not changed\n.\n(rerunfilecheck)             Checksum: D41D8CD98F00B204E9800998ECF8427E;0.\nPackage logreq Info: Writing requests to 'carrier-command-strings.run.xml'.\n\\openout1 = `carrier-command-strings.run.xml'.\n\n )\nOutput written on carrier-command-strings.xdv (4 pages, 16464 bytes).\n"
+  }
+]

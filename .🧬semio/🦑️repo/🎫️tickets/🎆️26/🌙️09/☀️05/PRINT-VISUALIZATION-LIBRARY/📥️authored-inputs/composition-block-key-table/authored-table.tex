@@ -1,0 +1,17 @@
+%region 🔖️BlockKeyTable
+\subsection{\Key{api-path-block}}
+\ApiScopeSource{api-path-block}{semio / viz / block}
+\SemioTableLong[text-size=8pt]{\Key{api-path-block} \ApiText{Table-driven composition blocks}{Tabellengetriebene Kompositionsblöcke}}{0.19,0.12,0.16,0.53}{\ApiKey & \ApiType & \ApiDefault & \ApiMeaning}{%
+  \SemioTableRow{\Key{label} & \Key{string} & \Key{label} & \ApiText{Column supplying each box caption.}{Spalte für die Beschriftung jedes Kastens.}}
+  \SemioTableRow{\Key{key} & \Key{string} & \ApiText{empty}{leer} & \ApiText{Column naming the band occupied by a box.}{Spalte mit dem Namen des Bandes, in dem ein Kasten liegt.}}
+  \SemioTableRow{\Key{scale} & \Key{string} & \ApiText{empty}{leer} & \ApiText{Band scale used by the key and span endpoint columns.}{Bandskala für die Schlüsselspalte und die Spalten der Spannenden.}}
+  \SemioTableRow{\Key{from} & \Key{string} & \Key{von} & \ApiText{Column naming the start band of a span.}{Spalte mit dem Namen des Anfangsbandes einer Spanne.}}
+  \SemioTableRow{\Key{to} & \Key{string} & \Key{bis} & \ApiText{Column naming the end band of a span.}{Spalte mit dem Namen des Endbandes einer Spanne.}}
+  \SemioTableRow{\Key{chip} & \Key{string} & \Key{chip} & \ApiText{Column supplying the source chip of a stage chain.}{Spalte für den Quellbaustein einer Stufenkette.}}
+  \SemioTableRow{\Key{stages} & \Key{string} & \ApiText{empty}{leer} & \ApiText{Comma-separated column names supplying the chain stages.}{Durch Kommas getrennte Spaltennamen für die Stufen der Kette.}}
+  \SemioTableRow{\Key{columns} & \Key{integer} & \Key{0} & \ApiText{Boxes per row; zero places every input row on one line.}{Kästen je Zeile; null platziert alle Eingabezeilen in einer einzigen Linie.}}
+  \SemioTableRow{\Key{boxHeight} & \Key{number} & \Key{7} & \ApiText{Height of one box in millimetres.}{Höhe eines Kastens in Millimetern.}}
+  \SemioTableRow{\Key{gutter} & \Key{number} & \Key{1.6} & \ApiText{Gap between neighbouring boxes in millimetres.}{Abstand zwischen benachbarten Kästen in Millimetern.}}
+  \SemioTableRow{\Key{labelWidth} & \Key{number} & \Key{25} & \ApiText{Width of the leading span-row caption column in millimetres.}{Breite der vorangestellten Beschriftungsspalte einer Spannzeile in Millimetern.}}
+}
+%endregion 🔖️BlockKeyTable

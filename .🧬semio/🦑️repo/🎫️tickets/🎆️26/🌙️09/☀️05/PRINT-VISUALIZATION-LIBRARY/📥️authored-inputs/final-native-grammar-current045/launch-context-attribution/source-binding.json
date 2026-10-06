@@ -1,0 +1,14 @@
+{
+  "purpose": "Exact prospective launch input recovery and unrelated concurrent configuration attribution; no workspace source modification",
+  "source": "C:/git/semio/.vscode/launch.json",
+  "prospectiveSha256": "9402F2BCB165D056150AC38AB7A8D59870BA7834BD00A576CAAE997E04966079",
+  "prospectiveBytes": 1155975,
+  "currentSha256": "21A3F674014B12D4DFA75021FC78D6D34DF7533622A935A51D96A30933820D26",
+  "currentBytes": 1156290,
+  "addedBytes": 315,
+  "line": 13484,
+  "configurationName": "📦️test🦀️cargo📚️library-search-path",
+  "command": "bun nx run @semio-tech/repo-lib:test-cargo-library-search-path",
+  "recovery": "Removing this exact single configuration from current bytes reproduces the original pre-dispatch prospective SHA256; retained older launch captures do not match the prospective hash",
+  "ownership": "Concurrent repo-lib Cargo library-search-path context; neither Root nor Catalogue authored this launch delta during final045/native94896"
+}

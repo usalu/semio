@@ -1,0 +1,16 @@
+{
+  "title": "Layered Overview Grid and Swipe on Mobile",
+  "emoji": "👆",
+  "status": "closed",
+  "description": "play, demonstrator, quiz ui: The mobile ui is still adhoc. Instead of a scrollable list turn it into the same grid. Swiping in both directions should work to navigate in the grid.",
+  "summary": "Follow-up 3: swiping across the edges wraps like an endless canvas. swipeWrapTarget gives {cell, slot}; the far page comes in right beside the view as an imperatively shifted ghost (pane and card cell), normalized to its own cell in the same frame once the strip rests; hints, warming and the wheel follow the wrap; the rubber band remains only for rows or columns of one page. Fixture: swipeWrapTargets plus regenerated sections (Python twin); exhaustive 2–60-pane test. Verified: ui-react 1138/1138, quiz-react 923/923, phone e2e 2/2 (wrap left/right and up/down with real touch), real-Chromium probe of a held edge swipe; typecheck clean apart from another session's 🛂️manifest. Report: 📓️report.md.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2767"
+  },
+  "goal": "🎯runningframework",
+  "sessions": [
+    "⚪9aba2b6643344775ad71f1d3952e6388",
+    "⚪84588774a3594951be6a5be2a094d4fa",
+    "⚪03ef414f00964261bcd71df8a2ac4add"
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "variant": "draw",
+  "crate": "🌎️hub/🧩️compositions/🖍️draw/📦️packages/🦀️rust",
+  "profiles": [
+    "dev",
+    "release"
+  ],
+  "browserRenderers": [
+    "react",
+    "wgpu"
+  ],
+  "flowProducer": "semio-framework-os-flow-core:wasm",
+  "nativeArgs": [
+    "--example",
+    "🎬️demo",
+    "--smoke"
+  ],
+  "entry": {
+    "pluginId": "draw",
+    "packageId": "semio:draw",
+    "cratePath": "🌎️hub/🧩️compositions/🖍️draw/📦️packages/🦀️rust",
+    "packageName": "semio-hub-draw",
+    "wasmOut": "semio_hub_draw.wasm",
+    "directoryName": "🖍️draw",
+    "role": "plugin",
+    "consumes": [],
+    "dependsOn": [],
+    "capabilities": [],
+    "contributes": [],
+    "activationEvents": [],
+    "extensionPoints": [],
+    "executionMode": "isolated",
+    "hashes": {
+      "wasmSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+      "coreWasmSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+      "descriptorSha256": "3333333333333333333333333333333333333333333333333333333333333333"
+    }
+  },
+  "playground": {
+    "variant": "draw",
+    "pluginId": "draw",
+    "cratePath": "🌎️hub/🧩️compositions/🖍️draw/📦️packages/🦀️rust",
+    "app": "s.draw.drawing@1/*#editor",
+    "brand": "fixture",
+    "aliases": [],
+    "assets": []
+  },
+  "nativeProcessStatus": {
+    "continuous": false,
+    "childFailureExit": 23
+  }
+}

@@ -1,0 +1,1408 @@
+[
+  {
+    "family": "namespace",
+    "key": "variant",
+    "before": {
+      "type": "string",
+      "description": {
+        "en": "Sub-kind the family renders; the catalogue slug of the chart kind. The family must draw a different geometry for every variant it declares.",
+        "de": "Untertyp, den die Familie zeichnet; der Katalog-Slug der Diagrammart. Die Familie muss für jede deklarierte Variante eine andere Geometrie zeichnen."
+      }
+    },
+    "after": {
+      "type": "string",
+      "default": "charts",
+      "description": {
+        "en": "Sub-kind the family renders; the catalogue slug of the chart kind. The family must draw a different geometry for every variant it declares.",
+        "de": "Untertyp, den die Familie zeichnet; der Katalog-Slug der Diagrammart. Die Familie muss für jede deklarierte Variante eine andere Geometrie zeichnen."
+      }
+    }
+  },
+  {
+    "family": "namespace",
+    "key": "data",
+    "before": {
+      "type": "string",
+      "description": {
+        "en": "The table the catalogue entry is registered against. It is read and not forwarded: a namespace is not a data set, and its canonical family draws the demo table its own renderer was written for.",
+        "de": "Die Tabelle, gegen die der Katalogeintrag registriert ist. Sie wird gelesen und nicht weitergereicht: Ein Namensraum ist kein Datensatz, und seine kanonische Familie zeichnet die Demotabelle, für die ihr eigener Renderer geschrieben wurde."
+      }
+    },
+    "after": {
+      "type": "string",
+      "default": "demo",
+      "description": {
+        "en": "The table the catalogue entry is registered against. It is read and not forwarded: a namespace is not a data set, and its canonical family draws the demo table its own renderer was written for.",
+        "de": "Die Tabelle, gegen die der Katalogeintrag registriert ist. Sie wird gelesen und nicht weitergereicht: Ein Namensraum ist kein Datensatz, und seine kanonische Familie zeichnet die Demotabelle, für die ihr eigener Renderer geschrieben wurde."
+      }
+    }
+  },
+  {
+    "family": "namespace",
+    "key": "caption",
+    "before": {
+      "type": "string",
+      "description": {
+        "en": "Draw the caption naming the namespace.",
+        "de": "Die Bildunterschrift mit dem Namen des Namensraums zeichnen."
+      }
+    },
+    "after": {
+      "type": "boolean",
+      "default": true,
+      "description": {
+        "en": "Draw the caption naming the namespace.",
+        "de": "Die Bildunterschrift mit dem Namen des Namensraums zeichnen."
+      }
+    }
+  },
+  {
+    "family": "namespace",
+    "key": "locator",
+    "before": {
+      "type": "string",
+      "description": {
+        "en": "Draw the section 76 locator track under the figure.",
+        "de": "Die Positionsleiste von Abschnitt 76 unter der Abbildung zeichnen."
+      }
+    },
+    "after": {
+      "type": "boolean",
+      "default": true,
+      "description": {
+        "en": "Draw the section 76 locator track under the figure.",
+        "de": "Die Positionsleiste von Abschnitt 76 unter der Abbildung zeichnen."
+      }
+    }
+  },
+  {
+    "family": "namespace",
+    "key": "order",
+    "before": {
+      "type": "string",
+      "description": {
+        "en": "The section 76 namespaces in taxonomy order; the locator reads its own position and its own length from this list.",
+        "de": "Die Namensräume von Abschnitt 76 in Taxonomiereihenfolge; die Positionsleiste liest daraus ihre eigene Stelle und ihre eigene Länge."
+      }
+    },
+    "after": {
+      "type": "string",
+      "default": "adjacency,alluvial,annotation,arc,architecture,area,axis,bar,biology,bundling,charts,chemistry,chord,choropleth,concept,contours,correlation,diagram,distribution,engineering,field,financial,flow,geo,graph,hierarchy,infographic,interactionstate,layout,legend,line,map,matrix,network,network-matrix,pack,parallelsets,partition,physics,polar,process,projection,routes,scale,scatter,scientific,signal,statistical,surface,symbols,table,theme,tree,uml",
+      "description": {
+        "en": "The section 76 namespaces in taxonomy order; the locator reads its own position and its own length from this list.",
+        "de": "Die Namensräume von Abschnitt 76 in Taxonomiereihenfolge; die Positionsleiste liest daraus ihre eigene Stelle und ihre eigene Länge."
+      }
+    }
+  },
+  {
+    "family": "namespace",
+    "key": "swatch",
+    "before": {
+      "type": "string",
+      "description": {
+        "en": "Edge length of the locator's own mark in millimetres.",
+        "de": "Kantenlänge der Marke der Positionsleiste in Millimetern."
+      }
+    },
+    "after": {
+      "type": "number",
+      "default": 2.4,
+      "description": {
+        "en": "Edge length of the locator's own mark in millimetres.",
+        "de": "Kantenlänge der Marke der Positionsleiste in Millimetern."
+      }
+    }
+  },
+  {
+    "family": "figure",
+    "key": "variant",
+    "before": {
+      "type": "string",
+      "description": {
+        "en": "Sub-kind the family renders; the catalogue slug of the chart kind. The family must draw a different geometry for every variant it declares.",
+        "de": "Untertyp, den die Familie zeichnet; der Katalog-Slug der Diagrammart. Die Familie muss für jede deklarierte Variante eine andere Geometrie zeichnen."
+      }
+    },
+    "after": {
+      "type": "string",
+      "default": "themes",
+      "description": {
+        "en": "Sub-kind the family renders; the catalogue slug of the chart kind. The family must draw a different geometry for every variant it declares.",
+        "de": "Untertyp, den die Familie zeichnet; der Katalog-Slug der Diagrammart. Die Familie muss für jede deklarierte Variante eine andere Geometrie zeichnen."
+      }
+    }
+  },
+  {
+    "family": "figure",
+    "key": "data",
+    "before": {
+      "type": "string",
+      "description": {
+        "en": "Bound table.",
+        "de": "Gebundene Tabelle."
+      }
+    },
+    "after": {
+      "type": "string",
+      "default": "demo",
+      "description": {
+        "en": "Bound table.",
+        "de": "Gebundene Tabelle."
+      }
+    }
+  },
+  {
+    "family": "figure",
+    "key": "x",
+    "before": {
+      "type": "string",
+      "description": {
+        "en": "Categorical column of the series.",
+        "de": "Kategoriale Spalte der Reihe."
+      }
+    },
+    "after": {
+      "type": "string",
+      "default": "cat",
+      "description": {
+        "en": "Categorical column of the series.",
+        "de": "Kategoriale Spalte der Reihe."
+      }
+    }
+  },
+  {
+    "family": "figure",
+    "key": "y",
+    "before": {
+      "type": "string",
+      "description": {
+        "en": "Quantitative column of the series.",
+        "de": "Quantitative Spalte der Reihe."
+      }
+    },
+    "after": {
+      "type": "string",
+      "default": "val",
+      "description": {
+        "en": "Quantitative column of the series.",
+        "de": "Quantitative Spalte der Reihe."
+      }
+    }
+  },
+  {
+    "family": "figure",
+    "key": "category",
+    "before": {
+      "type": "string",
+      "description": {
+        "en": "Column the faceting kind splits on.",
+        "de": "Spalte, nach der die Facettierungsart aufteilt."
+      }
+    },
+    "after": {
+      "type": "string",
+      "default": "grp",
+      "description": {
+        "en": "Column the faceting kind splits on.",
+        "de": "Spalte, nach der die Facettierungsart aufteilt."
+      }
+    }
+  },
+  {
+    "family": "figure",
+    "key": "label",
+    "before": {
+      "type": "string",
+      "description": {
+        "en": "Column supplying the labels and annotations.",
+        "de": "Spalte, die Beschriftungen und Anmerkungen liefert."
+      }
+    },
+    "after": {
+      "type": "string",
+      "default": "label",
+      "description": {
+        "en": "Column supplying the labels and annotations.",
+        "de": "Spalte, die Beschriftungen und Anmerkungen liefert."
+      }
+    }
+  },
+  {
+    "family": "figure",
+    "key": "cut",
+    "before": {
+      "type": "string",
+      "description": {
+        "en": "Value above which the clipping kind drops a record.",
+        "de": "Wert, oberhalb dessen die Beschneidungsart einen Datensatz verwirft."
+      }
+    },
+    "after": {
+      "type": "number",
+      "default": 6,
+      "description": {
+        "en": "Value above which the clipping kind drops a record.",
+        "de": "Wert, oberhalb dessen die Beschneidungsart einen Datensatz verwirft."
+      }
+    }
+  },
+  {
+    "family": "figure",
+    "key": "panels",
+    "before": {
+      "type": "string",
+      "description": {
+        "en": "Panels the responsive and typographic kinds stack.",
+        "de": "Felder, die die responsive und die typografische Art stapeln."
+      }
+    },
+    "after": {
+      "type": "integer",
+      "default": 3,
+      "description": {
+        "en": "Panels the responsive and typographic kinds stack.",
+        "de": "Felder, die die responsive und die typografische Art stapeln."
+      }
+    }
+  },
+  {
+    "family": "figure",
+    "key": "gap",
+    "before": {
+      "type": "string",
+      "description": {
+        "en": "Gap between the two halves of a contrast in millimetres.",
+        "de": "Abstand zwischen den beiden Hälften eines Vergleichs in Millimetern."
+      }
+    },
+    "after": {
+      "type": "number",
+      "default": 3,
+      "description": {
+        "en": "Gap between the two halves of a contrast in millimetres.",
+        "de": "Abstand zwischen den beiden Hälften eines Vergleichs in Millimetern."
+      }
+    }
+  },
+  {
+    "family": "figure",
+    "key": "swatch",
+    "before": {
+      "type": "string",
+      "description": {
+        "en": "Edge length of one swatch in millimetres.",
+        "de": "Kantenlänge eines Felds in Millimetern."
+      }
+    },
+    "after": {
+      "type": "number",
+      "default": 6,
+      "description": {
+        "en": "Edge length of one swatch in millimetres.",
+        "de": "Kantenlänge eines Felds in Millimetern."
+      }
+    }
+  },
+  {
+    "family": "figure",
+    "key": "patterns",
+    "before": {
+      "type": "string",
+      "description": {
+        "en": "Fills the accessible kind cycles.",
+        "de": "Füllungen, die die barrierearme Art durchläuft."
+      }
+    },
+    "after": {
+      "type": "string",
+      "default": "hatch,crosshatch,dots,grid",
+      "description": {
+        "en": "Fills the accessible kind cycles.",
+        "de": "Füllungen, die die barrierearme Art durchläuft."
+      }
+    }
+  },
+  {
+    "family": "figure",
+    "key": "textKinds",
+    "before": {
+      "type": "string",
+      "description": {
+        "en": "Text roles the typographic kind cycles.",
+        "de": "Textrollen, die die typografische Art durchläuft."
+      }
+    },
+    "after": {
+      "type": "string",
+      "default": "title,label,value,chip",
+      "description": {
+        "en": "Text roles the typographic kind cycles.",
+        "de": "Textrollen, die die typografische Art durchläuft."
+      }
+    }
+  },
+  {
+    "family": "grammar",
+    "key": "variant",
+    "before": {
+      "type": "string",
+      "description": {
+        "en": "Sub-kind the family renders; the catalogue slug of the chart kind. The family must draw a different geometry for every variant it declares.",
+        "de": "Untertyp, den die Familie zeichnet; der Katalog-Slug der Diagrammart. Die Familie muss für jede deklarierte Variante eine andere Geometrie zeichnen."
+      }
+    },
+    "after": {
+      "type": "string",
+      "default": "point",
+      "description": {
+        "en": "Sub-kind the family renders; the catalogue slug of the chart kind. The family must draw a different geometry for every variant it declares.",
+        "de": "Untertyp, den die Familie zeichnet; der Katalog-Slug der Diagrammart. Die Familie muss für jede deklarierte Variante eine andere Geometrie zeichnen."
+      }
+    }
+  },
+  {
+    "family": "grammar",
+    "key": "data",
+    "before": {
+      "type": "string",
+      "description": {
+        "en": "Bound table.",
+        "de": "Gebundene Tabelle."
+      }
+    },
+    "after": {
+      "type": "string",
+      "default": "demo",
+      "description": {
+        "en": "Bound table.",
+        "de": "Gebundene Tabelle."
+      }
+    }
+  },
+  {
+    "family": "grammar",
+    "key": "x",
+    "before": {
+      "type": "string",
+      "description": {
+        "en": "Column bound to the horizontal channel.",
+        "de": "Spalte, die an den horizontalen Kanal gebunden ist."
+      }
+    },
+    "after": {
+      "type": "string",
+      "default": "cat",
+      "description": {
+        "en": "Column bound to the horizontal channel.",
+        "de": "Spalte, die an den horizontalen Kanal gebunden ist."
+      }
+    }
+  },
+  {
+    "family": "grammar",
+    "key": "y",
+    "before": {
+      "type": "string",
+      "description": {
+        "en": "Column bound to the vertical channel.",
+        "de": "Spalte, die an den vertikalen Kanal gebunden ist."
+      }
+    },
+    "after": {
+      "type": "string",
+      "default": "val",
+      "description": {
+        "en": "Column bound to the vertical channel.",
+        "de": "Spalte, die an den vertikalen Kanal gebunden ist."
+      }
+    }
+  },
+  {
+    "family": "grammar",
+    "key": "y2",
+    "before": {
+      "type": "string",
+      "description": {
+        "en": "Column bound to the second quantitative channel.",
+        "de": "Spalte, die an den zweiten quantitativen Kanal gebunden ist."
+      }
+    },
+    "after": {
+      "type": "string",
+      "default": "val2",
+      "description": {
+        "en": "Column bound to the second quantitative channel.",
+        "de": "Spalte, die an den zweiten quantitativen Kanal gebunden ist."
+      }
+    }
+  },
+  {
+    "family": "grammar",
+    "key": "category",
+    "before": {
+      "type": "string",
+      "description": {
+        "en": "Column bound to the qualitative channel.",
+        "de": "Spalte, die an den qualitativen Kanal gebunden ist."
+      }
+    },
+    "after": {
+      "type": "string",
+      "default": "grp",
+      "description": {
+        "en": "Column bound to the qualitative channel.",
+        "de": "Spalte, die an den qualitativen Kanal gebunden ist."
+      }
+    }
+  },
+  {
+    "family": "grammar",
+    "key": "label",
+    "before": {
+      "type": "string",
+      "description": {
+        "en": "Column supplying node and mark text.",
+        "de": "Spalte, die Knoten- und Markentext liefert."
+      }
+    },
+    "after": {
+      "type": "string",
+      "default": "label",
+      "description": {
+        "en": "Column supplying node and mark text.",
+        "de": "Spalte, die Knoten- und Markentext liefert."
+      }
+    }
+  },
+  {
+    "family": "grammar",
+    "key": "bins",
+    "before": {
+      "type": "string",
+      "description": {
+        "en": "Bins the transform kind cuts its column into.",
+        "de": "Klassen, in die die Transformationsart ihre Spalte schneidet."
+      }
+    },
+    "after": {
+      "type": "integer",
+      "default": 4,
+      "description": {
+        "en": "Bins the transform kind cuts its column into.",
+        "de": "Klassen, in die die Transformationsart ihre Spalte schneidet."
+      }
+    }
+  },
+  {
+    "family": "grammar",
+    "key": "samples",
+    "before": {
+      "type": "string",
+      "description": {
+        "en": "Samples the functional kind evaluates.",
+        "de": "Stützstellen, die die funktionale Art auswertet."
+      }
+    },
+    "after": {
+      "type": "integer",
+      "default": 24,
+      "description": {
+        "en": "Samples the functional kind evaluates.",
+        "de": "Stützstellen, die die funktionale Art auswertet."
+      }
+    }
+  },
+  {
+    "family": "grammar",
+    "key": "corners",
+    "before": {
+      "type": "string",
+      "description": {
+        "en": "Corners the first shape of the shape kind carries.",
+        "de": "Ecken, die die erste Form der Formart trägt."
+      }
+    },
+    "after": {
+      "type": "integer",
+      "default": 3,
+      "description": {
+        "en": "Corners the first shape of the shape kind carries.",
+        "de": "Ecken, die die erste Form der Formart trägt."
+      }
+    }
+  },
+  {
+    "family": "grammar",
+    "key": "swatch",
+    "before": {
+      "type": "string",
+      "description": {
+        "en": "Edge length of one grammar swatch in millimetres.",
+        "de": "Kantenlänge eines Grammatikfelds in Millimetern."
+      }
+    },
+    "after": {
+      "type": "number",
+      "default": 6,
+      "description": {
+        "en": "Edge length of one grammar swatch in millimetres.",
+        "de": "Kantenlänge eines Grammatikfelds in Millimetern."
+      }
+    }
+  },
+  {
+    "family": "grammar",
+    "key": "marks",
+    "before": {
+      "type": "string",
+      "description": {
+        "en": "Primitives the mark kind enumerates.",
+        "de": "Primitive, die die Markenart aufzählt."
+      }
+    },
+    "after": {
+      "type": "string",
+      "default": "dot,straight-line,band,sector,straight-connector,rectangular-region,label",
+      "description": {
+        "en": "Primitives the mark kind enumerates.",
+        "de": "Primitive, die die Markenart aufzählt."
+      }
+    }
+  },
+  {
+    "family": "encoding",
+    "key": "variant",
+    "before": {
+      "type": "string",
+      "description": {
+        "en": "Sub-kind the family renders; the catalogue slug of the chart kind. The family must draw a different geometry for every variant it declares.",
+        "de": "Untertyp, den die Familie zeichnet; der Katalog-Slug der Diagrammart. Die Familie muss für jede deklarierte Variante eine andere Geometrie zeichnen."
+      }
+    },
+    "after": {
+      "type": "string",
+      "default": "cartesian-x-y",
+      "description": {
+        "en": "Sub-kind the family renders; the catalogue slug of the chart kind. The family must draw a different geometry for every variant it declares.",
+        "de": "Untertyp, den die Familie zeichnet; der Katalog-Slug der Diagrammart. Die Familie muss für jede deklarierte Variante eine andere Geometrie zeichnen."
+      }
+    }
+  },
+  {
+    "family": "encoding",
+    "key": "data",
+    "before": {
+      "type": "string",
+      "description": {
+        "en": "Table the samples are read from.",
+        "de": "Tabelle, aus der die Stichproben gelesen werden."
+      }
+    },
+    "after": {
+      "type": "string",
+      "default": "demo",
+      "description": {
+        "en": "Table the samples are read from.",
+        "de": "Tabelle, aus der die Stichproben gelesen werden."
+      }
+    }
+  },
+  {
+    "family": "encoding",
+    "key": "column",
+    "before": {
+      "type": "string",
+      "description": {
+        "en": "Numeric column the channel carries.",
+        "de": "Numerische Spalte, die der Kanal trägt."
+      }
+    },
+    "after": {
+      "type": "string",
+      "default": "val",
+      "description": {
+        "en": "Numeric column the channel carries.",
+        "de": "Numerische Spalte, die der Kanal trägt."
+      }
+    }
+  },
+  {
+    "family": "encoding",
+    "key": "column2",
+    "before": {
+      "type": "string",
+      "description": {
+        "en": "Second numeric column of the two-dimensional channels.",
+        "de": "Zweite numerische Spalte der zweidimensionalen Kanäle."
+      }
+    },
+    "after": {
+      "type": "string",
+      "default": "val2",
+      "description": {
+        "en": "Second numeric column of the two-dimensional channels.",
+        "de": "Zweite numerische Spalte der zweidimensionalen Kanäle."
+      }
+    }
+  },
+  {
+    "family": "encoding",
+    "key": "text",
+    "before": {
+      "type": "string",
+      "description": {
+        "en": "Column supplying the typographic samples.",
+        "de": "Spalte, die die typografischen Stichproben liefert."
+      }
+    },
+    "after": {
+      "type": "string",
+      "default": "cat",
+      "description": {
+        "en": "Column supplying the typographic samples.",
+        "de": "Spalte, die die typografischen Stichproben liefert."
+      }
+    }
+  },
+  {
+    "family": "encoding",
+    "key": "samples",
+    "before": {
+      "type": "string",
+      "description": {
+        "en": "Samples drawn; zero means every row of the table.",
+        "de": "Anzahl gezeichneter Stichproben; null bedeutet jede Zeile der Tabelle."
+      }
+    },
+    "after": {
+      "type": "integer",
+      "default": 0,
+      "description": {
+        "en": "Samples drawn; zero means every row of the table.",
+        "de": "Anzahl gezeichneter Stichproben; null bedeutet jede Zeile der Tabelle."
+      }
+    }
+  },
+  {
+    "family": "encoding",
+    "key": "low",
+    "before": {
+      "type": "string",
+      "description": {
+        "en": "Magnitude of the smallest sample in millimetres.",
+        "de": "Größe der kleinsten Stichprobe in Millimetern."
+      }
+    },
+    "after": {
+      "type": "number",
+      "default": 1.6,
+      "description": {
+        "en": "Magnitude of the smallest sample in millimetres.",
+        "de": "Größe der kleinsten Stichprobe in Millimetern."
+      }
+    }
+  },
+  {
+    "family": "encoding",
+    "key": "high",
+    "before": {
+      "type": "string",
+      "description": {
+        "en": "Magnitude of the largest sample in millimetres.",
+        "de": "Größe der größten Stichprobe in Millimetern."
+      }
+    },
+    "after": {
+      "type": "number",
+      "default": 7,
+      "description": {
+        "en": "Magnitude of the largest sample in millimetres.",
+        "de": "Größe der größten Stichprobe in Millimetern."
+      }
+    }
+  },
+  {
+    "family": "encoding",
+    "key": "span",
+    "before": {
+      "type": "string",
+      "description": {
+        "en": "Angular span of the rotational channels in degrees.",
+        "de": "Winkelbereich der Rotationskanäle in Grad."
+      }
+    },
+    "after": {
+      "type": "number",
+      "default": 120,
+      "description": {
+        "en": "Angular span of the rotational channels in degrees.",
+        "de": "Winkelbereich der Rotationskanäle in Grad."
+      }
+    }
+  },
+  {
+    "family": "encoding",
+    "key": "swatch",
+    "before": {
+      "type": "string",
+      "description": {
+        "en": "Edge length of a sample that stays constant, in millimetres.",
+        "de": "Kantenlänge einer konstant bleibenden Stichprobe in Millimetern."
+      }
+    },
+    "after": {
+      "type": "number",
+      "default": 7,
+      "description": {
+        "en": "Edge length of a sample that stays constant, in millimetres.",
+        "de": "Kantenlänge einer konstant bleibenden Stichprobe in Millimetern."
+      }
+    }
+  },
+  {
+    "family": "encoding",
+    "key": "strands",
+    "before": {
+      "type": "string",
+      "description": {
+        "en": "Strands a hatched, ramped or repeated sample is built from.",
+        "de": "Stränge, aus denen eine schraffierte, verlaufende oder wiederholte Stichprobe aufgebaut ist."
+      }
+    },
+    "after": {
+      "type": "integer",
+      "default": 4,
+      "description": {
+        "en": "Strands a hatched, ramped or repeated sample is built from.",
+        "de": "Stränge, aus denen eine schraffierte, verlaufende oder wiederholte Stichprobe aufgebaut ist."
+      }
+    }
+  },
+  {
+    "family": "encoding",
+    "key": "symbols",
+    "before": {
+      "type": "string",
+      "description": {
+        "en": "Mark kinds the symbol channel cycles.",
+        "de": "Markenarten, die der Symbolkanal durchläuft."
+      }
+    },
+    "after": {
+      "type": "string",
+      "default": "dot,square,triangle,diamond,cross",
+      "description": {
+        "en": "Mark kinds the symbol channel cycles.",
+        "de": "Markenarten, die der Symbolkanal durchläuft."
+      }
+    }
+  },
+  {
+    "family": "encoding",
+    "key": "dashes",
+    "before": {
+      "type": "string",
+      "description": {
+        "en": "Dash patterns the dash channel cycles.",
+        "de": "Strichmuster, die der Strichkanal durchläuft."
+      }
+    },
+    "after": {
+      "type": "string",
+      "default": "none,dashed,dotted,dash-dot",
+      "description": {
+        "en": "Dash patterns the dash channel cycles.",
+        "de": "Strichmuster, die der Strichkanal durchläuft."
+      }
+    }
+  },
+  {
+    "family": "encoding",
+    "key": "patterns",
+    "before": {
+      "type": "string",
+      "description": {
+        "en": "Fills the pattern channel cycles.",
+        "de": "Füllungen, die der Musterkanal durchläuft."
+      }
+    },
+    "after": {
+      "type": "string",
+      "default": "hatch,crosshatch,dots,grid",
+      "description": {
+        "en": "Fills the pattern channel cycles.",
+        "de": "Füllungen, die der Musterkanal durchläuft."
+      }
+    }
+  },
+  {
+    "family": "encoding",
+    "key": "arrows",
+    "before": {
+      "type": "string",
+      "description": {
+        "en": "Arrow ends the arrowheads channel cycles.",
+        "de": "Pfeilenden, die der Pfeilspitzenkanal durchläuft."
+      }
+    },
+    "after": {
+      "type": "string",
+      "default": "none,end,start,both",
+      "description": {
+        "en": "Arrow ends the arrowheads channel cycles.",
+        "de": "Pfeilenden, die der Pfeilspitzenkanal durchläuft."
+      }
+    }
+  },
+  {
+    "family": "encoding",
+    "key": "fonts",
+    "before": {
+      "type": "string",
+      "description": {
+        "en": "Size switch names the font-size channel cycles.",
+        "de": "Namen der Größenschalter, die der Schriftgrößenkanal durchläuft."
+      }
+    },
+    "after": {
+      "type": "string",
+      "default": "scriptsize,footnotesize,small,normalsize,large",
+      "description": {
+        "en": "Size switch names the font-size channel cycles.",
+        "de": "Namen der Größenschalter, die der Schriftgrößenkanal durchläuft."
+      }
+    }
+  },
+  {
+    "family": "encoding",
+    "key": "weights",
+    "before": {
+      "type": "string",
+      "description": {
+        "en": "Series switch names the font-weight channel cycles.",
+        "de": "Namen der Schnittschalter, die der Schriftstärkenkanal durchläuft."
+      }
+    },
+    "after": {
+      "type": "string",
+      "default": "mdseries,bfseries",
+      "description": {
+        "en": "Series switch names the font-weight channel cycles.",
+        "de": "Namen der Schnittschalter, die der Schriftstärkenkanal durchläuft."
+      }
+    }
+  },
+  {
+    "family": "scale",
+    "key": "variant",
+    "before": {
+      "type": "string",
+      "description": {
+        "en": "Sub-kind the family renders; the catalogue slug of the chart kind. The family must draw a different geometry for every variant it declares.",
+        "de": "Untertyp, den die Familie zeichnet; der Katalog-Slug der Diagrammart. Die Familie muss für jede deklarierte Variante eine andere Geometrie zeichnen."
+      }
+    },
+    "after": {
+      "type": "string",
+      "default": "linear",
+      "description": {
+        "en": "Sub-kind the family renders; the catalogue slug of the chart kind. The family must draw a different geometry for every variant it declares.",
+        "de": "Untertyp, den die Familie zeichnet; der Katalog-Slug der Diagrammart. Die Familie muss für jede deklarierte Variante eine andere Geometrie zeichnen."
+      }
+    }
+  },
+  {
+    "family": "scale",
+    "key": "domain",
+    "before": {
+      "type": "string",
+      "description": {
+        "en": "Input domain `min,max` of the scale or function.",
+        "de": "Eingabebereich `min,max` der Skala bzw. Funktion."
+      }
+    },
+    "after": {
+      "type": "string",
+      "default": "0,10",
+      "description": {
+        "en": "Input domain `min,max` of the scale or function.",
+        "de": "Eingabebereich `min,max` der Skala bzw. Funktion."
+      }
+    }
+  },
+  {
+    "family": "scale",
+    "key": "range",
+    "before": {
+      "type": "string",
+      "description": {
+        "en": "Output range `min,max` of the scale or sweep.",
+        "de": "Ausgabebereich `min,max` der Skala bzw. des Durchlaufs."
+      }
+    },
+    "after": {
+      "type": "string",
+      "default": "0,60",
+      "description": {
+        "en": "Output range `min,max` of the scale or sweep.",
+        "de": "Ausgabebereich `min,max` der Skala bzw. des Durchlaufs."
+      }
+    }
+  },
+  {
+    "family": "scale",
+    "key": "nice",
+    "before": {
+      "type": "string",
+      "description": {
+        "en": "Extend the domain to round tick values.",
+        "de": "Den Wertebereich auf runde Teilstrichwerte erweitern."
+      }
+    },
+    "after": {
+      "type": "boolean",
+      "default": false,
+      "description": {
+        "en": "Extend the domain to round tick values.",
+        "de": "Den Wertebereich auf runde Teilstrichwerte erweitern."
+      }
+    }
+  },
+  {
+    "family": "shape",
+    "key": "variant",
+    "before": {
+      "type": "string",
+      "description": {
+        "en": "Sub-kind the family renders; the catalogue slug of the chart kind. The family must draw a different geometry for every variant it declares.",
+        "de": "Untertyp, den die Familie zeichnet; der Katalog-Slug der Diagrammart. Die Familie muss für jede deklarierte Variante eine andere Geometrie zeichnen."
+      }
+    },
+    "after": {
+      "type": "string",
+      "default": "lines",
+      "description": {
+        "en": "Sub-kind the family renders; the catalogue slug of the chart kind. The family must draw a different geometry for every variant it declares.",
+        "de": "Untertyp, den die Familie zeichnet; der Katalog-Slug der Diagrammart. Die Familie muss für jede deklarierte Variante eine andere Geometrie zeichnen."
+      }
+    }
+  },
+  {
+    "family": "shape",
+    "key": "curves",
+    "before": {
+      "type": "string",
+      "description": {
+        "en": "Interpolators the lines and areas kinds cycle through.",
+        "de": "Interpolatoren, die die Linien- und Flächenarten durchlaufen."
+      }
+    },
+    "after": {
+      "type": "string",
+      "default": "linear,cardinal,natural,step",
+      "description": {
+        "en": "Interpolators the lines and areas kinds cycle through.",
+        "de": "Interpolatoren, die die Linien- und Flächenarten durchlaufen."
+      }
+    }
+  },
+  {
+    "family": "layout-algorithm",
+    "key": "variant",
+    "before": {
+      "type": "string",
+      "description": {
+        "en": "Sub-kind the family renders; the catalogue slug of the chart kind. The family must draw a different geometry for every variant it declares.",
+        "de": "Untertyp, den die Familie zeichnet; der Katalog-Slug der Diagrammart. Die Familie muss für jede deklarierte Variante eine andere Geometrie zeichnen."
+      }
+    },
+    "after": {
+      "type": "string",
+      "default": "stack",
+      "description": {
+        "en": "Sub-kind the family renders; the catalogue slug of the chart kind. The family must draw a different geometry for every variant it declares.",
+        "de": "Untertyp, den die Familie zeichnet; der Katalog-Slug der Diagrammart. Die Familie muss für jede deklarierte Variante eine andere Geometrie zeichnen."
+      }
+    }
+  },
+  {
+    "family": "layout-algorithm",
+    "key": "x",
+    "before": {
+      "type": "string",
+      "description": {
+        "en": "Column laid out along the horizontal axis.",
+        "de": "Spalte, die entlang der horizontalen Achse angeordnet wird."
+      }
+    },
+    "after": {
+      "type": "string",
+      "default": "t",
+      "description": {
+        "en": "Column laid out along the horizontal axis.",
+        "de": "Spalte, die entlang der horizontalen Achse angeordnet wird."
+      }
+    }
+  },
+  {
+    "family": "layout-algorithm",
+    "key": "series",
+    "before": {
+      "type": "string",
+      "description": {
+        "en": "Column whose distinct values become the stacked series.",
+        "de": "Spalte, deren verschiedene Werte zu den gestapelten Reihen werden."
+      }
+    },
+    "after": {
+      "type": "string",
+      "default": "series",
+      "description": {
+        "en": "Column whose distinct values become the stacked series.",
+        "de": "Spalte, deren verschiedene Werte zu den gestapelten Reihen werden."
+      }
+    }
+  },
+  {
+    "family": "layout-algorithm",
+    "key": "value",
+    "before": {
+      "type": "string",
+      "description": {
+        "en": "Numeric column the stacking kinds consume.",
+        "de": "Numerische Spalte, die die stapelnden Arten verbrauchen."
+      }
+    },
+    "after": {
+      "type": "string",
+      "default": "value",
+      "description": {
+        "en": "Numeric column the stacking kinds consume.",
+        "de": "Numerische Spalte, die die stapelnden Arten verbrauchen."
+      }
+    }
+  },
+  {
+    "family": "layout-algorithm",
+    "key": "binColumn",
+    "before": {
+      "type": "string",
+      "description": {
+        "en": "Numeric column of the binning and jitter kinds.",
+        "de": "Numerische Spalte der Klassierungs- und Jitter-Arten."
+      }
+    },
+    "after": {
+      "type": "string",
+      "default": "value",
+      "description": {
+        "en": "Numeric column of the binning and jitter kinds.",
+        "de": "Numerische Spalte der Klassierungs- und Jitter-Arten."
+      }
+    }
+  },
+  {
+    "family": "layout-algorithm",
+    "key": "pieColumn",
+    "before": {
+      "type": "string",
+      "description": {
+        "en": "Numeric column of the pie kind.",
+        "de": "Numerische Spalte der Kreisart."
+      }
+    },
+    "after": {
+      "type": "string",
+      "default": "val",
+      "description": {
+        "en": "Numeric column of the pie kind.",
+        "de": "Numerische Spalte der Kreisart."
+      }
+    }
+  },
+  {
+    "family": "layout-algorithm",
+    "key": "order",
+    "before": {
+      "type": "string",
+      "description": {
+        "en": "Series order the algorithm applies: auto, none, ascending, descending, inside-out, reverse or appearance.",
+        "de": "Reihenfolge der Reihen, die das Verfahren anwendet: auto, none, ascending, descending, inside-out, reverse oder appearance."
+      }
+    },
+    "after": {
+      "type": "string",
+      "default": "auto",
+      "description": {
+        "en": "Series order the algorithm applies: auto, none, ascending, descending, inside-out, reverse or appearance.",
+        "de": "Reihenfolge der Reihen, die das Verfahren anwendet: auto, none, ascending, descending, inside-out, reverse oder appearance."
+      }
+    }
+  },
+  {
+    "family": "layout-algorithm",
+    "key": "bins",
+    "before": {
+      "type": "string",
+      "description": {
+        "en": "Bin count of the histogram kind.",
+        "de": "Anzahl der Klassen der Histogrammart."
+      }
+    },
+    "after": {
+      "type": "integer",
+      "default": 8,
+      "description": {
+        "en": "Bin count of the histogram kind.",
+        "de": "Anzahl der Klassen der Histogrammart."
+      }
+    }
+  },
+  {
+    "family": "layout-algorithm",
+    "key": "amount",
+    "before": {
+      "type": "string",
+      "description": {
+        "en": "Jitter amplitude in millimetres.",
+        "de": "Jitter-Amplitude in Millimetern."
+      }
+    },
+    "after": {
+      "type": "number",
+      "default": 3,
+      "description": {
+        "en": "Jitter amplitude in millimetres.",
+        "de": "Jitter-Amplitude in Millimetern."
+      }
+    }
+  },
+  {
+    "family": "layout-algorithm",
+    "key": "innerRadius",
+    "before": {
+      "type": "string",
+      "description": {
+        "en": "Inner radius of the pie kind in millimetres.",
+        "de": "Innenradius der Kreisart in Millimetern."
+      }
+    },
+    "after": {
+      "type": "number",
+      "default": 0,
+      "description": {
+        "en": "Inner radius of the pie kind in millimetres.",
+        "de": "Innenradius der Kreisart in Millimetern."
+      }
+    }
+  },
+  {
+    "family": "transform-data",
+    "key": "variant",
+    "before": {
+      "type": "string",
+      "description": {
+        "en": "Sub-kind the family renders; the catalogue slug of the chart kind. The family must draw a different geometry for every variant it declares.",
+        "de": "Untertyp, den die Familie zeichnet; der Katalog-Slug der Diagrammart. Die Familie muss für jede deklarierte Variante eine andere Geometrie zeichnen."
+      }
+    },
+    "after": {
+      "type": "string",
+      "default": "filter",
+      "description": {
+        "en": "Sub-kind the family renders; the catalogue slug of the chart kind. The family must draw a different geometry for every variant it declares.",
+        "de": "Untertyp, den die Familie zeichnet; der Katalog-Slug der Diagrammart. Die Familie muss für jede deklarierte Variante eine andere Geometrie zeichnen."
+      }
+    }
+  },
+  {
+    "family": "transform-data",
+    "key": "data",
+    "before": {
+      "type": "string",
+      "description": {
+        "en": "Source table the operation reads.",
+        "de": "Quelltabelle, die die Operation liest."
+      }
+    },
+    "after": {
+      "type": "string",
+      "default": "demo",
+      "description": {
+        "en": "Source table the operation reads.",
+        "de": "Quelltabelle, die die Operation liest."
+      }
+    }
+  },
+  {
+    "family": "transform-data",
+    "key": "group",
+    "before": {
+      "type": "string",
+      "description": {
+        "en": "Grouping column of the grouping kinds.",
+        "de": "Gruppierungsspalte der gruppierenden Arten."
+      }
+    },
+    "after": {
+      "type": "string",
+      "default": "grp",
+      "description": {
+        "en": "Grouping column of the grouping kinds.",
+        "de": "Gruppierungsspalte der gruppierenden Arten."
+      }
+    }
+  },
+  {
+    "family": "transform-data",
+    "key": "value",
+    "before": {
+      "type": "string",
+      "description": {
+        "en": "Numeric column the operations reduce.",
+        "de": "Numerische Spalte, die die Operationen reduzieren."
+      }
+    },
+    "after": {
+      "type": "string",
+      "default": "val",
+      "description": {
+        "en": "Numeric column the operations reduce.",
+        "de": "Numerische Spalte, die die Operationen reduzieren."
+      }
+    }
+  },
+  {
+    "family": "transform-data",
+    "key": "key",
+    "before": {
+      "type": "string",
+      "description": {
+        "en": "Key column of the pivot, fold and join kinds.",
+        "de": "Schlüsselspalte der Pivot-, Fold- und Join-Arten."
+      }
+    },
+    "after": {
+      "type": "string",
+      "default": "cat",
+      "description": {
+        "en": "Key column of the pivot, fold and join kinds.",
+        "de": "Schlüsselspalte der Pivot-, Fold- und Join-Arten."
+      }
+    }
+  },
+  {
+    "family": "transform-data",
+    "key": "second",
+    "before": {
+      "type": "string",
+      "description": {
+        "en": "Second folded column.",
+        "de": "Zweite gefaltete Spalte."
+      }
+    },
+    "after": {
+      "type": "string",
+      "default": "val2",
+      "description": {
+        "en": "Second folded column.",
+        "de": "Zweite gefaltete Spalte."
+      }
+    }
+  },
+  {
+    "family": "transform-data",
+    "key": "predicate",
+    "before": {
+      "type": "string",
+      "description": {
+        "en": "Filter predicate over bare column names.",
+        "de": "Filterprädikat über blanke Spaltennamen."
+      }
+    },
+    "after": {
+      "type": "string",
+      "default": "val > 4",
+      "description": {
+        "en": "Filter predicate over bare column names.",
+        "de": "Filterprädikat über blanke Spaltennamen."
+      }
+    }
+  },
+  {
+    "family": "transform-data",
+    "key": "sortBy",
+    "before": {
+      "type": "string",
+      "description": {
+        "en": "Column the sort kind orders by.",
+        "de": "Spalte, nach der die Sortierart ordnet."
+      }
+    },
+    "after": {
+      "type": "string",
+      "default": "val",
+      "description": {
+        "en": "Column the sort kind orders by.",
+        "de": "Spalte, nach der die Sortierart ordnet."
+      }
+    }
+  },
+  {
+    "family": "transform-data",
+    "key": "descending",
+    "before": {
+      "type": "string",
+      "description": {
+        "en": "Reverse the sort order.",
+        "de": "Die Sortierreihenfolge umkehren."
+      }
+    },
+    "after": {
+      "type": "boolean",
+      "default": true,
+      "description": {
+        "en": "Reverse the sort order.",
+        "de": "Die Sortierreihenfolge umkehren."
+      }
+    }
+  },
+  {
+    "family": "transform-data",
+    "key": "windowSize",
+    "before": {
+      "type": "string",
+      "description": {
+        "en": "Window length of the moving average.",
+        "de": "Fensterlänge des gleitenden Mittels."
+      }
+    },
+    "after": {
+      "type": "integer",
+      "default": 3,
+      "description": {
+        "en": "Window length of the moving average.",
+        "de": "Fensterlänge des gleitenden Mittels."
+      }
+    }
+  },
+  {
+    "family": "transform-data",
+    "key": "windowKind",
+    "before": {
+      "type": "string",
+      "description": {
+        "en": "Window the kind computes and the name of the column it appends: movingAverage, cumulativeSum, rank or lag.",
+        "de": "Fenster, das die Art berechnet, und Name der Spalte, die sie anfügt: movingAverage, cumulativeSum, rank oder lag."
+      }
+    },
+    "after": {
+      "type": "string",
+      "default": "movingAverage",
+      "description": {
+        "en": "Window the kind computes and the name of the column it appends: movingAverage, cumulativeSum, rank or lag.",
+        "de": "Fenster, das die Art berechnet, und Name der Spalte, die sie anfügt: movingAverage, cumulativeSum, rank oder lag."
+      }
+    }
+  }
+]

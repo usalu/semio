@@ -207,5 +207,107 @@
     { "name": "a 120 Hz frame closes less, two of them the same 12 %", "elapsedMs": 8.333333333333334, "factor": 0.0619168480353141 },
     { "name": "a slow 100 ms frame closes what six 60 Hz frames would", "elapsedMs": 100, "factor": 0.535595913216 },
     { "name": "a clock running backwards closes nothing", "elapsedMs": -5, "factor": 0 }
+  ],
+  "nearestCells": [
+    { "name": "a view at rest is its own cell", "count": 9, "offset": { "x": 1, "y": 1 }, "cell": { "column": 1, "row": 1 } },
+    { "name": "a view past the middle rounds on", "count": 9, "offset": { "x": 1.6, "y": 0.4 }, "cell": { "column": 2, "row": 0 } },
+    { "name": "a view outside the strip comes back to its edge", "count": 9, "offset": { "x": -0.8, "y": 3.4 }, "cell": { "column": 0, "row": 2 } },
+    { "name": "an empty flank of a short row lands on its occupied columns", "count": 10, "offset": { "x": 0, "y": 2 }, "cell": { "column": 1, "row": 2 } },
+    { "name": "the far empty flank lands on the last occupied column", "count": 10, "offset": { "x": 3.2, "y": 1.7 }, "cell": { "column": 2, "row": 2 } }
+  ],
+  "restingCells": [
+    { "name": "exactly on a cell", "offset": { "x": 2, "y": 1 }, "cell": { "column": 2, "row": 1 } },
+    { "name": "within a ten-thousandth of a cell", "offset": { "x": 0.99995, "y": 2.00004 }, "cell": { "column": 1, "row": 2 } },
+    { "name": "mid swipe", "offset": { "x": 1.4, "y": 0 }, "cell": null },
+    { "name": "a settle's last sliver", "offset": { "x": 1, "y": 0.9998 }, "cell": null }
+  ],
+  "swipeAxes": [
+    { "name": "a tap stays a tap", "dx": 6, "dy": -8, "axis": null },
+    { "name": "sideways once past the slop", "dx": -10, "dy": 3, "axis": "x" },
+    { "name": "down once past the slop", "dx": 2, "dy": 12, "axis": "y" },
+    { "name": "a diagonal goes to the longer leg", "dx": -30, "dy": 31, "axis": "y" },
+    { "name": "a tie goes along the rows", "dx": 20, "dy": -20, "axis": "x" }
+  ],
+  "swipeSteps": [
+    { "name": "a quarter of the view to the left moves to the next cell", "movedPx": -94, "velocityPxPerMs": 0.1, "viewPx": 375, "step": 1 },
+    { "name": "just short of a quarter stays", "movedPx": -93, "velocityPxPerMs": -0.1, "viewPx": 375, "step": 0 },
+    { "name": "a long swipe to the right moves back", "movedPx": 200, "velocityPxPerMs": 0, "viewPx": 375, "step": -1 },
+    { "name": "a flick moves however short", "movedPx": -30, "velocityPxPerMs": -0.3, "viewPx": 375, "step": 1 },
+    { "name": "a flick back wins over the way it went", "movedPx": -150, "velocityPxPerMs": 0.5, "viewPx": 375, "step": -1 },
+    { "name": "a slow short drag stays", "movedPx": 40, "velocityPxPerMs": 0.29, "viewPx": 812, "step": 0 },
+    { "name": "a quarter of a tall view upward moves down a row", "movedPx": -203, "velocityPxPerMs": 0, "viewPx": 812, "step": 1 }
+  ],
+  "swipeTargets": [
+    { "name": "the next column", "count": 9, "from": { "column": 0, "row": 0 }, "axis": "x", "step": 1, "target": { "column": 1, "row": 0 } },
+    { "name": "the row below", "count": 9, "from": { "column": 1, "row": 1 }, "axis": "y", "step": 1, "target": { "column": 1, "row": 2 } },
+    { "name": "back a column", "count": 9, "from": { "column": 2, "row": 1 }, "axis": "x", "step": -1, "target": { "column": 1, "row": 1 } },
+    { "name": "up a row", "count": 9, "from": { "column": 1, "row": 2 }, "axis": "y", "step": -1, "target": { "column": 1, "row": 1 } },
+    { "name": "no column before the first", "count": 9, "from": { "column": 0, "row": 1 }, "axis": "x", "step": -1, "target": null },
+    { "name": "no row below the last", "count": 9, "from": { "column": 2, "row": 2 }, "axis": "y", "step": 1, "target": null },
+    { "name": "no move without a step", "count": 9, "from": { "column": 1, "row": 1 }, "axis": "x", "step": 0, "target": null },
+    { "name": "down into a short row lands on its occupied columns", "count": 10, "from": { "column": 0, "row": 1 }, "axis": "y", "step": 1, "target": { "column": 1, "row": 2 } },
+    { "name": "down into a short row from its far side", "count": 10, "from": { "column": 3, "row": 1 }, "axis": "y", "step": 1, "target": { "column": 2, "row": 2 } },
+    { "name": "no column past the end of a short row", "count": 10, "from": { "column": 2, "row": 2 }, "axis": "x", "step": 1, "target": null }
+  ],
+  "rubberBands": [
+    { "overshoot": 0, "pull": 0.0 },
+    { "overshoot": 0.1, "pull": 0.052132701421801 },
+    { "overshoot": 0.5, "pull": 0.215686274509804 },
+    { "overshoot": 1, "pull": 0.354838709677419 },
+    { "overshoot": 4, "pull": 0.6875 },
+    { "overshoot": -1, "pull": 0.0 }
+  ],
+  "swipeDrags": [
+    { "name": "a fifth of the way to the next column", "count": 9, "from": { "column": 0, "row": 0 }, "axis": "x", "shift": 0.2, "offset": { "x": 0.2, "y": 0.0 } },
+    { "name": "never past the neighbour", "count": 9, "from": { "column": 0, "row": 0 }, "axis": "x", "shift": 1.7, "offset": { "x": 1.0, "y": 0.0 } },
+    { "name": "back toward the row above", "count": 9, "from": { "column": 1, "row": 1 }, "axis": "y", "shift": -0.35, "offset": { "x": 1.0, "y": 0.65 } },
+    { "name": "across the first column toward the last one, beside the view", "count": 9, "from": { "column": 0, "row": 0 }, "axis": "x", "shift": -1, "offset": { "x": -1.0, "y": 0.0 } },
+    { "name": "across the last row toward the top row, below the view", "count": 9, "from": { "column": 1, "row": 2 }, "axis": "y", "shift": 0.5, "offset": { "x": 1.0, "y": 2.5 } },
+    { "name": "toward a short row's occupied column, both axes at once", "count": 10, "from": { "column": 0, "row": 1 }, "axis": "y", "shift": 0.5, "offset": { "x": 0.5, "y": 1.5 } },
+    { "name": "on a rubber band where the column holds no other page", "count": 2, "from": { "column": 0, "row": 0 }, "axis": "y", "shift": 0.5, "offset": { "x": 0.0, "y": 0.21568627451 } }
+  ],
+  "settles": [
+    { "name": "a released swipe sampled every 80 ms", "from": { "x": 0.3, "y": 1 }, "to": { "x": 1, "y": 1 }, "durationMs": 320, "samples": [{ "elapsedMs": -10, "offset": { "x": 0.3, "y": 1.0 }, "done": false }, { "elapsedMs": 0, "offset": { "x": 0.3, "y": 1.0 }, "done": false }, { "elapsedMs": 80, "offset": { "x": 0.7046875, "y": 1.0 }, "done": false }, { "elapsedMs": 160, "offset": { "x": 0.9125, "y": 1.0 }, "done": false }, { "elapsedMs": 240, "offset": { "x": 0.9890625, "y": 1.0 }, "done": false }, { "elapsedMs": 320, "offset": { "x": 1.0, "y": 1.0 }, "done": true }, { "elapsedMs": 400, "offset": { "x": 1.0, "y": 1.0 }, "done": true }] },
+    { "name": "a rubber band springing back", "from": { "x": -0.35, "y": 0 }, "to": { "x": 0, "y": 0 }, "durationMs": 320, "samples": [{ "elapsedMs": -10, "offset": { "x": -0.35, "y": 0.0 }, "done": false }, { "elapsedMs": 0, "offset": { "x": -0.35, "y": 0.0 }, "done": false }, { "elapsedMs": 80, "offset": { "x": -0.14765625, "y": 0.0 }, "done": false }, { "elapsedMs": 160, "offset": { "x": -0.04375, "y": 0.0 }, "done": false }, { "elapsedMs": 240, "offset": { "x": -0.00546875, "y": 0.0 }, "done": false }, { "elapsedMs": 320, "offset": { "x": 0.0, "y": 0.0 }, "done": true }, { "elapsedMs": 400, "offset": { "x": 0.0, "y": 0.0 }, "done": true }] }
+  ],
+  "flings": [
+    { "name": "no time travels nothing", "velocityPxPerMs": 2, "elapsedMs": 0, "distance": 0.0, "velocity": 2.0, "done": false },
+    { "name": "one 60 Hz frame of a fast fling", "velocityPxPerMs": 2, "elapsedMs": 16.666666666666668, "distance": 32.783355436, "velocity": 1.934367634864, "done": false },
+    { "name": "a second of a fast fling", "velocityPxPerMs": 2, "elapsedMs": 1000, "distance": 864.070253475, "velocity": 0.270129044893, "done": false },
+    { "name": "a fling upward travels upward", "velocityPxPerMs": -1.5, "elapsedMs": 250, "distance": -295.034272686, "velocity": -0.909340598142, "done": false },
+    { "name": "a slow fling stops at once", "velocityPxPerMs": 0.019, "elapsedMs": 0, "distance": 0.0, "velocity": 0.019, "done": true },
+    { "name": "a fling comes to rest", "velocityPxPerMs": 1, "elapsedMs": 1500, "distance": 474.705794248, "velocity": 0.049637732131, "done": false },
+    { "name": "a clock running backwards travels nothing", "velocityPxPerMs": 1, "elapsedMs": -5, "distance": 0.0, "velocity": 1.0, "done": false }
+  ],
+  "neighbourWarmBoots": [
+    { "name": "warms the first neighbour in pane order", "count": 9, "at": { "column": 1, "row": 1 }, "live": ["p4"], "openedId": null, "budget": 4, "step": { "kind": "boot", "id": "p1" } },
+    { "name": "skips a neighbour that lives", "count": 9, "at": { "column": 1, "row": 1 }, "live": ["p4", "p1"], "openedId": null, "budget": 4, "step": { "kind": "boot", "id": "p3" } },
+    { "name": "the far column and the far row are neighbours too", "count": 9, "at": { "column": 0, "row": 0 }, "live": ["p0", "p1", "p3"], "openedId": null, "budget": 9, "step": { "kind": "boot", "id": "p2" } },
+    { "name": "never a diagonal", "count": 9, "at": { "column": 0, "row": 0 }, "live": ["p0", "p1", "p3", "p2", "p6"], "openedId": null, "budget": 9, "step": { "kind": "hold", "reason": "complete" } },
+    { "name": "never warms past the budget", "count": 9, "at": { "column": 1, "row": 1 }, "live": ["p4", "p0", "p8"], "openedId": null, "budget": 3, "step": { "kind": "hold", "reason": "budget" } },
+    { "name": "never warms while a page is opened", "count": 9, "at": { "column": 1, "row": 1 }, "live": [], "openedId": "p4", "budget": 4, "step": { "kind": "hold", "reason": "opened" } },
+    { "name": "a page of a short row wraps down to the top row", "count": 10, "at": { "column": 1, "row": 2 }, "live": ["p8", "p5", "p9"], "openedId": null, "budget": 4, "step": { "kind": "boot", "id": "p1" } }
+  ],
+  "swipeNeighbours": [
+    { "name": "the centre of the ring of nine has all four, each beside it", "count": 9, "from": { "column": 1, "row": 1 }, "neighbours": [{ "direction": "up", "cell": { "column": 1, "row": 0 }, "slot": { "x": 1, "y": 0 } }, { "direction": "left", "cell": { "column": 0, "row": 1 }, "slot": { "x": 0, "y": 1 } }, { "direction": "right", "cell": { "column": 2, "row": 1 }, "slot": { "x": 2, "y": 1 } }, { "direction": "down", "cell": { "column": 1, "row": 2 }, "slot": { "x": 1, "y": 2 } }] },
+    { "name": "the first page sees the bottom row above and the last column on its left", "count": 9, "from": { "column": 0, "row": 0 }, "neighbours": [{ "direction": "up", "cell": { "column": 0, "row": 2 }, "slot": { "x": 0, "y": -1 } }, { "direction": "left", "cell": { "column": 2, "row": 0 }, "slot": { "x": -1, "y": 0 } }, { "direction": "right", "cell": { "column": 1, "row": 0 }, "slot": { "x": 1, "y": 0 } }, { "direction": "down", "cell": { "column": 0, "row": 1 }, "slot": { "x": 0, "y": 1 } }] },
+    { "name": "the last page sees the top row below and the first column on its right", "count": 9, "from": { "column": 2, "row": 2 }, "neighbours": [{ "direction": "up", "cell": { "column": 2, "row": 1 }, "slot": { "x": 2, "y": 1 } }, { "direction": "left", "cell": { "column": 1, "row": 2 }, "slot": { "x": 1, "y": 2 } }, { "direction": "right", "cell": { "column": 0, "row": 2 }, "slot": { "x": 3, "y": 2 } }, { "direction": "down", "cell": { "column": 2, "row": 0 }, "slot": { "x": 2, "y": 3 } }] },
+    { "name": "one page alone has none", "count": 1, "from": { "column": 0, "row": 0 }, "neighbours": [] },
+    { "name": "two pages side by side are each other's neighbour on both sides", "count": 2, "from": { "column": 0, "row": 0 }, "neighbours": [{ "direction": "left", "cell": { "column": 1, "row": 0 }, "slot": { "x": -1, "y": 0 } }, { "direction": "right", "cell": { "column": 1, "row": 0 }, "slot": { "x": 1, "y": 0 } }] },
+    { "name": "below a short row lies its nearest occupied column", "count": 10, "from": { "column": 0, "row": 1 }, "neighbours": [{ "direction": "up", "cell": { "column": 0, "row": 0 }, "slot": { "x": 0, "y": 0 } }, { "direction": "left", "cell": { "column": 3, "row": 1 }, "slot": { "x": -1, "y": 1 } }, { "direction": "right", "cell": { "column": 1, "row": 1 }, "slot": { "x": 1, "y": 1 } }, { "direction": "down", "cell": { "column": 1, "row": 2 }, "slot": { "x": 1, "y": 2 } }] },
+    { "name": "a page of a short row wraps within its row and down to the top", "count": 10, "from": { "column": 1, "row": 2 }, "neighbours": [{ "direction": "up", "cell": { "column": 1, "row": 1 }, "slot": { "x": 1, "y": 1 } }, { "direction": "left", "cell": { "column": 2, "row": 2 }, "slot": { "x": 0, "y": 2 } }, { "direction": "right", "cell": { "column": 2, "row": 2 }, "slot": { "x": 2, "y": 2 } }, { "direction": "down", "cell": { "column": 1, "row": 0 }, "slot": { "x": 1, "y": 3 } }] }
+  ],
+  "swipeWrapTargets": [
+    { "name": "inside the strip the slot is the cell", "count": 9, "from": { "column": 1, "row": 1 }, "axis": "x", "step": 1, "landing": { "cell": { "column": 2, "row": 1 }, "slot": { "x": 2, "y": 1 } } },
+    { "name": "past the last column to the first, coming in from the right", "count": 9, "from": { "column": 2, "row": 1 }, "axis": "x", "step": 1, "landing": { "cell": { "column": 0, "row": 1 }, "slot": { "x": 3, "y": 1 } } },
+    { "name": "before the first column to the last, coming in from the left", "count": 9, "from": { "column": 0, "row": 0 }, "axis": "x", "step": -1, "landing": { "cell": { "column": 2, "row": 0 }, "slot": { "x": -1, "y": 0 } } },
+    { "name": "above the top row to the bottom row, coming in from above", "count": 9, "from": { "column": 1, "row": 0 }, "axis": "y", "step": -1, "landing": { "cell": { "column": 1, "row": 2 }, "slot": { "x": 1, "y": -1 } } },
+    { "name": "below the bottom row to the top row, coming in from below", "count": 9, "from": { "column": 2, "row": 2 }, "axis": "y", "step": 1, "landing": { "cell": { "column": 2, "row": 0 }, "slot": { "x": 2, "y": 3 } } },
+    { "name": "past the end of a short row to its first occupied column", "count": 10, "from": { "column": 2, "row": 2 }, "axis": "x", "step": 1, "landing": { "cell": { "column": 1, "row": 2 }, "slot": { "x": 3, "y": 2 } } },
+    { "name": "above the top row onto the short bottom row's nearest occupied column", "count": 10, "from": { "column": 0, "row": 0 }, "axis": "y", "step": -1, "landing": { "cell": { "column": 1, "row": 2 }, "slot": { "x": 1, "y": -1 } } },
+    { "name": "below a short row to the top row", "count": 10, "from": { "column": 1, "row": 2 }, "axis": "y", "step": 1, "landing": { "cell": { "column": 1, "row": 0 }, "slot": { "x": 1, "y": 3 } } },
+    { "name": "no move without a step", "count": 9, "from": { "column": 1, "row": 1 }, "axis": "x", "step": 0, "landing": null },
+    { "name": "one page alone wraps onto itself: no move", "count": 1, "from": { "column": 0, "row": 0 }, "axis": "x", "step": 1, "landing": null },
+    { "name": "a single row wraps vertically onto itself: no move", "count": 2, "from": { "column": 1, "row": 0 }, "axis": "y", "step": 1, "landing": null }
   ]
 }

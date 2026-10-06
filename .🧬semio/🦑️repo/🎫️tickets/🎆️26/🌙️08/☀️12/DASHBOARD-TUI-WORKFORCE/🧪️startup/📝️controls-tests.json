@@ -1,0 +1,15 @@
+[
+  {
+    "path": "dashboard/🖥️terminal/🧪️tests/🔬️unit/🦀️.rs",
+    "replace": [
+      {
+        "from": "use super::*;\n",
+        "toFile": "📓️controls-tests.rs.md"
+      }
+    ]
+  },
+  {
+    "path": "dashboard/🧪️tests/🌀️control-plane/🟦️.ts",
+    "replace": [{"from":"import { readFileSync } from \"node:fs\";\n","toFile":"📓️controls-oracle.ts.md"}]
+  }
+]

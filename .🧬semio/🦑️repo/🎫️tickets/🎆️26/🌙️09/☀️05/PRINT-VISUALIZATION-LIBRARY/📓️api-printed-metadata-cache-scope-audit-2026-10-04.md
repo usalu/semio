@@ -1,0 +1,7 @@
+# API Printed Metadata Cache Scope Audit — 2026-10-04
+
+Read-only current20576 graph/API source audit. build-viz-api hashes authored template/📊️viz-api/🔓️viz-api.tex plus shared LaTeX/library/compiler source globs and runtime dependencies. commandSources4 expands compiler source closure, not viz-api.json/schema. Its generate dependency is design-token generation, not visualization metadata generation. Physical294 compiler snapshot therefore correctly excludes unconsumed metadata inputs; no cached consumed-JSON gap is inferred.
+
+The API PDF source is a static authored TeX document. vizGeneratedFiles emits machine-readable viz-api.json from source/key docs/schema, but does not emit or rewrite API TeX. Actual printed sci-set table at4471–4479 has mode/sets/intersections/radius/labels only, omitting newly introduced fit/padding. Current A4FE metadata contains them; exact asset freshness can pass while printed document still omits their guidance. This is a concrete printed customization documentation gap, separate from Nx input caching. Adding authored rows changes already-hashed TeX input and invalidates API publisher; Root owns source freeze coordination. No product edit/cancel/job started here.
+
+After coordinated correction, actual printed API source/hash and PDF published receipt/text must be rebound. Sameversion description-only asset checks remain scoped to machine-readable asset equality and do not on their own certify static printed documentation.

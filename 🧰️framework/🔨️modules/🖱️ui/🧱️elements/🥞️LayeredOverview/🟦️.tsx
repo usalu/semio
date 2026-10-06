@@ -9,25 +9,41 @@ import * as React from "react";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { loadingBorderClass } from "../../🔨️modules/🌀️status-border-presentation/🟦️.ts";
 import {
+  LAYERED_WHEEL_QUIET_MS,
+  LAYERED_WHEEL_STEP_PX,
   cellOffset,
   clampOffset,
+  flingStep,
   followStep,
   glideOffset,
   inWindow,
+  nearestCell,
+  neighbourWarmBoot,
   nextWarmBoot,
   panesOverBudget,
   panesToRelease,
   pointerOffset,
   resolveLifecycle,
+  restingCell,
   scheduleIdle,
+  settleOffset,
   stripGrid,
   stripTransform,
+  swipeAxis,
+  swipeDragOffset,
+  swipeNeighbours,
+  swipeStep,
+  swipeTarget,
+  swipeWrapTarget,
   veilClip,
   veilClipPath,
   warmDelay,
   windowAround,
+  type LayeredAxis,
   type LayeredCell,
+  type LayeredDirection,
   type LayeredGrid,
+  type LayeredLanding,
   type LayeredLifecycle,
   type LayeredOffset,
   type LayeredVeil,
@@ -37,8 +53,11 @@ import { Icon, type IconName } from "../🔣️Icons/🟦️.tsx";
 // #endregion 🔌️Adapters
 
 // #region 🧬️LayeredOverviewContracts
-/** 🧭️ `strip`: every pane on one panorama under one glass with the card grid above; `list`: one snap section per pane, each under its own glass (touch phones). */
-export type LayeredMode = "strip" | "list";
+/** 🧭️ How the one strip under the one glass is read. `strip`: the app's card grid stays put above it and the mouse pans the pages behind
+ * (desktop, tablet); `swipe`: the view is one cell of the same grid, each card rides on its own page, and a swipe along either axis — or the
+ * wheel — carries the strip to the neighbouring cell, across the edges too: the grid wraps like an endless canvas (touch phones, windows too
+ * small for the card grid). */
+export type LayeredMode = "strip" | "swipe";
 
 /** 🥞️ One backdrop page, the real page its card opens: `id` is its hash route, `data-layered-pane` and key, `label` names the opened page and its
  * placeholder, `render` is called only while the pane is mounted, `poster` is shown while it is not, and `capturePoster` (for example
@@ -46,6 +65,8 @@ export type LayeredMode = "strip" | "list";
 export interface LayeredPane {
   readonly id: string;
   readonly label: string;
+  /** 📱️ What swipe hints and other tight chrome show instead of {@link label} when space is scarce; defaults to `label`. */
+  readonly shortLabel?: string;
   readonly icon?: IconName;
   readonly render: (state: LayeredPaneState) => React.ReactNode;
   readonly poster?: string | null;
@@ -74,19 +95,30 @@ export interface LayeredChromeState {
   readonly opened: boolean;
 }
 
-/** 🌐️ The element's own words, always the app's (no default language): the card group, the Overview button, a waiting and a failed page. An app
- * whose own chrome leads back to the overview names no `overview`, and the element shows no button of its own over the opened page. */
+/** 🌐️ The element's own words, always the app's (no default language): the card group, the Overview button, a waiting and a failed page, and
+ * the hint of a page one swipe away in `direction` (its accessible name, such as "Go right to Physics"; the hint shows the page's label). An
+ * app whose own chrome leads back to the overview names no `overview`, and the element shows no button of its own over the opened page. */
 export interface LayeredLabels {
   readonly grid: string;
   readonly overview?: string;
   readonly waiting: (pane: LayeredPane) => string;
   readonly failed: (pane: LayeredPane) => string;
+  readonly neighbour: (pane: LayeredPane, direction: LayeredDirection) => string;
 }
 
-/** 🥞️ Props of {@link LayeredOverview}. `cells` places every pane on the strip for the current breakpoint; the card grid is the app's CSS
- * (`overlayClassName`/`overlayStyle`, each card wrapped in a `display: contents` host); `pan` lets the mouse pan the strip under the glass while
- * it is between the cards; `reducedMotion` says whether pan and glide give way to stillness — `"never"` (the default), `"auto"` (when the
- * device asks for it) or `"always"`; `openedId` makes the open page controlled. */
+export type { LayeredDirection };
+
+/** 📏️ How far the app's own chrome covers the `top` and the `bottom` of the overview, as CSS lengths (`0px` where not given). */
+export interface LayeredInsets {
+  readonly top?: string;
+  readonly bottom?: string;
+}
+
+/** 🥞️ Props of {@link LayeredOverview}. `cells` places every pane on the strip for the current breakpoint; in `strip` mode the card grid is the
+ * app's CSS (`overlayClassName`/`overlayStyle`, each card wrapped in a `display: contents` host), in `swipe` mode the element centres each card
+ * in its page's cell itself, inside `insets`, and the hints of its neighbours stand inside them too; `pan` lets the mouse pan the strip under the glass while it is between the cards; `reducedMotion` says whether
+ * pan, glide and settle give way to stillness — `"never"` (the default), `"auto"` (when the device asks for it) or `"always"`; `openedId`
+ * makes the open page controlled. */
 export interface LayeredOverviewProps {
   readonly panes: readonly LayeredPane[];
   readonly cells: Readonly<Record<string, LayeredCell>>;
@@ -95,6 +127,7 @@ export interface LayeredOverviewProps {
   readonly overlayStyle?: React.CSSProperties;
   readonly renderChrome?: (state: LayeredChromeState) => React.ReactNode;
   readonly mode?: LayeredMode;
+  readonly insets?: LayeredInsets;
   readonly pan?: "pointer" | "none";
   readonly routing?: "hash" | "none";
   readonly openedId?: string | null;
@@ -141,7 +174,7 @@ export function capturePosterFromCanvases(container: HTMLElement): string | null
 const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
 const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
-type LayeredDrive = { readonly kind: "follow" } | { readonly kind: "glide"; readonly from: LayeredOffset; readonly to: LayeredOffset; readonly startedAt: number };
+type LayeredDrive = { readonly kind: "follow" } | { readonly kind: "glide" | "settle"; readonly from: LayeredOffset; readonly to: LayeredOffset; readonly startedAt: number };
 const FOLLOW: LayeredDrive = { kind: "follow" };
 
 /** 🐢️ Whether the user asks for reduced motion, unless the app forces it on or off. */
@@ -208,8 +241,8 @@ function useStableByKey<T>(value: T, key: string): T {
   return kept.current.value;
 }
 
-/** 🧮️ Mounts, releases and posters of the panes: boots on reveal/open/list scroll, a warm queue in cell order (while `warming`: the strip, never
- * the list; a pace of zero boots at once instead of waiting for an idle moment), a live `budget` (least recently touched pristine pane first), time-based release, posters from `capturePoster`. Dirty, opened and
+/** 🧮️ Mounts, releases and posters of the panes: boots on reveal/open/swipe, a warm queue in cell order (while `warming`: the strip mode, never
+ * the swipe mode, which warms the neighbours of its cell instead; a pace of zero boots at once instead of waiting for an idle moment), a live `budget` (least recently touched pristine pane first), time-based release, posters from `capturePoster`. Dirty, opened and
  * revealed panes are never released; the most recently opened pane (initially the first) is never released by time while the overview shows. */
 function usePaneLifecycle(panes: readonly LayeredPane[], ids: readonly string[], opened: string | null, revealed: string | null, lifecycle: LayeredLifecycle, warming: boolean) {
   const initial = opened ? [opened] : [];
@@ -424,17 +457,311 @@ const LayeredCardHost = React.memo(function LayeredCardHost(props: {
 });
 // #endregion 🥞️LayeredPaneView
 
+// #region 🧭️LayeredNeighbourHints
+const HINT_ICONS: { readonly [D in LayeredDirection]: IconName } = { up: "arrow-up", left: "arrow-left", right: "arrow-right", down: "arrow-down" };
+const HINT_PLACES: { readonly [D in LayeredDirection]: string } = {
+  up: "left-1/2 -translate-x-1/2 max-w-[calc(100%-6rem)] min-h-[28px] flex-row px-single",
+  down: "left-1/2 -translate-x-1/2 max-w-[calc(100%-6rem)] min-h-[28px] flex-row px-single",
+  left: "top-1/2 -translate-y-1/2 max-h-[45%] w-[28px] flex-col py-single",
+  right: "top-1/2 -translate-y-1/2 max-h-[45%] w-[28px] flex-col py-single",
+};
+const HINT_TEXT: { readonly [D in LayeredDirection]: string } = {
+  up: "min-w-0 truncate",
+  down: "min-w-0 truncate",
+  left: "min-h-0 overflow-hidden text-ellipsis whitespace-nowrap [writing-mode:vertical-rl] rotate-180",
+  right: "min-h-0 overflow-hidden text-ellipsis whitespace-nowrap [writing-mode:vertical-rl]",
+};
+
+/** 📏️ Where the hint of `direction` stands: inside the app's chrome at the top and the bottom, in the room the cells keep free at the sides. */
+function hintPlace(direction: LayeredDirection, insets: Required<LayeredInsets>): React.CSSProperties {
+  switch (direction) {
+    case "up":
+      return { top: `calc(${insets.top} + var(--spacing-single))` };
+    case "down":
+      return { bottom: `calc(${insets.bottom} + var(--spacing-single))` };
+    case "left":
+      return { left: "4px" };
+    case "right":
+      return { right: "4px" };
+  }
+}
+
+/** 🧭️ One page one swipe away from the resting page and the direction it lies in. */
+interface LayeredNeighbour extends LayeredLanding {
+  readonly direction: LayeredDirection;
+  readonly pane: LayeredPane;
+}
+
+/** 🧭️ The hints of the swiped overview: at each edge of the view behind which a page lies, that page's label with an arrow — the page a swipe
+ * the other way brings in — at the top and bottom edges across, at the sides along them. Each hint is a button that goes there. While the strip
+ * moves the hints fade out (and leave the focus order), so they always name the neighbours of the page at rest.
+ * @see https://www.w3.org/WAI/WCAG22/Understanding/pointer-gestures.html — every swipe also has a single-pointer way */
+const LayeredNeighbourHints = React.memo(function LayeredNeighbourHints(props: {
+  readonly neighbours: readonly LayeredNeighbour[];
+  readonly moving: boolean;
+  readonly insets: Required<LayeredInsets>;
+  readonly label: LayeredLabels["neighbour"];
+  readonly onGo: (neighbour: LayeredNeighbour) => void;
+}): React.ReactElement {
+  return (
+    <>
+      {props.neighbours.map((neighbour) => (
+        <button
+          key={neighbour.direction}
+          type="button"
+          data-layered-neighbour={neighbour.direction}
+          data-pane={neighbour.pane.id}
+          data-level="dialog"
+          aria-label={props.label(neighbour.pane, neighbour.direction)}
+          aria-hidden={props.moving || undefined}
+          tabIndex={props.moving ? -1 : undefined}
+          onClick={() => props.onGo(neighbour)}
+          className={cn(
+            "ui-glass absolute z-[32] inline-flex items-center justify-center gap-[4px] border border-border-normal text-xs font-medium text-foreground outline-none transition-opacity duration-150 hover:border-border-emphasized focus-visible:ring-2 focus-visible:ring-ring",
+            HINT_PLACES[neighbour.direction],
+            props.moving && "pointer-events-none opacity-0",
+          )}
+          style={hintPlace(neighbour.direction, props.insets)}
+        >
+          <Icon icon={HINT_ICONS[neighbour.direction]} size="small" className="shrink-0" />
+          <span className={HINT_TEXT[neighbour.direction]}>{neighbour.pane.shortLabel ?? neighbour.pane.label}</span>
+        </button>
+      ))}
+    </>
+  );
+});
+// #endregion 🧭️LayeredNeighbourHints
+
+// #region 👆️LayeredSwipe
+/** 👆️ What the swipe gestures move: the strip's offset now, the occupied cells, a drag that follows the finger, a settle onto a cell, a stop. */
+interface LayeredSwipeDrive {
+  readonly offset: () => LayeredOffset;
+  readonly cells: () => readonly LayeredCell[];
+  readonly drag: (offset: LayeredOffset) => void;
+  readonly aim: (from: LayeredCell, axis: LayeredAxis, step: number) => LayeredLanding | null;
+  readonly settle: (to: LayeredOffset) => void;
+  readonly finish: () => void;
+  readonly stop: () => void;
+}
+
+/** 🍩️ The page that comes in across an edge of the wrapping strip: shifted from its `cell` to the `slot` beside the view until the strip rests. */
+interface LayeredGhost extends LayeredLanding {
+  readonly id: string;
+}
+
+/** 👆️ One touch on the overview: where it went down, the cell the strip left, the axis it locked to and, when it scrolls a tall card instead,
+ * that card's scroller and its position at the lock. */
+interface LayeredTouch {
+  readonly id: number;
+  readonly x: number;
+  readonly y: number;
+  readonly target: EventTarget | null;
+  readonly samples: { t: number; x: number; y: number }[];
+  start: LayeredOffset;
+  from: LayeredCell;
+  axis: LayeredAxis | null;
+  scroller: HTMLElement | null;
+  scrolled: number;
+  aimed: number;
+}
+
+const VELOCITY_WINDOW_MS = 100;
+const CLICK_AFTER_SWIPE_MS = 400;
+const along = (axis: LayeredAxis, x: number, y: number): number => (axis === "x" ? x : y);
+const scrollPosition = (element: HTMLElement, axis: LayeredAxis): number => (axis === "x" ? element.scrollLeft : element.scrollTop);
+const scrollAlong = (element: HTMLElement, axis: LayeredAxis, value: number): void => {
+  if (axis === "x") element.scrollLeft = value;
+  else element.scrollTop = value;
+};
+
+/** 📜️ The nearest element from `target` up to (not including) `root` that scrolls along `axis` and still can toward `direction` (+1 forward,
+ * −1 back): a tall card takes the gesture before the strip does, as a nested scroller does natively. */
+function scrollerToward(target: EventTarget | null, root: HTMLElement, axis: LayeredAxis, direction: number): HTMLElement | null {
+  for (let element = target instanceof Element ? target : null; element !== null && element !== root; element = element.parentElement) {
+    if (!(element instanceof HTMLElement)) continue;
+    const style = getComputedStyle(element);
+    if (!/auto|scroll/u.test(axis === "x" ? style.overflowX : style.overflowY)) continue;
+    const [position, size, view] = axis === "x" ? [element.scrollLeft, element.scrollWidth, element.clientWidth] : [element.scrollTop, element.scrollHeight, element.clientHeight];
+    if (direction > 0 ? position + view < size - 1 : position > 0) return element;
+  }
+  return null;
+}
+
+/** 🧲️ Captures `pointerId` on `element` where the browser can: an environment without pointer capture is left alone, and a pointer that
+ * is no longer active cannot be captured. */
+function capturePointer(element: HTMLElement, pointerId: number): void {
+  if (element.hasPointerCapture?.(pointerId) !== false) return;
+  try {
+    element.setPointerCapture(pointerId);
+  } catch (error) {
+    if (!(error instanceof DOMException)) throw error;
+  }
+}
+
+/** 🏎️ A touch's speed along `axis` over its last {@link VELOCITY_WINDOW_MS} (px/ms). */
+function touchVelocity(touch: LayeredTouch, axis: LayeredAxis): number {
+  const last = touch.samples[touch.samples.length - 1]!;
+  const first = touch.samples.find((sample) => last.t - sample.t <= VELOCITY_WINDOW_MS) ?? last;
+  const elapsed = last.t - first.t;
+  return elapsed > 0 ? (along(axis, last.x, last.y) - along(axis, first.x, first.y)) / elapsed : 0;
+}
+
+/** 👆️ Swiping the strip while `enabled`: a touch or pen that travels past the slop locks to one axis and carries the strip along it toward the
+ * page that comes in on that side — across an edge the page from the far side, shifted beside the view ({@link swipeWrapTarget}); a rubber band
+ * only where the row or column holds no other page — and its release settles there or back ({@link swipeStep}); a touch that starts on a tall card
+ * scrolls the card while it can and flings it on release; once a touch is a swipe the root captures its pointer, so the rest of the gesture
+ * reaches it even when the element it started on re-renders away; a second finger (never the primary pointer) hands the gesture to the
+ * browser's pinch zoom, while a new primary touch always starts a new gesture. The wheel steps one cell per gesture along its longer axis
+ * (Shift turns it sideways) once no card under it can scroll that way. The click a swipe would end in is swallowed. Mouse drags are left
+ * alone. The root, every card's cell and everything inside a cell (at zero specificity, so a card's own
+ * `touch-action` wins) carry `touch-action: pinch-zoom`: a browser reads `touch-action` only up to the nearest scroll container, and a cell
+ * that may scroll is one, as is any scrolling part of a card, so without its own the browser would take the swipe — every scroller inside a
+ * card is scrolled here instead.
+ * @see https://w3c.github.io/pointerevents/#determining-supported-direct-manipulation-behavior */
+function useSwipe(rootRef: React.RefObject<HTMLDivElement | null>, enabled: boolean, drive: React.RefObject<LayeredSwipeDrive>): void {
+  React.useEffect(() => {
+    const root = rootRef.current;
+    if (!enabled || root === null) return;
+    let touch: LayeredTouch | null = null;
+    let fling = 0;
+    let swallowUntil = -Infinity;
+    const wheel = { at: -Infinity, sum: 0, spent: false };
+    const size = (axis: LayeredAxis): number => Math.max(1, axis === "x" ? root.clientWidth : root.clientHeight);
+    const residual = (current: LayeredTouch, axis: LayeredAxis): number => along(axis, current.start.x - current.from.column, current.start.y - current.from.row);
+    const flingScroller = (element: HTMLElement, axis: LayeredAxis, velocity: number) => {
+      let speed = velocity;
+      let last = performance.now();
+      const tick = (now: number) => {
+        const step = flingStep(speed, now - last);
+        last = now;
+        const before = scrollPosition(element, axis);
+        scrollAlong(element, axis, before + step.distance);
+        speed = step.velocity;
+        if (!step.done && scrollPosition(element, axis) !== before) fling = requestAnimationFrame(tick);
+      };
+      fling = requestAnimationFrame(tick);
+    };
+    const onDown = (event: PointerEvent) => {
+      if (event.pointerType === "mouse") return;
+      if (touch !== null) {
+        const held = touch;
+        touch = null;
+        if (held.axis !== null && held.scroller === null) drive.current.settle(cellOffset(held.from));
+        if (!event.isPrimary) return;
+      }
+      cancelAnimationFrame(fling);
+      drive.current.finish();
+      const start = drive.current.offset();
+      touch = { id: event.pointerId, x: event.clientX, y: event.clientY, target: event.target, samples: [{ t: event.timeStamp, x: event.clientX, y: event.clientY }], start, from: nearestCell(start, drive.current.cells()), axis: null, scroller: null, scrolled: 0, aimed: 0 };
+    };
+    const onMove = (event: PointerEvent) => {
+      const current = touch;
+      if (current === null || event.pointerId !== current.id) return;
+      current.samples.push({ t: event.timeStamp, x: event.clientX, y: event.clientY });
+      if (current.samples.length > 32) current.samples.splice(0, current.samples.length - 32);
+      const dx = event.clientX - current.x;
+      const dy = event.clientY - current.y;
+      if (current.axis === null) {
+        const axis = swipeAxis(dx, dy);
+        if (axis === null) return;
+        current.axis = axis;
+        capturePointer(root, event.pointerId);
+        current.scroller = scrollerToward(current.target, root, axis, -Math.sign(along(axis, dx, dy)));
+        if (current.scroller !== null) current.scrolled = scrollPosition(current.scroller, axis);
+        else {
+          drive.current.stop();
+          current.start = drive.current.offset();
+          current.from = nearestCell(current.start, drive.current.cells());
+        }
+      }
+      const moved = along(current.axis, dx, dy);
+      if (current.scroller !== null) {
+        scrollAlong(current.scroller, current.axis, current.scrolled - moved);
+        return;
+      }
+      const shift = residual(current, current.axis) - moved / size(current.axis);
+      if (Math.sign(shift) !== 0 && Math.sign(shift) !== current.aimed) {
+        current.aimed = Math.sign(shift);
+        drive.current.aim(current.from, current.axis, current.aimed);
+      }
+      drive.current.drag(swipeDragOffset(current.from, current.axis, shift, drive.current.cells()));
+    };
+    const onEnd = (event: PointerEvent) => {
+      const current = touch;
+      if (current === null || event.pointerId !== current.id) return;
+      touch = null;
+      if (current.axis === null) return;
+      const cancelled = event.type === "pointercancel";
+      if (!cancelled) swallowUntil = performance.now() + CLICK_AFTER_SWIPE_MS;
+      const velocity = touchVelocity(current, current.axis);
+      if (current.scroller !== null) {
+        if (!cancelled) flingScroller(current.scroller, current.axis, -velocity);
+        return;
+      }
+      const view = size(current.axis);
+      const moved = along(current.axis, event.clientX - current.x, event.clientY - current.y) - residual(current, current.axis) * view;
+      const step = cancelled ? 0 : swipeStep(moved, velocity, view);
+      const landing = step === 0 ? null : drive.current.aim(current.from, current.axis, step);
+      drive.current.settle(landing?.slot ?? cellOffset(current.from));
+    };
+    const onClick = (event: MouseEvent) => {
+      if (performance.now() > swallowUntil) return;
+      swallowUntil = -Infinity;
+      event.preventDefault();
+      event.stopPropagation();
+    };
+    const onWheel = (event: WheelEvent) => {
+      if (event.ctrlKey) return;
+      const scale = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? size("y") : 1;
+      const sideways = event.shiftKey && event.deltaX === 0;
+      const axis: LayeredAxis = sideways || Math.abs(event.deltaX) > Math.abs(event.deltaY) ? "x" : "y";
+      const delta = (sideways ? event.deltaY : along(axis, event.deltaX, event.deltaY)) * scale;
+      if (delta === 0 || scrollerToward(event.target, root, axis, Math.sign(delta)) !== null) return;
+      event.preventDefault();
+      if (event.timeStamp - wheel.at > LAYERED_WHEEL_QUIET_MS) Object.assign(wheel, { sum: 0, spent: false });
+      wheel.at = event.timeStamp;
+      if (wheel.spent) return;
+      wheel.sum += delta;
+      if (Math.abs(wheel.sum) < LAYERED_WHEEL_STEP_PX) return;
+      wheel.spent = true;
+      drive.current.finish();
+      const landing = drive.current.aim(nearestCell(drive.current.offset(), drive.current.cells()), axis, Math.sign(wheel.sum));
+      if (landing !== null) drive.current.settle(landing.slot);
+    };
+    root.addEventListener("pointerdown", onDown);
+    root.addEventListener("pointermove", onMove);
+    root.addEventListener("pointerup", onEnd);
+    root.addEventListener("pointercancel", onEnd);
+    root.addEventListener("click", onClick, true);
+    root.addEventListener("wheel", onWheel, { passive: false });
+    return () => {
+      cancelAnimationFrame(fling);
+      root.removeEventListener("pointerdown", onDown);
+      root.removeEventListener("pointermove", onMove);
+      root.removeEventListener("pointerup", onEnd);
+      root.removeEventListener("pointercancel", onEnd);
+      root.removeEventListener("click", onClick, true);
+      root.removeEventListener("wheel", onWheel);
+    };
+  }, [rootRef, enabled, drive]);
+}
+// #endregion 👆️LayeredSwipe
+
 // #region 🥞️LayeredOverview
 /** 🥞️ A layered landing: every page on a strip of container-sized cells, ONE `ui-veil` glass above it whose `clip-path` punches a hole over the
- * revealed page, and the app's card grid above the glass. It fills its positioned parent. Hovering (mouse) or keyboard-focusing a card glides the
- * strip to that page (500 ms, cubic) and shows it clear; leaving or blurring the card restores the glass and the pointer pan (12 % of the gap
- * per 60 Hz frame, by elapsed time). Opening a
+ * revealed page, and the cards above the glass — in `strip` mode the app's card grid, fixed; in `swipe` mode a card layer of the strip's own
+ * grid that moves with the strip, each card centred on its page and scrolling inside its cell when taller. It fills its positioned parent.
+ * Hovering (mouse) or keyboard-focusing a card glides the strip to that page (500 ms, cubic) and shows it clear; leaving or blurring the card
+ * restores the glass and the pointer pan (12 % of the gap per 60 Hz frame, by elapsed time). In `swipe` mode a touch carries the strip along
+ * the axis it takes first and settles it on the neighbouring cell (320 ms, cubic ease-out); past an edge the index wraps while the motion goes
+ * on — the far page is shifted into the slot beside the view, and once the strip rests there the shift and the offset are undone in the same
+ * frame — and the panes one swipe away are warmed. Opening a
  * card (or `#id`) shows its page full size as a focused region; Escape or the Overview button — the element's own, or the app's chrome closing the
  * controlled page — return focus to the card unless it lies in that chrome.
- * Transforms and veil are written imperatively in percent (no render per frame, no viewport reads), and only pages near the view keep
- * placeholders. The pan and the glide are how the landing is read, so they run whatever the device says about motion (`reducedMotion`
- * `"never"`, the default): a Remote Desktop session reports reduced motion for everyone in it. An app that wants the device's request honoured
- * passes `"auto"`, one that wants stillness `"always"` — then nothing pans and a page is simply there.
+ * Transforms and veil are written imperatively in percent (no render per frame, no viewport reads, a rotated phone stays on its cell), and only
+ * pages near the view keep placeholders. The pan, the glide and the settle are how the landing is read, so they run whatever the device says
+ * about motion (`reducedMotion` `"never"`, the default): a Remote Desktop session reports reduced motion for everyone in it. An app that wants
+ * the device's request honoured passes `"auto"`, one that wants stillness `"always"` — then nothing pans and a page is simply there.
  *
  * @see ../../🔨️modules/🥞️layered-overview-geometry/🟦️.ts — the pure geometry and lifecycle policy
  * @see ../🃏️OverviewCard/🟦️.tsx — the card the apps render
@@ -458,11 +785,13 @@ export function LayeredOverview(props: LayeredOverviewProps): React.ReactElement
   const [revealedId, setRevealedId] = React.useState<string | null>(null);
   const { booted, live, posters, touch, warm, markDirty, registerContainer, container } = usePaneLifecycle(panes, ids, opened, revealedId, lifecycle, mode === "strip");
 
+  const swiping = mode === "swipe";
   const initial = opened ? cellOffset(requireCell(cells, opened)) : cellList[0] ? cellOffset(cellList[0]) : { x: 0, y: 0 };
+  const paneAt = React.useMemo(() => new Map(cellList.map((cell, index) => [`${cell.column}:${cell.row}`, ids[index]!])), [cellList, ids]);
   const rootRef = React.useRef<HTMLDivElement | null>(null);
   const stripRef = React.useRef<HTMLDivElement | null>(null);
   const veilRef = React.useRef<HTMLDivElement | null>(null);
-  const listRef = React.useRef<HTMLDivElement | null>(null);
+  const cardStripRef = React.useRef<HTMLDivElement | null>(null);
   const cardElements = React.useRef(new Map<string, HTMLElement>());
   const offsetRef = React.useRef<LayeredOffset>(initial);
   const targetRef = React.useRef<LayeredOffset>(initial);
@@ -473,22 +802,30 @@ export function LayeredOverview(props: LayeredOverviewProps): React.ReactElement
   const revealedRef = React.useRef<string | null>(null);
   const openedRef = React.useRef(opened);
   const previousOpened = React.useRef(opened);
-  const listFrame = React.useRef<number | null>(null);
   const [windowBox, setWindowBox] = React.useState<LayeredWindow>(() => windowAround(initial, radius));
   const windowRef = React.useRef(windowBox);
-  const [listIndex, setListIndex] = React.useState(() => Math.max(0, opened ? ids.indexOf(opened) : 0));
-  const latest = React.useRef({ props, cells, cellList, grid, reduced, radius, mode, controlled, ids });
-  latest.current = { props, cells, cellList, grid, reduced, radius, mode, controlled, ids };
+  const [resting, setResting] = React.useState<string | null>(() => paneAt.get(`${initial.x}:${initial.y}`) ?? null);
+  const restingRef = React.useRef(resting);
+  const latest = React.useRef({ props, cells, cellList, grid, reduced, radius, mode, controlled, ids, paneAt });
+  latest.current = { props, cells, cellList, grid, reduced, radius, mode, controlled, ids, paneAt };
 
   const paint = React.useCallback((offset: LayeredOffset) => {
     offsetRef.current = offset;
-    const { grid: strip, cells: placed, radius: reach } = latest.current;
-    if (stripRef.current) stripRef.current.style.transform = stripTransform(offset, strip);
+    const { grid: strip, cells: placed, radius: reach, paneAt: at } = latest.current;
+    const transform = stripTransform(offset, strip);
+    if (stripRef.current) stripRef.current.style.transform = transform;
+    if (cardStripRef.current) cardStripRef.current.style.transform = transform;
     if (veilRef.current) applyVeil(veilRef.current, veilClip(revealedRef.current === null ? null : (placed[revealedRef.current] ?? null), offset));
     const next = windowAround(offset, reach);
     if (!sameWindow(next, windowRef.current)) {
       windowRef.current = next;
       setWindowBox(next);
+    }
+    const cell = restingCell(offset);
+    const still = cell === null ? null : (at.get(`${cell.column}:${cell.row}`) ?? null);
+    if (still !== restingRef.current) {
+      restingRef.current = still;
+      setResting(still);
     }
   }, []);
 
@@ -500,6 +837,55 @@ export function LayeredOverview(props: LayeredOverviewProps): React.ReactElement
     runningRef.current = false;
   }, []);
 
+  const ghostRef = React.useRef<LayeredGhost | null>(null);
+  const cellElements = React.useRef(new Map<string, HTMLElement>());
+  const cellRefs = React.useMemo(
+    () =>
+      new Map(
+        ids.map((id) => [
+          id,
+          (element: HTMLDivElement | null) => {
+            if (element) cellElements.current.set(id, element);
+            else cellElements.current.delete(id);
+          },
+        ]),
+      ),
+    [ids],
+  );
+
+  const aim = React.useCallback(
+    (landing: LayeredLanding | null) => {
+      const ghost = landing === null || (landing.slot.x === landing.cell.column && landing.slot.y === landing.cell.row) ? null : { id: latest.current.paneAt.get(`${landing.cell.column}:${landing.cell.row}`)!, ...landing };
+      const previous = ghostRef.current;
+      if (previous !== null && previous.id !== ghost?.id) for (const element of [container(previous.id), cellElements.current.get(previous.id)]) if (element) element.style.transform = "";
+      ghostRef.current = ghost;
+      if (ghost === null) return;
+      const transform = `translate(${(ghost.slot.x - ghost.cell.column) * 100}%, ${(ghost.slot.y - ghost.cell.row) * 100}%)`;
+      for (const element of [container(ghost.id), cellElements.current.get(ghost.id)]) if (element) element.style.transform = transform;
+    },
+    [container],
+  );
+
+  const settleGhost = React.useCallback(() => {
+    const ghost = ghostRef.current;
+    if (ghost === null) return;
+    const at = offsetRef.current;
+    aim(null);
+    if (at.x !== ghost.slot.x || at.y !== ghost.slot.y) return;
+    targetRef.current = cellOffset(ghost.cell);
+    paint(targetRef.current);
+  }, [aim, paint]);
+
+  const finishGhost = React.useCallback(() => {
+    if (ghostRef.current === null) return;
+    if (runningRef.current) {
+      stop();
+      driveRef.current = FOLLOW;
+      paint(targetRef.current);
+    }
+    settleGhost();
+  }, [paint, settleGhost, stop]);
+
   const run = React.useCallback(() => {
     stop();
     runningRef.current = true;
@@ -508,8 +894,8 @@ export function LayeredOverview(props: LayeredOverviewProps): React.ReactElement
     const advance = (drive: LayeredDrive, now: number): boolean => {
       const elapsed = now - painted;
       painted = now;
-      if (drive.kind === "glide") {
-        const step = glideOffset(drive.from, drive.to, now - drive.startedAt);
+      if (drive.kind !== "follow") {
+        const step = (drive.kind === "glide" ? glideOffset : settleOffset)(drive.from, drive.to, now - drive.startedAt);
         paint(step.offset);
         return step.done;
       }
@@ -522,28 +908,31 @@ export function LayeredOverview(props: LayeredOverviewProps): React.ReactElement
       if (advance(driveRef.current, performance.now())) {
         driveRef.current = FOLLOW;
         runningRef.current = false;
+        settleGhost();
         return;
       }
       frameRef.current = requestAnimationFrame(tick);
     };
     frameRef.current = requestAnimationFrame(tick);
-  }, [paint, stop]);
+  }, [paint, settleGhost, stop]);
 
-  const glideTo = React.useCallback(
-    (to: LayeredOffset) => {
+  const moveTo = React.useCallback(
+    (to: LayeredOffset, kind: "glide" | "settle") => {
       targetRef.current = to;
       const from = offsetRef.current;
       if (latest.current.reduced || (from.x === to.x && from.y === to.y)) {
         stop();
         driveRef.current = FOLLOW;
         paint(to);
+        settleGhost();
         return;
       }
-      driveRef.current = { kind: "glide", from, to, startedAt: performance.now() };
+      driveRef.current = { kind, from, to, startedAt: performance.now() };
       run();
     },
-    [paint, run, stop],
+    [paint, run, settleGhost, stop],
   );
+  const glideTo = React.useCallback((to: LayeredOffset) => moveTo(to, "glide"), [moveTo]);
 
   const follow = React.useCallback(
     (to: LayeredOffset) => {
@@ -556,6 +945,26 @@ export function LayeredOverview(props: LayeredOverviewProps): React.ReactElement
   );
 
   const focusView = React.useCallback((id: string) => glideTo(cellOffset(requireCell(latest.current.cells, id))), [glideTo]);
+
+  const swipeDrive = React.useRef<LayeredSwipeDrive>({
+    offset: () => offsetRef.current,
+    cells: () => latest.current.cellList,
+    drag: (offset) => {
+      stop();
+      driveRef.current = FOLLOW;
+      targetRef.current = offset;
+      paint(offset);
+    },
+    aim: (from, axis, step) => {
+      const landing = swipeWrapTarget(from, axis, step, latest.current.cellList);
+      aim(landing);
+      return landing;
+    },
+    settle: (to) => moveTo(to, "settle"),
+    finish: finishGhost,
+    stop,
+  });
+  useSwipe(rootRef, swiping && opened === null, swipeDrive);
 
   React.useEffect(() => stop, [stop]);
 
@@ -573,6 +982,13 @@ export function LayeredOverview(props: LayeredOverviewProps): React.ReactElement
     },
     [repaint],
   );
+  const cardStripCallback = React.useCallback(
+    (element: HTMLDivElement | null) => {
+      cardStripRef.current = element;
+      if (element) repaint();
+    },
+    [repaint],
+  );
   const cardCallback = React.useCallback((id: string, element: HTMLElement | null) => {
     if (element) cardElements.current.set(id, element);
     else cardElements.current.delete(id);
@@ -586,11 +1002,12 @@ export function LayeredOverview(props: LayeredOverviewProps): React.ReactElement
     }
     const focus = openedRef.current ?? revealedRef.current;
     stop();
+    aim(null);
     driveRef.current = FOLLOW;
     const next = focus === null ? clampOffset(offsetRef.current, cellList) : cellOffset(requireCell(latest.current.cells, focus));
     targetRef.current = next;
     paint(next);
-  }, [cellList, paint, stop]);
+  }, [aim, cellList, paint, stop]);
 
   const reveal = React.useCallback(
     (id: string) => {
@@ -599,11 +1016,11 @@ export function LayeredOverview(props: LayeredOverviewProps): React.ReactElement
       setRevealedId(id);
       latest.current.props.onRevealedIdChange?.(id);
       touch(id);
-      if (latest.current.mode !== "strip") return;
+      finishGhost();
       focusView(id);
       repaint();
     },
-    [focusView, repaint, touch],
+    [finishGhost, focusView, repaint, touch],
   );
 
   const conceal = React.useCallback(
@@ -624,20 +1041,9 @@ export function LayeredOverview(props: LayeredOverviewProps): React.ReactElement
   }, []);
   const close = React.useCallback(() => requestOpen(null), [requestOpen]);
 
-  const scrollListTo = React.useCallback((index: number) => {
-    const list = listRef.current;
-    if (!list || list.clientHeight <= 0) return;
-    list.scrollTop = index * list.clientHeight;
-    setListIndex(index);
-  }, []);
-
   React.useEffect(() => {
     if (deepLink !== null && (!latest.current.controlled || deepLink !== openedRef.current)) latest.current.props.onOpenedIdChange?.(deepLink);
   }, [deepLink]);
-
-  React.useLayoutEffect(() => {
-    if (mode === "list" && openedRef.current !== null) scrollListTo(latest.current.ids.indexOf(openedRef.current));
-  }, [mode, scrollListTo]);
 
   React.useLayoutEffect(() => {
     const previous = previousOpened.current;
@@ -651,18 +1057,17 @@ export function LayeredOverview(props: LayeredOverviewProps): React.ReactElement
       latest.current.props.onRevealedIdChange?.(null);
     }
     if (opened !== null) {
-      if (mode === "strip") focusView(opened);
-      else scrollListTo(latest.current.ids.indexOf(opened));
+      finishGhost();
+      focusView(opened);
       const region = container(opened);
       if (region && !region.contains(document.activeElement)) region.focus({ preventScroll: true });
       return;
     }
     if (previous === null) return;
-    if (mode === "list") scrollListTo(latest.current.ids.indexOf(previous));
     const active = document.activeElement;
     if (active && active !== document.body && rootRef.current && !rootRef.current.contains(active)) return;
     cardElements.current.get(previous)?.querySelector<HTMLElement>(FOCUSABLE)?.focus({ preventScroll: true });
-  }, [opened, mode, routing, deepLink, container, focusView, scrollListTo]);
+  }, [opened, routing, deepLink, container, finishGhost, focusView]);
 
   React.useEffect(() => {
     if (routing !== "hash") return;
@@ -697,33 +1102,47 @@ export function LayeredOverview(props: LayeredOverviewProps): React.ReactElement
     return () => window.removeEventListener("pointermove", onMove);
   }, [panning, follow]);
 
-  const onListScroll = React.useCallback(() => {
-    if (openedRef.current !== null || listFrame.current !== null) return;
-    listFrame.current = requestAnimationFrame(() => {
-      listFrame.current = null;
-      const list = listRef.current;
-      if (list && list.clientHeight > 0) setListIndex(Math.round(list.scrollTop / list.clientHeight));
-    });
-  }, []);
+  React.useEffect(() => {
+    if (swiping && opened === null && resting !== null) touch(resting);
+  }, [swiping, opened, resting, touch]);
 
   React.useEffect(() => {
-    if (mode !== "list" || opened !== null) return;
-    const current = ids[listIndex];
-    const next = ids[listIndex + 1];
-    if (current !== undefined) touch(current);
-    if (next !== undefined && live.size < lifecycle.budget) warm(next);
-  }, [mode, opened, listIndex, ids, live.size, lifecycle.budget, touch, warm]);
+    if (!swiping || resting === null) return;
+    const step = neighbourWarmBoot(ids, cellList, requireCell(latest.current.cells, resting), live, opened, lifecycle.budget);
+    if (step.kind === "boot") warm(step.id);
+  }, [swiping, resting, ids, cellList, live, opened, lifecycle.budget, warm]);
 
   const paneStyles = React.useMemo(() => new Map(ids.map((id, index) => [id, { gridColumn: cellList[index]!.column + 1, gridRow: cellList[index]!.row + 1 }])), [ids, cellList]);
+  const insetTop = props.insets?.top ?? "0px";
+  const insetBottom = props.insets?.bottom ?? "0px";
+  const insets = React.useMemo(() => ({ top: insetTop, bottom: insetBottom }), [insetTop, insetBottom]);
+  const cellStyles = React.useMemo(() => new Map([...paneStyles].map(([id, style]) => [id, { ...style, touchAction: "pinch-zoom", paddingTop: `calc(${insets.top} + 44px)`, paddingBottom: `calc(${insets.bottom} + 44px)` }])), [paneStyles, insets]);
+  const restedOn = React.useRef(resting);
+  if (resting !== null) restedOn.current = resting;
+  const hintFrom = restedOn.current;
+  const neighbours = React.useMemo<readonly LayeredNeighbour[]>(
+    () => (hintFrom === null ? [] : swipeNeighbours(requireCell(cells, hintFrom), cellList).map(({ direction, cell, slot }) => ({ direction, cell, slot, pane: panes[ids.indexOf(paneAt.get(`${cell.column}:${cell.row}`)!)]! }))),
+    [hintFrom, cells, cellList, panes, ids, paneAt],
+  );
+  const goTo = React.useCallback(
+    (neighbour: LayeredNeighbour) => {
+      finishGhost();
+      aim(neighbour);
+      moveTo(neighbour.slot, "settle");
+    },
+    [aim, finishGhost, moveTo],
+  );
+  const nearby = React.useMemo(() => new Set(neighbours.map(({ pane }) => pane.id)), [neighbours]);
+  const stripStyle: React.CSSProperties = { width: `${grid.columns * 100}%`, height: `${grid.rows * 100}%`, gridTemplateColumns: `repeat(${grid.columns}, minmax(0, 1fr))`, gridTemplateRows: `repeat(${grid.rows}, minmax(0, 1fr))`, contain: swiping ? "layout" : "layout paint" };
   const paneView = (pane: LayeredPane, index: number) => (
     <LayeredPaneView
       key={pane.id}
       pane={pane}
-      style={mode === "strip" ? paneStyles.get(pane.id) : undefined}
+      style={paneStyles.get(pane.id)}
       opened={opened === pane.id}
       revealed={revealedId === pane.id}
       live={live.has(pane.id)}
-      shown={mode === "strip" ? inWindow(cellList[index]!, windowBox) : Math.abs(index - listIndex) <= radius}
+      shown={inWindow(cellList[index]!, windowBox) || (swiping && nearby.has(pane.id))}
       busy={booted.has(pane.id)}
       poster={posters.get(pane.id) ?? pane.poster ?? null}
       waiting={labels.waiting(pane)}
@@ -751,47 +1170,38 @@ export function LayeredOverview(props: LayeredOverviewProps): React.ReactElement
       </button>
     );
 
-  if (mode === "list") {
-    return (
-      <div ref={rootRef} data-layered-overview="" data-mode="list" className="relative h-full w-full overflow-hidden bg-background text-foreground">
-        {overviewButton}
-        <div ref={listRef} data-layered-list="" role="group" aria-label={labels.grid} onScroll={onListScroll} className={cn("flex h-full w-full flex-col overscroll-y-contain", opened === null ? "snap-y snap-mandatory overflow-y-auto" : "overflow-hidden")}>
-          {panes.map((pane, index) => (
-            <section key={pane.id} data-layered-section={pane.id} className="relative h-full w-full shrink-0 snap-start overflow-hidden">
-              {paneView(pane, index)}
-              {opened === null ? (
-                <>
-                  {Math.abs(index - listIndex) <= radius ? (
-                    <div data-layered-veil="" data-level="dialog" data-veil={revealedId === pane.id ? "clear" : "whole"} className="ui-veil pointer-events-none absolute inset-0 z-30" style={revealedId === pane.id ? { visibility: "hidden" } : undefined} />
-                  ) : null}
-                  <div className="pointer-events-none absolute inset-0 z-[31] flex items-center-safe justify-center overflow-y-auto px-double pb-[88px]">{cardHost(pane)}</div>
-                </>
-              ) : null}
-            </section>
-          ))}
-        </div>
-        {chrome}
-      </div>
-    );
-  }
-
   return (
-    <div ref={rootRef} data-layered-overview="" data-mode="strip" data-pan={panning ? "pointer" : "none"} className="relative h-full w-full overflow-clip bg-background text-foreground">
+    <div
+      ref={rootRef}
+      data-layered-overview=""
+      data-mode={mode}
+      data-pan={panning ? "pointer" : "none"}
+      className="relative h-full w-full overflow-clip bg-background text-foreground"
+      style={swiping && opened === null ? { touchAction: "pinch-zoom" } : undefined}
+    >
       {overviewButton}
-      <div
-        ref={stripCallback}
-        data-layered-strip=""
-        className="grid will-change-transform"
-        style={{ width: `${grid.columns * 100}%`, height: `${grid.rows * 100}%`, gridTemplateColumns: `repeat(${grid.columns}, minmax(0, 1fr))`, gridTemplateRows: `repeat(${grid.rows}, minmax(0, 1fr))`, contain: "layout paint" }}
-      >
+      <div ref={stripCallback} data-layered-strip="" className="grid will-change-transform" style={stripStyle}>
         {panes.map(paneView)}
       </div>
       {opened === null ? (
         <>
           <div ref={veilCallback} data-layered-veil="" data-level="dialog" className="ui-veil pointer-events-none absolute inset-0 z-30" />
-          <div data-layered-overlay="" role="group" aria-label={labels.grid} className={cn("pointer-events-none absolute inset-0 z-[31]", props.overlayClassName)} style={props.overlayStyle}>
-            {panes.map(cardHost)}
-          </div>
+          {swiping ? (
+            <>
+              <div ref={cardStripCallback} data-layered-overlay="" role="group" aria-label={labels.grid} className="pointer-events-none absolute left-0 top-0 z-[31] grid will-change-transform" style={stripStyle}>
+                {panes.map((pane) => (
+                  <div key={pane.id} ref={cellRefs.get(pane.id)} data-layered-cell={pane.id} className="pointer-events-none flex min-h-0 min-w-0 items-center-safe justify-center overflow-y-auto px-[36px] [:where(&)_*]:touch-pinch-zoom" style={cellStyles.get(pane.id)}>
+                    {cardHost(pane)}
+                  </div>
+                ))}
+              </div>
+              <LayeredNeighbourHints neighbours={neighbours} moving={resting === null} insets={insets} label={labels.neighbour} onGo={goTo} />
+            </>
+          ) : (
+            <div data-layered-overlay="" role="group" aria-label={labels.grid} className={cn("pointer-events-none absolute inset-0 z-[31]", props.overlayClassName)} style={props.overlayStyle}>
+              {panes.map(cardHost)}
+            </div>
+          )}
         </>
       ) : null}
       {chrome}

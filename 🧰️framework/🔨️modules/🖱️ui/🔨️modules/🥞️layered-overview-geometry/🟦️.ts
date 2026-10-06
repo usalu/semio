@@ -103,6 +103,19 @@ export function clampOffset(offset: LayeredOffset, cells: readonly LayeredCell[]
   return { x: Math.min(last, Math.max(first, offset.x)), y };
 }
 
+/** 📍️ The occupied cell nearest to `offset`: rounded, then clamped onto occupied columns ({@link clampOffset}). */
+export function nearestCell(offset: LayeredOffset, cells: readonly LayeredCell[]): LayeredCell {
+  const { x, y } = clampOffset({ x: Math.round(offset.x), y: Math.round(offset.y) }, cells);
+  return { column: Math.round(x), row: Math.round(y) };
+}
+
+/** 📍️ The cell a view rests on exactly, or `null` while it lies between cells. */
+export function restingCell(offset: LayeredOffset): LayeredCell | null {
+  const column = Math.round(offset.x);
+  const row = Math.round(offset.y);
+  return Math.abs(offset.x - column) < LAYERED_FOLLOW_EPSILON && Math.abs(offset.y - row) < LAYERED_FOLLOW_EPSILON ? { column, row } : null;
+}
+
 /** 🖱️ The offset a pointer at the fractions `fx`, `fy` of the view pans to: the top-left corner shows the first cell, the bottom-right the last. */
 export function pointerOffset(fx: number, fy: number, grid: LayeredGrid): LayeredOffset {
   const unit = (value: number): number => Math.min(1, Math.max(0, value));
@@ -149,6 +162,20 @@ export function followFactor(elapsedMs: number = LAYERED_FOLLOW_FRAME_MS): numbe
 export function followStep(current: LayeredOffset, target: LayeredOffset, elapsedMs?: number): { readonly offset: LayeredOffset; readonly settled: boolean } {
   if (Math.abs(target.x - current.x) < LAYERED_FOLLOW_EPSILON && Math.abs(target.y - current.y) < LAYERED_FOLLOW_EPSILON) return { offset: target, settled: true };
   return { offset: lerpOffset(current, target, followFactor(elapsedMs)), settled: false };
+}
+
+/** 🎞️ Duration of the settle that carries a released swipe or a wheel step onto its cell. */
+export const LAYERED_SETTLE_MS = 320;
+
+/** 🎞️ Cubic ease-out: a settle leaves at the speed it was let go with and comes to rest. */
+export function easeOutCubic(t: number): number {
+  return 1 - (1 - t) ** 3;
+}
+
+/** 🎞️ Where a settle from `from` to `to` is after `elapsedMs`; it lands exactly on `to`. */
+export function settleOffset(from: LayeredOffset, to: LayeredOffset, elapsedMs: number, durationMs: number = LAYERED_SETTLE_MS): { readonly offset: LayeredOffset; readonly done: boolean } {
+  const t = Math.min(1, Math.max(0, elapsedMs / durationMs));
+  return t >= 1 ? { offset: to, done: true } : { offset: lerpOffset(from, to, easeOutCubic(t)), done: false };
 }
 
 /** 🧱️ The strip's CSS transform for `offset`, in percent of the strip itself. */
@@ -203,6 +230,130 @@ export function veilClipPath(veil: LayeredVeil): string {
 }
 // #endregion 🕳️LayeredVeil
 
+// #region 👆️LayeredSwipe
+/** 👆️ How far (px) a touch travels before it is a swipe along one axis rather than a tap. */
+export const LAYERED_SWIPE_SLOP_PX = 10;
+
+/** 👆️ The share of the view a released swipe must have carried the strip to move on to the neighbouring cell. */
+export const LAYERED_SWIPE_DISTANCE = 0.25;
+
+/** 👆️ The release speed (px/ms) at which a swipe moves on however short it was: a flick. */
+export const LAYERED_SWIPE_FLICK_PX_PER_MS = 0.3;
+
+/** 🪀️ The stiffness of the rubber band past the last cell of a row or column — UIKit's 0.55. */
+export const LAYERED_RUBBER_BAND = 0.55;
+
+/** 🧈️ The share of its speed a flung scroll keeps per ms — UIKit's normal deceleration rate. */
+export const LAYERED_DECELERATION = 0.998;
+
+/** 🧈️ A flung scroll stops below this speed (px/ms). */
+export const LAYERED_FLING_STOP_PX_PER_MS = 0.02;
+
+/** 🛞️ The wheel distance (px) one step to the neighbouring cell needs. */
+export const LAYERED_WHEEL_STEP_PX = 40;
+
+/** 🛞️ The pause (ms) that ends a wheel gesture, so the trailing inertia of a touchpad never takes a second step. */
+export const LAYERED_WHEEL_QUIET_MS = 250;
+
+/** ↔️ An axis of the strip: `x` along the rows, `y` along the columns. */
+export type LayeredAxis = "x" | "y";
+
+/** ↔️ The axis a touch that moved `dx`, `dy` px swipes along, or `null` while it is still within {@link LAYERED_SWIPE_SLOP_PX}; the longer leg wins, a tie goes to `x`. */
+export function swipeAxis(dx: number, dy: number): LayeredAxis | null {
+  if (Math.max(Math.abs(dx), Math.abs(dy)) < LAYERED_SWIPE_SLOP_PX) return null;
+  return Math.abs(dx) >= Math.abs(dy) ? "x" : "y";
+}
+
+/** 👆️ The cell a released swipe moves the view by along its axis: `movedPx` is how far the finger carried the strip from its cell (negative =
+ * left or up, toward the next cell), `velocityPxPerMs` its speed at release with the same sign; a flick moves the way it flicks, a long swipe the
+ * way it went, anything else stays. */
+export function swipeStep(movedPx: number, velocityPxPerMs: number, viewPx: number): -1 | 0 | 1 {
+  const direction = Math.abs(velocityPxPerMs) >= LAYERED_SWIPE_FLICK_PX_PER_MS ? velocityPxPerMs : Math.abs(movedPx) >= LAYERED_SWIPE_DISTANCE * viewPx ? movedPx : 0;
+  return direction > 0 ? -1 : direction < 0 ? 1 : 0;
+}
+
+/** 🧭️ The occupied cell one `step` from `from` along `axis`, landing on occupied columns like a pan ({@link clampOffset}); `null` where the
+ * strip ends or the cell holds no pane. */
+export function swipeTarget(from: LayeredCell, axis: LayeredAxis, step: number, cells: readonly LayeredCell[]): LayeredCell | null {
+  if (step === 0) return null;
+  const target = nearestCell(axis === "x" ? { x: from.column + step, y: from.row } : { x: from.column, y: from.row + step }, cells);
+  if (target.column === from.column && target.row === from.row) return null;
+  return cells.some((cell) => cell.column === target.column && cell.row === target.row) ? target : null;
+}
+
+/** 🧭️ Where a neighbouring page lies from the view: `left` is reached by swiping right, `up` by swiping down. */
+export type LayeredDirection = "up" | "left" | "right" | "down";
+
+/** 🧭️ The directions in the order a reader meets their hints: above, beside, below. */
+export const LAYERED_DIRECTIONS: readonly { readonly direction: LayeredDirection; readonly axis: LayeredAxis; readonly step: -1 | 1 }[] = [
+  { direction: "up", axis: "y", step: -1 },
+  { direction: "left", axis: "x", step: -1 },
+  { direction: "right", axis: "x", step: 1 },
+  { direction: "down", axis: "y", step: 1 },
+];
+
+/** 🍩️ Where a swipe lands on the wrapping strip: the occupied `cell`, and the `slot` — the offset next to the view where that page comes in
+ * from. Inside the strip the slot is the cell itself; across an edge the index wraps (past the last occupied column of a row to its first,
+ * past the bottom row to the top one, onto its occupied columns like a pan) while the slot stays beside the view, so the strip seems an
+ * endless canvas. */
+export interface LayeredLanding {
+  readonly cell: LayeredCell;
+  readonly slot: LayeredOffset;
+}
+
+/** 🍩️ The occupied cell a swipe past the edge wraps to: the far end of the row's occupied columns, or the far row on its occupied columns. */
+function wrappedCell(from: LayeredCell, axis: LayeredAxis, step: number, cells: readonly LayeredCell[]): LayeredCell {
+  if (axis === "y") return nearestCell({ x: from.column, y: step > 0 ? 0 : stripGrid(cells).rows - 1 }, cells);
+  const columns = cells.filter((other) => other.row === from.row).map((other) => other.column);
+  return { column: step > 0 ? Math.min(...columns) : Math.max(...columns), row: from.row };
+}
+
+/** 🍩️ The landing one `step` from `from` along `axis` on the wrapping strip ({@link LayeredLanding}); `null` without a step or where the row
+ * (or the column) holds no other page. */
+export function swipeWrapTarget(from: LayeredCell, axis: LayeredAxis, step: number, cells: readonly LayeredCell[]): LayeredLanding | null {
+  if (step === 0) return null;
+  const inside = swipeTarget(from, axis, step, cells);
+  if (inside !== null) return { cell: inside, slot: cellOffset(inside) };
+  const cell = wrappedCell(from, axis, step, cells);
+  if (cell.column === from.column && cell.row === from.row) return null;
+  return { cell, slot: axis === "x" ? { x: from.column + step, y: from.row } : { x: cell.column, y: from.row + step } };
+}
+
+/** 🧭️ The landings one swipe away from `from`, by the direction they lie in — exactly where {@link swipeWrapTarget} lands a swipe, so a hint
+ * never promises a page the swipe does not reach. Directions without another page are left out. */
+export function swipeNeighbours(from: LayeredCell, cells: readonly LayeredCell[]): readonly ({ readonly direction: LayeredDirection } & LayeredLanding)[] {
+  return LAYERED_DIRECTIONS.flatMap(({ direction, axis, step }) => {
+    const landing = swipeWrapTarget(from, axis, step, cells);
+    return landing === null ? [] : [{ direction, ...landing }];
+  });
+}
+
+/** 🪀️ How far (in cells) the strip follows a finger that pulls it `overshoot` cells past the last cell: ever less, never a whole cell. */
+export function rubberBand(overshoot: number): number {
+  return 1 - 1 / (Math.max(0, overshoot) * LAYERED_RUBBER_BAND + 1);
+}
+
+/** 👆️ Where the strip lies while a finger carries it `shift` cells from `from` along `axis` (positive = toward the next cell): toward the slot
+ * the neighbouring page comes in from ({@link swipeWrapTarget}, across an edge too) at most all the way, on a rubber band where the row or
+ * column holds no other page. */
+export function swipeDragOffset(from: LayeredCell, axis: LayeredAxis, shift: number, cells: readonly LayeredCell[]): LayeredOffset {
+  const step = Math.sign(shift);
+  const base = cellOffset(from);
+  const landing = swipeWrapTarget(from, axis, step, cells);
+  if (landing !== null) return lerpOffset(base, landing.slot, Math.min(1, Math.abs(shift)));
+  const pull = step * rubberBand(Math.abs(shift));
+  return axis === "x" ? { x: base.x + pull, y: base.y } : { x: base.x, y: base.y + pull };
+}
+
+/** 🧈️ A flung scroll `elapsedMs` on: the distance it travelled (px), its speed then (px/ms) and whether it has come to rest — exponential
+ * decay by {@link LAYERED_DECELERATION} per ms, exact at any frame rate. */
+export function flingStep(velocityPxPerMs: number, elapsedMs: number): { readonly distance: number; readonly velocity: number; readonly done: boolean } {
+  const kept = LAYERED_DECELERATION ** Math.max(0, elapsedMs);
+  const velocity = velocityPxPerMs * kept;
+  return { distance: (velocityPxPerMs * (kept - 1)) / Math.log(LAYERED_DECELERATION), velocity, done: Math.abs(velocity) < LAYERED_FLING_STOP_PX_PER_MS };
+}
+// #endregion 👆️LayeredSwipe
+
 // #region 🪟️LayeredWindowing
 /** 🪟️ The cells whose placeholder or poster exists while the view sits at an offset. */
 export interface LayeredWindow {
@@ -242,6 +393,18 @@ export function nextWarmBoot(ids: readonly string[], booted: ReadonlySet<string>
   const next = ids.find((id) => !booted.has(id));
   if (next === undefined) return { kind: "hold", reason: "complete" };
   if (liveCount >= budget || booted.size >= budget) return { kind: "hold", reason: "budget" };
+  return { kind: "boot", id: next };
+}
+
+/** 🐢️ While the view rests on cell `at` of a swiped strip, the panes one swipe away — its neighbours on the wrapping strip
+ * ({@link swipeNeighbours}), in pane order — are booted one at a time while fewer than `budget` panes live, so the next swipe lands on a live
+ * page and warming never evicts one. */
+export function neighbourWarmBoot(ids: readonly string[], cells: readonly LayeredCell[], at: LayeredCell, live: ReadonlySet<string>, openedId: string | null, budget: number): LayeredWarmStep {
+  if (openedId !== null) return { kind: "hold", reason: "opened" };
+  const around = new Set(swipeNeighbours(at, cells).map(({ cell }) => `${cell.column}:${cell.row}`));
+  const next = ids.find((id, index) => !live.has(id) && around.has(`${cells[index]!.column}:${cells[index]!.row}`));
+  if (next === undefined) return { kind: "hold", reason: "complete" };
+  if (live.size >= budget) return { kind: "hold", reason: "budget" };
   return { kind: "boot", id: next };
 }
 

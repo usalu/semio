@@ -1,0 +1,280 @@
+{
+  "kind": "Authored audited source and status capsule",
+  "capturedAt": "2026-10-05T06:04:44.1768631Z",
+  "scope": "Final schema045A registered cheap gates and exact29 TS runtime closure, distinct from pending broad native and81/162PDF catalogue",
+  "evidenceSha256": "1f7cc0bd60d15296450738826baa40d67c47a76e64e24eb5210115ea8c361fb9",
+  "sourceInitialAggregate": "e893eb31a3e948d0b477cdaa95c70a06d4d07105e020eaa4306a9a66c08cfe77",
+  "sourceFinalAggregate": "e893eb31a3e948d0b477cdaa95c70a06d4d07105e020eaa4306a9a66c08cfe77",
+  "sourceStable": true,
+  "sourceCount": 29,
+  "sourceDiskDrift": 0,
+  "hosts": [
+    {
+      "host": "Bun",
+      "version": "1.3.14",
+      "pass": true,
+      "complete": true,
+      "deterministic": true,
+      "fontTransport": true,
+      "tikzFontSelectors": true,
+      "progressValid": true,
+      "earlyAtomic": true,
+      "timerStarted": true,
+      "timerFired": true,
+      "cancelAtomic": true,
+      "ownedAndAjvAdmissionControls": 3,
+      "fontAdmissionControls": 10
+    },
+    {
+      "host": "Chromium",
+      "version": "151.0.7922.34",
+      "pass": true,
+      "complete": true,
+      "deterministic": true,
+      "fontTransport": true,
+      "tikzFontSelectors": true,
+      "progressValid": true,
+      "earlyAtomic": true,
+      "timerStarted": true,
+      "timerFired": true,
+      "cancelAtomic": true,
+      "ownedAndAjvAdmissionControls": 3,
+      "fontAdmissionControls": 10
+    },
+    {
+      "host": "Node",
+      "version": "v24.14.1",
+      "pass": true,
+      "complete": true,
+      "deterministic": true,
+      "fontTransport": true,
+      "tikzFontSelectors": true,
+      "progressValid": true,
+      "earlyAtomic": true,
+      "timerStarted": true,
+      "timerFired": true,
+      "cancelAtomic": true,
+      "ownedAndAjvAdmissionControls": 3,
+      "fontAdmissionControls": 10
+    }
+  ],
+  "gates": [
+    {
+      "name": "final045-current-strict.log",
+      "terminal": 55504,
+      "exitCode": 0,
+      "status": "PASS",
+      "scope": "registered print check: three suites",
+      "seconds": 14.1,
+      "sha256": "82dae834252757c39214db1f1a344fc667d040a8338820ba67e05d68614a6df4"
+    },
+    {
+      "name": "final045-current-canonical.log",
+      "terminal": 56464,
+      "exitCode": 0,
+      "status": "PASS",
+      "scope": "634 canonical checks, zero failed or errored",
+      "seconds": null,
+      "sha256": "d2c6ec8e3a4eda00982554279e3bcdde08d4cf8a05a62280a182bb900c065b18"
+    },
+    {
+      "name": "final045-current-three-hosts.log",
+      "terminal": 52040,
+      "exitCode": 0,
+      "status": "PASS",
+      "scope": "actual configured Bun Chromium Node closed inference/font/progress/cancellation",
+      "seconds": null,
+      "sha256": "e01bae22eb62fc5021c5a43f5e0a1292a31c24e65f23db1458b890f5a970f50f"
+    },
+    {
+      "name": "final045-current-inference-exports.log",
+      "terminal": 17338,
+      "exitCode": 0,
+      "status": "PASS",
+      "scope": "inference/worker and native helper strict; actual253 barrel exports",
+      "seconds": null,
+      "sha256": "9b7cd97855bb2a60d519d7eb50370cb1adc6d5c5596b70c5111350bf8cce0372"
+    }
+  ],
+  "sources": [
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🔨️modules\\🖱️ui\\🎨️styling\\🌗️mixing\\🟦️.ts",
+      "beforeSha256": "400624f3790f23cd71a69e13a2746eacc13007e0a661a7025e0eb85269e9dc79",
+      "afterSha256": "400624f3790f23cd71a69e13a2746eacc13007e0a661a7025e0eb85269e9dc79",
+      "currentDiskSha256": "400624f3790f23cd71a69e13a2746eacc13007e0a661a7025e0eb85269e9dc79"
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🔨️modules\\🖱️ui\\🎨️styling\\🔣️.json",
+      "beforeSha256": "09e8b5afb79a554b01429a7ab71d7a84b61195b9ca1738f1c0bdac1dde66aaca",
+      "afterSha256": "09e8b5afb79a554b01429a7ab71d7a84b61195b9ca1738f1c0bdac1dde66aaca",
+      "currentDiskSha256": "09e8b5afb79a554b01429a7ab71d7a84b61195b9ca1738f1c0bdac1dde66aaca"
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🔨️modules\\🧬️schema\\✅️validator\\🟦️.ts",
+      "beforeSha256": "2617c03029c26a0cb97b3cf7fab1fa159b03c3f821d163ba55a55902c76170f3",
+      "afterSha256": "2617c03029c26a0cb97b3cf7fab1fa159b03c3f821d163ba55a55902c76170f3",
+      "currentDiskSha256": "2617c03029c26a0cb97b3cf7fab1fa159b03c3f821d163ba55a55902c76170f3"
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🔨️modules\\🎨print-design-token-paints\\🧮️resolution\\🟦️.ts",
+      "beforeSha256": "b3f26600887b2de5b5fd755d989294ba84ab760e70b9e636d35260f0a30f46dd",
+      "afterSha256": "b3f26600887b2de5b5fd755d989294ba84ab760e70b9e636d35260f0a30f46dd",
+      "currentDiskSha256": "b3f26600887b2de5b5fd755d989294ba84ab760e70b9e636d35260f0a30f46dd"
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🔨️modules\\🔤print-font-catalog\\📏️metrics\\🔣️.json",
+      "beforeSha256": "68829670a0124ebf1053816bef7a05bf65684f71f33f28b31e6f4690affc12eb",
+      "afterSha256": "68829670a0124ebf1053816bef7a05bf65684f71f33f28b31e6f4690affc12eb",
+      "currentDiskSha256": "68829670a0124ebf1053816bef7a05bf65684f71f33f28b31e6f4690affc12eb"
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🔨️modules\\🔤print-font-catalog\\📏️metrics\\🟦️.ts",
+      "beforeSha256": "c2de06b5dbe7b1d3cc6e7434f501f7d8739639c3cffcbfe5ef079f825e5494a5",
+      "afterSha256": "c2de06b5dbe7b1d3cc6e7434f501f7d8739639c3cffcbfe5ef079f825e5494a5",
+      "currentDiskSha256": "c2de06b5dbe7b1d3cc6e7434f501f7d8739639c3cffcbfe5ef079f825e5494a5"
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🔨️modules\\🔤print-font-catalog\\🔣️.json",
+      "beforeSha256": "b63eb4a1255760f5b19a02298da33c34bf14c21a4135db78eb344b02839ab451",
+      "afterSha256": "b63eb4a1255760f5b19a02298da33c34bf14c21a4135db78eb344b02839ab451",
+      "currentDiskSha256": "b63eb4a1255760f5b19a02298da33c34bf14c21a4135db78eb344b02839ab451"
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🖼️assets\\🔣️viz-catalog.json",
+      "beforeSha256": "83cab801138c01f1f469384a62ec9c2860f879c15d5e7e4873f3c90b065e88da",
+      "afterSha256": "83cab801138c01f1f469384a62ec9c2860f879c15d5e7e4873f3c90b065e88da",
+      "currentDiskSha256": "83cab801138c01f1f469384a62ec9c2860f879c15d5e7e4873f3c90b065e88da"
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\💡️inferences\\✅️validation\\🟦️.ts",
+      "beforeSha256": "4482a28ee677bc8b85b930600ce4ab07b94df4dd56336a6347744f297f18d369",
+      "afterSha256": "4482a28ee677bc8b85b930600ce4ab07b94df4dd56336a6347744f297f18d369",
+      "currentDiskSha256": "4482a28ee677bc8b85b930600ce4ab07b94df4dd56336a6347744f297f18d369"
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\💡️inferences\\✒️mark\\🟦️.ts",
+      "beforeSha256": "b50edba869c3f21d35d58a854fc9601dc3972229229307341255f5242a7f748a",
+      "afterSha256": "b50edba869c3f21d35d58a854fc9601dc3972229229307341255f5242a7f748a",
+      "currentDiskSha256": "b50edba869c3f21d35d58a854fc9601dc3972229229307341255f5242a7f748a"
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\💡️inferences\\🌊flow\\🟦️.ts",
+      "beforeSha256": "a0f20875427dbe943a80f74aa439652efbb56f62a81ea296dea60cc4466c4b01",
+      "afterSha256": "a0f20875427dbe943a80f74aa439652efbb56f62a81ea296dea60cc4466c4b01",
+      "currentDiskSha256": "a0f20875427dbe943a80f74aa439652efbb56f62a81ea296dea60cc4466c4b01"
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\💡️inferences\\🌍geo\\🟦️.ts",
+      "beforeSha256": "9d4d9deb711813fa49f0446ad1d8fdc84bf0b40ffbf5c133c3990ebf37abaf0c",
+      "afterSha256": "9d4d9deb711813fa49f0446ad1d8fdc84bf0b40ffbf5c133c3990ebf37abaf0c",
+      "currentDiskSha256": "9d4d9deb711813fa49f0446ad1d8fdc84bf0b40ffbf5c133c3990ebf37abaf0c"
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\💡️inferences\\🌳hierarchy\\🟦️.ts",
+      "beforeSha256": "4c84cea6ee7f39110c071f32be8d883b9103c8cb54cab975c42968e9f99a08f8",
+      "afterSha256": "4c84cea6ee7f39110c071f32be8d883b9103c8cb54cab975c42968e9f99a08f8",
+      "currentDiskSha256": "4c84cea6ee7f39110c071f32be8d883b9103c8cb54cab975c42968e9f99a08f8"
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\💡️inferences\\🎨theme\\🟦️.ts",
+      "beforeSha256": "7a65e22068cb4d9fae540d3584d9e280056f3c74c2a60c9ce9ddaa1ef8232d64",
+      "afterSha256": "7a65e22068cb4d9fae540d3584d9e280056f3c74c2a60c9ce9ddaa1ef8232d64",
+      "currentDiskSha256": "7a65e22068cb4d9fae540d3584d9e280056f3c74c2a60c9ce9ddaa1ef8232d64"
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\💡️inferences\\📍spatial\\🟦️.ts",
+      "beforeSha256": "58adbb55e17d190f0d2092c320c3d102d776f3b9a8b1dfc5fad778359b642edf",
+      "afterSha256": "58adbb55e17d190f0d2092c320c3d102d776f3b9a8b1dfc5fad778359b642edf",
+      "currentDiskSha256": "58adbb55e17d190f0d2092c320c3d102d776f3b9a8b1dfc5fad778359b642edf"
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\💡️inferences\\📐scale\\🟦️.ts",
+      "beforeSha256": "25837eba287f63342521ae4123f79c609641e9edc925f37091e78b60f74a1477",
+      "afterSha256": "25837eba287f63342521ae4123f79c609641e9edc925f37091e78b60f74a1477",
+      "currentDiskSha256": "25837eba287f63342521ae4123f79c609641e9edc925f37091e78b60f74a1477"
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\💡️inferences\\📚️catalogue\\🟦️.ts",
+      "beforeSha256": "72e8badb26d1ede036b52c9cfb8a7ed80c66a3d725c6c2915ee4e604e4c39ba8",
+      "afterSha256": "72e8badb26d1ede036b52c9cfb8a7ed80c66a3d725c6c2915ee4e604e4c39ba8",
+      "currentDiskSha256": "72e8badb26d1ede036b52c9cfb8a7ed80c66a3d725c6c2915ee4e604e4c39ba8"
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\💡️inferences\\🔢format\\🟦️.ts",
+      "beforeSha256": "6c6e25d5d6899030907782fc7245dbf7386fbf2997276bdaeb5dac1b54101d0c",
+      "afterSha256": "6c6e25d5d6899030907782fc7245dbf7386fbf2997276bdaeb5dac1b54101d0c",
+      "currentDiskSha256": "6c6e25d5d6899030907782fc7245dbf7386fbf2997276bdaeb5dac1b54101d0c"
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\💡️inferences\\🔣️.json",
+      "beforeSha256": "a1232c89dcf15c63c22962af544e2521196529dc6a03b151141fdda6a255d7d3",
+      "afterSha256": "a1232c89dcf15c63c22962af544e2521196529dc6a03b151141fdda6a255d7d3",
+      "currentDiskSha256": "a1232c89dcf15c63c22962af544e2521196529dc6a03b151141fdda6a255d7d3"
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\💡️inferences\\🕸️network\\🟦️.ts",
+      "beforeSha256": "db0f836e4794eac93fb4465bd2c0001337889cf5348f2f369da0b14bdcf27668",
+      "afterSha256": "db0f836e4794eac93fb4465bd2c0001337889cf5348f2f369da0b14bdcf27668",
+      "currentDiskSha256": "db0f836e4794eac93fb4465bd2c0001337889cf5348f2f369da0b14bdcf27668"
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\💡️inferences\\🖼️render\\🟦️.ts",
+      "beforeSha256": "83cbca27822db8ecb72cf041a18d999be560122e8d19164934d8484b5b51dca4",
+      "afterSha256": "83cbca27822db8ecb72cf041a18d999be560122e8d19164934d8484b5b51dca4",
+      "currentDiskSha256": "83cbca27822db8ecb72cf041a18d999be560122e8d19164934d8484b5b51dca4"
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\💡️inferences\\🟦️.ts",
+      "beforeSha256": "edb3dfe3639b08a14ef87d750e3aee277a6dd08abb647f91708a177224620dd9",
+      "afterSha256": "edb3dfe3639b08a14ef87d750e3aee277a6dd08abb647f91708a177224620dd9",
+      "currentDiskSha256": "edb3dfe3639b08a14ef87d750e3aee277a6dd08abb647f91708a177224620dd9"
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\💡️inferences\\🥧shape\\🟦️.ts",
+      "beforeSha256": "d854c5267131fd6b41fffbf300097d87549aa02a250c172f5a8e75bed9363d1c",
+      "afterSha256": "d854c5267131fd6b41fffbf300097d87549aa02a250c172f5a8e75bed9363d1c",
+      "currentDiskSha256": "d854c5267131fd6b41fffbf300097d87549aa02a250c172f5a8e75bed9363d1c"
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\💡️inferences\\🧭coordinate\\🟦️.ts",
+      "beforeSha256": "a71d09747c422927db8b9d529a34a406a0599449887cb9c3409774562bd9e449",
+      "afterSha256": "a71d09747c422927db8b9d529a34a406a0599449887cb9c3409774562bd9e449",
+      "currentDiskSha256": "a71d09747c422927db8b9d529a34a406a0599449887cb9c3409774562bd9e449"
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\💡️inferences\\🧮transform\\🟦️.ts",
+      "beforeSha256": "c7d3db330ac9ded4c09cd931e6c7927841946885db72e9beb156daa2d80f158e",
+      "afterSha256": "c7d3db330ac9ded4c09cd931e6c7927841946885db72e9beb156daa2d80f158e",
+      "currentDiskSha256": "c7d3db330ac9ded4c09cd931e6c7927841946885db72e9beb156daa2d80f158e"
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\💡️inferences\\🧵️worker\\🟦️.ts",
+      "beforeSha256": "56a17cf00bfa0dff40560c2150a8434473ff6598aec3e6d6e97464bc437acbb8",
+      "afterSha256": "56a17cf00bfa0dff40560c2150a8434473ff6598aec3e6d6e97464bc437acbb8",
+      "currentDiskSha256": "56a17cf00bfa0dff40560c2150a8434473ff6598aec3e6d6e97464bc437acbb8"
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\📸️snapshot\\📊️chart\\🎨️color\\🔣️.json",
+      "beforeSha256": "def3436d7f6ee7265d9e21dc44bcd9ddd22b18aa36485d2171133afda608b0b0",
+      "afterSha256": "def3436d7f6ee7265d9e21dc44bcd9ddd22b18aa36485d2171133afda608b0b0",
+      "currentDiskSha256": "def3436d7f6ee7265d9e21dc44bcd9ddd22b18aa36485d2171133afda608b0b0"
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\📸️snapshot\\📊️chart\\🟦️.ts",
+      "beforeSha256": "2848b50e6e3fe7333e3622affbf76821e0e52f481fed99be989b09acb78877ef",
+      "afterSha256": "2848b50e6e3fe7333e3622affbf76821e0e52f481fed99be989b09acb78877ef",
+      "currentDiskSha256": "2848b50e6e3fe7333e3622affbf76821e0e52f481fed99be989b09acb78877ef"
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\🔣️.json",
+      "beforeSha256": "045a015fa5e12521d32d0ba87e70f938424e853548b6e323720ec407b10a38ba",
+      "afterSha256": "045a015fa5e12521d32d0ba87e70f938424e853548b6e323720ec407b10a38ba",
+      "currentDiskSha256": "045a015fa5e12521d32d0ba87e70f938424e853548b6e323720ec407b10a38ba"
+    }
+  ],
+  "pending": [
+    "Root broad native94896",
+    "Catalogue81pair/162PDF full25808"
+  ],
+  "rawOutputsPreserved": false
+}

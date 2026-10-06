@@ -28,6 +28,8 @@ export {
   capturePosterFromCanvases,
   type LayeredCardState,
   type LayeredChromeState,
+  type LayeredDirection,
+  type LayeredInsets,
   type LayeredLabels,
   type LayeredMode,
   type LayeredOverviewProps,
@@ -94,3 +96,4 @@ export {
   type ElementsSurfaceChromeInput,
 } from "../🌓️appearance/🟦️.ts";
 export { presenceColor, presenceCssVar, presencePaint, type PresenceAppearance, type PresenceHsl } from "../../../🔨️modules/👥️presence-presentation/🟦️.ts";
+export { ResponsiveLabel, shellChromeTitleClassName } from "../🟦️.tsx";

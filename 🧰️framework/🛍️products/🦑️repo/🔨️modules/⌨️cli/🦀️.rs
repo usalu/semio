@@ -3,23 +3,21 @@
 //!
 //! @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/🦀️.rs
 
-use semio_framework_repo_dashboard::{args, command_tree, daemon, playground_catalog, playground_session, plugin_registry, root_delegation, terminal, usage, workflow};
-use std::io::IsTerminal;
+use semio_framework_repo_dashboard::{args, command_tree, daemon, playground_catalog, playground_session, plugin_registry, root_delegation, terminal, workflow};
 use std::path::PathBuf;
 
 // #region 🔖️Dispatch
 /// 🚦️ Runs one `semio` invocation and returns its process exit code.
 pub fn run(argv: &[String]) -> i32 {
     let root = semio_framework_repo_workspace::find_repo_root(&std::env::current_dir().unwrap_or_else(|_| PathBuf::from(".")));
-    if argv.is_empty() {
-        if !std::io::stdout().is_terminal() {
-            usage::print();
-            return 1;
-        }
-        return terminal::run(&root);
+    if argv.is_empty() || argv.first().is_some_and(|argument| argument.starts_with("--")) {
+        return terminal::run_with(&root, &args::parse(&std::iter::once("dashboard".into()).chain(argv.iter().cloned()).collect::<Vec<_>>()));
     }
     let parsed = args::parse(argv);
     match parsed.verb.as_str() {
+        "dashboard" => terminal::run_with(&root, &parsed),
+        "preferences" => semio_framework_repo_dashboard::preferences::run(&root, &parsed),
+        "repo-view" => command_tree::run_action(&root, &parsed),
         "daemon" => daemon::run(&root, &parsed),
         "workflow" => workflow::run(&root, &parsed),
         "dev" => playground_session::run(&root, &parsed),

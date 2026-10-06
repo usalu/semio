@@ -1,0 +1,14 @@
+[
+  {
+    "session": 37264,
+    "exitCode": 1,
+    "log": "\ud83d\uddd1\ufe0fgenerated\\catalogue-geoflow-admission-red.log",
+    "logSha256": "33ae5f80a488db1cfbe5c2f7b8c94a35f7d8d950041990b07ea982a83331fb1c"
+  },
+  {
+    "session": 60120,
+    "exitCode": 0,
+    "log": "\ud83d\uddd1\ufe0fgenerated\\catalogue-geoflow-admission-green.log",
+    "logSha256": "80d2145f653824745e5956cfa0dcf6bebe5ab6239978f801cc6a34e5b2c6c711"
+  }
+]

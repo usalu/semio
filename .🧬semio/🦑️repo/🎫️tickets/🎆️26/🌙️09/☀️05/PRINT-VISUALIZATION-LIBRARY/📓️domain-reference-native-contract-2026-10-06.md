@@ -1,0 +1,15 @@
+# Public Forest Reference And Order Contract
+
+Thirteen strict language-neutral cases cover ordered/reversed profile rows, Unicode IDs, forests, empty data and seven invalid ID/reference/value cases. Independent D3 stratify with a neutral virtual forest root plus AJV finite nonnegative values defines native one-based depths and subtree totals. Public canonical table/preset mutation, replay, inverse and inference run before the native cases.
+
+Previous handle12174 ended without a receipt or compiler stage; no RED/GREEN is claimed. Fresh18297 entered the exact owned Tectonic37500 full-render baseline. At183.59 CPU seconds it remained in the reversed hierarchy document: original one-pass loader assigns child and parent the same depth, allowing child offset to read an absent parent offset. The exact owned PID, creation, command and bounded cancellation are retained; only that compiler was stopped, and18297 terminal1 followed. This is bounded failure evidence, not a completed numeric oracle comparison.
+
+The baseline now isolates the unchanged native reader through public keys/table admission and records its depths/subtree totals before drawing. After a genuine numerical RED, production will resolve all records before memoized parent depth/fold and validate references/cycles. The full phase then checks actual canonical inferred profile paint in both modes/themes plus seven hard rejections. These remain pending. Source/helper/neutral/launch inputs are retained; no separate renderer or runtime dependency is added.
+
+Actual93925 reader baseline exited1 after both PDFs compiled. Exactly four failures were reversed flame/tree in EN/light and DE/dark: G depth2/subtree2 versus independent D3 depth3/subtree2. Ordered raw cases matched. The earlier compiler stop did not itself localize a raw-reader hang; the later isolated reader completed, and the definite numerical RED now supports the fix.
+
+After that actual RED, the existing Data owner gained semio_viz_table_scalar:N, which removes exactly one canonical string carrier and preserves its payload. Existing getters still retain typed tokens. The shared Partition reader now loads and validates all IDs/values, memoizes ancestor depths with cycle/missing-parent checks, and folds descendant totals in resolved descending depth. It preserves authored ordering and forests, accepts empty input, and clears paint keys after redirected invalid diagnostics. Full canonical inferred paint and hard rejection verification is pending.
+
+## Actual Canonical GREEN
+
+Run64435 completed with exit0 at2026-10-05T23:34:41.5357203Z. Both language/theme documents matched24 canonical inferred bodies and60 D3 subtree frames. All14 malformed-reference/value compilations rejected with the owned Domain hierarchy diagnostic. Current-source SHA bindings are retained in authored-inputs/domain-reference-controls/current-green/receipt.json. This proof covers the initial13 vectors; sibling/zero/sentinel extensions and critical-path contracts are subsequent work.

@@ -25,6 +25,7 @@ import { retryWithJitteredBackoff } from "@semio-tech/framework";
 import {
   DEFAULT_UI_DRIVER,
   Navbar,
+  ResponsiveLabel,
   ShellBrandLogo,
   UI_AVAILABLE_HEIGHT,
   UI_MOBILE_MEDIA_QUERY,
@@ -36,7 +37,7 @@ import {
   useMediaQuery,
   type NavbarItem,
 } from "@semio-tech/ui-react/chrome";
-import { applyLocale, localized, preferredLocale, quizText, type QuizLabelKey, type QuizLocale, type QuizText } from "./🔨️modules/🌐️i18n/🟦️.ts";
+import { applyLocale, localized, preferredLocale, quizText, titled, type QuizLabelKey, type QuizLocale, type QuizText } from "./🔨️modules/🌐️i18n/🟦️.ts";
 import { browserStorageArea, localStore, type LocalStore, type StorageArea } from "./🔨️modules/💾️persistence/🟦️.ts";
 import { ProctorClient, RETRY_TIMING, proctorTransport, type ProctorConnect, type RetryTiming } from "./🔨️modules/🛂️proctor/🟦️.ts";
 import { Deputy, type QuizMaterial } from "./🔨️modules/🫡️deputy/🟦️.ts";
@@ -49,13 +50,13 @@ import { NavigationControls, placeName, useAddress } from "./🔨️modules/🚏
 import type { RunScreen } from "./🔨️modules/▶️run/🟦️.tsx";
 import type { ResultsScreen } from "./🔨️modules/🏁️results/🟦️.tsx";
 import { LegalFooter, type QuizLegal } from "./🔨️modules/⚖️legal/🟦️.tsx";
-import { BodyButton, CardIcon, ProblemNote, QuizCard, cn } from "./🔨️modules/🪟️chrome/🟦️.tsx";
+import { BodyButton, CardIcon, ProblemNote, QuizCard, cn, playTappedIcons } from "./🔨️modules/🪟️chrome/🟦️.tsx";
 import { PresenceOverlay, PresenceProvider, PresenceStatus, QuizPresence, presencePlace, presenceSelf, presenceView, presenceDrafts, sheetItemLabels, useDocumentVisible, usePresencePointer, type PresenceConnect } from "./🔨️modules/👥️presence/🟦️.tsx";
 import { PetsSwitch, QuizPets, QuizPetsProvider, effectivePetMode, switchedPets, usePetsReduced, type QuizPetsSource } from "./🔨️modules/🐾️pets/🟦️.tsx";
 import "./🎨️.css";
 
 //#region 🔁️Reexports
-export { QUIZ_BUNDLE_DE, QUIZ_BUNDLE_EN, QUIZ_LOCALES, REJECTION_LABELS, TASK_KIND_LABELS, applyLocale, isQuizLocale, localized, preferredLocale, quizText } from "./🔨️modules/🌐️i18n/🟦️.ts";
+export { QUIZ_BUNDLE_DE, QUIZ_BUNDLE_EN, QUIZ_LOCALES, REJECTION_LABELS, TASK_KIND_LABELS, applyLocale, isQuizLocale, localized, preferredLocale, quizText, titled } from "./🔨️modules/🌐️i18n/🟦️.ts";
 export type { QuizLabelKey, QuizLocale, QuizText } from "./🔨️modules/🌐️i18n/🟦️.ts";
 export { SIGNIFICANT_DIGITS, SI_PREFIXES, ceilSignificant, engineering, floorSignificant, formatClock, formatCount, formatCountdown, formatDate, formatDuration, formatFactor, formatInstant, formatNumber, formatPoints, formatQuantity, formatScore, formatTimes, oneDecimal, parseQuantity, withMinusSign, withUnit } from "./🔨️modules/📏️quantity/🟦️.ts";
 export type { Toward } from "./🔨️modules/📏️quantity/🟦️.ts";
@@ -113,7 +114,7 @@ export type { PetDeed } from "./🔨️modules/🐾️pets/🎪️stage/🟦️.
 export { DRAG_THRESHOLD_PX, dropZoneAt, startPointerDrag } from "./🔨️modules/🤏️drag/🟦️.ts";
 export { DROP_ZONE_CLASS, DragGrip, GuessField, HINT_SYMBOL, HintNote, ICON_BUTTON_CLASS, LockedNote, SELECT_ANNOUNCEMENT_DELAY_MS, SELECT_CLASS, compareText, describedBy, elementId, exampleGuess, hintName, hintTerm, useFocusAfterRender, useHintAnnouncement } from "./🔨️modules/🧩️task/🟦️.tsx";
 export type { TaskViewProps } from "./🔨️modules/🧩️task/🟦️.tsx";
-export { BodyButton, CardAction, CardIcon, Dialog, Facts, Glyph, IconLabel, LiveRegion, Mark, Missing, ProblemNote, QuizCard, Records, Segments, TABLE, TASK_KIND_ICONS, TaskGlyph, textPresentation, useAnnouncement } from "./🔨️modules/🪟️chrome/🟦️.tsx";
+export { BodyButton, CardAction, CardIcon, Dialog, Facts, Glyph, ICON_HOSTS, ICON_LOOP_MS, IconLabel, LiveRegion, Mark, Missing, ProblemNote, QuizCard, Records, Segments, TABLE, TASK_KIND_ICONS, TaskGlyph, playTappedIcons, textPresentation, useAnnouncement } from "./🔨️modules/🪟️chrome/🟦️.tsx";
 export type { Announcement, Problem, Segment } from "./🔨️modules/🪟️chrome/🟦️.tsx";
 export { ClassificationTaskView, classificationHintText } from "./🔨️modules/🗂️classification/🟦️.tsx";
 export { SortingTaskView, ordered, reordered } from "./🔨️modules/↕️sorting/🟦️.tsx";
@@ -125,8 +126,8 @@ export { CHALLENGE_HINTS, CHALLENGE_LABELS, ChallengeChooser, challengeScored } 
 export type { Act } from "./🔨️modules/📖️quiz-page/🟦️.tsx";
 export { IdentityScreen, failureProblem, handleFault, handleFaultMessage, learnerName, noticeProblem, thrownProblem } from "./🔨️modules/🪪️identity/🟦️.tsx";
 export type { HandleFault } from "./🔨️modules/🪪️identity/🟦️.tsx";
-export { HOME_CHROME_HEIGHT_PX, HOME_GRID_ROW_HEIGHT_PX, HOME_GRID_TRACKS, HomeScreen, homeCells, homeGridMinHeight, homeLayoutQueries, homePages, homeTrackTemplate, pageLabel } from "./🔨️modules/🏠️home/🟦️.tsx";
-export type { HomeLayout } from "./🔨️modules/🏠️home/🟦️.tsx";
+export { HOME_CHROME_HEIGHT_PX, HOME_GRID_ROW_HEIGHT_PX, HOME_GRID_TRACKS, HomeScreen, homeCells, homeGridMinHeight, homeLayout, homeLayoutQueries, homePages, homeTrackTemplate, pageLabel } from "./🔨️modules/🏠️home/🟦️.tsx";
+export type { HomeGrid, HomeLayout } from "./🔨️modules/🏠️home/🟦️.tsx";
 export { RunScreen, TaskClock, TaskView, clockStage, usePassed, useRemaining } from "./🔨️modules/▶️run/🟦️.tsx";
 export type { ClockStage } from "./🔨️modules/▶️run/🟦️.tsx";
 export { ResultsScreen, TaskResultView, deviation, tolerance } from "./🔨️modules/🏁️results/🟦️.tsx";
@@ -330,7 +331,7 @@ function screenTitle(state: QuizState, locale: QuizLocale, text: QuizText): stri
 export function documentTitle(state: QuizState, locale: QuizLocale | undefined): string {
   if (locale === undefined) return everyLanguage("quiz.preferences.language");
   const screen = screenTitle(state, locale, quizText(locale));
-  const site = state.catalog === undefined ? undefined : localized(state.catalog.title, locale);
+  const site = state.catalog === undefined ? undefined : titled(state.catalog, locale).short;
   return site === undefined || site === screen ? screen : `${screen} · ${site}`;
 }
 
@@ -502,7 +503,7 @@ function Client(props: ClientProps): ReactElement {
     shown.current = key;
   }, [key]);
 
-  const title = state.catalog === undefined ? "" : localized(state.catalog.title, locale);
+  const catalogTitle = state.catalog === undefined ? undefined : titled(state.catalog, locale);
   const brand = (
     <span data-quiz-brand="" className="quiz-brand">
       {options.logo === undefined ? null : (
@@ -510,10 +511,8 @@ function Client(props: ClientProps): ReactElement {
           <ShellBrandLogo svg={options.logo} className="size-workbench shrink-0" />
         </span>
       )}
-      {title === "" ? null : (
-        <span title={title} className="quiz-brand-title truncate px-single text-sm font-semibold text-foreground">
-          {title}
-        </span>
+      {catalogTitle === undefined ? null : (
+        <ResponsiveLabel full={catalogTitle.full} short={catalogTitle.short} className="quiz-brand-title truncate px-single text-sm font-semibold text-foreground" />
       )}
     </span>
   );
@@ -527,7 +526,7 @@ function Client(props: ClientProps): ReactElement {
   ];
   return (
     <PresenceProvider view={view} showCursors={preferences.showCursors} setTask={setTask}>
-      <div className="quiz-app flex min-h-0 flex-col overflow-hidden bg-background text-foreground" style={{ height: UI_AVAILABLE_HEIGHT }} lang={locale} data-icon-motion={icons ? "on" : "off"} data-pets={pets}>
+      <div className="quiz-app flex min-h-0 flex-col overflow-hidden bg-background text-foreground" style={{ height: UI_AVAILABLE_HEIGHT }} lang={locale} data-icon-motion={icons ? "on" : "off"} onPointerDownCapture={(event) => playTappedIcons(event.target, event.pointerType)} data-pets={pets}>
         <a
           href="#quiz-main"
           className="sr-only focus:not-sr-only focus:absolute focus:start-double focus:top-double focus:z-50 focus:bg-background focus:p-double focus:text-sm focus:text-foreground"

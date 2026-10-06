@@ -1,0 +1,382 @@
+{
+  "schema": {
+    "type": "object",
+    "required": [
+      "families",
+      "cases"
+    ],
+    "additionalProperties": false,
+    "properties": {
+      "families": {
+        "type": "array",
+        "minItems": 8,
+        "maxItems": 8
+      },
+      "cases": {
+        "type": "array",
+        "minItems": 46,
+        "maxItems": 46
+      }
+    }
+  },
+  "vectors": {
+    "families": [
+      {
+        "name": "sci-pathway",
+        "modes": [
+          "pathway",
+          "food-web",
+          "metabolic",
+          "interaction"
+        ]
+      },
+      {
+        "name": "sci-circuit",
+        "modes": [
+          "schematic",
+          "logic",
+          "ladder",
+          "wiring",
+          "block",
+          "signal-flow"
+        ]
+      },
+      {
+        "name": "sci-abstract-diagram",
+        "modes": [
+          "commutative",
+          "string",
+          "tensor",
+          "hasse",
+          "cayley",
+          "dynkin",
+          "proof",
+          "rewrite"
+        ]
+      },
+      {
+        "name": "sci-orbital",
+        "modes": [
+          "molecular-orbital",
+          "configuration",
+          "orbital"
+        ]
+      },
+      {
+        "name": "sci-phase-diagram",
+        "modes": [
+          "binary",
+          "unary",
+          "ternary"
+        ]
+      },
+      {
+        "name": "sci-electrochem",
+        "modes": [
+          "pourbaix",
+          "frost",
+          "latimer"
+        ]
+      },
+      {
+        "name": "sci-optimization",
+        "modes": [
+          "feasible-region",
+          "pareto",
+          "queueing",
+          "decision-lattice",
+          "objective-contours"
+        ]
+      },
+      {
+        "name": "sci-pitch",
+        "modes": [
+          "shot-chart",
+          "pitch-map",
+          "pass-network",
+          "heatmap",
+          "positions",
+          "trajectory"
+        ]
+      }
+    ],
+    "cases": [
+      {
+        "id": "sci-pathway-pathway",
+        "family": "sci-pathway",
+        "mode": "pathway",
+        "valid": true
+      },
+      {
+        "id": "sci-pathway-food-web",
+        "family": "sci-pathway",
+        "mode": "food-web",
+        "valid": true
+      },
+      {
+        "id": "sci-pathway-metabolic",
+        "family": "sci-pathway",
+        "mode": "metabolic",
+        "valid": true
+      },
+      {
+        "id": "sci-pathway-interaction",
+        "family": "sci-pathway",
+        "mode": "interaction",
+        "valid": true
+      },
+      {
+        "id": "sci-pathway-unknown",
+        "family": "sci-pathway",
+        "mode": "unknown",
+        "valid": false
+      },
+      {
+        "id": "sci-circuit-schematic",
+        "family": "sci-circuit",
+        "mode": "schematic",
+        "valid": true
+      },
+      {
+        "id": "sci-circuit-logic",
+        "family": "sci-circuit",
+        "mode": "logic",
+        "valid": true
+      },
+      {
+        "id": "sci-circuit-ladder",
+        "family": "sci-circuit",
+        "mode": "ladder",
+        "valid": true
+      },
+      {
+        "id": "sci-circuit-wiring",
+        "family": "sci-circuit",
+        "mode": "wiring",
+        "valid": true
+      },
+      {
+        "id": "sci-circuit-block",
+        "family": "sci-circuit",
+        "mode": "block",
+        "valid": true
+      },
+      {
+        "id": "sci-circuit-signal-flow",
+        "family": "sci-circuit",
+        "mode": "signal-flow",
+        "valid": true
+      },
+      {
+        "id": "sci-circuit-unknown",
+        "family": "sci-circuit",
+        "mode": "unknown",
+        "valid": false
+      },
+      {
+        "id": "sci-abstract-diagram-commutative",
+        "family": "sci-abstract-diagram",
+        "mode": "commutative",
+        "valid": true
+      },
+      {
+        "id": "sci-abstract-diagram-string",
+        "family": "sci-abstract-diagram",
+        "mode": "string",
+        "valid": true
+      },
+      {
+        "id": "sci-abstract-diagram-tensor",
+        "family": "sci-abstract-diagram",
+        "mode": "tensor",
+        "valid": true
+      },
+      {
+        "id": "sci-abstract-diagram-hasse",
+        "family": "sci-abstract-diagram",
+        "mode": "hasse",
+        "valid": true
+      },
+      {
+        "id": "sci-abstract-diagram-cayley",
+        "family": "sci-abstract-diagram",
+        "mode": "cayley",
+        "valid": true
+      },
+      {
+        "id": "sci-abstract-diagram-dynkin",
+        "family": "sci-abstract-diagram",
+        "mode": "dynkin",
+        "valid": true
+      },
+      {
+        "id": "sci-abstract-diagram-proof",
+        "family": "sci-abstract-diagram",
+        "mode": "proof",
+        "valid": true
+      },
+      {
+        "id": "sci-abstract-diagram-rewrite",
+        "family": "sci-abstract-diagram",
+        "mode": "rewrite",
+        "valid": true
+      },
+      {
+        "id": "sci-abstract-diagram-unknown",
+        "family": "sci-abstract-diagram",
+        "mode": "unknown",
+        "valid": false
+      },
+      {
+        "id": "sci-orbital-molecular-orbital",
+        "family": "sci-orbital",
+        "mode": "molecular-orbital",
+        "valid": true
+      },
+      {
+        "id": "sci-orbital-configuration",
+        "family": "sci-orbital",
+        "mode": "configuration",
+        "valid": true
+      },
+      {
+        "id": "sci-orbital-orbital",
+        "family": "sci-orbital",
+        "mode": "orbital",
+        "valid": true
+      },
+      {
+        "id": "sci-orbital-unknown",
+        "family": "sci-orbital",
+        "mode": "unknown",
+        "valid": false
+      },
+      {
+        "id": "sci-phase-diagram-binary",
+        "family": "sci-phase-diagram",
+        "mode": "binary",
+        "valid": true
+      },
+      {
+        "id": "sci-phase-diagram-unary",
+        "family": "sci-phase-diagram",
+        "mode": "unary",
+        "valid": true
+      },
+      {
+        "id": "sci-phase-diagram-ternary",
+        "family": "sci-phase-diagram",
+        "mode": "ternary",
+        "valid": true
+      },
+      {
+        "id": "sci-phase-diagram-unknown",
+        "family": "sci-phase-diagram",
+        "mode": "unknown",
+        "valid": false
+      },
+      {
+        "id": "sci-electrochem-pourbaix",
+        "family": "sci-electrochem",
+        "mode": "pourbaix",
+        "valid": true
+      },
+      {
+        "id": "sci-electrochem-frost",
+        "family": "sci-electrochem",
+        "mode": "frost",
+        "valid": true
+      },
+      {
+        "id": "sci-electrochem-latimer",
+        "family": "sci-electrochem",
+        "mode": "latimer",
+        "valid": true
+      },
+      {
+        "id": "sci-electrochem-unknown",
+        "family": "sci-electrochem",
+        "mode": "unknown",
+        "valid": false
+      },
+      {
+        "id": "sci-optimization-feasible-region",
+        "family": "sci-optimization",
+        "mode": "feasible-region",
+        "valid": true
+      },
+      {
+        "id": "sci-optimization-pareto",
+        "family": "sci-optimization",
+        "mode": "pareto",
+        "valid": true
+      },
+      {
+        "id": "sci-optimization-queueing",
+        "family": "sci-optimization",
+        "mode": "queueing",
+        "valid": true
+      },
+      {
+        "id": "sci-optimization-decision-lattice",
+        "family": "sci-optimization",
+        "mode": "decision-lattice",
+        "valid": true
+      },
+      {
+        "id": "sci-optimization-objective-contours",
+        "family": "sci-optimization",
+        "mode": "objective-contours",
+        "valid": true
+      },
+      {
+        "id": "sci-optimization-unknown",
+        "family": "sci-optimization",
+        "mode": "unknown",
+        "valid": false
+      },
+      {
+        "id": "sci-pitch-shot-chart",
+        "family": "sci-pitch",
+        "mode": "shot-chart",
+        "valid": true
+      },
+      {
+        "id": "sci-pitch-pitch-map",
+        "family": "sci-pitch",
+        "mode": "pitch-map",
+        "valid": true
+      },
+      {
+        "id": "sci-pitch-pass-network",
+        "family": "sci-pitch",
+        "mode": "pass-network",
+        "valid": true
+      },
+      {
+        "id": "sci-pitch-heatmap",
+        "family": "sci-pitch",
+        "mode": "heatmap",
+        "valid": true
+      },
+      {
+        "id": "sci-pitch-positions",
+        "family": "sci-pitch",
+        "mode": "positions",
+        "valid": true
+      },
+      {
+        "id": "sci-pitch-trajectory",
+        "family": "sci-pitch",
+        "mode": "trajectory",
+        "valid": true
+      },
+      {
+        "id": "sci-pitch-unknown",
+        "family": "sci-pitch",
+        "mode": "unknown",
+        "valid": false
+      }
+    ]
+  }
+}

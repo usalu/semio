@@ -1,0 +1,19 @@
+# Visible Relation Style Frame
+
+Actual Poppler page2 was the arrow rather than the hook; pypdf identified actual hook ownership on page3 of the12-page documents. Page3 inspection exposed the earlier fixture's source hook clipping: both authored nodes were on y0 at the canvas edge, so the right-hand hook extended outside the visible frame. The test's path observer had validated un-clipped PDF operators. This was an observer fixture gap, not evidence that the native hook style failed for interior nodes.
+
+The strict language-neutral style fixture now authors a public node-coordinate origin0.5,1 with unit20, giving source10,20mm and target30,20mm. The native canonical edge mutation/inference remains unchanged. The observer first requires every actual path bound inside the visible80×48 frame, then translates only the observed path coordinates to retain the same independent D3 shaft/head/hook/dash assertions. Before/after neutral and helper spans are retained. A fresh registered16-case native run plus actual hook-page visual QA is pending; no new runtime owner or library was added.
+
+A later independent source/operator audit corrected the initial clipping interpretation: the257-point hook bounds are x0.132–1.100/y0–0.418, inside the original frame. Two subsequent opaque empty-node fill squares at±0.6mm cover the curve. The actual source-node overpaint is the product defect. The neutral fixture now requires emptyNodePaint=false and the observer rejects closed paint or glyphs for these explicitly empty, nodeShape=none nodes. Interior placement remains useful for full visible stroke-envelope QA. Actual closed-paint RED is pending before production repair.
+
+Actual53363 exited0 for the interior16-style geometry/dash observer loaded before the new empty-paint assertion. Fresh34532 replayed those exact PDFs with the new assertion and exited1 for all16 empty-node opaque covers. Only after that actual RED, the existing mathematical diagram node painter now skips a blank label when nodeShape=none. Circle/box shapes and nonblank bare labels retain their requested paint, and all logical node coordinate reports remain. A fresh full16-style compiler GREEN and rendered interior hook inspection are pending.
+
+## Empty Edge Label RED and Repair
+
+Native run91446 completed with exit1 after both PDFs. The endpoint-label guard removed the endpoint covers. Exactly one opaque0.8mm closed path remained at the midpoint in every case. The read-only auditor located its source in the unconditional edge-label node. My initial suspicion about protected string carriers was incorrect: these options are delimiter records, and the endpoint guard already succeeded. The existing edge-label branch now omits its background node when field4 is blank. The zero-closed-paint oracle remains unchanged; fresh native verification is pending.
+
+The attempted inline authored-input write returned0 without altering any source; direct fresh-span patching produced the verified change.
+
+## Actual Visible GREEN And Raster Review
+
+Run61553 completed exit0 UTC23:39:20.0988233Z for16 EN/light and DE/dark relation bodies. The unchanged oracle found zero empty-label opaque covers/glyphs, all relation points inside the authored frame, correct D3 shafts,8 target heads and2 source injection hooks, doubled strokes and dash state. pypdf located the hook marker on actual page3 of12 in both PDFs. Poppler rendered those exact pages; I viewed both raster results and confirmed the source hook and uninterrupted centre shaft remain visibly painted. Initial absolute-Unicode Poppler output prefixes could not be written; using the verified ticket generated directory as working directory and relative prefixes succeeded. The current stage/span auditor bound the3201-byte native node/edge span; its equality proof and PDF hashes are retained separately.

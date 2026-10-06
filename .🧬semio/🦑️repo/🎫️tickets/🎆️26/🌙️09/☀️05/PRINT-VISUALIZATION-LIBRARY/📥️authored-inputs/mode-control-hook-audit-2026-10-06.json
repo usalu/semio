@@ -1,0 +1,57 @@
+[
+  {
+    "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\🔣️.json",
+    "bytes": 1598824,
+    "sha256": "29C6DBCD391EEE965211204783781DC4AD741F7EE8864C055BE4DDE3F3B260FE"
+  },
+  {
+    "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🖋️latex\\semio-viz-scientific-mathematics.sty",
+    "bytes": 122938,
+    "sha256": "4D00F2DD0392B3AD28A026FA83C500EF534E6CA92832466268D194558B868736"
+  },
+  {
+    "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🖋️latex\\semio-viz-geo-routes.sty",
+    "bytes": 28744,
+    "sha256": "434E42F1AE4C623B81DD2478E98CD85C196AD99E99C8FEA8AE2F569998BBA3C9"
+  },
+  {
+    "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🖋️latex\\semio-viz-network-arc.sty",
+    "bytes": 11188,
+    "sha256": "67E16AD2F93F6B009B114C7C61C1445CAF5A22487E2EEA81306ADA688CCB348E"
+  },
+  {
+    "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🖋️latex\\semio-viz.sty",
+    "bytes": 17640,
+    "sha256": "F2277314E69747B06F8FECE032CA71AF7CD1A3C0765BDDE6A9A52489F80C852C"
+  },
+  {
+    "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧪️tests\\🧬️native-chart-grammar\\🟦️.ts",
+    "bytes": 354179,
+    "sha256": "7F11837088975A8B8E5C14FEDD83D171DD07C50EB3513E16C74730FD1EBA1538"
+  },
+  {
+    "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧪️tests\\🧬️native-chart-grammar\\🔣️.json",
+    "bytes": 505636,
+    "sha256": "73B4F52BB367CA243B150CF53B0E3BEB379860DC3350DE956DD485A721447348"
+  },
+  {
+    "path": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\style-green2\\scientific-styles\\light\\actual-owned-styles.json",
+    "bytes": 56869,
+    "sha256": "65F8051E89705EDFF47D0F031CAE24AFE64BB6934A16E9052E199F215600F55F"
+  },
+  {
+    "path": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\style-green2\\scientific-styles\\light\\🧪️probe-source\\light.tex",
+    "bytes": 6160,
+    "sha256": "C7D4FC71B3507D849347B3E04C3051EF9D0DE63AA23CDBC6A2D2832917BD3D1E"
+  },
+  {
+    "path": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\style-green2\\scientific-styles\\dark\\actual-owned-styles.json",
+    "bytes": 56839,
+    "sha256": "1830271C128700AF9CE298CF7574A3465443CC7DB901967CBF01FF7554777FBB"
+  },
+  {
+    "path": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\style-green2\\scientific-styles\\dark\\🧪️probe-source\\dark.tex",
+    "bytes": 6142,
+    "sha256": "14187893AF25CE80E20FF5B96965914802012CE89CAEA1BF4346EA19EAC48272"
+  }
+]

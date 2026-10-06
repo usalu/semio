@@ -80,15 +80,24 @@ export type PlayPaneSpec = {
  * always starts clean, and the catalog's curated example as the boot default so the grid opens every app
  * on real content instead of `exampleOptions[0]`. Exactly how the demonstrator's brands carry
  * `defaults.exampleId`: a DEFAULT, never a lock, so the pane's own example picker stays usable. */
-export function playPaneBrand(variant: string, label: string, exampleId?: string): ShellBrand {
-  return { id: `semio-tech-play-${variant}`, windowTitle: `semio · ${label}`, logoSvg: SEMIO_TECH_PLAY_LOGO_SVG, locks: { locale: PLAY_LOCALE, terminology: PLAY_TERMINOLOGY, themeId: "semio" }, ...(exampleId ? { defaults: { exampleId } } : {}), ephemeral: true };
+export function playPaneBrand(variant: string, label: string, exampleId?: string, shortLabel?: string): ShellBrand {
+  const short = shortLabel ?? label;
+  return {
+    id: `semio-tech-play-${variant}`,
+    windowTitle: `semio · ${label}`,
+    ...(short === label ? {} : { shortWindowTitle: `semio · ${short}` }),
+    logoSvg: SEMIO_TECH_PLAY_LOGO_SVG,
+    locks: { locale: PLAY_LOCALE, terminology: PLAY_TERMINOLOGY, themeId: "semio" },
+    ...(exampleId ? { defaults: { exampleId } } : {}),
+    ephemeral: true,
+  };
 }
 
 export const PLAY_PANES: readonly PlayPaneSpec[] = PLAY_RUNTIME_PANES.map(pane => ({
   id: pane.variant,
   variant: pane.variant,
   group: pane.group,
-  brand: playPaneBrand(pane.variant, pane.label, pane.example),
+  brand: playPaneBrand(pane.variant, pane.label, pane.example, pane.shortLabel),
   label: pane.label,
   tagline: pane.tagline,
   description: pane.description,

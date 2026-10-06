@@ -10,7 +10,8 @@ pub fn reserve<T>(count:usize,control:&mut SqliteSnapshotControl<'_>)->Result<Ve
  let bytes=count.checked_mul(std::mem::size_of::<T>()).filter(|bytes|*bytes<=isize::MAX as usize).ok_or_else(||overflow("SQLite transfer backing overflow"))?;control.admit_allocation_bytes(bytes)?;
  let mut values=Vec::new();values.try_reserve_exact(count).map_err(|_|ValueError::new(ValueRefusalKind::AllocationFailed,"SQLite transfer allocation failed"))?;Ok(values)
 }
-pub(super) fn grow<T>(values:&mut Vec<T>,phase:SqliteSnapshotPhase,control:&mut SqliteSnapshotControl<'_>)->Result<()>{
+/// 🌿️ Reserves paid collection growth and preserves cancellable transfer of existing ownership.
+pub fn grow<T>(values:&mut Vec<T>,phase:SqliteSnapshotPhase,control:&mut SqliteSnapshotControl<'_>)->Result<()>{
  if values.len()==values.capacity(){let capacity=values.capacity().max(1).checked_mul(2).ok_or_else(||overflow("SQLite transfer collection overflow"))?;let mut next=reserve(capacity,control)?;let total=values.len();for(index,value)in values.drain(..).enumerate(){next.push(value);if(index+1)%256==0{control.checkpoint(phase,index+1,total)?;}}*values=next;}Ok(())
 }
 /// 🧵 Copies exact UTF8 bytes with interior progress and cumulative admission.

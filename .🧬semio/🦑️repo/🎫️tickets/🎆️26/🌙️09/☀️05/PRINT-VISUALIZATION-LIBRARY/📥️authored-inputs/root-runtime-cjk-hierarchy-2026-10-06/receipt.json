@@ -1,0 +1,43 @@
+{
+  "receipts": [
+    {
+      "name": "critical-cjk-canonical-green-2026-10-06",
+      "scope": "critical-cjk-canonical-green-2026-10-06",
+      "completedUtc": "2026-10-06T00:25:11.7954449Z",
+      "exitCode": 0
+    },
+    {
+      "name": "forest-ordinal-current-green-2026-10-06",
+      "scope": "forest-ordinal-current-green-2026-10-06",
+      "completedUtc": "2026-10-06T00:24:22.5132133Z",
+      "exitCode": 0
+    },
+    {
+      "name": "root-directed-neural-current-strict-2026-10-06",
+      "scope": "root-directed-neural-current-strict-2026-10-06",
+      "exitCode": 0,
+      "completedUtc": "2026-10-06T00:22:01.2311681Z"
+    },
+    {
+      "name": "root-final-launch-projection-2026-10-06",
+      "scope": "root-final-launch-projection-2026-10-06",
+      "exitCode": 0,
+      "completedUtc": "2026-10-06T00:25:04.3558599Z"
+    }
+  ],
+  "sources": [
+    {
+      "file": "🖋️latex/semio-fonts.sty",
+      "sha256": "652634d20651133e775c0c7d5504fd4aef80c0afc8cbae4f98ac54649a6eac8b"
+    },
+    {
+      "file": "🖋️latex/semio-viz-domain.sty",
+      "sha256": "0c926f2e248de44ea1ac0290a86aaf794f6e2194164faf91193e1e671726c8a1"
+    },
+    {
+      "file": "🖋️latex/semio-viz-data.sty",
+      "sha256": "6551eae29d19c287a975073a638d8c0047c3dff97f831b8b03fa3ba066fbba3a"
+    }
+  ],
+  "note": "Critical15 helper/neutral exact pre-directed-control snapshots retained separately in complete-paint-contract before files. Current extended complete-directed gate is still pending."
+}

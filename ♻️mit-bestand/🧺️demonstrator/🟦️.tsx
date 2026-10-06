@@ -25,6 +25,7 @@ import {
   useMediaQuery,
   type LayeredCardState,
   type LayeredChromeState,
+  type LayeredDirection,
   type LayeredPane,
 } from "@semio-tech/ui-react";
 import { createBrowserStoragePort, resolvePlaygroundBoot } from "@semio-tech/framework";
@@ -45,8 +46,8 @@ bootstrapElementsSurfaceChromeDocument(readStoredUiChromeAppearance(demonstrator
 // first render so the landing page's own chrome (Skip/Back/Next/Done) never flashes English.
 initUiLocaleSync(DEMONSTRATOR_LOCALE);
 
-/** 📱️ Touch-first viewports use the vertical snap list even when wider than {@link UI_MOBILE_MEDIA_QUERY}. */
-const DEMONSTRATOR_TOUCH_LIST_MEDIA_QUERY = `${UI_MOBILE_MEDIA_QUERY} and (hover: none) and (pointer: coarse)`;
+/** 📱️ Touch phones swipe through the same grid one app at a time instead of seeing every card at once. */
+const DEMONSTRATOR_SWIPE_MEDIA_QUERY = `${UI_MOBILE_MEDIA_QUERY} and (hover: none) and (pointer: coarse)`;
 
 //#region 🌐️DemonstratorLandingLabels
 /** 🌐️ The landing's own chrome strings, for English AND German (no default language) — the German lock picks German. */
@@ -59,6 +60,10 @@ export const demonstratorLandingUiLabel = registerUiTranslationBundles({
           overview: { label: { normal: "Overview", beginner: "Back to all demonstrators" } },
           paneWaiting: { label: { normal: "{{label}} is being prepared", beginner: "{{label}} is being prepared" } },
           paneFailed: { label: { normal: "{{label}} could not be loaded.", beginner: "{{label}} could not be loaded." } },
+          neighbourUp: { label: { normal: "Go up to {{label}}", beginner: "Swipe down to reach {{label}} above" } },
+          neighbourLeft: { label: { normal: "Go left to {{label}}", beginner: "Swipe right to reach {{label}} on the left" } },
+          neighbourRight: { label: { normal: "Go right to {{label}}", beginner: "Swipe left to reach {{label}} on the right" } },
+          neighbourDown: { label: { normal: "Go down to {{label}}", beginner: "Swipe up to reach {{label}} below" } },
         },
       },
     },
@@ -71,6 +76,10 @@ export const demonstratorLandingUiLabel = registerUiTranslationBundles({
           overview: { label: { normal: "Übersicht", beginner: "Zurück zu allen Demonstratoren" } },
           paneWaiting: { label: { normal: "{{label}} wird vorbereitet", beginner: "{{label}} wird vorbereitet" } },
           paneFailed: { label: { normal: "{{label}} konnte nicht geladen werden.", beginner: "{{label}} konnte nicht geladen werden." } },
+          neighbourUp: { label: { normal: "Nach oben zu {{label}}", beginner: "Nach unten wischen, um {{label}} oben zu erreichen" } },
+          neighbourLeft: { label: { normal: "Nach links zu {{label}}", beginner: "Nach rechts wischen, um {{label}} links zu erreichen" } },
+          neighbourRight: { label: { normal: "Nach rechts zu {{label}}", beginner: "Nach links wischen, um {{label}} rechts zu erreichen" } },
+          neighbourDown: { label: { normal: "Nach unten zu {{label}}", beginner: "Nach oben wischen, um {{label}} unten zu erreichen" } },
         },
       },
     },
@@ -89,6 +98,10 @@ const DEMONSTRATOR_OVERLAY_STYLE = { gridTemplateColumns: `repeat(${DEMONSTRATOR
 /** 🧮️ Every app may stay live; boots start 1.5 s after load, one per 35 s plugin-load budget. A pristine app is released to its poster after
  * 30 s offscreen while another is opened, 5 min idle on the overview or 60 s in a hidden tab — the unattended kiosk case. */
 const DEMONSTRATOR_LIFECYCLE = { budget: DEMONSTRATOR_PANES.length, warmStartMs: 1_500, warmIntervalMs: 35_000, suspendIdleMs: 5 * 60_000, suspendOffscreenMs: 30_000, suspendHiddenMs: 60_000 } as const;
+
+/** 📏️ When swiping, the cards and the neighbour hints stay between the navbar over the top of the overview and the partner credits over its
+ * bottom (two rows of logos on a phone). */
+const DEMONSTRATOR_INSETS = { top: "calc(var(--size-workbench) * 1.5)", bottom: "5.5rem" } as const;
 
 /** 🎪️ One app's live shell: the standalone module it runs, the branded app id its manifest declares, its tour only while opened. */
 function DemonstratorShell({ pane, opened }: { readonly pane: DemonstratorPaneSpec; readonly opened: boolean }) {
@@ -113,20 +126,22 @@ function DemonstratorShell({ pane, opened }: { readonly pane: DemonstratorPaneSp
   );
 }
 
-const DEMONSTRATOR_PAGES: readonly LayeredPane[] = DEMONSTRATOR_PANES.map((pane) => ({ id: pane.id, label: pane.label, icon: pane.icon, capturePoster: capturePosterFromCanvases, render: ({ opened }) => <DemonstratorShell pane={pane} opened={opened} /> }));
+const demonstratorPaneShortLabel = (pane: (typeof DEMONSTRATOR_PANES)[number]): string => pane.brand.shortWindowTitle?.split(" · ").at(-1) ?? pane.label;
+
+const DEMONSTRATOR_PAGES: readonly LayeredPane[] = DEMONSTRATOR_PANES.map((pane) => ({ id: pane.id, label: pane.label, shortLabel: demonstratorPaneShortLabel(pane), icon: pane.icon, capturePoster: capturePosterFromCanvases, render: ({ opened }) => <DemonstratorShell pane={pane} opened={opened} /> }));
 const DEMONSTRATOR_SPECS = new Map(DEMONSTRATOR_PANES.map((pane) => [pane.id, pane]));
 
-/** 🃏️ An app's card, centred in its cell of the card grid (list sections centre it themselves). */
+/** 🃏️ An app's card, centred in its cell of the card grid (when swiping, the overview centres it on its page itself). */
 function renderDemonstratorCard(page: LayeredPane, state: LayeredCardState) {
   const card = <DemonstratorCard pane={DEMONSTRATOR_SPECS.get(page.id)!} lifted={state.revealed} onClick={state.open} />;
-  return state.mode === "list" ? card : <div className="flex min-w-0 justify-center px-double">{card}</div>;
+  return state.mode === "swipe" ? card : <div className="flex min-w-0 justify-center px-double">{card}</div>;
 }
 //#endregion 🎪️DemonstratorPages
 
 //#region 🎪️DemonstratorLanding
 function DemonstratorLanding() {
   const viewportMobile = useMediaQuery(UI_MOBILE_MEDIA_QUERY);
-  const touchList = useMediaQuery(DEMONSTRATOR_TOUCH_LIST_MEDIA_QUERY);
+  const swipe = useMediaQuery(DEMONSTRATOR_SWIPE_MEDIA_QUERY);
   const surfaceChrome = useMemo(
     () => ({
       appearance: readStoredUiChromeAppearance(demonstratorStorage),
@@ -143,9 +158,19 @@ function DemonstratorLanding() {
   const overviewLabel = useLabel(demonstratorLandingUiLabel("demonstrator.landing.overview"));
   const waitingLabel = useLabelFormatter(demonstratorLandingUiLabel("demonstrator.landing.paneWaiting"));
   const failedLabel = useLabelFormatter(demonstratorLandingUiLabel("demonstrator.landing.paneFailed"));
+  const up = useLabelFormatter(demonstratorLandingUiLabel("demonstrator.landing.neighbourUp"));
+  const left = useLabelFormatter(demonstratorLandingUiLabel("demonstrator.landing.neighbourLeft"));
+  const right = useLabelFormatter(demonstratorLandingUiLabel("demonstrator.landing.neighbourRight"));
+  const down = useLabelFormatter(demonstratorLandingUiLabel("demonstrator.landing.neighbourDown"));
   const labels = useMemo(
-    () => ({ grid: gridLabel, overview: overviewLabel, waiting: (page: LayeredPane) => waitingLabel({ label: page.label }), failed: (page: LayeredPane) => failedLabel({ label: page.label }) }),
-    [gridLabel, overviewLabel, waitingLabel, failedLabel],
+    () => ({
+      grid: gridLabel,
+      overview: overviewLabel,
+      waiting: (page: LayeredPane) => waitingLabel({ label: page.label }),
+      failed: (page: LayeredPane) => failedLabel({ label: page.label }),
+      neighbour: (page: LayeredPane, direction: LayeredDirection) => ({ up, left, right, down })[direction]({ label: page.label }),
+    }),
+    [gridLabel, overviewLabel, waitingLabel, failedLabel, up, left, right, down],
   );
   const dismissIntroduction = useCallback((id: string | null) => id !== null && setIntroductionDismissed(true), []);
 
@@ -195,7 +220,8 @@ function DemonstratorLanding() {
       overlayClassName="grid items-center"
       overlayStyle={DEMONSTRATOR_OVERLAY_STYLE}
       renderChrome={renderChrome}
-      mode={touchList ? "list" : "strip"}
+      mode={swipe ? "swipe" : "strip"}
+      insets={DEMONSTRATOR_INSETS}
       lifecycle={DEMONSTRATOR_LIFECYCLE}
       labels={labels}
       onOpenedIdChange={dismissIntroduction}

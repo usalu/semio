@@ -1,0 +1,173 @@
+{
+  "owner": "GEO-SPATIAL",
+  "options": {
+    "basemap": {
+      "syntax": "scalar",
+      "type": "boolean",
+      "description": {
+        "en": "Draw the base map behind the overlay.",
+        "de": "Die Grundkarte hinter der Überlagerung zeichnen."
+      }
+    },
+    "curvature": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Curvature of a link, as a fraction of its span.",
+        "de": "Krümmung einer Kante als Bruchteil ihrer Spannweite."
+      }
+    },
+    "fit": {
+      "syntax": "identifier",
+      "type": "string",
+      "enum": [
+        "geometry",
+        "world"
+      ],
+      "description": {
+        "en": "What the projection is fitted to; families that draw a graticule default to `world`.",
+        "de": "Woran die Projektion eingepasst wird; Familien mit Gradnetz verwenden `world`."
+      }
+    },
+    "flow": {
+      "syntax": "identifier",
+      "type": "string",
+      "description": {
+        "en": "Origin–destination rendering style: tapered band, arrow, straight desire line or migration arrow.",
+        "de": "Darstellungsstil für Quelle und Ziel: verjüngtes Band, Pfeil, gerade Wunschlinie oder Migrationspfeil."
+      },
+      "enum": [
+        "band",
+        "arrow",
+        "desire",
+        "migration"
+      ],
+      "default": "band"
+    },
+    "geometry": {
+      "syntax": "identifier",
+      "type": "string",
+      "description": {
+        "en": "Name of the geometry table the map draws.",
+        "de": "Name der Geometrietabelle, die die Karte zeichnet."
+      }
+    },
+    "height": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Frame height in millimetres.",
+        "de": "Rahmenhöhe in Millimetern."
+      }
+    },
+    "lineWidth": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Outline width as a TeX dimension; the hairline stroke token by default.",
+        "de": "Umrissbreite als TeX-Dimension; standardmäßig das Haarlinien-Token."
+      }
+    },
+    "opacity": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Draw opacity of the layer.",
+        "de": "Zeichendeckkraft der Ebene."
+      }
+    },
+    "origins": {
+      "syntax": "scalar",
+      "type": "boolean",
+      "description": {
+        "en": "Mark the origin of every flow.",
+        "de": "Den Ursprung jedes Stroms markieren."
+      }
+    },
+    "palette": {
+      "syntax": "identifier",
+      "type": "string",
+      "description": {
+        "en": "Named colour palette resolved by semio-viz-theme.",
+        "de": "Benannte Farbpalette, die semio-viz-theme auflöst."
+      }
+    },
+    "paletteSteps": {
+      "syntax": "expression",
+      "type": "integer",
+      "minimum": 1,
+      "default": 5,
+      "description": {
+        "en": "Number of geographic palette levels, independently of vector integration steps; one level uses the palette midpoint.",
+        "de": "Anzahl der geografischen Palettenstufen unabhängig von den Vektorintegrationsschritten; eine Stufe nutzt die Palettenmitte."
+      }
+    },
+    "parallels": {
+      "syntax": "number-list",
+      "type": "string",
+      "default": "0,60",
+      "description": {
+        "en": "Conic standard parallels `p0,p1` in degrees.",
+        "de": "Standardparallelen `p0,p1` der Kegelprojektion in Grad."
+      }
+    },
+    "projection": {
+      "syntax": "identifier",
+      "type": "string",
+      "description": {
+        "en": "Map or camera projection used.",
+        "de": "Verwendete Karten- bzw. Kameraprojektion."
+      }
+    },
+    "rotate": {
+      "syntax": "number-list",
+      "type": "string",
+      "default": "0,0,0",
+      "description": {
+        "en": "Projection rotation `lambda,phi,gamma` in degrees.",
+        "de": "Projektionsdrehung `lambda,phi,gamma` in Grad."
+      }
+    },
+    "routes": {
+      "syntax": "identifier",
+      "type": "string",
+      "description": {
+        "en": "Table of routes drawn on the map.",
+        "de": "Tabelle der Routen, die auf der Karte gezeichnet werden."
+      }
+    },
+    "routeWidth": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Dimensionless normalized-width factor: route strokes use 0.3 + factor × normalized value points; flow half-width uses 0.4 + 2 × factor × normalized value millimetres.",
+        "de": "Dimensionsloser Faktor der normierten Breite: Routenlinien nutzen 0,3 + Faktor × normierter Wert Punkt; Flusshalbbreiten nutzen 0,4 + 2 × Faktor × normierter Wert Millimeter."
+      }
+    },
+    "stroke": {
+      "syntax": "paint",
+      "type": "string",
+      "default": "semio-chrome-border-emphasized",
+      "description": {
+        "en": "Outline colour token.",
+        "de": "Farbtoken der Umrisslinie."
+      }
+    },
+    "variant": {
+      "syntax": "identifier",
+      "type": "string",
+      "description": {
+        "en": "Sub-kind the family renders; the catalogue slug of the chart kind. The family must draw a different geometry for every variant it declares.",
+        "de": "Untertyp, den die Familie zeichnet; der Katalog-Slug der Diagrammart. Die Familie muss für jede deklarierte Variante eine andere Geometrie zeichnen."
+      }
+    },
+    "width": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Frame width in millimetres.",
+        "de": "Rahmenbreite in Millimetern."
+      }
+    }
+  }
+}

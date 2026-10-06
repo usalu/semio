@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "durationMs": 10500,
+  "cases": [
+    {
+      "id": "ordinary-owner",
+      "mode": "wrapper",
+      "wrapperProgress": true
+    },
+    {
+      "id": "interactive-owner",
+      "mode": "delegated",
+      "wrapperProgress": false
+    }
+  ],
+  "artifactEnvironment": {
+    "route": "native-owner-command-policy",
+    "defaultRelativeRoot": ".🧬semio/🦑️repo/⚡️cache/🧪️tests"
+  }
+}

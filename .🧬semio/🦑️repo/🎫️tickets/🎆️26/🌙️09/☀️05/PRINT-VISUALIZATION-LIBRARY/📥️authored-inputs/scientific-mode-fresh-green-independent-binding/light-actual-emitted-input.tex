@@ -1,0 +1,428 @@
+\documentclass[type=paper,language=en,theme=light]{semio}
+\usepackage{semio-viz-probe}
+\usepackage{semio-viz}
+\title{Scientific Viewports}
+\author{Semio}
+\date{}
+\errorcontextlines=200
+\ExplSyntaxOn
+\tl_new:N \l_semio_viz_test_canvas_case_tl
+\cs_new_eq:NN \semio_viz_test_canvas_frame: \semio_viz_sci_frame:
+\cs_set_protected:Npn \semio_viz_sci_frame: { \exp_args:Nx \special {pdf:literal~direct~/SemioVizChrome\tl_use:N \l_semio_viz_test_canvas_case_tl \c_space_tl BMC} \semio_viz_test_canvas_frame: \special{pdf:literal~direct~EMC} }
+\cs_if_exist:NT \semio_viz_sci_physical_begin: {
+\cs_new_eq:NN \semio_viz_test_canvas_begin: \semio_viz_sci_physical_begin:
+\cs_new_eq:NN \semio_viz_test_canvas_end: \semio_viz_sci_physical_end:
+\cs_set_protected:Npn \semio_viz_sci_physical_begin: { \semio_viz_test_canvas_begin: \exp_args:Nx \special{pdf:literal~direct~/SemioVizBody\tl_use:N \l_semio_viz_test_canvas_case_tl \c_space_tl BMC} }
+\cs_set_protected:Npn \semio_viz_sci_physical_end: { \special{pdf:literal~direct~EMC} \semio_viz_test_canvas_end: }
+}
+\ExplSyntaxOff
+\ExplSyntaxOn
+\int_new:N\g_semio_viz_test_mode_element_int
+\cs_new_eq:NN\semio_viz_test_mode_symbol:\semio_viz_eng_symbol:
+\cs_set_protected:Npn\semio_viz_eng_symbol:{
+\int_gincr:N\g_semio_viz_test_mode_element_int
+\use:x{\exp_not:N\special{pdf:literal~direct~/SemioVizElement\tl_use:N\l_semio_viz_test_canvas_case_tl E\int_use:N\g_semio_viz_test_mode_element_int\c_space_tl BMC}}
+\semio_viz_test_mode_symbol:\special{pdf:literal~direct~EMC}}
+\ExplSyntaxOff
+\begin{document}
+\SemioVizProbeBegin{scientific-mode-defaults}{light}
+\SemioVizProbeOn
+\SemioVizProbePage
+\clearpage\ExplSyntaxOn\tl_set:Nn\l_semio_viz_test_canvas_case_tl{Md0M0O}\int_gzero:N\g_semio_viz_test_mode_element_int\ExplSyntaxOff\SemioVizProbeBegin{scientific-mode-defaults}{Md0M0O}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{en}\ExplSyntaxOff
+\begin{VizFigure}[width=140,height=120,title={}]
+\draw[line width=.01mm] (0,0) rectangle (140,120);
+\SemioVizTheme{default}[appearance=light]
+\SemioVizChart{pathway-diagram}[axes={false},grid={false},height={48},mode={pathway},nodeShape={box},title={},unit={1},width={80},xlabel={},ylabel={}]
+% 140mm × 120mm, light appearance
+\end{VizFigure}
+\endgroup
+
+\clearpage\ExplSyntaxOn\tl_set:Nn\l_semio_viz_test_canvas_case_tl{Md0M0X}\int_gzero:N\g_semio_viz_test_mode_element_int\ExplSyntaxOff\SemioVizProbeBegin{scientific-mode-defaults}{Md0M0X}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{en}\ExplSyntaxOff
+\begin{VizFigure}[width=140,height=120,title={}]
+\draw[line width=.01mm] (0,0) rectangle (140,120);
+\SemioVizTheme{default}[appearance=light]
+\SemioVizChart{pathway-diagram}[axes={false},edges={a/b/activate/,b/c/activate/,c/d/activate/P,d/e/activate/,f/c/inhibit/},grid={false},height={48},mode={pathway},nodeShape={box},nodes={a/0/28/ligand,b/0/14/receptor,c/22/14/kinase,d/44/14/TF,e/44/0/gene,f/22/28/inhibitor},title={},unit={1},width={80},xlabel={},ylabel={}]
+% 140mm × 120mm, light appearance
+\end{VizFigure}
+\endgroup
+
+\clearpage\ExplSyntaxOn\tl_set:Nn\l_semio_viz_test_canvas_case_tl{Md0M1O}\int_gzero:N\g_semio_viz_test_mode_element_int\ExplSyntaxOff\SemioVizProbeBegin{scientific-mode-defaults}{Md0M1O}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{en}\ExplSyntaxOff
+\begin{VizFigure}[width=140,height=120,title={}]
+\draw[line width=.01mm] (0,0) rectangle (140,120);
+\SemioVizTheme{default}[appearance=light]
+\SemioVizChart{pathway-diagram}[axes={false},grid={false},height={48},mode={food-web},nodeShape={box},title={},unit={1},width={80},xlabel={},ylabel={}]
+% 140mm × 120mm, light appearance
+\end{VizFigure}
+\endgroup
+
+\clearpage\ExplSyntaxOn\tl_set:Nn\l_semio_viz_test_canvas_case_tl{Md0M1X}\int_gzero:N\g_semio_viz_test_mode_element_int\ExplSyntaxOff\SemioVizProbeBegin{scientific-mode-defaults}{Md0M1X}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{en}\ExplSyntaxOff
+\begin{VizFigure}[width=140,height=120,title={}]
+\draw[line width=.01mm] (0,0) rectangle (140,120);
+\SemioVizTheme{default}[appearance=light]
+\SemioVizChart{pathway-diagram}[axes={false},edges={p/h/flux/,p/o/flux/,h/c/flux/,o/c/flux/,h/o/flux/},grid={false},height={48},mode={food-web},nodeShape={box},nodes={p/0/0/producer,h/22/14/herbivore,o/22/-14/omnivore,c/44/0/carnivore},title={},unit={1},width={80},xlabel={},ylabel={}]
+% 140mm × 120mm, light appearance
+\end{VizFigure}
+\endgroup
+
+\clearpage\ExplSyntaxOn\tl_set:Nn\l_semio_viz_test_canvas_case_tl{Md0M2O}\int_gzero:N\g_semio_viz_test_mode_element_int\ExplSyntaxOff\SemioVizProbeBegin{scientific-mode-defaults}{Md0M2O}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{en}\ExplSyntaxOff
+\begin{VizFigure}[width=140,height=120,title={}]
+\draw[line width=.01mm] (0,0) rectangle (140,120);
+\SemioVizTheme{default}[appearance=light]
+\SemioVizChart{pathway-diagram}[axes={false},grid={false},height={48},mode={metabolic},nodeShape={box},title={},unit={1},width={80},xlabel={},ylabel={}]
+% 140mm × 120mm, light appearance
+\end{VizFigure}
+\endgroup
+
+\clearpage\ExplSyntaxOn\tl_set:Nn\l_semio_viz_test_canvas_case_tl{Md0M2X}\int_gzero:N\g_semio_viz_test_mode_element_int\ExplSyntaxOff\SemioVizProbeBegin{scientific-mode-defaults}{Md0M2X}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{en}\ExplSyntaxOff
+\begin{VizFigure}[width=140,height=120,title={}]
+\draw[line width=.01mm] (0,0) rectangle (140,120);
+\SemioVizTheme{default}[appearance=light]
+\SemioVizChart{pathway-diagram}[axes={false},edges={g/p/flux/glycolysis,p/a/flux/,p/l/flux/,a/t/flux/},grid={false},height={48},mode={metabolic},nodeShape={box},nodes={g/0/0/glucose,p/22/0/pyruvate,a/44/0/acetyl-CoA,l/22/-18/lactate,t/44/18/TCA},title={},unit={1},width={80},xlabel={},ylabel={}]
+% 140mm × 120mm, light appearance
+\end{VizFigure}
+\endgroup
+
+\clearpage\ExplSyntaxOn\tl_set:Nn\l_semio_viz_test_canvas_case_tl{Md0M3O}\int_gzero:N\g_semio_viz_test_mode_element_int\ExplSyntaxOff\SemioVizProbeBegin{scientific-mode-defaults}{Md0M3O}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{en}\ExplSyntaxOff
+\begin{VizFigure}[width=140,height=120,title={}]
+\draw[line width=.01mm] (0,0) rectangle (140,120);
+\SemioVizTheme{default}[appearance=light]
+\SemioVizChart{pathway-diagram}[axes={false},grid={false},height={48},mode={interaction},nodeShape={box},title={},unit={1},width={80},xlabel={},ylabel={}]
+% 140mm × 120mm, light appearance
+\end{VizFigure}
+\endgroup
+
+\clearpage\ExplSyntaxOn\tl_set:Nn\l_semio_viz_test_canvas_case_tl{Md0M3X}\int_gzero:N\g_semio_viz_test_mode_element_int\ExplSyntaxOff\SemioVizProbeBegin{scientific-mode-defaults}{Md0M3X}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{en}\ExplSyntaxOff
+\begin{VizFigure}[width=140,height=120,title={}]
+\draw[line width=.01mm] (0,0) rectangle (140,120);
+\SemioVizTheme{default}[appearance=light]
+\SemioVizChart{pathway-diagram}[axes={false},edges={a/b/plain/,b/c/plain/,c/d/plain/,d/a/plain/,b/d/plain/},grid={false},height={48},mode={interaction},nodeShape={box},nodes={a/0/0/P1,b/22/14/P2,c/44/0/P3,d/22/-14/P4},title={},unit={1},width={80},xlabel={},ylabel={}]
+% 140mm × 120mm, light appearance
+\end{VizFigure}
+\endgroup
+
+\clearpage\ExplSyntaxOn\tl_set:Nn\l_semio_viz_test_canvas_case_tl{Md1M0O}\int_gzero:N\g_semio_viz_test_mode_element_int\ExplSyntaxOff\SemioVizProbeBegin{scientific-mode-defaults}{Md1M0O}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{en}\ExplSyntaxOff
+\begin{VizFigure}[width=140,height=120,title={}]
+\draw[line width=.01mm] (0,0) rectangle (140,120);
+\SemioVizTheme{default}[appearance=light]
+\SemioVizChart{circuit-schematic}[axes={false},grid={false},height={48},mode={schematic},title={},width={80},xlabel={},ylabel={}]
+% 140mm × 120mm, light appearance
+\end{VizFigure}
+\endgroup
+
+\clearpage\ExplSyntaxOn\tl_set:Nn\l_semio_viz_test_canvas_case_tl{Md1M0X}\int_gzero:N\g_semio_viz_test_mode_element_int\ExplSyntaxOff\SemioVizProbeBegin{scientific-mode-defaults}{Md1M0X}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{en}\ExplSyntaxOff
+\begin{VizFigure}[width=140,height=120,title={}]
+\draw[line width=.01mm] (0,0) rectangle (140,120);
+\SemioVizTheme{default}[appearance=light]
+\SemioVizChart{circuit-schematic}[axes={false},elements={source/0/0/0/24/V,wire/0/24/16/24/,resistor/16/24/34/24/R1,wire/34/24/50/24/,capacitor/50/24/50/8/C1,wire/50/8/50/0/,wire/50/0/0/0/,ground/22/0/22/-6/},grid={false},height={48},mode={schematic},title={},width={80},xlabel={},ylabel={}]
+% 140mm × 120mm, light appearance
+\end{VizFigure}
+\endgroup
+
+\clearpage\ExplSyntaxOn\tl_set:Nn\l_semio_viz_test_canvas_case_tl{Md1M1O}\int_gzero:N\g_semio_viz_test_mode_element_int\ExplSyntaxOff\SemioVizProbeBegin{scientific-mode-defaults}{Md1M1O}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{en}\ExplSyntaxOff
+\begin{VizFigure}[width=140,height=120,title={}]
+\draw[line width=.01mm] (0,0) rectangle (140,120);
+\SemioVizTheme{default}[appearance=light]
+\SemioVizChart{circuit-schematic}[axes={false},grid={false},height={48},mode={logic},title={},width={80},xlabel={},ylabel={}]
+% 140mm × 120mm, light appearance
+\end{VizFigure}
+\endgroup
+
+\clearpage\ExplSyntaxOn\tl_set:Nn\l_semio_viz_test_canvas_case_tl{Md1M1X}\int_gzero:N\g_semio_viz_test_mode_element_int\ExplSyntaxOff\SemioVizProbeBegin{scientific-mode-defaults}{Md1M1X}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{en}\ExplSyntaxOff
+\begin{VizFigure}[width=140,height=120,title={}]
+\draw[line width=.01mm] (0,0) rectangle (140,120);
+\SemioVizTheme{default}[appearance=light]
+\SemioVizChart{circuit-schematic}[axes={false},elements={and/0/0/12/0/A,wire/12/0/20/0/,not/20/0/32/0/B,wire/32/0/40/0/,or/40/0/52/0/C},grid={false},height={48},mode={logic},title={},width={80},xlabel={},ylabel={}]
+% 140mm × 120mm, light appearance
+\end{VizFigure}
+\endgroup
+
+\clearpage\ExplSyntaxOn\tl_set:Nn\l_semio_viz_test_canvas_case_tl{Md1M2O}\int_gzero:N\g_semio_viz_test_mode_element_int\ExplSyntaxOff\SemioVizProbeBegin{scientific-mode-defaults}{Md1M2O}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{en}\ExplSyntaxOff
+\begin{VizFigure}[width=140,height=120,title={}]
+\draw[line width=.01mm] (0,0) rectangle (140,120);
+\SemioVizTheme{default}[appearance=light]
+\SemioVizChart{circuit-schematic}[axes={false},grid={false},height={48},mode={ladder},title={},width={80},xlabel={},ylabel={}]
+% 140mm × 120mm, light appearance
+\end{VizFigure}
+\endgroup
+
+\clearpage\ExplSyntaxOn\tl_set:Nn\l_semio_viz_test_canvas_case_tl{Md1M2X}\int_gzero:N\g_semio_viz_test_mode_element_int\ExplSyntaxOff\SemioVizProbeBegin{scientific-mode-defaults}{Md1M2X}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{en}\ExplSyntaxOff
+\begin{VizFigure}[width=140,height=120,title={}]
+\draw[line width=.01mm] (0,0) rectangle (140,120);
+\SemioVizTheme{default}[appearance=light]
+\SemioVizChart{circuit-schematic}[axes={false},elements={wire/0/0/0/30/,wire/40/0/40/30/,contact/0/24/16/24/K1,wire/16/24/24/24/,coil/24/24/40/24/Q1,contact/0/12/16/12/K2,wire/16/12/24/12/,coil/24/12/40/12/Q2},grid={false},height={48},mode={ladder},title={},width={80},xlabel={},ylabel={}]
+% 140mm × 120mm, light appearance
+\end{VizFigure}
+\endgroup
+
+\clearpage\ExplSyntaxOn\tl_set:Nn\l_semio_viz_test_canvas_case_tl{Md1M3O}\int_gzero:N\g_semio_viz_test_mode_element_int\ExplSyntaxOff\SemioVizProbeBegin{scientific-mode-defaults}{Md1M3O}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{en}\ExplSyntaxOff
+\begin{VizFigure}[width=140,height=120,title={}]
+\draw[line width=.01mm] (0,0) rectangle (140,120);
+\SemioVizTheme{default}[appearance=light]
+\SemioVizChart{circuit-schematic}[axes={false},grid={false},height={48},mode={wiring},title={},width={80},xlabel={},ylabel={}]
+% 140mm × 120mm, light appearance
+\end{VizFigure}
+\endgroup
+
+\clearpage\ExplSyntaxOn\tl_set:Nn\l_semio_viz_test_canvas_case_tl{Md1M3X}\int_gzero:N\g_semio_viz_test_mode_element_int\ExplSyntaxOff\SemioVizProbeBegin{scientific-mode-defaults}{Md1M3X}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{en}\ExplSyntaxOff
+\begin{VizFigure}[width=140,height=120,title={}]
+\draw[line width=.01mm] (0,0) rectangle (140,120);
+\SemioVizTheme{default}[appearance=light]
+\SemioVizChart{circuit-schematic}[axes={false},elements={node/0/0/0/0/,wire/0/0/24/0/L1,node/24/0/24/0/,wire/24/0/24/18/L2,node/24/18/24/18/},grid={false},height={48},mode={wiring},title={},width={80},xlabel={},ylabel={}]
+% 140mm × 120mm, light appearance
+\end{VizFigure}
+\endgroup
+
+\clearpage\ExplSyntaxOn\tl_set:Nn\l_semio_viz_test_canvas_case_tl{Md1M4O}\int_gzero:N\g_semio_viz_test_mode_element_int\ExplSyntaxOff\SemioVizProbeBegin{scientific-mode-defaults}{Md1M4O}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{en}\ExplSyntaxOff
+\begin{VizFigure}[width=140,height=120,title={}]
+\draw[line width=.01mm] (0,0) rectangle (140,120);
+\SemioVizTheme{default}[appearance=light]
+\SemioVizChart{circuit-schematic}[axes={false},grid={false},height={48},mode={block},title={},width={80},xlabel={},ylabel={}]
+% 140mm × 120mm, light appearance
+\end{VizFigure}
+\endgroup
+
+\clearpage\ExplSyntaxOn\tl_set:Nn\l_semio_viz_test_canvas_case_tl{Md1M4X}\int_gzero:N\g_semio_viz_test_mode_element_int\ExplSyntaxOff\SemioVizProbeBegin{scientific-mode-defaults}{Md1M4X}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{en}\ExplSyntaxOff
+\begin{VizFigure}[width=140,height=120,title={}]
+\draw[line width=.01mm] (0,0) rectangle (140,120);
+\SemioVizTheme{default}[appearance=light]
+\SemioVizChart{circuit-schematic}[axes={false},elements={block/0/0/16/0/in,signal/16/0/24/0/,block/24/0/44/0/G,signal/44/0/52/0/,block/52/0/68/0/out},grid={false},height={48},mode={block},title={},width={80},xlabel={},ylabel={}]
+% 140mm × 120mm, light appearance
+\end{VizFigure}
+\endgroup
+
+\clearpage\ExplSyntaxOn\tl_set:Nn\l_semio_viz_test_canvas_case_tl{Md1M5O}\int_gzero:N\g_semio_viz_test_mode_element_int\ExplSyntaxOff\SemioVizProbeBegin{scientific-mode-defaults}{Md1M5O}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{en}\ExplSyntaxOff
+\begin{VizFigure}[width=140,height=120,title={}]
+\draw[line width=.01mm] (0,0) rectangle (140,120);
+\SemioVizTheme{default}[appearance=light]
+\SemioVizChart{circuit-schematic}[axes={false},grid={false},height={48},mode={signal-flow},title={},width={80},xlabel={},ylabel={}]
+% 140mm × 120mm, light appearance
+\end{VizFigure}
+\endgroup
+
+\clearpage\ExplSyntaxOn\tl_set:Nn\l_semio_viz_test_canvas_case_tl{Md1M5X}\int_gzero:N\g_semio_viz_test_mode_element_int\ExplSyntaxOff\SemioVizProbeBegin{scientific-mode-defaults}{Md1M5X}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{en}\ExplSyntaxOff
+\begin{VizFigure}[width=140,height=120,title={}]
+\draw[line width=.01mm] (0,0) rectangle (140,120);
+\SemioVizTheme{default}[appearance=light]
+\SemioVizChart{circuit-schematic}[axes={false},elements={node/0/0/0/0/x,signal/0/0/20/0/a,node/20/0/20/0/y,signal/20/0/40/0/b,node/40/0/40/0/z},grid={false},height={48},mode={signal-flow},title={},width={80},xlabel={},ylabel={}]
+% 140mm × 120mm, light appearance
+\end{VizFigure}
+\endgroup
+
+\clearpage\ExplSyntaxOn\tl_set:Nn\l_semio_viz_test_canvas_case_tl{Md2M0O}\int_gzero:N\g_semio_viz_test_mode_element_int\ExplSyntaxOff\SemioVizProbeBegin{scientific-mode-defaults}{Md2M0O}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{en}\ExplSyntaxOff
+\begin{VizFigure}[width=140,height=120,title={}]
+\draw[line width=.01mm] (0,0) rectangle (140,120);
+\SemioVizTheme{default}[appearance=light]
+\SemioVizChart{commutative-diagram}[axes={false},grid={false},height={48},mode={commutative},nodeShape={none},title={},unit={18},width={80},xlabel={},ylabel={}]
+% 140mm × 120mm, light appearance
+\end{VizFigure}
+\endgroup
+
+\clearpage\ExplSyntaxOn\tl_set:Nn\l_semio_viz_test_canvas_case_tl{Md2M0X}\int_gzero:N\g_semio_viz_test_mode_element_int\ExplSyntaxOff\SemioVizProbeBegin{scientific-mode-defaults}{Md2M0X}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{en}\ExplSyntaxOff
+\begin{VizFigure}[width=140,height=120,title={}]
+\draw[line width=.01mm] (0,0) rectangle (140,120);
+\SemioVizTheme{default}[appearance=light]
+\SemioVizChart{commutative-diagram}[axes={false},edges={a/b/arrow/f,a/c/arrow/g,b/d/arrow/h,c/d/arrow/k},grid={false},height={48},mode={commutative},nodeShape={none},nodes={a/0/1/A,b/1/1/B,c/0/0/C,d/1/0/D},title={},unit={18},width={80},xlabel={},ylabel={}]
+% 140mm × 120mm, light appearance
+\end{VizFigure}
+\endgroup
+
+\clearpage\ExplSyntaxOn\tl_set:Nn\l_semio_viz_test_canvas_case_tl{Md2M1O}\int_gzero:N\g_semio_viz_test_mode_element_int\ExplSyntaxOff\SemioVizProbeBegin{scientific-mode-defaults}{Md2M1O}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{en}\ExplSyntaxOff
+\begin{VizFigure}[width=140,height=120,title={}]
+\draw[line width=.01mm] (0,0) rectangle (140,120);
+\SemioVizTheme{default}[appearance=light]
+\SemioVizChart{commutative-diagram}[axes={false},grid={false},height={48},mode={string},nodeShape={none},title={},unit={18},width={80},xlabel={},ylabel={}]
+% 140mm × 120mm, light appearance
+\end{VizFigure}
+\endgroup
+
+\clearpage\ExplSyntaxOn\tl_set:Nn\l_semio_viz_test_canvas_case_tl{Md2M1X}\int_gzero:N\g_semio_viz_test_mode_element_int\ExplSyntaxOff\SemioVizProbeBegin{scientific-mode-defaults}{Md2M1X}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{en}\ExplSyntaxOff
+\begin{VizFigure}[width=140,height=120,title={}]
+\draw[line width=.01mm] (0,0) rectangle (140,120);
+\SemioVizTheme{default}[appearance=light]
+\SemioVizChart{commutative-diagram}[axes={false},edges={c/a/wire/,d/b/wire/,a/b/wire/},grid={false},height={48},mode={string},nodeShape={none},nodes={a/0/1/f,b/1/1/g,c/0/0/,d/1/0/},title={},unit={18},width={80},xlabel={},ylabel={}]
+% 140mm × 120mm, light appearance
+\end{VizFigure}
+\endgroup
+
+\clearpage\ExplSyntaxOn\tl_set:Nn\l_semio_viz_test_canvas_case_tl{Md2M2O}\int_gzero:N\g_semio_viz_test_mode_element_int\ExplSyntaxOff\SemioVizProbeBegin{scientific-mode-defaults}{Md2M2O}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{en}\ExplSyntaxOff
+\begin{VizFigure}[width=140,height=120,title={}]
+\draw[line width=.01mm] (0,0) rectangle (140,120);
+\SemioVizTheme{default}[appearance=light]
+\SemioVizChart{commutative-diagram}[axes={false},grid={false},height={48},mode={tensor},nodeShape={none},title={},unit={18},width={80},xlabel={},ylabel={}]
+% 140mm × 120mm, light appearance
+\end{VizFigure}
+\endgroup
+
+\clearpage\ExplSyntaxOn\tl_set:Nn\l_semio_viz_test_canvas_case_tl{Md2M2X}\int_gzero:N\g_semio_viz_test_mode_element_int\ExplSyntaxOff\SemioVizProbeBegin{scientific-mode-defaults}{Md2M2X}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{en}\ExplSyntaxOff
+\begin{VizFigure}[width=140,height=120,title={}]
+\draw[line width=.01mm] (0,0) rectangle (140,120);
+\SemioVizTheme{default}[appearance=light]
+\SemioVizChart{commutative-diagram}[axes={false},edges={a/b/leg/,a/c/leg/,b/d/leg/,c/d/leg/},grid={false},height={48},mode={tensor},nodeShape={none},nodes={a/0/1/A,b/1/1/B,c/0/0/C,d/1/0/D},title={},unit={18},width={80},xlabel={},ylabel={}]
+% 140mm × 120mm, light appearance
+\end{VizFigure}
+\endgroup
+
+\clearpage\ExplSyntaxOn\tl_set:Nn\l_semio_viz_test_canvas_case_tl{Md2M3O}\int_gzero:N\g_semio_viz_test_mode_element_int\ExplSyntaxOff\SemioVizProbeBegin{scientific-mode-defaults}{Md2M3O}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{en}\ExplSyntaxOff
+\begin{VizFigure}[width=140,height=120,title={}]
+\draw[line width=.01mm] (0,0) rectangle (140,120);
+\SemioVizTheme{default}[appearance=light]
+\SemioVizChart{commutative-diagram}[axes={false},grid={false},height={48},mode={hasse},nodeShape={none},title={},unit={18},width={80},xlabel={},ylabel={}]
+% 140mm × 120mm, light appearance
+\end{VizFigure}
+\endgroup
+
+\clearpage\ExplSyntaxOn\tl_set:Nn\l_semio_viz_test_canvas_case_tl{Md2M3X}\int_gzero:N\g_semio_viz_test_mode_element_int\ExplSyntaxOff\SemioVizProbeBegin{scientific-mode-defaults}{Md2M3X}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{en}\ExplSyntaxOff
+\begin{VizFigure}[width=140,height=120,title={}]
+\draw[line width=.01mm] (0,0) rectangle (140,120);
+\SemioVizTheme{default}[appearance=light]
+\SemioVizChart{commutative-diagram}[axes={false},edges={a/b/order/,a/c/order/,b/d/order/,c/d/order/},grid={false},height={48},mode={hasse},nodeShape={none},nodes={a/0/0/0,b/-0.7/1/a,c/0.7/1/b,d/0/2/1},title={},unit={18},width={80},xlabel={},ylabel={}]
+% 140mm × 120mm, light appearance
+\end{VizFigure}
+\endgroup
+
+\clearpage\ExplSyntaxOn\tl_set:Nn\l_semio_viz_test_canvas_case_tl{Md2M4O}\int_gzero:N\g_semio_viz_test_mode_element_int\ExplSyntaxOff\SemioVizProbeBegin{scientific-mode-defaults}{Md2M4O}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{en}\ExplSyntaxOff
+\begin{VizFigure}[width=140,height=120,title={}]
+\draw[line width=.01mm] (0,0) rectangle (140,120);
+\SemioVizTheme{default}[appearance=light]
+\SemioVizChart{commutative-diagram}[axes={false},grid={false},height={48},mode={cayley},nodeShape={none},title={},unit={18},width={80},xlabel={},ylabel={}]
+% 140mm × 120mm, light appearance
+\end{VizFigure}
+\endgroup
+
+\clearpage\ExplSyntaxOn\tl_set:Nn\l_semio_viz_test_canvas_case_tl{Md2M4X}\int_gzero:N\g_semio_viz_test_mode_element_int\ExplSyntaxOff\SemioVizProbeBegin{scientific-mode-defaults}{Md2M4X}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{en}\ExplSyntaxOff
+\begin{VizFigure}[width=140,height=120,title={}]
+\draw[line width=.01mm] (0,0) rectangle (140,120);
+\SemioVizTheme{default}[appearance=light]
+\SemioVizChart{commutative-diagram}[axes={false},edges={a/b/arrow/r,b/c/arrow/r,c/d/arrow/r,d/a/arrow/r},grid={false},height={48},mode={cayley},nodeShape={none},nodes={a/0/0/e,b/1/0/r,c/1/1/r2,d/0/1/r3},title={},unit={18},width={80},xlabel={},ylabel={}]
+% 140mm × 120mm, light appearance
+\end{VizFigure}
+\endgroup
+
+\clearpage\ExplSyntaxOn\tl_set:Nn\l_semio_viz_test_canvas_case_tl{Md2M5O}\int_gzero:N\g_semio_viz_test_mode_element_int\ExplSyntaxOff\SemioVizProbeBegin{scientific-mode-defaults}{Md2M5O}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{en}\ExplSyntaxOff
+\begin{VizFigure}[width=140,height=120,title={}]
+\draw[line width=.01mm] (0,0) rectangle (140,120);
+\SemioVizTheme{default}[appearance=light]
+\SemioVizChart{commutative-diagram}[axes={false},grid={false},height={48},mode={dynkin},nodeShape={none},title={},unit={18},width={80},xlabel={},ylabel={}]
+% 140mm × 120mm, light appearance
+\end{VizFigure}
+\endgroup
+
+\clearpage\ExplSyntaxOn\tl_set:Nn\l_semio_viz_test_canvas_case_tl{Md2M5X}\int_gzero:N\g_semio_viz_test_mode_element_int\ExplSyntaxOff\SemioVizProbeBegin{scientific-mode-defaults}{Md2M5X}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{en}\ExplSyntaxOff
+\begin{VizFigure}[width=140,height=120,title={}]
+\draw[line width=.01mm] (0,0) rectangle (140,120);
+\SemioVizTheme{default}[appearance=light]
+\SemioVizChart{commutative-diagram}[axes={false},edges={a/b/order/,b/c/dynkin-double/,c/d/order/},grid={false},height={48},mode={dynkin},nodeShape={none},nodes={a/0/0/,b/1/0/,c/2/0/,d/3/0/},title={},unit={18},width={80},xlabel={},ylabel={}]
+% 140mm × 120mm, light appearance
+\end{VizFigure}
+\endgroup
+
+\clearpage\ExplSyntaxOn\tl_set:Nn\l_semio_viz_test_canvas_case_tl{Md2M6O}\int_gzero:N\g_semio_viz_test_mode_element_int\ExplSyntaxOff\SemioVizProbeBegin{scientific-mode-defaults}{Md2M6O}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{en}\ExplSyntaxOff
+\begin{VizFigure}[width=140,height=120,title={}]
+\draw[line width=.01mm] (0,0) rectangle (140,120);
+\SemioVizTheme{default}[appearance=light]
+\SemioVizChart{commutative-diagram}[axes={false},grid={false},height={48},mode={proof},nodeShape={none},title={},unit={18},width={80},xlabel={},ylabel={}]
+% 140mm × 120mm, light appearance
+\end{VizFigure}
+\endgroup
+
+\clearpage\ExplSyntaxOn\tl_set:Nn\l_semio_viz_test_canvas_case_tl{Md2M6X}\int_gzero:N\g_semio_viz_test_mode_element_int\ExplSyntaxOff\SemioVizProbeBegin{scientific-mode-defaults}{Md2M6X}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{en}\ExplSyntaxOff
+\begin{VizFigure}[width=140,height=120,title={}]
+\draw[line width=.01mm] (0,0) rectangle (140,120);
+\SemioVizTheme{default}[appearance=light]
+\SemioVizChart{commutative-diagram}[axes={false},edges={a/c/order/,b/c/order/},grid={false},height={48},mode={proof},nodeShape={none},nodes={a/-0.7/1/P,b/0.7/1/Q,c/0/0/R},title={},unit={18},width={80},xlabel={},ylabel={}]
+% 140mm × 120mm, light appearance
+\end{VizFigure}
+\endgroup
+
+\clearpage\ExplSyntaxOn\tl_set:Nn\l_semio_viz_test_canvas_case_tl{Md2M7O}\int_gzero:N\g_semio_viz_test_mode_element_int\ExplSyntaxOff\SemioVizProbeBegin{scientific-mode-defaults}{Md2M7O}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{en}\ExplSyntaxOff
+\begin{VizFigure}[width=140,height=120,title={}]
+\draw[line width=.01mm] (0,0) rectangle (140,120);
+\SemioVizTheme{default}[appearance=light]
+\SemioVizChart{commutative-diagram}[axes={false},grid={false},height={48},mode={rewrite},nodeShape={none},title={},unit={18},width={80},xlabel={},ylabel={}]
+% 140mm × 120mm, light appearance
+\end{VizFigure}
+\endgroup
+
+\clearpage\ExplSyntaxOn\tl_set:Nn\l_semio_viz_test_canvas_case_tl{Md2M7X}\int_gzero:N\g_semio_viz_test_mode_element_int\ExplSyntaxOff\SemioVizProbeBegin{scientific-mode-defaults}{Md2M7X}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{en}\ExplSyntaxOff
+\begin{VizFigure}[width=140,height=120,title={}]
+\draw[line width=.01mm] (0,0) rectangle (140,120);
+\SemioVizTheme{default}[appearance=light]
+\SemioVizChart{commutative-diagram}[axes={false},edges={a/b/double/r,a/c/dashed/,b/d/double/r,c/d/double/r},grid={false},height={48},mode={rewrite},nodeShape={none},nodes={a/0/1/s,b/1/1/t,c/0/0/u,d/1/0/v},title={},unit={18},width={80},xlabel={},ylabel={}]
+% 140mm × 120mm, light appearance
+\end{VizFigure}
+\endgroup
+
+\SemioVizProbeEnd
+\end{document}

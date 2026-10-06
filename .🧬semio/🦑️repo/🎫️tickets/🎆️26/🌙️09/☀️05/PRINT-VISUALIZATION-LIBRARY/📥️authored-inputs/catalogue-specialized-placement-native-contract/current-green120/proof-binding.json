@@ -1,0 +1,72 @@
+{
+  "actualBodies": 120,
+  "casesPerOwnerTheme": 20,
+  "runs": {
+    "biofabric": {
+      "process": 19447,
+      "terminal": 0,
+      "themes": {
+        "light": {
+          "semio-viz-data.sty": "6551eae29d19c287a975073a638d8c0047c3dff97f831b8b03fa3ba066fbba3a",
+          "semio-viz-network.sty": "e809e5a965fd9746bc383414861a27dfbcc73f477422ab2e8ee6322d76f9fc14",
+          "semio-viz-network-graph.sty": "b8edc9a58d53471bc04410b74cdd1b2a2f82e82291a6d5c5c220f2ac311667aa",
+          "semio-viz-network-matrix.sty": "8772c565060ab7aab6398d23b4ade07f2502ba3989c12ca2981b0a39b8ff51cd",
+          "input.tex": "0ee97d1cfa4e2c9cc5d60c1807d42db45707f0fc240680971ff47a4ceccd1b6c",
+          "pdf": "0202e7b6e94d51cc1b02b908e7c68c2dd7cd6cc016e1e784147ea9519fe1b44a"
+        },
+        "dark": {
+          "semio-viz-data.sty": "6551eae29d19c287a975073a638d8c0047c3dff97f831b8b03fa3ba066fbba3a",
+          "semio-viz-network.sty": "e809e5a965fd9746bc383414861a27dfbcc73f477422ab2e8ee6322d76f9fc14",
+          "semio-viz-network-graph.sty": "b8edc9a58d53471bc04410b74cdd1b2a2f82e82291a6d5c5c220f2ac311667aa",
+          "semio-viz-network-matrix.sty": "8772c565060ab7aab6398d23b4ade07f2502ba3989c12ca2981b0a39b8ff51cd",
+          "input.tex": "998f23f43e2f9e3d350dfde9e44f0c2a1645a18c21a90c4d8ac1ed84822dbed3",
+          "pdf": "8056db3fac308acdd70f013cdf5961197224ff852eaa6cfa7c57c64af2c11f39"
+        }
+      }
+    },
+    "data-structure": {
+      "process": 89530,
+      "terminal": 0,
+      "themes": {
+        "light": {
+          "semio-viz-data.sty": "6551eae29d19c287a975073a638d8c0047c3dff97f831b8b03fa3ba066fbba3a",
+          "semio-viz-network.sty": "e809e5a965fd9746bc383414861a27dfbcc73f477422ab2e8ee6322d76f9fc14",
+          "semio-viz-network-graph.sty": "b8edc9a58d53471bc04410b74cdd1b2a2f82e82291a6d5c5c220f2ac311667aa",
+          "semio-viz-network-matrix.sty": "8772c565060ab7aab6398d23b4ade07f2502ba3989c12ca2981b0a39b8ff51cd",
+          "input.tex": "3d180f6e3e6ea17b76c6e605aba9ab9c4e4c3a5778b71abab46e35ad93f5ef31",
+          "pdf": "d4856b64ea2c97ea09ccc827afaa3a35c37ebd087641b940c482186eacfe87ad"
+        },
+        "dark": {
+          "semio-viz-data.sty": "6551eae29d19c287a975073a638d8c0047c3dff97f831b8b03fa3ba066fbba3a",
+          "semio-viz-network.sty": "e809e5a965fd9746bc383414861a27dfbcc73f477422ab2e8ee6322d76f9fc14",
+          "semio-viz-network-graph.sty": "b8edc9a58d53471bc04410b74cdd1b2a2f82e82291a6d5c5c220f2ac311667aa",
+          "semio-viz-network-matrix.sty": "8772c565060ab7aab6398d23b4ade07f2502ba3989c12ca2981b0a39b8ff51cd",
+          "input.tex": "8f7091427a5ffc19365783e18887fe3d86727963091a72a984b45ab273643d5f",
+          "pdf": "60b12b2f1cb7b86d2823ab699903b5e5372173fe3caa137948c1b575cac0c296"
+        }
+      }
+    },
+    "commit-graph": {
+      "process": 42946,
+      "terminal": 0,
+      "themes": {
+        "light": {
+          "semio-viz-data.sty": "6551eae29d19c287a975073a638d8c0047c3dff97f831b8b03fa3ba066fbba3a",
+          "semio-viz-network.sty": "e809e5a965fd9746bc383414861a27dfbcc73f477422ab2e8ee6322d76f9fc14",
+          "semio-viz-network-graph.sty": "b8edc9a58d53471bc04410b74cdd1b2a2f82e82291a6d5c5c220f2ac311667aa",
+          "semio-viz-network-matrix.sty": "8772c565060ab7aab6398d23b4ade07f2502ba3989c12ca2981b0a39b8ff51cd",
+          "input.tex": "06c7efe6b19f6d0e6c471618d6c9f789b9a6d10adf4a39b058c99d9fcfbdd9a6",
+          "pdf": "191374a4461836185a8384372ab13d0dd6e13d1d72602e212547bcd25d30161d"
+        },
+        "dark": {
+          "semio-viz-data.sty": "6551eae29d19c287a975073a638d8c0047c3dff97f831b8b03fa3ba066fbba3a",
+          "semio-viz-network.sty": "e809e5a965fd9746bc383414861a27dfbcc73f477422ab2e8ee6322d76f9fc14",
+          "semio-viz-network-graph.sty": "b8edc9a58d53471bc04410b74cdd1b2a2f82e82291a6d5c5c220f2ac311667aa",
+          "semio-viz-network-matrix.sty": "8772c565060ab7aab6398d23b4ade07f2502ba3989c12ca2981b0a39b8ff51cd",
+          "input.tex": "c9162dc2927280f86597df0a3be1025acc4c0a3b519b93d5ed1305f0a2f58fb7",
+          "pdf": "27ed6f6e0f6dd1e52e83e1b2aa8691baadecedd39ebdf9a82b1fd4e1c2ee5758"
+        }
+      }
+    }
+  }
+}

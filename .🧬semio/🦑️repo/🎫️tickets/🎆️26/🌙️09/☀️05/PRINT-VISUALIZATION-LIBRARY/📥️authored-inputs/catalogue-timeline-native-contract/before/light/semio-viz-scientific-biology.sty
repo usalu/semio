@@ -1,0 +1,1991 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-viz-scientific-biology}[2026/09/05 v0.2.0 semio viz namespace scientific-biology, genomics and medicine families]
+
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+\RequirePackage{semio-viz-scientific-field}
+
+\ExplSyntaxOn
+
+%region 🔖️Parsing
+\cs_generate_variant:Nn \seq_set_split:Nnn { Nnx }
+\cs_generate_variant:Nn \prop_put:Nnn { Nxx }
+\cs_generate_variant:Nn \prop_item:Nn { Ne }
+\tl_new:N \l_semio_viz_bio_key_tl
+\seq_new:N \l_semio_viz_bio_rec_seq
+% 🧾 Splits a slash-separated record into the scratch sequence every renderer below reads its fields from.
+\cs_new_protected:Npn \semio_viz_bio_record:n #1
+  { \seq_set_split:Nnx \l_semio_viz_bio_rec_seq { / } {#1} }
+% 🔢 Returns field #1 of the record most recently split by \semio_viz_bio_record:n.
+\cs_new:Npn \semio_viz_bio_field:n #1
+  { \seq_item:Nn \l_semio_viz_bio_rec_seq {#1} }
+\tl_new:N \l_semio_viz_bio_mode_tl
+\clist_new:N \l_semio_viz_bio_nodes_clist
+\clist_new:N \l_semio_viz_bio_edges_clist
+\prop_new:N \l_semio_viz_bio_nx_prop
+\prop_new:N \l_semio_viz_bio_ny_prop
+\int_new:N \l_semio_viz_bio_samples_int
+\fp_new:N \l_semio_viz_bio_unit_fp
+\fp_new:N \l_semio_viz_bio_cell_fp
+
+% 🧬 Reads a node table `id/x/y/label` into the position lookup shared by every graph-shaped family below.
+\cs_new_protected:Npn \semio_viz_bio_nodes_read:N #1
+  {
+    \prop_clear:N \l_semio_viz_bio_nx_prop
+    \prop_clear:N \l_semio_viz_bio_ny_prop
+    \clist_map_inline:Nn #1
+      {
+        \semio_viz_bio_record:n {##1}
+        \prop_put:Nxx \l_semio_viz_bio_nx_prop
+          { \semio_viz_bio_field:n { 1 } } { \semio_viz_bio_field:n { 2 } }
+        \prop_put:Nxx \l_semio_viz_bio_ny_prop
+          { \semio_viz_bio_field:n { 1 } } { \semio_viz_bio_field:n { 3 } }
+      }
+  }
+%endregion 🔖️Parsing
+
+%region 🔖️Families
+
+%region 🔖️Keys
+% 🔑 Keys of `sci-survival` (§22 time-to-event):
+%    mode (kaplan-meier|cumulative-hazard, kaplan-meier).
+%    groups (clist of `label/events`) where events is a `+`-joined list of `time:status`
+%    records, status 1 for an event and 0 for a censored observation.
+%    confidence (bool, true): draw the Greenwood pointwise band. censorMarks (bool, true): tick the censored times.
+\clist_new:N \l_semio_viz_bio_groups_clist
+\bool_new:N \l_semio_viz_bio_conf_bool
+\bool_new:N \l_semio_viz_bio_censor_bool
+\seq_new:N \l_semio_viz_bio_time_seq
+\seq_new:N \l_semio_viz_bio_status_seq
+\fp_new:N \l_semio_viz_bio_surv_fp
+\fp_new:N \l_semio_viz_bio_var_fp
+%endregion 🔖️Keys
+
+\semio_viz_sci_keys_canvas:n { sci-survival }
+% ⏳ Binds the `sci-survival` keys to the event groups, the confidence band and the censor-mark switch.
+\keys_define:nn { semio / viz / family / sci-survival }
+  {
+    mode        .tl_set:N    = \l_semio_viz_bio_mode_tl ,
+    groups      .clist_set:N = \l_semio_viz_bio_groups_clist ,
+    confidence  .bool_set:N  = \l_semio_viz_bio_conf_bool ,
+    censorMarks .bool_set:N  = \l_semio_viz_bio_censor_bool ,
+  }
+
+% ⚕️ §22 Kaplan–Meier: the product-limit estimator with Greenwood variance, computed from the event records themselves.
+\SemioVizFamily { sci-survival }
+  {
+    \semio_viz_sci_enter:nnn { sci-survival }
+      {
+        mode=kaplan-meier , confidence=true , censorMarks=true , domain={0,24} , range={0,1} ,
+        groups={
+          treatment/2:1+4:1+5:0+7:1+11:1+12:0+15:1+18:0+21:1+24:0 ,
+          control/1:1+2:1+3:1+5:1+6:1+8:1+9:0+12:1+14:1+17:1
+        }
+      }
+      {#1}
+    \semio_viz_sci_window_keys:
+    \str_if_eq:VnT \l_semio_viz_bio_mode_tl { cumulative-hazard }
+      { \semio_viz_sci_window:nnnn { \l_semio_viz_sci_dxmin_fp } { \l_semio_viz_sci_dxmax_fp } { 0 } { 2 } }
+    \semio_viz_sci_frame:
+    \int_zero:N \l_tmpa_int
+    \clist_map_inline:Nn \l_semio_viz_bio_groups_clist
+      {
+        \int_incr:N \l_tmpa_int
+        \semio_viz_bio_record:n {##1}
+        \semio_viz_bio_km:
+      }
+  }
+% ⚕️ One group: the product-limit steps, its Greenwood band and its censoring ticks.
+\cs_new_protected:Npn \semio_viz_bio_km:
+  {
+    \seq_set_split:Nnx \l_semio_viz_bio_time_seq { + } { \semio_viz_bio_field:n { 2 } }
+    \int_set:Nn \l_tmpb_int { \seq_count:N \l_semio_viz_bio_time_seq }
+    \fp_set:Nn \l_semio_viz_bio_surv_fp { 1 }
+    \fp_zero:N \l_semio_viz_bio_var_fp
+    \seq_clear:N \l_semio_viz_sci_pts_seq
+    \seq_clear:N \l_semio_viz_sci_pts_b_seq
+    \seq_clear:N \l_semio_viz_sci_pts_c_seq
+    \fp_zero:N \l_semio_viz_sci_g_fp
+    \semio_viz_bio_km_point:
+    \int_step_inline:nnnn { 1 } { 1 } { \l_tmpb_int } { \semio_viz_bio_km_step:n {##1} }
+    \bool_if:NT \l_semio_viz_bio_conf_bool
+      {
+        \semio_viz_sci_polyline:Nn \l_semio_viz_sci_pts_b_seq
+          { semio~sci~aux , draw=\semio_viz_sci_hue:n { \l_tmpa_int } }
+        \semio_viz_sci_polyline:Nn \l_semio_viz_sci_pts_c_seq
+          { semio~sci~aux , draw=\semio_viz_sci_hue:n { \l_tmpa_int } }
+      }
+    \semio_viz_sci_polyline:Nn \l_semio_viz_sci_pts_seq
+      { semio~sci~curve , draw=\semio_viz_sci_hue:n { \l_tmpa_int } }
+    \semio_viz_sci_report_values:nn { survival/final }
+      { \fp_to_decimal:N \l_semio_viz_bio_surv_fp }
+  }
+% 🪜 Handles observation #1: an event drops the product-limit estimate and grows the Greenwood variance, a censoring draws a tick.
+\cs_new_protected:Npn \semio_viz_bio_km_step:n #1
+  {
+    \semio_viz_sci_split_colon:Nn \l_tmpb_seq { \seq_item:Nn \l_semio_viz_bio_time_seq {#1} }
+    \fp_set:Nn \l_semio_viz_sci_g_fp { \seq_item:Nn \l_tmpb_seq { 1 } }
+    \int_compare:nNnTF { \seq_item:Nn \l_tmpb_seq { 2 } } = { 1 }
+      {
+        \semio_viz_bio_km_point:
+        \fp_set:Nn \l_semio_viz_bio_surv_fp
+          { \l_semio_viz_bio_surv_fp * ( 1 - 1 / ( \l_tmpb_int - #1 + 1 ) ) }
+        \fp_add:Nn \l_semio_viz_bio_var_fp
+          { 1 / ( ( \l_tmpb_int - #1 + 1 ) * max ( 1 , \l_tmpb_int - #1 ) ) }
+        \semio_viz_bio_km_point:
+        \semio_viz_bio_km_band:
+      }
+      {
+        \bool_if:NT \l_semio_viz_bio_censor_bool
+          {
+            \draw [ semio~sci~thin , draw=\semio_viz_sci_hue:n { \l_tmpa_int } ]
+              ( \semio_viz_sci_mx:n { \l_semio_viz_sci_g_fp } ,
+                \fp_eval:n { \semio_viz_sci_my:n { \l_semio_viz_bio_surv_fp } - 1 } ) --
+              ( \semio_viz_sci_mx:n { \l_semio_viz_sci_g_fp } ,
+                \fp_eval:n { \semio_viz_sci_my:n { \l_semio_viz_bio_surv_fp } + 1 } ) ;
+          }
+      }
+  }
+% ⚕️ One step of the drawn curve: the survival estimate itself, or its negative logarithm in the hazard mode.
+\cs_new_protected:Npn \semio_viz_bio_km_point:
+  {
+    \str_if_eq:VnTF \l_semio_viz_bio_mode_tl { cumulative-hazard }
+      {
+        \semio_viz_points_put:Nnn \l_semio_viz_sci_pts_seq
+          { \l_semio_viz_sci_g_fp } { - ln ( max ( 1e-6 , \l_semio_viz_bio_surv_fp ) ) }
+      }
+      {
+        \semio_viz_points_put:Nnn \l_semio_viz_sci_pts_seq
+          { \l_semio_viz_sci_g_fp } { \l_semio_viz_bio_surv_fp }
+      }
+  }
+% 🎗️ Appends the upper and lower Greenwood 95 % bounds at the current time to the two band sequences.
+\cs_new_protected:Npn \semio_viz_bio_km_band:
+  {
+    \fp_set:Nn \l_semio_viz_sci_e_fp
+      { 1.96 * \l_semio_viz_bio_surv_fp * sqrt ( \l_semio_viz_bio_var_fp ) }
+    \str_if_eq:VnTF \l_semio_viz_bio_mode_tl { cumulative-hazard }
+      {
+        \semio_viz_points_put:Nnn \l_semio_viz_sci_pts_b_seq { \l_semio_viz_sci_g_fp }
+          { - ln ( max ( 1e-6 , \l_semio_viz_bio_surv_fp + \l_semio_viz_sci_e_fp ) ) }
+        \semio_viz_points_put:Nnn \l_semio_viz_sci_pts_c_seq { \l_semio_viz_sci_g_fp }
+          { - ln ( max ( 1e-6 , \l_semio_viz_bio_surv_fp - \l_semio_viz_sci_e_fp ) ) }
+      }
+      {
+        \semio_viz_points_put:Nnn \l_semio_viz_sci_pts_b_seq { \l_semio_viz_sci_g_fp }
+          { min ( 1 , \l_semio_viz_bio_surv_fp + \l_semio_viz_sci_e_fp ) }
+        \semio_viz_points_put:Nnn \l_semio_viz_sci_pts_c_seq { \l_semio_viz_sci_g_fp }
+          { max ( 0 , \l_semio_viz_bio_surv_fp - \l_semio_viz_sci_e_fp ) }
+      }
+  }
+
+%region 🔖️Keys
+% 🔑 Keys of `sci-dose-response` (§22 pharmacology):
+%    bottom, top, ec50, hill (fp, 0/100/1/1): the four-parameter logistic curve.
+%    points (clist of `dose/response`): the measured data, doses on a decadic log axis.
+%    decades (clist of 2, `-2,2`): the log dose sweep. samples (int, 160): curve resolution.
+%    markEC (bool, true): mark the EC50 on the curve.
+\fp_new:N \l_semio_viz_bio_bottom_fp
+\fp_new:N \l_semio_viz_bio_top_fp
+\fp_new:N \l_semio_viz_bio_ecfifty_fp
+\fp_new:N \l_semio_viz_bio_hill_fp
+\clist_new:N \l_semio_viz_bio_points_clist
+\clist_new:N \l_semio_viz_bio_decades_clist
+\bool_new:N \l_semio_viz_bio_markec_bool
+%endregion 🔖️Keys
+
+\semio_viz_sci_keys_canvas:n { sci-dose-response }
+% 💉 Binds the `sci-dose-response` keys to the four logistic parameters, the measured points and the decade sweep.
+\keys_define:nn { semio / viz / family / sci-dose-response }
+  {
+    bottom  .fp_set:N    = \l_semio_viz_bio_bottom_fp ,
+    top     .fp_set:N    = \l_semio_viz_bio_top_fp ,
+    ec50    .fp_set:N    = \l_semio_viz_bio_ecfifty_fp ,
+    hill    .fp_set:N    = \l_semio_viz_bio_hill_fp ,
+    points  .clist_set:N = \l_semio_viz_bio_points_clist ,
+    decades .clist_set:N = \l_semio_viz_bio_decades_clist ,
+    samples .int_set:N   = \l_semio_viz_bio_samples_int ,
+    markEC  .bool_set:N  = \l_semio_viz_bio_markec_bool ,
+  }
+
+% 💊 §22 dose–response: the four-parameter logistic curve evaluated over the log dose axis, with the measured points on top.
+\SemioVizFamily { sci-dose-response }
+  {
+    \semio_viz_sci_enter:nnn { sci-dose-response }
+      {
+        bottom=2 , top=98 , ec50=0.4 , hill=1.3 , samples=160 , markEC=true , decades={ -2 , 2 } ,
+        points={ 0.01/4 , 0.03/7 , 0.1/19 , 0.3/44 , 1/72 , 3/88 , 10/95 , 30/97 } , range={0,105}
+      }
+      {#1}
+    \seq_clear:N \l_semio_viz_sci_pts_seq
+    \int_step_inline:nnnn { 0 } { 1 } { \l_semio_viz_bio_samples_int }
+      {
+        \fp_set:Nn \SemioX
+          {
+            \clist_item:Nn \l_semio_viz_bio_decades_clist { 1 }
+            + ( \clist_item:Nn \l_semio_viz_bio_decades_clist { 2 }
+                - \clist_item:Nn \l_semio_viz_bio_decades_clist { 1 } )
+              * ##1 / \l_semio_viz_bio_samples_int
+          }
+        \semio_viz_points_put:Nnn \l_semio_viz_sci_pts_seq { \SemioX }
+          {
+            \l_semio_viz_bio_bottom_fp
+            + ( \l_semio_viz_bio_top_fp - \l_semio_viz_bio_bottom_fp )
+              / ( 1 + ( \l_semio_viz_bio_ecfifty_fp / ( 10 ^ \SemioX ) ) ^ \l_semio_viz_bio_hill_fp )
+          }
+      }
+    \semio_viz_sci_window:nnnn
+      { \clist_item:Nn \l_semio_viz_bio_decades_clist { 1 } }
+      { \clist_item:Nn \l_semio_viz_bio_decades_clist { 2 } } { 0 } { 105 }
+    \semio_viz_sci_window_keys:
+    \semio_viz_sci_frame:
+    \semio_viz_sci_polyline:Nn \l_semio_viz_sci_pts_seq { semio~sci~curve }
+    \clist_map_inline:Nn \l_semio_viz_bio_points_clist
+      {
+        \semio_viz_bio_record:n {##1}
+        \semio_viz_sci_dot:nnn
+          { ln ( \semio_viz_bio_field:n { 1 } ) / ln (10) } { \semio_viz_bio_field:n { 2 } }
+          { semio-primary }
+      }
+    \bool_if:NT \l_semio_viz_bio_markec_bool
+      {
+        \draw [ semio~sci~aux , draw=semio-secondary ]
+          ( \semio_viz_sci_mx:n { ln ( \l_semio_viz_bio_ecfifty_fp ) / ln (10) } , 0 ) --
+          ( \semio_viz_sci_mx:n { ln ( \l_semio_viz_bio_ecfifty_fp ) / ln (10) } ,
+            \semio_viz_sci_my:n
+              { ( \l_semio_viz_bio_bottom_fp + \l_semio_viz_bio_top_fp ) / 2 } ) ;
+        \semio_viz_sci_report_values:nn { dose/ec }
+          { \fp_to_decimal:n { ln ( \l_semio_viz_bio_ecfifty_fp ) / ln (10) } }
+      }
+  }
+
+%region 🔖️Keys
+% 🔑 Keys of `sci-scatter-diagnostic` (§22 measurement and expression diagnostics):
+%    mode (bland-altman|volcano|ma, bland-altman).
+%    pairs (clist of `a/b/label`): the two measurements of a Bland–Altman plot.
+%    features (clist of `logfc/pvalue/mean/label`): the differential-expression table.
+%    threshold (fp, 0.05), effect (fp, 1): the significance and effect-size cut-offs.
+\clist_new:N \l_semio_viz_bio_pairs_clist
+\clist_new:N \l_semio_viz_bio_features_clist
+\fp_new:N \l_semio_viz_bio_threshold_fp
+\fp_new:N \l_semio_viz_bio_effect_fp
+%endregion 🔖️Keys
+
+\semio_viz_sci_keys_canvas:n { sci-scatter-diagnostic }
+% 🔬 Binds the `sci-scatter-diagnostic` keys to the measurement pairs, the feature table and the two cut-offs.
+\keys_define:nn { semio / viz / family / sci-scatter-diagnostic }
+  {
+    mode      .tl_set:N    = \l_semio_viz_bio_mode_tl ,
+    pairs     .clist_set:N = \l_semio_viz_bio_pairs_clist ,
+    features  .clist_set:N = \l_semio_viz_bio_features_clist ,
+    threshold .fp_set:N    = \l_semio_viz_bio_threshold_fp ,
+    effect    .fp_set:N    = \l_semio_viz_bio_effect_fp ,
+  }
+
+% ⚕️ §22 diagnostics: the Bland–Altman agreement plot with its computed limits, and the volcano and MA plots of an expression table.
+\SemioVizFamily { sci-scatter-diagnostic }
+  {
+    \semio_viz_sci_enter:nnn { sci-scatter-diagnostic }
+      {
+        mode=bland-altman , threshold=0.05 , effect=1 , domain={} , range={} ,
+        pairs={ 12/13/ , 18/17/ , 24/26/ , 31/29/ , 37/40/ , 44/43/ , 52/56/ , 58/57/ ,
+                63/68/ , 71/69/ , 78/82/ , 84/83/ } ,
+        features={ -2.4/0.0004/6.2/g1 , -1.2/0.02/7.4/g2 , 0.3/0.6/8.1/g3 , 1.8/0.001/5.9/g4 ,
+                   2.6/0.00002/6.8/g5 , 0.9/0.2/7.7/g6 , -0.4/0.8/9.0/g7 , 3.1/0.000004/5.1/g8 }
+      }
+      {#1}
+    \str_case:VnF \l_semio_viz_bio_mode_tl
+      {
+        { volcano } { \semio_viz_bio_volcano: }
+        { ma }      { \semio_viz_bio_ma: }
+      }
+      { \semio_viz_bio_bland: }
+  }
+% 📉 Plots every pair as mean against difference and derives the bias and standard deviation behind the limits.
+\cs_new_protected:Npn \semio_viz_bio_bland:
+  {
+    \seq_clear:N \l_semio_viz_sci_pts_seq
+    \fp_zero:N \l_semio_viz_sci_e_fp
+    \fp_zero:N \l_semio_viz_sci_f_fp
+    \clist_map_inline:Nn \l_semio_viz_bio_pairs_clist
+      {
+        \semio_viz_bio_record:n {##1}
+        \semio_viz_points_put:Nnn \l_semio_viz_sci_pts_seq
+          { ( \semio_viz_bio_field:n { 1 } + \semio_viz_bio_field:n { 2 } ) / 2 }
+          { \semio_viz_bio_field:n { 2 } - \semio_viz_bio_field:n { 1 } }
+        \fp_add:Nn \l_semio_viz_sci_e_fp
+          { \semio_viz_bio_field:n { 2 } - \semio_viz_bio_field:n { 1 } }
+        \fp_add:Nn \l_semio_viz_sci_f_fp
+          { ( \semio_viz_bio_field:n { 2 } - \semio_viz_bio_field:n { 1 } ) ^ 2 }
+      }
+    \int_set:Nn \l_tmpa_int { \clist_count:N \l_semio_viz_bio_pairs_clist }
+    \fp_set:Nn \l_semio_viz_sci_e_fp { \l_semio_viz_sci_e_fp / \l_tmpa_int }
+    \fp_set:Nn \l_semio_viz_sci_f_fp
+      {
+        sqrt ( max ( 0 , \l_semio_viz_sci_f_fp / \l_tmpa_int - \l_semio_viz_sci_e_fp ^ 2 )
+          * \l_tmpa_int / ( \l_tmpa_int - 1 ) )
+      }
+    \semio_viz_sci_window_from:Nn \l_semio_viz_sci_pts_seq { 0.16 }
+    \semio_viz_sci_window_keys:
+    \semio_viz_sci_frame:
+    \int_step_inline:nnnn { -1 } { 1 } { 1 } { \semio_viz_bio_bland_limit:n {##1} }
+    \seq_map_inline:Nn \l_semio_viz_sci_pts_seq
+      { \semio_viz_sci_dot:nnn { \semio_viz_points_x:n {##1} } { \semio_viz_points_y:n {##1} } { semio-primary } }
+    \semio_viz_sci_report_values:nn { bland/limits }
+      { \fp_to_decimal:N \l_semio_viz_sci_e_fp , \fp_to_decimal:N \l_semio_viz_sci_f_fp }
+  }
+% ⚕️ One Bland–Altman reference line: the bias at offset 0, the 95 % limits of agreement at ±1.
+\cs_new_protected:Npn \semio_viz_bio_bland_limit:n #1
+  {
+    \tl_set:Nx \l_semio_viz_bio_key_tl
+      { \int_compare:nNnTF {#1} = { 0 } { semio-primary } { semio-secondary } }
+    \use:x
+      {
+        \exp_not:N \draw [ semio~sci~aux , draw=\l_semio_viz_bio_key_tl ]
+          ( 0 , \semio_viz_sci_my:n { \l_semio_viz_sci_e_fp + #1 * 1.96 * \l_semio_viz_sci_f_fp } ) --
+          ( \fp_to_decimal:N \l_semio_viz_sci_w_fp ,
+            \semio_viz_sci_my:n { \l_semio_viz_sci_e_fp + #1 * 1.96 * \l_semio_viz_sci_f_fp } ) ;
+      }
+  }
+% 🌋 Plots each feature's log fold change against its −log10 p, under the drawn significance threshold.
+\cs_new_protected:Npn \semio_viz_bio_volcano:
+  {
+    \seq_clear:N \l_semio_viz_sci_pts_seq
+    \clist_map_inline:Nn \l_semio_viz_bio_features_clist
+      {
+        \semio_viz_bio_record:n {##1}
+        \semio_viz_points_put:Nnn \l_semio_viz_sci_pts_seq
+          { \semio_viz_bio_field:n { 1 } }
+          { - ln ( \semio_viz_bio_field:n { 2 } ) / ln (10) }
+      }
+    \semio_viz_sci_window_from:Nn \l_semio_viz_sci_pts_seq { 0.14 }
+    \semio_viz_sci_window_keys:
+    \semio_viz_sci_frame:
+    \draw [ semio~sci~aux , draw=semio-secondary ]
+      ( 0 , \semio_viz_sci_my:n { - ln ( \l_semio_viz_bio_threshold_fp ) / ln (10) } ) --
+      ( \fp_eval:n { \l_semio_viz_sci_w_fp } ,
+        \semio_viz_sci_my:n { - ln ( \l_semio_viz_bio_threshold_fp ) / ln (10) } ) ;
+    \clist_map_inline:Nn \l_semio_viz_bio_features_clist
+      {
+        \semio_viz_bio_record:n {##1}
+        \semio_viz_bio_feature_dot:nn
+          { \semio_viz_bio_field:n { 1 } } { - ln ( \semio_viz_bio_field:n { 2 } ) / ln (10) }
+      }
+  }
+% 📊 Plots each feature's mean expression against its log fold change around the zero line.
+\cs_new_protected:Npn \semio_viz_bio_ma:
+  {
+    \seq_clear:N \l_semio_viz_sci_pts_seq
+    \clist_map_inline:Nn \l_semio_viz_bio_features_clist
+      {
+        \semio_viz_bio_record:n {##1}
+        \semio_viz_points_put:Nnn \l_semio_viz_sci_pts_seq
+          { \semio_viz_bio_field:n { 3 } } { \semio_viz_bio_field:n { 1 } }
+      }
+    \semio_viz_sci_window_from:Nn \l_semio_viz_sci_pts_seq { 0.14 }
+    \semio_viz_sci_window_keys:
+    \semio_viz_sci_frame:
+    \semio_viz_sci_zero_lines:
+    \clist_map_inline:Nn \l_semio_viz_bio_features_clist
+      {
+        \semio_viz_bio_record:n {##1}
+        \semio_viz_bio_feature_dot:nn
+          { \semio_viz_bio_field:n { 3 } } { \semio_viz_bio_field:n { 1 } }
+      }
+  }
+% 🔴 Dots the current feature at (#1,#2), highlighted only when it clears both the p-value and effect-size cut-offs.
+\cs_new_protected:Npn \semio_viz_bio_feature_dot:nn #1#2
+  {
+    \fp_compare:nTF
+      {
+        \semio_viz_bio_field:n { 2 } < \l_semio_viz_bio_threshold_fp &&
+        abs ( \semio_viz_bio_field:n { 1 } ) > \l_semio_viz_bio_effect_fp
+      }
+      { \semio_viz_sci_dot:nnn {#1} {#2} { semio-primary } }
+      { \semio_viz_sci_dot:nnn {#1} {#2} { semio-chrome-border-normal } }
+  }
+
+%region 🔖️Keys
+% 🔑 Keys of `sci-population` (§34 population dynamics):
+%    mode (growth|predator-prey|phase|abundance|rarefaction|niche, growth).
+%    r, capacity (fp, 0.6/100): the logistic growth parameters.
+%    alpha, beta, gamma, delta (fp, 0.9/0.4/0.5/0.2): the Lotka–Volterra coefficients.
+%    prey, predator (fp, 20/6): the initial state. steps (int, 600), step (fp, 0.02): the RK4 budget.
+%    counts (clist): the ranked abundances or the rarefaction sample.
+\fp_new:N \l_semio_viz_bio_r_fp
+\fp_new:N \l_semio_viz_bio_capacity_fp
+\fp_new:N \l_semio_viz_bio_alpha_fp
+\fp_new:N \l_semio_viz_bio_beta_fp
+\fp_new:N \l_semio_viz_bio_gamma_fp
+\fp_new:N \l_semio_viz_bio_delta_fp
+\fp_new:N \l_semio_viz_bio_prey_fp
+\fp_new:N \l_semio_viz_bio_predator_fp
+\fp_new:N \l_semio_viz_bio_step_fp
+\int_new:N \l_semio_viz_bio_steps_int
+\clist_new:N \l_semio_viz_bio_counts_clist
+%endregion 🔖️Keys
+
+\semio_viz_sci_keys_canvas:n { sci-population }
+% 🐇 Binds the `sci-population` keys to the logistic and Lotka–Volterra parameters, the initial state and the community counts.
+\keys_define:nn { semio / viz / family / sci-population }
+  {
+    mode      .tl_set:N    = \l_semio_viz_bio_mode_tl ,
+    r         .fp_set:N    = \l_semio_viz_bio_r_fp ,
+    capacity  .fp_set:N    = \l_semio_viz_bio_capacity_fp ,
+    alpha     .fp_set:N    = \l_semio_viz_bio_alpha_fp ,
+    beta      .fp_set:N    = \l_semio_viz_bio_beta_fp ,
+    gamma     .fp_set:N    = \l_semio_viz_bio_gamma_fp ,
+    delta     .fp_set:N    = \l_semio_viz_bio_delta_fp ,
+    prey      .fp_set:N    = \l_semio_viz_bio_prey_fp ,
+    predator  .fp_set:N    = \l_semio_viz_bio_predator_fp ,
+    steps     .int_set:N   = \l_semio_viz_bio_steps_int ,
+    step      .fp_set:N    = \l_semio_viz_bio_step_fp ,
+    counts    .clist_set:N = \l_semio_viz_bio_counts_clist ,
+  }
+
+% 🦌 §34 population dynamics: logistic growth, the Lotka–Volterra system integrated with RK4, and the community curves.
+\SemioVizFamily { sci-population }
+  {
+    \semio_viz_sci_enter:nnn { sci-population }
+      {
+        mode=growth , r=0.6 , capacity=100 , alpha=0.9 , beta=0.04 , gamma=0.5 , delta=0.01 ,
+        prey=40 , predator=9 , steps=600 , step=0.02 , domain={0,12} , range={} ,
+        counts={ 48 , 31 , 22 , 15 , 11 , 8 , 6 , 4 , 3 , 2 , 2 , 1 , 1 , 1 }
+      }
+      {#1}
+    \str_case:VnF \l_semio_viz_bio_mode_tl
+      {
+        { predator-prey } { \semio_viz_bio_lotka:n { time } }
+        { phase }         { \semio_viz_bio_lotka:n { phase } }
+        { abundance }     { \semio_viz_bio_abundance: }
+        { rarefaction }   { \semio_viz_bio_rarefaction: }
+        { niche }         { \semio_viz_bio_niche: }
+      }
+      { \semio_viz_bio_logistic: }
+  }
+% 📈 Evaluates the closed-form logistic solution over the time domain and draws it under its capacity line.
+\cs_new_protected:Npn \semio_viz_bio_logistic:
+  {
+    \seq_clear:N \l_semio_viz_sci_pts_seq
+    \int_step_inline:nnnn { 0 } { 1 } { 160 }
+      {
+        \fp_set:Nn \SemioT
+          {
+            \clist_item:Nn \l_semio_viz_sci_domain_clist { 1 }
+            + ( \clist_item:Nn \l_semio_viz_sci_domain_clist { 2 }
+                - \clist_item:Nn \l_semio_viz_sci_domain_clist { 1 } ) * ##1 / 160
+          }
+        \semio_viz_points_put:Nnn \l_semio_viz_sci_pts_seq { \SemioT }
+          {
+            \l_semio_viz_bio_capacity_fp
+            / ( 1 + ( \l_semio_viz_bio_capacity_fp / \l_semio_viz_bio_prey_fp - 1 )
+                * exp ( - \l_semio_viz_bio_r_fp * \SemioT ) )
+          }
+      }
+    \semio_viz_sci_window_from:Nn \l_semio_viz_sci_pts_seq { 0.06 }
+    \semio_viz_sci_window_keys:
+    \semio_viz_sci_frame:
+    \draw [ semio~sci~aux , draw=semio-secondary ]
+      ( 0 , \semio_viz_sci_my:n { \l_semio_viz_bio_capacity_fp } ) --
+      ( \fp_eval:n { \l_semio_viz_sci_w_fp } , \semio_viz_sci_my:n { \l_semio_viz_bio_capacity_fp } ) ;
+    \semio_viz_sci_polyline:Nn \l_semio_viz_sci_pts_seq { semio~sci~curve }
+  }
+% 🦌 Lotka–Volterra integrated by the shared RK4 stepper; `time` draws both series, `phase` the orbit.
+\cs_new_protected:Npn \semio_viz_bio_lotka:n #1
+  {
+    \semio_viz_sci_rkfour:nnnnnnN
+      { \l_semio_viz_bio_alpha_fp * \SemioX - \l_semio_viz_bio_beta_fp * \SemioX * \SemioY }
+      { \l_semio_viz_bio_delta_fp * \SemioX * \SemioY - \l_semio_viz_bio_gamma_fp * \SemioY }
+      { \l_semio_viz_bio_prey_fp } { \l_semio_viz_bio_predator_fp }
+      { \l_semio_viz_bio_step_fp } { \l_semio_viz_bio_steps_int } \l_semio_viz_sci_pts_seq
+    \str_if_eq:nnTF {#1} { phase }
+      {
+        \semio_viz_sci_window_from:Nn \l_semio_viz_sci_pts_seq { 0.1 }
+        \semio_viz_sci_window_keys:
+        \semio_viz_sci_frame:
+        \semio_viz_sci_polyline:Nn \l_semio_viz_sci_pts_seq { semio~sci~curve }
+        \semio_viz_sci_dot:nnn { \l_semio_viz_bio_gamma_fp / \l_semio_viz_bio_delta_fp }
+          { \l_semio_viz_bio_alpha_fp / \l_semio_viz_bio_beta_fp } { semio-tertiary }
+      }
+      {
+        \seq_clear:N \l_semio_viz_sci_pts_b_seq
+        \seq_clear:N \l_semio_viz_sci_pts_c_seq
+        \int_zero:N \l_tmpa_int
+        \seq_map_inline:Nn \l_semio_viz_sci_pts_seq
+          {
+            \semio_viz_points_put:Nnn \l_semio_viz_sci_pts_b_seq
+              { \l_tmpa_int * \l_semio_viz_bio_step_fp } { \semio_viz_points_x:n {##1} }
+            \semio_viz_points_put:Nnn \l_semio_viz_sci_pts_c_seq
+              { \l_tmpa_int * \l_semio_viz_bio_step_fp } { \semio_viz_points_y:n {##1} }
+            \int_incr:N \l_tmpa_int
+          }
+        \semio_viz_sci_window_from:Nn \l_semio_viz_sci_pts_b_seq { 0.06 }
+        \semio_viz_sci_window_keys:
+        \semio_viz_sci_frame:
+        \semio_viz_sci_polyline:Nn \l_semio_viz_sci_pts_b_seq { semio~sci~curve }
+        \semio_viz_sci_polyline:Nn \l_semio_viz_sci_pts_c_seq { semio~sci~curve~alt }
+      }
+  }
+% 🪶 Draws the rank–abundance stems on a decadic log scale, joined by a thin rank curve.
+\cs_new_protected:Npn \semio_viz_bio_abundance:
+  {
+    \seq_clear:N \l_semio_viz_sci_pts_seq
+    \int_zero:N \l_tmpa_int
+    \clist_map_inline:Nn \l_semio_viz_bio_counts_clist
+      {
+        \int_incr:N \l_tmpa_int
+        \semio_viz_points_put:Nnn \l_semio_viz_sci_pts_seq { \l_tmpa_int }
+          { ln ( max ( 1 , ##1 ) ) / ln (10) }
+      }
+    \semio_viz_sci_window_from:Nn \l_semio_viz_sci_pts_seq { 0.08 }
+    \semio_viz_sci_window_keys:
+    \semio_viz_sci_frame:
+    \seq_map_inline:Nn \l_semio_viz_sci_pts_seq
+      {
+        \draw [ semio~sci~curve ]
+          ( \semio_viz_sci_mx:n { \semio_viz_points_x:n {##1} } , \semio_viz_sci_my:n { 0 } ) --
+          ( \semio_viz_sci_mx:n { \semio_viz_points_x:n {##1} } , \semio_viz_sci_my:n { \semio_viz_points_y:n {##1} } ) ;
+      }
+    \semio_viz_sci_polyline:Nn \l_semio_viz_sci_pts_seq { semio~sci~thin , draw=semio-secondary }
+  }
+% 🦌 Rarefaction: the expected species count at every sample size, from the hypergeometric expectation over the abundance vector.
+\cs_new_protected:Npn \semio_viz_bio_rarefaction:
+  {
+    \fp_zero:N \l_semio_viz_sci_e_fp
+    \clist_map_inline:Nn \l_semio_viz_bio_counts_clist { \fp_add:Nn \l_semio_viz_sci_e_fp {##1} }
+    \seq_clear:N \l_semio_viz_sci_pts_seq
+    \int_step_inline:nnnn { 0 } { 4 } { \fp_to_int:n { \l_semio_viz_sci_e_fp } }
+      { \semio_viz_bio_rarefaction_point:n {##1} }
+    \semio_viz_sci_window_from:Nn \l_semio_viz_sci_pts_seq { 0.06 }
+    \semio_viz_sci_window_keys:
+    \semio_viz_sci_frame:
+    \semio_viz_sci_polyline:Nn \l_semio_viz_sci_pts_seq { semio~sci~curve }
+  }
+% 🎣 Adds the expected species richness at sample size #1, summing the hypergeometric detection probability of every species.
+\cs_new_protected:Npn \semio_viz_bio_rarefaction_point:n #1
+  {
+    \fp_zero:N \l_semio_viz_sci_f_fp
+    \clist_map_inline:Nn \l_semio_viz_bio_counts_clist
+      {
+        \fp_compare:nNnTF { \l_semio_viz_sci_e_fp - ##1 - #1 } < { 0 }
+          { \fp_add:Nn \l_semio_viz_sci_f_fp { 1 } }
+          {
+            \fp_add:Nn \l_semio_viz_sci_f_fp
+              {
+                1 - exp (
+                  \semio_viz_tr_dist_lgamma:n { \l_semio_viz_sci_e_fp - ##1 + 1 }
+                  - \semio_viz_tr_dist_lgamma:n { \l_semio_viz_sci_e_fp - ##1 - #1 + 1 }
+                  - \semio_viz_tr_dist_lgamma:n { \l_semio_viz_sci_e_fp + 1 }
+                  + \semio_viz_tr_dist_lgamma:n { \l_semio_viz_sci_e_fp - #1 + 1 } )
+              }
+          }
+      }
+    \semio_viz_points_put:Nnn \l_semio_viz_sci_pts_seq {#1} { \l_semio_viz_sci_f_fp }
+  }
+% 🏞️ Draws three Gaussian resource-utilisation curves of growing centre and width as overlapping filled niches.
+\cs_new_protected:Npn \semio_viz_bio_niche:
+  {
+    \semio_viz_sci_window:nnnn { 0 } { 10 } { 0 } { 1 }
+    \semio_viz_sci_window_keys:
+    \semio_viz_sci_frame:
+    \int_step_inline:nnnn { 1 } { 1 } { 3 }
+      {
+        \seq_clear:N \l_semio_viz_sci_pts_seq
+        \int_step_inline:nnnn { 0 } { 1 } { 80 }
+          {
+            \fp_set:Nn \SemioX { 10 * ####1 / 80 }
+            \semio_viz_points_put:Nnn \l_semio_viz_sci_pts_seq { \SemioX }
+              { exp ( - ( \SemioX - 2.4 * ##1 ) ^ 2 / ( 2 * ( 0.7 + 0.25 * ##1 ) ^ 2 ) ) }
+          }
+        \semio_viz_sci_polyarea:Nnn \l_semio_viz_sci_pts_seq
+          { fill=\semio_viz_sci_hue:n {##1} , fill~opacity=0.2 } { 0 }
+        \semio_viz_sci_polyline:Nn \l_semio_viz_sci_pts_seq
+          { semio~sci~curve , draw=\semio_viz_sci_hue:n {##1} }
+      }
+  }
+
+%region 🔖️Keys
+% 🔑 Keys of `sci-pathway` (§34 biological networks):
+%    mode (pathway|food-web|metabolic|interaction, pathway).
+%    nodes (clist of `id/x/y/label`), edges (clist of `from/to/kind/label`) with kinds
+%    activate, inhibit, flux, plain.
+%    unit (fp, 1): millimetres per node coordinate unit. nodeShape (box|circle, box).
+\tl_new:N \l_semio_viz_bio_shape_tl
+%endregion 🔖️Keys
+
+\semio_viz_sci_keys_canvas:n { sci-pathway }
+% 🧷 Binds the `sci-pathway` keys to the node and edge lists, the coordinate unit and the node shape.
+\keys_define:nn { semio / viz / family / sci-pathway }
+  {
+    mode      .tl_set:N    = \l_semio_viz_bio_mode_tl ,
+    nodes     .clist_set:N = \l_semio_viz_bio_nodes_clist ,
+    edges     .clist_set:N = \l_semio_viz_bio_edges_clist ,
+    unit      .fp_set:N    = \l_semio_viz_bio_unit_fp ,
+    nodeShape .tl_set:N    = \l_semio_viz_bio_shape_tl ,
+  }
+
+% 🧫 §34 biological networks: pathways, food webs and metabolic maps, with activation and inhibition drawn as different heads.
+\SemioVizFamily { sci-pathway }
+  {
+    \semio_viz_sci_enter:nnn { sci-pathway }
+      {
+        mode=pathway , unit=1 , nodeShape=box , axes=false , grid=false ,
+        nodes={ a/0/28/ligand , b/0/14/receptor , c/22/14/kinase , d/44/14/TF ,
+                e/44/0/gene , f/22/28/inhibitor } ,
+        edges={ a/b/activate/ , b/c/activate/ , c/d/activate/P , d/e/activate/ , f/c/inhibit/ }
+      }
+      {#1}
+    \semio_viz_bio_nodes_read:N \l_semio_viz_bio_nodes_clist
+    \clist_map_inline:Nn \l_semio_viz_bio_edges_clist
+      {
+        \semio_viz_bio_record:n {##1}
+        \semio_viz_bio_edge:
+      }
+    \clist_map_inline:Nn \l_semio_viz_bio_nodes_clist
+      {
+        \semio_viz_bio_record:n {##1}
+        \semio_viz_bio_node:
+      }
+  }
+% 🔗 Draws one network edge between its endpoint nodes, its head chosen by the kind: a bar for inhibit, an arrow for activate or flux.
+\cs_new_protected:Npn \semio_viz_bio_edge:
+  {
+    \tl_set:Nx \l_semio_viz_bio_key_tl { \semio_viz_bio_field:n { 3 } }
+    \use:x
+      {
+        \exp_not:N \draw
+          [
+            \str_case:Vn \l_semio_viz_bio_key_tl
+              {
+                { inhibit } { semio~sci~thin , -{Bar[width=1.6mm]} }
+                { flux }    { semio~sci~arrow , draw=semio-secondary }
+                { plain }   { semio~sci~thin }
+              }
+            \str_if_eq:VnT \l_semio_viz_bio_key_tl { activate } { semio~sci~arrow }
+          ]
+          ( \fp_eval:n { \l_semio_viz_bio_unit_fp
+              * \prop_item:Ne \l_semio_viz_bio_nx_prop { \semio_viz_bio_field:n { 1 } } } ,
+            \fp_eval:n { \l_semio_viz_bio_unit_fp
+              * \prop_item:Ne \l_semio_viz_bio_ny_prop { \semio_viz_bio_field:n { 1 } } } ) --
+          node [ font=\exp_not:N \c_semio_viz_theme_font_label_tl , text=semio-chrome-text-normal ,
+                 fill=semio-chrome-base , inner~sep=0.3mm ]
+            { \semio_viz_bio_field:n { 4 } }
+          ( \fp_eval:n { \l_semio_viz_bio_unit_fp
+              * \prop_item:Ne \l_semio_viz_bio_nx_prop { \semio_viz_bio_field:n { 2 } } } ,
+            \fp_eval:n { \l_semio_viz_bio_unit_fp
+              * \prop_item:Ne \l_semio_viz_bio_ny_prop { \semio_viz_bio_field:n { 2 } } } ) ;
+      }
+  }
+% 🔲 Places the node label in a rounded box, or in a circle when the node shape asks for one.
+\cs_new_protected:Npn \semio_viz_bio_node:
+  {
+    \str_if_eq:VnTF \l_semio_viz_bio_shape_tl { circle }
+      {
+        \node [ semio~sci~glyph , circle , inner~sep=0.9mm ,
+                font=\c_semio_viz_theme_font_label_tl , text=semio-chrome-foreground ]
+          at ( \fp_eval:n { \l_semio_viz_bio_unit_fp * \semio_viz_bio_field:n { 2 } } ,
+               \fp_eval:n { \l_semio_viz_bio_unit_fp * \semio_viz_bio_field:n { 3 } } )
+          { \semio_viz_bio_field:n { 4 } } ;
+      }
+      {
+        \node [ semio~sci~box , inner~sep=1mm , rounded~corners=0.6mm ,
+                font=\c_semio_viz_theme_font_label_tl , text=semio-chrome-foreground ]
+          at ( \fp_eval:n { \l_semio_viz_bio_unit_fp * \semio_viz_bio_field:n { 2 } } ,
+               \fp_eval:n { \l_semio_viz_bio_unit_fp * \semio_viz_bio_field:n { 3 } } )
+          { \semio_viz_bio_field:n { 4 } } ;
+      }
+    \semio_viz_sci_report_values:nn { pathway/node }
+      { \semio_viz_bio_field:n { 2 } , \semio_viz_bio_field:n { 3 } }
+  }
+
+%region 🔖️Keys
+% 🔑 Keys of `sci-pedigree` (§34 inheritance charts):
+%    individuals (clist of `id/generation/index/sex/affected`): sex m or f, affected 0 or 1.
+%    relations (clist of `parent1/parent2/children`) where children is a `+`-joined id list.
+%    generationGap (fp, 16), siblingGap (fp, 12): millimetre spacing.
+\clist_new:N \l_semio_viz_bio_individuals_clist
+\clist_new:N \l_semio_viz_bio_relations_clist
+\fp_new:N \l_semio_viz_bio_gengap_fp
+\fp_new:N \l_semio_viz_bio_sibgap_fp
+%endregion 🔖️Keys
+
+\semio_viz_sci_keys_canvas:n { sci-pedigree }
+% 🍼 Binds the `sci-pedigree` keys to the individuals, the matings and the generation and sibling spacing.
+\keys_define:nn { semio / viz / family / sci-pedigree }
+  {
+    individuals   .clist_set:N = \l_semio_viz_bio_individuals_clist ,
+    relations     .clist_set:N = \l_semio_viz_bio_relations_clist ,
+    generationGap .fp_set:N    = \l_semio_viz_bio_gengap_fp ,
+    siblingGap    .fp_set:N    = \l_semio_viz_bio_sibgap_fp ,
+  }
+
+% 👪 §34 pedigree: squares for males, circles for females, filled when affected, joined by the recorded matings.
+\SemioVizFamily { sci-pedigree }
+  {
+    \semio_viz_sci_enter:nnn { sci-pedigree }
+      {
+        generationGap=16 , siblingGap=12 , axes=false , grid=false ,
+        individuals={ i1/1/1/m/0 , i2/1/2/f/1 , i3/2/1/m/1 , i4/2/2/f/0 , i5/2/3/m/0 ,
+                      i6/3/1/f/1 , i7/3/2/m/0 } ,
+        relations={ i1/i2/i3+i4+i5 , i3/i4/i6+i7 }
+      }
+      {#1}
+    \prop_clear:N \l_semio_viz_bio_nx_prop
+    \prop_clear:N \l_semio_viz_bio_ny_prop
+    \clist_map_inline:Nn \l_semio_viz_bio_individuals_clist
+      {
+        \semio_viz_bio_record:n {##1}
+        \prop_put:Nxx \l_semio_viz_bio_nx_prop { \semio_viz_bio_field:n { 1 } }
+          { \fp_to_decimal:n { \semio_viz_bio_field:n { 3 } * \l_semio_viz_bio_sibgap_fp } }
+        \prop_put:Nxx \l_semio_viz_bio_ny_prop { \semio_viz_bio_field:n { 1 } }
+          { \fp_to_decimal:n { - \semio_viz_bio_field:n { 2 } * \l_semio_viz_bio_gengap_fp } }
+      }
+    \clist_map_inline:Nn \l_semio_viz_bio_relations_clist
+      {
+        \semio_viz_bio_record:n {##1}
+        \semio_viz_bio_mating:
+      }
+    \clist_map_inline:Nn \l_semio_viz_bio_individuals_clist
+      {
+        \semio_viz_bio_record:n {##1}
+        \semio_viz_bio_individual:
+      }
+  }
+% 💞 Draws the mating bar between the two parents and the descent lines dropping from its midpoint to each child.
+\cs_new_protected:Npn \semio_viz_bio_mating:
+  {
+    \fp_set:Nn \l_semio_viz_sci_a_fp
+      { \prop_item:Ne \l_semio_viz_bio_nx_prop { \semio_viz_bio_field:n { 1 } } }
+    \fp_set:Nn \l_semio_viz_sci_b_fp
+      { \prop_item:Ne \l_semio_viz_bio_ny_prop { \semio_viz_bio_field:n { 1 } } }
+    \fp_set:Nn \l_semio_viz_sci_c_fp
+      { \prop_item:Ne \l_semio_viz_bio_nx_prop { \semio_viz_bio_field:n { 2 } } }
+    \draw [ semio~sci~thin ]
+      ( \fp_eval:n { \l_semio_viz_sci_a_fp } , \fp_eval:n { \l_semio_viz_sci_b_fp } ) --
+      ( \fp_eval:n { \l_semio_viz_sci_c_fp } , \fp_eval:n { \l_semio_viz_sci_b_fp } ) ;
+    \fp_set:Nn \l_semio_viz_sci_d_fp { ( \l_semio_viz_sci_a_fp + \l_semio_viz_sci_c_fp ) / 2 }
+    \draw [ semio~sci~thin ]
+      ( \fp_eval:n { \l_semio_viz_sci_d_fp } , \fp_eval:n { \l_semio_viz_sci_b_fp } ) --
+      ( \fp_eval:n { \l_semio_viz_sci_d_fp } ,
+        \fp_eval:n { \l_semio_viz_sci_b_fp - \l_semio_viz_bio_gengap_fp / 2 } ) ;
+    \seq_set_split:Nnx \l_tmpa_seq { + } { \semio_viz_bio_field:n { 3 } }
+    \seq_map_inline:Nn \l_tmpa_seq
+      {
+        \draw [ semio~sci~thin ]
+          ( \fp_eval:n { \l_semio_viz_sci_d_fp } ,
+            \fp_eval:n { \l_semio_viz_sci_b_fp - \l_semio_viz_bio_gengap_fp / 2 } ) --
+          ( \prop_item:Nn \l_semio_viz_bio_nx_prop {##1} ,
+            \fp_eval:n { \l_semio_viz_sci_b_fp - \l_semio_viz_bio_gengap_fp / 2 } ) --
+          ( \prop_item:Nn \l_semio_viz_bio_nx_prop {##1} ,
+            \prop_item:Nn \l_semio_viz_bio_ny_prop {##1} ) ;
+      }
+  }
+% ⬜ Draws one individual at its generation and sibling slot: a circle for f, a square otherwise, filled when affected.
+\cs_new_protected:Npn \semio_viz_bio_individual:
+  {
+    \fp_set:Nn \l_semio_viz_sci_a_fp
+      { \semio_viz_bio_field:n { 3 } * \l_semio_viz_bio_sibgap_fp }
+    \fp_set:Nn \l_semio_viz_sci_b_fp
+      { - \semio_viz_bio_field:n { 2 } * \l_semio_viz_bio_gengap_fp }
+    \tl_set:Nx \l_semio_viz_bio_key_tl
+      {
+        \int_compare:nNnTF { \semio_viz_bio_field:n { 5 } } = { 1 }
+          { semio-chrome-foreground } { semio-chrome-base }
+      }
+    \tl_set:Nx \l_tmpa_tl { \semio_viz_bio_field:n { 4 } }
+    \str_if_eq:VnTF \l_tmpa_tl { f }
+      {
+        \use:x
+          {
+            \exp_not:N \draw [ semio~sci~thin , fill=\l_semio_viz_bio_key_tl ]
+              ( \fp_to_decimal:N \l_semio_viz_sci_a_fp , \fp_to_decimal:N \l_semio_viz_sci_b_fp )
+              ~ circle ~ [ radius=3 ] ;
+          }
+      }
+      {
+        \use:x
+          {
+            \exp_not:N \draw [ semio~sci~thin , fill=\l_semio_viz_bio_key_tl ]
+              ( \fp_to_decimal:n { \l_semio_viz_sci_a_fp - 3 } ,
+                \fp_to_decimal:n { \l_semio_viz_sci_b_fp - 3 } ) ~ rectangle ~
+              ( \fp_to_decimal:n { \l_semio_viz_sci_a_fp + 3 } ,
+                \fp_to_decimal:n { \l_semio_viz_sci_b_fp + 3 } ) ;
+          }
+      }
+  }
+
+%region 🔖️Keys
+% 🔑 Keys of `sci-punnett` (§34 Mendelian crosses):
+%    parentA, parentB (clist): the gametes of each parent.
+%    cell (fp, 9): cell size in millimetres. highlight (clist): genotypes to shade.
+\clist_new:N \l_semio_viz_bio_parenta_clist
+\clist_new:N \l_semio_viz_bio_parentb_clist
+\clist_new:N \l_semio_viz_bio_highlight_clist
+%endregion 🔖️Keys
+
+\semio_viz_sci_keys_canvas:n { sci-punnett }
+% 🌾 Binds the `sci-punnett` keys to the two gamete lists, the cell size and the genotypes to shade.
+\keys_define:nn { semio / viz / family / sci-punnett }
+  {
+    parentA   .clist_set:N = \l_semio_viz_bio_parenta_clist ,
+    parentB   .clist_set:N = \l_semio_viz_bio_parentb_clist ,
+    cell      .fp_set:N    = \l_semio_viz_bio_cell_fp ,
+    highlight .clist_set:N = \l_semio_viz_bio_highlight_clist ,
+  }
+
+% 🌱 §34 Punnett square: the cross table of the two gamete lists, each cell the concatenated genotype.
+\SemioVizFamily { sci-punnett }
+  {
+    \semio_viz_sci_enter:nnn { sci-punnett }
+      {
+        parentA={ A , a } , parentB={ A , a } , cell=9 , highlight={ AA } , axes=false , grid=false
+      }
+      {#1}
+    \int_zero:N \l_tmpa_int
+    \clist_map_inline:Nn \l_semio_viz_bio_parenta_clist
+      {
+        \int_incr:N \l_tmpa_int
+        \node [ font=\c_semio_viz_theme_font_label_tl , text=semio-chrome-text-normal ]
+          at ( \fp_eval:n { ( \l_tmpa_int - 0.5 ) * \l_semio_viz_bio_cell_fp } ,
+               \fp_eval:n { 0.5 * \l_semio_viz_bio_cell_fp } ) {##1} ;
+        \int_zero:N \l_tmpb_int
+        \clist_map_inline:Nn \l_semio_viz_bio_parentb_clist
+          { \int_incr:N \l_tmpb_int \semio_viz_bio_punnett_cell:nn {##1} {####1} }
+      }
+    \int_zero:N \l_tmpb_int
+    \clist_map_inline:Nn \l_semio_viz_bio_parentb_clist
+      {
+        \int_incr:N \l_tmpb_int
+        \node [ font=\c_semio_viz_theme_font_label_tl , text=semio-chrome-text-normal ]
+          at ( \fp_eval:n { -0.5 * \l_semio_viz_bio_cell_fp } ,
+               \fp_eval:n { - ( \l_tmpb_int - 0.5 ) * \l_semio_viz_bio_cell_fp } ) {##1} ;
+      }
+  }
+% 🔳 Draws the cell crossing gametes #1 and #2 and prints their genotype, shaded when it is in the highlight list.
+\cs_new_protected:Npn \semio_viz_bio_punnett_cell:nn #1#2
+  {
+    \tl_set:Nn \l_semio_viz_bio_key_tl { #1 #2 }
+    \clist_if_in:NVTF \l_semio_viz_bio_highlight_clist \l_semio_viz_bio_key_tl
+      {
+        \fill [ fill=semio-primary , fill~opacity=0.2 ]
+          ( \fp_eval:n { ( \l_tmpa_int - 1 ) * \l_semio_viz_bio_cell_fp } ,
+            \fp_eval:n { - \l_tmpb_int * \l_semio_viz_bio_cell_fp } ) rectangle
+          ( \fp_eval:n { \l_tmpa_int * \l_semio_viz_bio_cell_fp } ,
+            \fp_eval:n { ( 1 - \l_tmpb_int ) * \l_semio_viz_bio_cell_fp } ) ;
+      }
+      { }
+    \draw [ semio~sci~box , fill=none ]
+      ( \fp_eval:n { ( \l_tmpa_int - 1 ) * \l_semio_viz_bio_cell_fp } ,
+        \fp_eval:n { - \l_tmpb_int * \l_semio_viz_bio_cell_fp } ) rectangle
+      ( \fp_eval:n { \l_tmpa_int * \l_semio_viz_bio_cell_fp } ,
+        \fp_eval:n { ( 1 - \l_tmpb_int ) * \l_semio_viz_bio_cell_fp } ) ;
+    \node [ font=\c_semio_viz_theme_font_label_tl , text=semio-chrome-foreground ]
+      at ( \fp_eval:n { ( \l_tmpa_int - 0.5 ) * \l_semio_viz_bio_cell_fp } ,
+           \fp_eval:n { ( 0.5 - \l_tmpb_int ) * \l_semio_viz_bio_cell_fp } )
+      { \tl_use:N \l_semio_viz_bio_key_tl } ;
+  }
+
+%region 🔖️Keys
+% 🔑 Keys of `sci-lifecycle` (§34 cyclic processes):
+%    stages (clist of `label`): the stages, placed evenly around the ring.
+%    radius (fp, 22): ring radius in millimetres. arrows (bool, true): draw the arcs between stages.
+\clist_new:N \l_semio_viz_bio_stages_clist
+\fp_new:N \l_semio_viz_bio_radius_fp
+\bool_new:N \l_semio_viz_bio_arrows_bool
+%endregion 🔖️Keys
+
+\semio_viz_sci_keys_canvas:n { sci-lifecycle }
+% ♻️ Binds the `sci-lifecycle` keys to the stage names, the ring radius and the connecting-arc switch.
+\keys_define:nn { semio / viz / family / sci-lifecycle }
+  {
+    stages .clist_set:N = \l_semio_viz_bio_stages_clist ,
+    radius .fp_set:N    = \l_semio_viz_bio_radius_fp ,
+    arrows .bool_set:N  = \l_semio_viz_bio_arrows_bool ,
+  }
+
+% 🔄 §34 life cycle: the stages on a ring, joined by arcs that run round it.
+\SemioVizFamily { sci-lifecycle }
+  {
+    \semio_viz_sci_enter:nnn { sci-lifecycle }
+      {
+        stages={ egg , larva , pupa , adult } , radius=22 , arrows=true , axes=false , grid=false
+      }
+      {#1}
+    \int_set:Nn \l_tmpb_int { \clist_count:N \l_semio_viz_bio_stages_clist }
+    \int_zero:N \l_tmpa_int
+    \clist_map_inline:Nn \l_semio_viz_bio_stages_clist
+      {
+        \int_incr:N \l_tmpa_int
+        \bool_if:NT \l_semio_viz_bio_arrows_bool
+          {
+            \draw [ semio~sci~arrow ]
+              ( \fp_eval:n { \l_semio_viz_bio_radius_fp * cosd ( 90 - 360 * ( \l_tmpa_int - 0.72 ) / \l_tmpb_int ) } ,
+                \fp_eval:n { \l_semio_viz_bio_radius_fp * sind ( 90 - 360 * ( \l_tmpa_int - 0.72 ) / \l_tmpb_int ) } )
+              arc [ start~angle=\fp_eval:n { 90 - 360 * ( \l_tmpa_int - 0.72 ) / \l_tmpb_int } ,
+                    end~angle=\fp_eval:n { 90 - 360 * ( \l_tmpa_int - 0.28 ) / \l_tmpb_int } ,
+                    radius=\fp_eval:n { \l_semio_viz_bio_radius_fp } ] ;
+          }
+        \node [ semio~sci~box , inner~sep=1mm , rounded~corners=0.6mm ,
+                font=\c_semio_viz_theme_font_label_tl , text=semio-chrome-foreground ]
+          at ( \fp_eval:n { \l_semio_viz_bio_radius_fp * cosd ( 90 - 360 * ( \l_tmpa_int - 1 ) / \l_tmpb_int ) } ,
+               \fp_eval:n { \l_semio_viz_bio_radius_fp * sind ( 90 - 360 * ( \l_tmpa_int - 1 ) / \l_tmpb_int ) } )
+          {##1} ;
+      }
+  }
+
+%region 🔖️Keys
+% 🔑 Keys of `sci-circos` (§21 circular genomes):
+%    segments (clist of `id/length/label`): the chromosomes, drawn as arcs proportional to their length.
+%    tracks (clist of `segment/start/end/value/track`): the ring data; track 1 is the outermost ring.
+%    links (clist of `segA/posA/segB/posB/weight`): the chords inside the ring.
+%    radius (fp, 26), ringWidth (fp, 3.4), gap (fp, 2): the ring geometry in millimetres and degrees.
+\clist_new:N \l_semio_viz_bio_segments_clist
+\clist_new:N \l_semio_viz_bio_tracks_clist
+\clist_new:N \l_semio_viz_bio_links_clist
+\fp_new:N \l_semio_viz_bio_ring_fp
+\fp_new:N \l_semio_viz_bio_gap_fp
+\fp_new:N \l_semio_viz_bio_total_fp
+\prop_new:N \l_semio_viz_bio_start_prop
+\prop_new:N \l_semio_viz_bio_scale_prop
+\bool_new:N \l_semio_viz_bio_tracks_bool
+\bool_new:N \l_semio_viz_bio_links_bool
+\bool_new:N \l_semio_viz_bio_bands_bool
+\bool_new:N \l_semio_viz_bio_marks_bool
+%endregion 🔖️Keys
+
+\semio_viz_sci_keys_canvas:n { sci-circos }
+% 🎡 Binds the `sci-circos` keys to the segments, tracks and links and to the ring radius, width and gap.
+\keys_define:nn { semio / viz / family / sci-circos }
+  {
+    segments  .clist_set:N = \l_semio_viz_bio_segments_clist ,
+    tracks    .clist_set:N = \l_semio_viz_bio_tracks_clist ,
+    links     .clist_set:N = \l_semio_viz_bio_links_clist ,
+    radius    .fp_set:N    = \l_semio_viz_bio_radius_fp ,
+    ringWidth .fp_set:N    = \l_semio_viz_bio_ring_fp ,
+    gap       .fp_set:N    = \l_semio_viz_bio_gap_fp ,
+    showTracks .bool_set:N = \l_semio_viz_bio_tracks_bool ,
+    showLinks  .bool_set:N = \l_semio_viz_bio_links_bool ,
+  }
+
+% 🧬 §21 circular genome: each segment gets the share of the circle its own length earns, then its tracks and links.
+\SemioVizFamily { sci-circos }
+  {
+    \semio_viz_sci_enter:nnn { sci-circos }
+      {
+        radius=26 , ringWidth=3.4 , gap=2 , showTracks=true , showLinks=true , axes=false , grid=false ,
+        segments={ c1/249/1 , c2/243/2 , c3/198/3 , c4/191/4 , c5/181/5 , c6/171/6 } ,
+        tracks={ c1/10/60/0.8/1 , c1/90/180/0.4/1 , c2/20/120/0.9/1 , c3/30/150/0.55/1 ,
+                 c4/10/90/0.7/2 , c5/40/160/0.3/2 , c6/20/140/0.85/2 } ,
+        links={ c1/40/c4/60/1 , c2/100/c5/80/1 , c3/120/c6/40/1 }
+      }
+      {#1}
+    \semio_viz_bio_circos_scale:
+    \clist_map_inline:Nn \l_semio_viz_bio_segments_clist
+      {
+        \semio_viz_bio_record:n {##1}
+        \semio_viz_bio_circos_segment:
+      }
+    \bool_if:NT \l_semio_viz_bio_tracks_bool
+      {
+        \clist_map_inline:Nn \l_semio_viz_bio_tracks_clist
+          {
+            \semio_viz_bio_record:n {##1}
+            \semio_viz_bio_circos_track:
+          }
+      }
+    \bool_if:NT \l_semio_viz_bio_links_bool
+      {
+        \clist_map_inline:Nn \l_semio_viz_bio_links_clist
+          {
+            \semio_viz_bio_record:n {##1}
+            \semio_viz_bio_circos_link:
+          }
+      }
+  }
+% 🧮 Shares the circle among the segments by length, storing each one's start angle and its degrees-per-unit scale.
+\cs_new_protected:Npn \semio_viz_bio_circos_scale:
+  {
+    \fp_zero:N \l_semio_viz_bio_total_fp
+    \clist_map_inline:Nn \l_semio_viz_bio_segments_clist
+      {
+        \semio_viz_bio_record:n {##1}
+        \fp_add:Nn \l_semio_viz_bio_total_fp { \semio_viz_bio_field:n { 2 } }
+      }
+    \prop_clear:N \l_semio_viz_bio_start_prop
+    \prop_clear:N \l_semio_viz_bio_scale_prop
+    \fp_zero:N \l_semio_viz_sci_g_fp
+    \clist_map_inline:Nn \l_semio_viz_bio_segments_clist
+      {
+        \semio_viz_bio_record:n {##1}
+        \prop_put:Nxx \l_semio_viz_bio_start_prop { \semio_viz_bio_field:n { 1 } }
+          { \fp_to_decimal:N \l_semio_viz_sci_g_fp }
+        \prop_put:Nxx \l_semio_viz_bio_scale_prop { \semio_viz_bio_field:n { 1 } }
+          {
+            \fp_to_decimal:n
+              {
+                ( 360 - \l_semio_viz_bio_gap_fp * \clist_count:N \l_semio_viz_bio_segments_clist )
+                / \l_semio_viz_bio_total_fp
+              }
+          }
+        \fp_add:Nn \l_semio_viz_sci_g_fp
+          {
+            \semio_viz_bio_field:n { 2 }
+            * ( 360 - \l_semio_viz_bio_gap_fp * \clist_count:N \l_semio_viz_bio_segments_clist )
+              / \l_semio_viz_bio_total_fp
+            + \l_semio_viz_bio_gap_fp
+          }
+      }
+  }
+% 🧭 Converts position #2 on segment #1 into its absolute angle on the ring.
+\cs_new:Npn \semio_viz_bio_angle:nn #1#2
+  {
+    \prop_item:Ne \l_semio_viz_bio_start_prop {#1}
+    + ( #2 ) * \prop_item:Ne \l_semio_viz_bio_scale_prop {#1}
+  }
+% 🌈 Draws one chromosome as a hued arc spanning its share of the circle, labelled just outside it.
+\cs_new_protected:Npn \semio_viz_bio_circos_segment:
+  {
+    \fp_set:Nn \l_semio_viz_sci_a_fp
+      { \semio_viz_bio_angle:nn { \semio_viz_bio_field:n { 1 } } { 0 } }
+    \fp_set:Nn \l_semio_viz_sci_b_fp
+      { \semio_viz_bio_angle:nn { \semio_viz_bio_field:n { 1 } } { \semio_viz_bio_field:n { 2 } } }
+    \draw [ line~width=2.2pt , draw=\semio_viz_sci_hue:n { \semio_viz_bio_field:n { 3 } } ]
+      ( \fp_eval:n { \l_semio_viz_bio_radius_fp * cosd ( \l_semio_viz_sci_a_fp ) } ,
+        \fp_eval:n { \l_semio_viz_bio_radius_fp * sind ( \l_semio_viz_sci_a_fp ) } )
+      arc [ start~angle=\fp_eval:n { \l_semio_viz_sci_a_fp } ,
+            end~angle=\fp_eval:n { \l_semio_viz_sci_b_fp } ,
+            radius=\fp_eval:n { \l_semio_viz_bio_radius_fp } ] ;
+    \node [ font=\c_semio_viz_theme_font_label_tl , text=semio-chrome-text-normal ]
+      at ( \fp_eval:n { ( \l_semio_viz_bio_radius_fp + 4 )
+             * cosd ( ( \l_semio_viz_sci_a_fp + \l_semio_viz_sci_b_fp ) / 2 ) } ,
+           \fp_eval:n { ( \l_semio_viz_bio_radius_fp + 4 )
+             * sind ( ( \l_semio_viz_sci_a_fp + \l_semio_viz_sci_b_fp ) / 2 ) } )
+      { \semio_viz_bio_field:n { 3 } } ;
+    \semio_viz_sci_report_values:nn { circos/segment }
+      { \fp_to_decimal:N \l_semio_viz_sci_a_fp , \fp_to_decimal:N \l_semio_viz_sci_b_fp }
+  }
+% 📿 Draws one track datum as an arc on the ring of its track index, its width and colour taken from its value.
+\cs_new_protected:Npn \semio_viz_bio_circos_track:
+  {
+    \fp_set:Nn \l_semio_viz_sci_a_fp
+      { \semio_viz_bio_angle:nn { \semio_viz_bio_field:n { 1 } } { \semio_viz_bio_field:n { 2 } } }
+    \fp_set:Nn \l_semio_viz_sci_b_fp
+      { \semio_viz_bio_angle:nn { \semio_viz_bio_field:n { 1 } } { \semio_viz_bio_field:n { 3 } } }
+    \fp_set:Nn \l_semio_viz_sci_c_fp
+      {
+        \l_semio_viz_bio_radius_fp
+        - \semio_viz_bio_field:n { 5 } * ( \l_semio_viz_bio_ring_fp + 1 )
+      }
+    \draw
+      [ line~width=\fp_eval:n { 0.4 + 2.4 * \semio_viz_bio_field:n { 4 } } pt ,
+        draw=\semio_viz_sci_ramp:n { \semio_viz_bio_field:n { 4 } } ]
+      ( \fp_eval:n { \l_semio_viz_sci_c_fp * cosd ( \l_semio_viz_sci_a_fp ) } ,
+        \fp_eval:n { \l_semio_viz_sci_c_fp * sind ( \l_semio_viz_sci_a_fp ) } )
+      arc [ start~angle=\fp_eval:n { \l_semio_viz_sci_a_fp } ,
+            end~angle=\fp_eval:n { \l_semio_viz_sci_b_fp } ,
+            radius=\fp_eval:n { \l_semio_viz_sci_c_fp } ] ;
+  }
+% 🪢 Draws one chord between two segment positions, bending it through the centre of the ring.
+\cs_new_protected:Npn \semio_viz_bio_circos_link:
+  {
+    \fp_set:Nn \l_semio_viz_sci_a_fp
+      { \semio_viz_bio_angle:nn { \semio_viz_bio_field:n { 1 } } { \semio_viz_bio_field:n { 2 } } }
+    \fp_set:Nn \l_semio_viz_sci_b_fp
+      { \semio_viz_bio_angle:nn { \semio_viz_bio_field:n { 3 } } { \semio_viz_bio_field:n { 4 } } }
+    \fp_set:Nn \l_semio_viz_sci_c_fp { \l_semio_viz_bio_radius_fp - 2 * \l_semio_viz_bio_ring_fp - 3 }
+    \draw [ semio~sci~thin , draw=semio-primary , opacity=0.65 ]
+      ( \fp_eval:n { \l_semio_viz_sci_c_fp * cosd ( \l_semio_viz_sci_a_fp ) } ,
+        \fp_eval:n { \l_semio_viz_sci_c_fp * sind ( \l_semio_viz_sci_a_fp ) } )
+      .. controls ( 0 , 0 ) ..
+      ( \fp_eval:n { \l_semio_viz_sci_c_fp * cosd ( \l_semio_viz_sci_b_fp ) } ,
+        \fp_eval:n { \l_semio_viz_sci_c_fp * sind ( \l_semio_viz_sci_b_fp ) } ) ;
+  }
+
+%region 🔖️Keys
+% 🔑 Keys of `sci-ideogram` (§21 chromosome maps):
+%    chromosomes (clist of `id/length/centromere`): lengths and centromere positions in the same unit.
+%    bands (clist of `chromosome/start/end/stain`): stains gneg, gpos25, gpos50, gpos75, gpos100, acen.
+%    marks (clist of `chromosome/position/label`): loci to annotate.
+%    columnGap (fp, 9), scale (fp, 0.16): millimetres between chromosomes and per length unit.
+\clist_new:N \l_semio_viz_bio_chrom_clist
+\clist_new:N \l_semio_viz_bio_bands_clist
+\clist_new:N \l_semio_viz_bio_marks_clist
+\fp_new:N \l_semio_viz_bio_scale_fp
+%endregion 🔖️Keys
+
+\semio_viz_sci_keys_canvas:n { sci-ideogram }
+% 🎞️ Binds the `sci-ideogram` keys to the chromosomes, bands and marks and to the column gap and length scale.
+\keys_define:nn { semio / viz / family / sci-ideogram }
+  {
+    chromosomes .clist_set:N = \l_semio_viz_bio_chrom_clist ,
+    bands       .clist_set:N = \l_semio_viz_bio_bands_clist ,
+    marks       .clist_set:N = \l_semio_viz_bio_marks_clist ,
+    columnGap   .fp_set:N    = \l_semio_viz_bio_gap_fp ,
+    scale       .fp_set:N    = \l_semio_viz_bio_scale_fp ,
+    showBands   .bool_set:N  = \l_semio_viz_bio_bands_bool ,
+    showMarks   .bool_set:N  = \l_semio_viz_bio_marks_bool ,
+  }
+
+% 🧬 §21 karyotype: one bar per chromosome with its Giemsa bands and centromere, plus annotated loci.
+\SemioVizFamily { sci-ideogram }
+  {
+    \semio_viz_sci_enter:nnn { sci-ideogram }
+      {
+        columnGap=9 , scale=0.16 , showBands=true , showMarks=true , axes=false , grid=false ,
+        chromosomes={ c1/249/125 , c2/243/93 , c3/198/91 , c4/191/50 , c5/181/48 } ,
+        bands={ c1/0/40/gpos100 , c1/40/90/gneg , c1/90/125/gpos50 , c1/130/200/gneg ,
+                c1/200/249/gpos75 , c2/0/60/gneg , c2/60/93/gpos75 , c2/100/243/gneg ,
+                c3/0/91/gpos50 , c3/95/198/gneg , c4/0/50/gpos25 , c4/55/191/gneg ,
+                c5/0/48/gpos100 , c5/52/181/gneg } ,
+        marks={ c1/150/BRCA , c3/60/TP53 }
+      }
+      {#1}
+    \int_zero:N \l_tmpa_int
+    \clist_map_inline:Nn \l_semio_viz_bio_chrom_clist
+      {
+        \int_incr:N \l_tmpa_int
+        \semio_viz_bio_record:n {##1}
+        \prop_put:Nxx \l_semio_viz_bio_nx_prop { \semio_viz_bio_field:n { 1 } }
+          { \fp_to_decimal:n { \l_tmpa_int * \l_semio_viz_bio_gap_fp } }
+        \draw [ semio~sci~thin , draw=semio-chrome-border-normal ]
+          ( \fp_eval:n { \l_tmpa_int * \l_semio_viz_bio_gap_fp - 2 } , 0 ) rectangle
+          ( \fp_eval:n { \l_tmpa_int * \l_semio_viz_bio_gap_fp + 2 } ,
+            \fp_eval:n { - \semio_viz_bio_field:n { 2 } * \l_semio_viz_bio_scale_fp } ) ;
+        \node [ font=\c_semio_viz_theme_font_label_tl , text=semio-chrome-text-normal , anchor=south ]
+          at ( \fp_eval:n { \l_tmpa_int * \l_semio_viz_bio_gap_fp } , 1 )
+          { \semio_viz_bio_field:n { 1 } } ;
+      }
+    \bool_if:NT \l_semio_viz_bio_bands_bool
+      {
+        \clist_map_inline:Nn \l_semio_viz_bio_bands_clist
+          {
+            \semio_viz_bio_record:n {##1}
+            \semio_viz_bio_band:
+          }
+      }
+    \bool_if:NF \l_semio_viz_bio_marks_bool { \clist_clear:N \l_semio_viz_bio_marks_clist }
+    \clist_map_inline:Nn \l_semio_viz_bio_marks_clist
+      {
+        \semio_viz_bio_record:n {##1}
+        \node [ font=\c_semio_viz_theme_font_label_tl , text=semio-chrome-foreground , anchor=west ]
+          at ( \fp_eval:n { \prop_item:Ne \l_semio_viz_bio_nx_prop { \semio_viz_bio_field:n { 1 } } + 3 } ,
+               \fp_eval:n { - \semio_viz_bio_field:n { 2 } * \l_semio_viz_bio_scale_fp } )
+          { \semio_viz_bio_field:n { 3 } } ;
+      }
+  }
+% 🖤 Fills one Giemsa band on its chromosome bar with the grey level its stain name selects.
+\cs_new_protected:Npn \semio_viz_bio_band:
+  {
+    \tl_set:Nx \l_semio_viz_bio_key_tl { \semio_viz_bio_field:n { 4 } }
+    \use:x
+      {
+        \exp_not:N \fill
+          [
+            fill=\str_case:Vn \l_semio_viz_bio_key_tl
+              {
+                { gneg }    { semio-chrome-window }
+                { gpos25 }  { semio-chrome-foreground!25 }
+                { gpos50 }  { semio-chrome-foreground!50 }
+                { gpos75 }  { semio-chrome-foreground!75 }
+                { gpos100 } { semio-chrome-foreground }
+                { acen }    { semio-primary }
+              }
+          ]
+          ( \fp_to_decimal:n
+              { \prop_item:Ne \l_semio_viz_bio_nx_prop { \semio_viz_bio_field:n { 1 } } - 2 } ,
+            \fp_to_decimal:n { - \semio_viz_bio_field:n { 2 } * \l_semio_viz_bio_scale_fp } )
+          ~ rectangle ~
+          ( \fp_to_decimal:n
+              { \prop_item:Ne \l_semio_viz_bio_nx_prop { \semio_viz_bio_field:n { 1 } } + 2 } ,
+            \fp_to_decimal:n { - \semio_viz_bio_field:n { 3 } * \l_semio_viz_bio_scale_fp } ) ;
+      }
+  }
+
+%region 🔖️Keys
+% 🔑 Keys of `sci-genome-track` (§21 linear genome browser):
+%    mode (coverage|pileup|variant|gene-structure|domain, coverage).
+%    features (clist of `start/end/strand/kind/label`): exons, introns, domains or variants.
+%    coverage (clist of numbers): the per-bin depth of the coverage track.
+%    span (clist of 2, `0,1000`): the genomic window. laneHeight (fp, 6): track height in millimetres.
+\clist_new:N \l_semio_viz_bio_features_track_clist
+\clist_new:N \l_semio_viz_bio_coverage_clist
+\clist_new:N \l_semio_viz_bio_span_clist
+\fp_new:N \l_semio_viz_bio_lane_fp
+%endregion 🔖️Keys
+
+\semio_viz_sci_keys_canvas:n { sci-genome-track }
+% 🔭 Binds the `sci-genome-track` keys to the features, the coverage bins, the genomic span and the lane height.
+\keys_define:nn { semio / viz / family / sci-genome-track }
+  {
+    mode       .tl_set:N    = \l_semio_viz_bio_mode_tl ,
+    features   .clist_set:N = \l_semio_viz_bio_features_track_clist ,
+    coverage   .clist_set:N = \l_semio_viz_bio_coverage_clist ,
+    span       .clist_set:N = \l_semio_viz_bio_span_clist ,
+    laneHeight .fp_set:N    = \l_semio_viz_bio_lane_fp ,
+  }
+
+% 🧬 §21 genome browser: the coverage profile, read pileup, variant ticks and the exon–intron structure of a transcript.
+\SemioVizFamily { sci-genome-track }
+  {
+    \semio_viz_sci_enter:nnn { sci-genome-track }
+      {
+        mode=coverage , span={ 0 , 1000 } , laneHeight=6 , range={} ,
+        coverage={ 3,5,8,12,18,24,31,38,42,46,44,39,33,28,22,17,13,10,7,5,4,3,3,2 } ,
+        features={ 100/220/+/exon/e1 , 220/430/+/intron/ , 430/560/+/exon/e2 ,
+                   560/760/+/intron/ , 760/900/+/exon/e3 , 300/305/+/variant/rs1 }
+      }
+      {#1}
+    \semio_viz_sci_window:nnnn
+      { \clist_item:Nn \l_semio_viz_bio_span_clist { 1 } }
+      { \clist_item:Nn \l_semio_viz_bio_span_clist { 2 } } { 0 } { 1 }
+    \str_case:VnF \l_semio_viz_bio_mode_tl
+      {
+        { gene-structure } { \semio_viz_sci_frame: \semio_viz_bio_gene_structure: }
+        { domain }         { \semio_viz_sci_frame: \semio_viz_bio_gene_structure: }
+        { variant }        { \semio_viz_sci_frame: \semio_viz_bio_variants: }
+        { pileup }         { \semio_viz_sci_frame: \semio_viz_bio_pileup: }
+        { transcript }     { \semio_viz_sci_frame: \semio_viz_bio_gene_structure: \semio_viz_bio_feature_labels: }
+        { multi }          { \semio_viz_bio_coverage: \semio_viz_bio_gene_structure: }
+        { synteny }        { \semio_viz_sci_frame: \semio_viz_bio_synteny: }
+      }
+      { \semio_viz_bio_coverage: }
+  }
+% 🏔️ Spreads the coverage bins evenly across the span, refits the window to their peak and draws the filled depth profile.
+\cs_new_protected:Npn \semio_viz_bio_coverage:
+  {
+    \seq_clear:N \l_semio_viz_sci_pts_seq
+    \int_zero:N \l_tmpa_int
+    \int_set:Nn \l_tmpb_int { \clist_count:N \l_semio_viz_bio_coverage_clist }
+    \clist_map_inline:Nn \l_semio_viz_bio_coverage_clist
+      {
+        \semio_viz_points_put:Nnn \l_semio_viz_sci_pts_seq
+          {
+            \clist_item:Nn \l_semio_viz_bio_span_clist { 1 }
+            + ( \clist_item:Nn \l_semio_viz_bio_span_clist { 2 }
+                - \clist_item:Nn \l_semio_viz_bio_span_clist { 1 } )
+              * \l_tmpa_int / ( \l_tmpb_int - 1 )
+          }
+          {##1}
+        \int_incr:N \l_tmpa_int
+      }
+    \semio_viz_sci_extent:N \l_semio_viz_sci_pts_seq
+    \semio_viz_sci_window:nnnn
+      { \clist_item:Nn \l_semio_viz_bio_span_clist { 1 } }
+      { \clist_item:Nn \l_semio_viz_bio_span_clist { 2 } } { 0 } { \l_semio_viz_sci_ymax_fp * 1.1 }
+    \semio_viz_sci_window_keys:
+    \semio_viz_sci_frame:
+    \semio_viz_sci_polyarea:Nnn \l_semio_viz_sci_pts_seq { semio~sci~band } { 0 }
+    \semio_viz_sci_polyline:Nn \l_semio_viz_sci_pts_seq { semio~sci~curve }
+  }
+% 🧵 Draws the transcript backbone line across the window and one feature box per recorded feature.
+\cs_new_protected:Npn \semio_viz_bio_gene_structure:
+  {
+    \draw [ semio~sci~thin ]
+      ( 0 , \semio_viz_sci_my:n { 0.5 } ) --
+      ( \fp_eval:n { \l_semio_viz_sci_w_fp } , \semio_viz_sci_my:n { 0.5 } ) ;
+    \clist_map_inline:Nn \l_semio_viz_bio_features_track_clist
+      {
+        \semio_viz_bio_record:n {##1}
+        \semio_viz_bio_feature_box:
+      }
+  }
+% 📦 Draws the current feature on the backbone: a solid exon box, a translucent domain box or a variant tick.
+\cs_new_protected:Npn \semio_viz_bio_feature_box:
+  {
+    \tl_set:Nx \l_semio_viz_bio_key_tl { \semio_viz_bio_field:n { 4 } }
+    \str_case:VnF \l_semio_viz_bio_key_tl
+      {
+        { exon }
+          {
+            \fill [ fill=semio-primary ]
+              ( \semio_viz_sci_mx:n { \semio_viz_bio_field:n { 1 } } ,
+                \fp_eval:n { \semio_viz_sci_my:n { 0.5 } - \l_semio_viz_bio_lane_fp / 2 } )
+              rectangle
+              ( \semio_viz_sci_mx:n { \semio_viz_bio_field:n { 2 } } ,
+                \fp_eval:n { \semio_viz_sci_my:n { 0.5 } + \l_semio_viz_bio_lane_fp / 2 } ) ;
+          }
+        { domain }
+          {
+            \fill [ fill=semio-secondary , fill~opacity=0.6 ]
+              ( \semio_viz_sci_mx:n { \semio_viz_bio_field:n { 1 } } ,
+                \fp_eval:n { \semio_viz_sci_my:n { 0.5 } - \l_semio_viz_bio_lane_fp / 3 } )
+              rectangle
+              ( \semio_viz_sci_mx:n { \semio_viz_bio_field:n { 2 } } ,
+                \fp_eval:n { \semio_viz_sci_my:n { 0.5 } + \l_semio_viz_bio_lane_fp / 3 } ) ;
+          }
+        { variant }
+          {
+            \draw [ semio~sci~thin , draw=semio-danger ]
+              ( \semio_viz_sci_mx:n { \semio_viz_bio_field:n { 1 } } ,
+                \fp_eval:n { \semio_viz_sci_my:n { 0.5 } } ) --
+              ( \semio_viz_sci_mx:n { \semio_viz_bio_field:n { 1 } } ,
+                \fp_eval:n { \semio_viz_sci_my:n { 0.5 } + \l_semio_viz_bio_lane_fp } ) ;
+          }
+      }
+      { }
+    \semio_viz_sci_report_values:nn { track/feature }
+      { \semio_viz_bio_field:n { 1 } , \semio_viz_bio_field:n { 2 } }
+  }
+% 🧬 Feature names printed above the transcript structure.
+\cs_new_protected:Npn \semio_viz_bio_feature_labels:
+  {
+    \clist_map_inline:Nn \l_semio_viz_bio_features_track_clist
+      {
+        \semio_viz_bio_record:n {##1}
+        \tl_set:Nx \l_semio_viz_bio_key_tl { \semio_viz_bio_field:n { 5 } }
+        \tl_if_empty:NF \l_semio_viz_bio_key_tl
+          {
+            \node [ font=\c_semio_viz_theme_font_label_tl , text=semio-chrome-text-normal , anchor=south ]
+              at ( \semio_viz_sci_mx:n
+                     { ( \semio_viz_bio_field:n { 1 } + \semio_viz_bio_field:n { 2 } ) / 2 } ,
+                   \fp_eval:n { \semio_viz_sci_my:n { 0.5 } + \l_semio_viz_bio_lane_fp } )
+              { \tl_use:N \l_semio_viz_bio_key_tl } ;
+          }
+      }
+  }
+% 🧬 Synteny ribbons: every feature is joined to its mirror block on the second axis.
+\cs_new_protected:Npn \semio_viz_bio_synteny:
+  {
+    \int_zero:N \l_tmpa_int
+    \clist_map_inline:Nn \l_semio_viz_bio_features_track_clist
+      {
+        \int_incr:N \l_tmpa_int
+        \semio_viz_bio_record:n {##1}
+        \fill [ fill=\semio_viz_sci_hue:n { \l_tmpa_int } , fill~opacity=0.35 ]
+          ( \semio_viz_sci_mx:n { \semio_viz_bio_field:n { 1 } } , \semio_viz_sci_my:n { 0.86 } ) --
+          ( \semio_viz_sci_mx:n { \semio_viz_bio_field:n { 2 } } , \semio_viz_sci_my:n { 0.86 } ) --
+          ( \semio_viz_sci_mx:n
+              { \l_semio_viz_sci_dxmax_fp - \semio_viz_bio_field:n { 1 } + \l_semio_viz_sci_dxmin_fp } ,
+            \semio_viz_sci_my:n { 0.14 } ) --
+          ( \semio_viz_sci_mx:n
+              { \l_semio_viz_sci_dxmax_fp - \semio_viz_bio_field:n { 2 } + \l_semio_viz_sci_dxmin_fp } ,
+            \semio_viz_sci_my:n { 0.14 } ) -- cycle ;
+      }
+    \int_step_inline:nnnn { 0 } { 1 } { 1 }
+      {
+        \draw [ semio~sci~curve ]
+          ( 0 , \semio_viz_sci_my:n { 0.14 + 0.72 * ##1 } ) --
+          ( \fp_eval:n { \l_semio_viz_sci_w_fp } , \semio_viz_sci_my:n { 0.14 + 0.72 * ##1 } ) ;
+      }
+  }
+% 📍 Renders the variant mode through the gene-structure drawing, whose variant ticks already carry it.
+\cs_new_protected:Npn \semio_viz_bio_variants:
+  { \semio_viz_bio_gene_structure: }
+% 🧱 Stacks eighteen seeded pseudo-reads as short bars at pseudo-random offsets inside the span.
+\cs_new_protected:Npn \semio_viz_bio_pileup:
+  {
+    \int_step_inline:nnnn { 1 } { 1 } { 18 }
+      {
+        \semio_viz_sci_random:N \l_semio_viz_sci_e_fp
+        \fill [ fill=semio-primary , fill~opacity=0.55 ]
+          ( \semio_viz_sci_mx:n
+              {
+                \clist_item:Nn \l_semio_viz_bio_span_clist { 1 }
+                + 0.7 * \l_semio_viz_sci_e_fp
+                  * ( \clist_item:Nn \l_semio_viz_bio_span_clist { 2 }
+                    - \clist_item:Nn \l_semio_viz_bio_span_clist { 1 } )
+              } ,
+            \fp_eval:n { \l_semio_viz_sci_h_fp * ##1 / 20 } )
+          rectangle
+          ( \semio_viz_sci_mx:n
+              {
+                \clist_item:Nn \l_semio_viz_bio_span_clist { 1 }
+                + ( 0.7 * \l_semio_viz_sci_e_fp + 0.22 )
+                  * ( \clist_item:Nn \l_semio_viz_bio_span_clist { 2 }
+                    - \clist_item:Nn \l_semio_viz_bio_span_clist { 1 } )
+              } ,
+            \fp_eval:n { \l_semio_viz_sci_h_fp * ##1 / 20 + 1.6 } ) ;
+      }
+  }
+
+%region 🔖️Keys
+% 🔑 Keys of `sci-manhattan` (§21 association scans):
+%    mode (manhattan|regional, manhattan).
+%    points (clist of `chromosome/position/pvalue`): the association results.
+%    chromosomes (clist of `id/length`): the axis layout of a genome-wide scan.
+%    threshold (fp, 5e-8): the genome-wide significance line. suggestive (fp, 1e-5): the second line.
+%endregion 🔖️Keys
+
+\semio_viz_sci_keys_canvas:n { sci-manhattan }
+% 🗻 Binds the `sci-manhattan` keys to the association points, the chromosome lengths and the two significance levels.
+\keys_define:nn { semio / viz / family / sci-manhattan }
+  {
+    mode        .tl_set:N    = \l_semio_viz_bio_mode_tl ,
+    points      .clist_set:N = \l_semio_viz_bio_points_clist ,
+    chromosomes .clist_set:N = \l_semio_viz_bio_chrom_clist ,
+    threshold   .fp_set:N    = \l_semio_viz_bio_threshold_fp ,
+    suggestive  .fp_set:N    = \l_semio_viz_bio_effect_fp ,
+  }
+
+% 🧬 §21 association scan: −log10 p against genomic position, with the chromosomes laid end to end.
+\SemioVizFamily { sci-manhattan }
+  {
+    \semio_viz_sci_enter:nnn { sci-manhattan }
+      {
+        mode=manhattan , threshold=5e-8 , suggestive=1e-5 , range={0,12} ,
+        chromosomes={ 1/249 , 2/243 , 3/198 , 4/191 , 5/181 } ,
+        points={
+          1/20/0.4 , 1/80/0.02 , 1/140/1e-9 , 1/200/0.3 , 2/30/0.06 , 2/110/1e-6 ,
+          2/190/0.5 , 3/40/0.2 , 3/120/1e-11 , 3/170/0.08 , 4/60/0.4 , 4/150/1e-4 ,
+          5/20/0.7 , 5/90/0.03 , 5/160/1e-7
+        }
+      }
+      {#1}
+    \fp_zero:N \l_semio_viz_bio_total_fp
+    \prop_clear:N \l_semio_viz_bio_start_prop
+    \clist_map_inline:Nn \l_semio_viz_bio_chrom_clist
+      {
+        \semio_viz_bio_record:n {##1}
+        \prop_put:Nxx \l_semio_viz_bio_start_prop { \semio_viz_bio_field:n { 1 } }
+          { \fp_to_decimal:N \l_semio_viz_bio_total_fp }
+        \fp_add:Nn \l_semio_viz_bio_total_fp { \semio_viz_bio_field:n { 2 } }
+      }
+    \str_if_eq:VnTF \l_semio_viz_bio_mode_tl { regional }
+      {
+        \semio_viz_bio_record:n { \clist_item:Nn \l_semio_viz_bio_chrom_clist { 1 } }
+        \semio_viz_sci_window:nnnn { 0 } { \semio_viz_bio_field:n { 2 } } { 0 } { 12 }
+        \prop_clear:N \l_semio_viz_bio_start_prop
+        \clist_map_inline:Nn \l_semio_viz_bio_chrom_clist
+          {
+            \semio_viz_bio_record:n {##1}
+            \prop_put:Nxx \l_semio_viz_bio_start_prop { \semio_viz_bio_field:n { 1 } } { 0 }
+          }
+      }
+      { \semio_viz_sci_window:nnnn { 0 } { \l_semio_viz_bio_total_fp } { 0 } { 12 } }
+    \semio_viz_sci_window_keys:
+    \semio_viz_sci_frame:
+    \semio_viz_bio_manhattan_line:nn { \l_semio_viz_bio_threshold_fp } { semio-danger }
+    \semio_viz_bio_manhattan_line:nn { \l_semio_viz_bio_effect_fp } { semio-warning }
+    \clist_map_inline:Nn \l_semio_viz_bio_points_clist
+      {
+        \semio_viz_bio_record:n {##1}
+        \semio_viz_sci_dot:nnn
+          {
+            \prop_item:Ne \l_semio_viz_bio_start_prop { \semio_viz_bio_field:n { 1 } }
+            + \semio_viz_bio_field:n { 2 }
+          }
+          { - ln ( \semio_viz_bio_field:n { 3 } ) / ln (10) }
+          { \semio_viz_sci_hue:n { \semio_viz_bio_field:n { 1 } } }
+      }
+  }
+
+% 🧬 One significance line of an association scan, at −log10 of the given p value.
+\cs_new_protected:Npn \semio_viz_bio_manhattan_line:nn #1#2
+  {
+    \draw [ semio~sci~aux , draw=#2 ]
+      ( 0 , \semio_viz_sci_my:n { - ln (#1) / ln (10) } ) --
+      ( \fp_eval:n { \l_semio_viz_sci_w_fp } , \semio_viz_sci_my:n { - ln (#1) / ln (10) } ) ;
+  }
+
+%region 🔖️Keys
+% 🔑 Keys of `sci-seqlogo` (§21 sequence logos):
+%    columns (clist of `A:count+C:count+G:count+T:count`): one entry per position.
+%    alphabetSize (int, 4): the alphabet size that sets the maximum information content.
+%    columnWidth (fp, 6), height (fp, 26): the logo geometry in millimetres.
+\clist_new:N \l_semio_viz_bio_columns_clist
+\int_new:N \l_semio_viz_bio_alphabet_int
+\fp_new:N \l_semio_viz_bio_colw_fp
+\int_new:N \l_semio_viz_bio_letter_int
+%endregion 🔖️Keys
+
+\semio_viz_sci_keys_canvas:n { sci-seqlogo }
+% 🔤 Binds the `sci-seqlogo` keys to the per-position base counts, the alphabet size and the column width.
+\keys_define:nn { semio / viz / family / sci-seqlogo }
+  {
+    columns      .clist_set:N = \l_semio_viz_bio_columns_clist ,
+    alphabetSize .int_set:N   = \l_semio_viz_bio_alphabet_int ,
+    columnWidth  .fp_set:N    = \l_semio_viz_bio_colw_fp ,
+  }
+
+% 🧬 §21 sequence logo: every column scaled by its own information content log2(4) − H, each letter by its frequency.
+\SemioVizFamily { sci-seqlogo }
+  {
+    \semio_viz_sci_enter:nnn { sci-seqlogo }
+      {
+        alphabetSize=4 , columnWidth=6 , height=26 , axes=false , grid=false ,
+        columns={
+          A:20+C:2+G:1+T:1 , A:3+C:1+G:19+T:1 , A:1+C:1+G:1+T:21 , A:6+C:6+G:6+T:6 ,
+          A:2+C:18+G:2+T:2 , A:1+C:1+G:21+T:1 , A:5+C:4+G:9+T:6
+        }
+      }
+      {#1}
+    \int_zero:N \l_tmpa_int
+    \clist_map_inline:Nn \l_semio_viz_bio_columns_clist
+      {
+        \int_incr:N \l_tmpa_int
+        \semio_viz_bio_logo_column:n {##1}
+      }
+  }
+% 📏 Totals the counts of column #1, derives its Shannon entropy and information content, then stacks its letters.
+\cs_new_protected:Npn \semio_viz_bio_logo_column:n #1
+  {
+    \seq_set_split:Nnn \l_tmpa_seq { + } {#1}
+    \fp_zero:N \l_semio_viz_sci_e_fp
+    \seq_map_inline:Nn \l_tmpa_seq
+      {
+        \semio_viz_sci_split_colon:Nn \l_tmpb_seq {##1}
+        \fp_add:Nn \l_semio_viz_sci_e_fp { \seq_item:Nn \l_tmpb_seq { 2 } }
+      }
+    \fp_zero:N \l_semio_viz_sci_f_fp
+    \seq_map_inline:Nn \l_tmpa_seq
+      {
+        \semio_viz_sci_split_colon:Nn \l_tmpb_seq {##1}
+        \fp_compare:nNnT { \seq_item:Nn \l_tmpb_seq { 2 } } > { 0 }
+          {
+            \fp_sub:Nn \l_semio_viz_sci_f_fp
+              {
+                \seq_item:Nn \l_tmpb_seq { 2 } / \l_semio_viz_sci_e_fp
+                * ln ( \seq_item:Nn \l_tmpb_seq { 2 } / \l_semio_viz_sci_e_fp ) / ln (2)
+              }
+          }
+      }
+    \fp_set:Nn \l_semio_viz_sci_g_fp
+      { ln ( \l_semio_viz_bio_alphabet_int ) / ln (2) - \l_semio_viz_sci_f_fp }
+    \fp_zero:N \l_semio_viz_sci_re_fp
+    \seq_map_inline:Nn \l_tmpa_seq { \semio_viz_bio_logo_letter:n {##1} }
+    \semio_viz_sci_report_values:nn { seqlogo/information }
+      { \int_use:N \l_tmpa_int , \fp_to_decimal:N \l_semio_viz_sci_g_fp }
+  }
+% 🅰️ Scales the letter of entry #1 to its share of the column's information content and stacks it on the ones below.
+\cs_new_protected:Npn \semio_viz_bio_logo_letter:n #1
+  {
+    \semio_viz_sci_split_colon:Nn \l_tmpb_seq {#1}
+    \fp_set:Nn \l_semio_viz_sci_im_fp
+      {
+        \l_semio_viz_sci_h_fp * \l_semio_viz_sci_g_fp
+        / ( ln ( \l_semio_viz_bio_alphabet_int ) / ln (2) )
+        * \seq_item:Nn \l_tmpb_seq { 2 } / \l_semio_viz_sci_e_fp
+      }
+    \tl_set:Nx \l_semio_viz_bio_key_tl { \seq_item:Nn \l_tmpb_seq { 1 } }
+    \int_set:Nn \l_semio_viz_bio_letter_int
+      { \str_case:Vn \l_semio_viz_bio_key_tl { { A } { 1 } { C } { 2 } { G } { 3 } { T } { 4 } } }
+    \fp_compare:nNnT { \l_semio_viz_sci_im_fp } > { 0.4 }
+      {
+        \node
+          [
+            font=\c_semio_viz_theme_font_title_tl ,
+            text=\semio_viz_sci_hue:n { \l_semio_viz_bio_letter_int } ,
+            anchor=south , inner~sep=0pt ,
+            yscale=\fp_eval:n { \l_semio_viz_sci_im_fp / 2.2 } , xscale=1.4
+          ]
+          at ( \fp_eval:n { ( \l_tmpa_int - 0.5 ) * \l_semio_viz_bio_colw_fp } ,
+               \fp_eval:n { \l_semio_viz_sci_re_fp } )
+          { \seq_item:Nn \l_tmpb_seq { 1 } } ;
+        \fp_add:Nn \l_semio_viz_sci_re_fp { \l_semio_viz_sci_im_fp }
+      }
+  }
+
+%region 🔖️Keys
+% 🔑 Keys of `sci-contact-map` (§21 contact matrices):
+%    bins (int, 24): matrix size. expr (l3fp over \SemioX,\SemioY as bin indices): the contact frequency.
+%    cell (fp, 2): cell size in millimetres. logScale (bool, true): colour by the log of the value.
+\bool_new:N \l_semio_viz_bio_log_bool
+%endregion 🔖️Keys
+
+\semio_viz_sci_keys_canvas:n { sci-contact-map }
+% 🕸️ Binds the `sci-contact-map` keys to the bin count, the contact expression, the cell size and the log-scale switch.
+\keys_define:nn { semio / viz / family / sci-contact-map }
+  {
+    bins     .int_set:N  = \l_semio_viz_bio_samples_int ,
+    expr     .tl_set:N   = \l_semio_viz_bio_key_tl ,
+    cell     .fp_set:N   = \l_semio_viz_bio_cell_fp ,
+    logScale .bool_set:N = \l_semio_viz_bio_log_bool ,
+  }
+
+% 🧬 §21 Hi-C contact map: a symmetric matrix whose value is evaluated per cell, coloured on a sequential ramp.
+\SemioVizFamily { sci-contact-map }
+  {
+    \semio_viz_sci_enter:nnn { sci-contact-map }
+      {
+        bins=24 , cell=2 , logScale=true , axes=false , grid=false ,
+        expr={ 1 / ( 1 + abs ( \SemioX - \SemioY ) ) + 0.55 * exp ( - ( ( \SemioX - 6 ) ^ 2 + ( \SemioY - 18 ) ^ 2 ) / 12 )
+               + 0.55 * exp ( - ( ( \SemioX - 18 ) ^ 2 + ( \SemioY - 6 ) ^ 2 ) / 12 ) }
+      }
+      {#1}
+    \int_step_inline:nnnn { 0 } { 1 } { \l_semio_viz_bio_samples_int - 1 }
+      {
+        \int_step_inline:nnnn { 0 } { 1 } { \l_semio_viz_bio_samples_int - 1 }
+          { \semio_viz_bio_contact_cell:nn {##1} {####1} }
+      }
+  }
+% 🟦 Evaluates the contact expression at bin pair (#1,#2), optionally takes its log and fills the cell on the ramp.
+\cs_new_protected:Npn \semio_viz_bio_contact_cell:nn #1#2
+  {
+    \fp_set:Nn \SemioX {#1}
+    \fp_set:Nn \SemioY {#2}
+    \fp_set:Nn \l_semio_viz_sci_g_fp { \l_semio_viz_bio_key_tl }
+    \bool_if:NT \l_semio_viz_bio_log_bool
+      {
+        \fp_set:Nn \l_semio_viz_sci_g_fp
+          { max ( 0 , 1 + ln ( max ( 1e-3 , \l_semio_viz_sci_g_fp ) ) / ln (10) / 2 ) }
+      }
+    \fill [ fill=\semio_viz_sci_ramp:n { \l_semio_viz_sci_g_fp } ]
+      ( \fp_eval:n { #1 * \l_semio_viz_bio_cell_fp } , \fp_eval:n { - #2 * \l_semio_viz_bio_cell_fp } )
+      rectangle
+      ( \fp_eval:n { ( #1 + 1 ) * \l_semio_viz_bio_cell_fp } ,
+        \fp_eval:n { - ( #2 + 1 ) * \l_semio_viz_bio_cell_fp } ) ;
+  }
+
+%region 🔖️Keys
+% 🔑 Keys of `sci-clinical-timeline` (§22 patient timelines):
+%    events (clist of `time/lane/kind/label`): kinds point, interval-start, interval-end, marker.
+%    lanes (clist of labels): the lane names, top to bottom.
+%    laneHeight (fp, 7): lane spacing in millimetres.
+\clist_new:N \l_semio_viz_bio_lanes_clist
+\clist_new:N \l_semio_viz_bio_events_clist
+%endregion 🔖️Keys
+
+\semio_viz_sci_keys_canvas:n { sci-clinical-timeline }
+% 🗓️ Binds the `sci-clinical-timeline` keys to the event records, the lane names and the lane height.
+\keys_define:nn { semio / viz / family / sci-clinical-timeline }
+  {
+    events     .clist_set:N = \l_semio_viz_bio_events_clist ,
+    lanes      .clist_set:N = \l_semio_viz_bio_lanes_clist ,
+    laneHeight .fp_set:N    = \l_semio_viz_bio_lane_fp ,
+  }
+
+% ⚕️ §22 patient timeline: point events and intervals placed on named lanes along one shared time axis.
+\SemioVizFamily { sci-clinical-timeline }
+  {
+    \semio_viz_sci_enter:nnn { sci-clinical-timeline }
+      {
+        laneHeight=7 , domain={0,180} , range={} , grid=false ,
+        lanes={ therapy , imaging , labs , events } ,
+        events={ 0/1/interval-start/induction , 42/1/interval-end/ , 60/1/interval-start/maintenance ,
+                 150/1/interval-end/ , 12/2/point/CT , 70/2/point/MRI , 140/2/point/CT ,
+                 5/3/point/CBC , 40/3/point/CBC , 95/3/point/CBC , 30/4/marker/relapse }
+      }
+      {#1}
+    \semio_viz_sci_window:nnnn
+      { \clist_item:Nn \l_semio_viz_sci_domain_clist { 1 } }
+      { \clist_item:Nn \l_semio_viz_sci_domain_clist { 2 } }
+      { \fp_eval:n { - \clist_count:N \l_semio_viz_bio_lanes_clist - 0.5 } } { -0.2 }
+    \semio_viz_sci_frame:
+    \int_zero:N \l_tmpa_int
+    \clist_map_inline:Nn \l_semio_viz_bio_lanes_clist
+      {
+        \int_incr:N \l_tmpa_int
+        \node [ font=\c_semio_viz_theme_font_label_tl , text=semio-chrome-text-normal , anchor=east ]
+          at ( -1 , \semio_viz_sci_my:n { - \l_tmpa_int } ) {##1} ;
+      }
+    \fp_set:Nn \l_semio_viz_sci_g_fp { -1 }
+    \clist_map_inline:Nn \l_semio_viz_bio_events_clist
+      {
+        \semio_viz_bio_record:n {##1}
+        \semio_viz_bio_clinical_event:
+      }
+  }
+% 🩺 Draws one timeline entry — an interval bar, a full-height marker or a lane dot — and its optional label.
+\cs_new_protected:Npn \semio_viz_bio_clinical_event:
+  {
+    \tl_set:Nx \l_semio_viz_bio_key_tl { \semio_viz_bio_field:n { 3 } }
+    \str_case:VnF \l_semio_viz_bio_key_tl
+      {
+        { interval-start }
+          { \fp_set:Nn \l_semio_viz_sci_g_fp { \semio_viz_bio_field:n { 1 } } }
+        { interval-end }
+          {
+            \fill [ fill=semio-primary , fill~opacity=0.35 ]
+              ( \semio_viz_sci_mx:n { \l_semio_viz_sci_g_fp } ,
+                \fp_eval:n { \semio_viz_sci_my:n { - \semio_viz_bio_field:n { 2 } } - 2 } )
+              rectangle
+              ( \semio_viz_sci_mx:n { \semio_viz_bio_field:n { 1 } } ,
+                \fp_eval:n { \semio_viz_sci_my:n { - \semio_viz_bio_field:n { 2 } } + 2 } ) ;
+          }
+        { marker }
+          {
+            \draw [ semio~sci~aux , draw=semio-danger ]
+              ( \semio_viz_sci_mx:n { \semio_viz_bio_field:n { 1 } } , 0 ) --
+              ( \semio_viz_sci_mx:n { \semio_viz_bio_field:n { 1 } } , \fp_eval:n { \l_semio_viz_sci_h_fp } ) ;
+          }
+      }
+      {
+        \semio_viz_sci_dot:nnn { \semio_viz_bio_field:n { 1 } } { - \semio_viz_bio_field:n { 2 } }
+          { semio-primary }
+      }
+    \tl_set:Nx \l_tmpa_tl { \semio_viz_bio_field:n { 4 } }
+    \tl_if_empty:NF \l_tmpa_tl
+      {
+        \node [ font=\c_semio_viz_theme_font_label_tl , text=semio-chrome-foreground , anchor=south , inner~sep=0.8mm ]
+          at ( \semio_viz_sci_mx:n { \semio_viz_bio_field:n { 1 } } ,
+               \semio_viz_sci_my:n { - \semio_viz_bio_field:n { 2 } } )
+          { \tl_use:N \l_tmpa_tl } ;
+      }
+  }
+%region 🔖️Keys
+% 🔑 Keys of `sci-growth-chart` (§22 reference percentiles):
+%    percentiles (clist of `label/a/b/c`): each reference curve as a·(1−exp(−b·t))^c over age t.
+%    subject (clist of `age/value`): the individual measurements plotted on the reference.
+%    samples (int, 120): curve resolution.
+\clist_new:N \l_semio_viz_bio_percentiles_clist
+\clist_new:N \l_semio_viz_bio_subject_clist
+%endregion 🔖️Keys
+
+\semio_viz_sci_keys_canvas:n { sci-growth-chart }
+% 📐 Binds the `sci-growth-chart` keys to the percentile parameters, the subject measurements and the curve resolution.
+\keys_define:nn { semio / viz / family / sci-growth-chart }
+  {
+    percentiles .clist_set:N = \l_semio_viz_bio_percentiles_clist ,
+    subject     .clist_set:N = \l_semio_viz_bio_subject_clist ,
+    samples     .int_set:N   = \l_semio_viz_bio_samples_int ,
+  }
+
+% ⚕️ §22 growth chart: the reference percentile curves evaluated over age, with the individual's own measurements on them.
+\SemioVizFamily { sci-growth-chart }
+  {
+    \semio_viz_sci_enter:nnn { sci-growth-chart }
+      {
+        samples=120 , domain={0,18} , range={0,190} ,
+        percentiles={ P3/168/0.14/1.4 , P25/176/0.15/1.35 , P50/181/0.155/1.32 ,
+                      P75/187/0.16/1.3 , P97/195/0.17/1.28 } ,
+        subject={ 1/76 , 3/96 , 5/112 , 8/130 , 11/146 , 14/167 , 17/179 }
+      }
+      {#1}
+    \semio_viz_sci_window_keys:
+    \semio_viz_sci_frame:
+    \int_zero:N \l_tmpa_int
+    \clist_map_inline:Nn \l_semio_viz_bio_percentiles_clist
+      {
+        \int_incr:N \l_tmpa_int
+        \semio_viz_bio_record:n {##1}
+        \semio_viz_bio_percentile:
+      }
+    \seq_clear:N \l_semio_viz_sci_pts_seq
+    \clist_map_inline:Nn \l_semio_viz_bio_subject_clist
+      {
+        \semio_viz_bio_record:n {##1}
+        \semio_viz_points_put:Nnn \l_semio_viz_sci_pts_seq
+          { \semio_viz_bio_field:n { 1 } } { \semio_viz_bio_field:n { 2 } }
+      }
+    \semio_viz_sci_polyline:Nn \l_semio_viz_sci_pts_seq { semio~sci~curve }
+    \seq_map_inline:Nn \l_semio_viz_sci_pts_seq
+      { \semio_viz_sci_dot:nnn { \semio_viz_points_x:n {##1} } { \semio_viz_points_y:n {##1} } { semio-primary } }
+  }
+% 🪴 Samples one reference percentile curve across the age axis and names it at its right end.
+\cs_new_protected:Npn \semio_viz_bio_percentile:
+  {
+    \seq_clear:N \l_semio_viz_sci_pts_b_seq
+    \int_step_inline:nnnn { 0 } { 1 } { \l_semio_viz_bio_samples_int }
+      {
+        \fp_set:Nn \SemioX
+          {
+            \l_semio_viz_sci_dxmin_fp
+            + ( \l_semio_viz_sci_dxmax_fp - \l_semio_viz_sci_dxmin_fp ) * ##1 / \l_semio_viz_bio_samples_int
+          }
+        \semio_viz_points_put:Nnn \l_semio_viz_sci_pts_b_seq { \SemioX }
+          {
+            \semio_viz_bio_field:n { 2 }
+            * ( 1 - exp ( - \semio_viz_bio_field:n { 3 } * ( \SemioX + 1.2 ) ) ) ^ \semio_viz_bio_field:n { 4 }
+          }
+      }
+    \semio_viz_sci_polyline:Nn \l_semio_viz_sci_pts_b_seq
+      { semio~sci~aux , draw=\semio_viz_sci_hue:n { \l_tmpa_int } }
+    \node [ font=\c_semio_viz_theme_font_label_tl , text=semio-chrome-text-normal , anchor=west ]
+      at ( \fp_eval:n { \l_semio_viz_sci_w_fp + 1 } ,
+           \semio_viz_sci_my:n { \semio_viz_points_y:n { \seq_item:Nn \l_semio_viz_sci_pts_b_seq { -1 } } } )
+      { \semio_viz_bio_field:n { 1 } } ;
+  }
+
+%region 🔖️Keys
+% 🔑 Keys of `sci-nomogram` (§22 graphical calculators):
+%    scales (clist of `label/x/min/max/ticks`): the parallel scales, x in millimetres.
+%    isopleth (clist of `scale/value`): the reading line drawn through the given scale values.
+%    height (fp, 44): the scale length in millimetres.
+\clist_new:N \l_semio_viz_bio_scales_clist
+\clist_new:N \l_semio_viz_bio_isopleth_clist
+%endregion 🔖️Keys
+
+\semio_viz_sci_keys_canvas:n { sci-nomogram }
+% 🧰 Binds the `sci-nomogram` keys to the parallel scale definitions and the isopleth readings.
+\keys_define:nn { semio / viz / family / sci-nomogram }
+  {
+    scales   .clist_set:N = \l_semio_viz_bio_scales_clist ,
+    isopleth .clist_set:N = \l_semio_viz_bio_isopleth_clist ,
+  }
+
+% ⚕️ §22 nomogram: parallel scales with their own ticks and the isopleth that reads one value off the others.
+\SemioVizFamily { sci-nomogram }
+  {
+    \semio_viz_sci_enter:nnn { sci-nomogram }
+      {
+        height=44 , axes=false , grid=false ,
+        scales={ age/0/20/80/7 , risk/24/0/40/5 , points/48/0/100/6 } ,
+        isopleth={ age/58 , points/72 }
+      }
+      {#1}
+    \prop_clear:N \l_semio_viz_bio_nx_prop
+    \prop_clear:N \l_semio_viz_bio_ny_prop
+    \clist_map_inline:Nn \l_semio_viz_bio_scales_clist
+      {
+        \semio_viz_bio_record:n {##1}
+        \semio_viz_bio_scale_draw:
+      }
+    \seq_clear:N \l_semio_viz_sci_pts_seq
+    \clist_map_inline:Nn \l_semio_viz_bio_isopleth_clist
+      {
+        \semio_viz_bio_record:n {##1}
+        \semio_viz_points_put:Nnn \l_semio_viz_sci_pts_seq
+          { \prop_item:Ne \l_semio_viz_bio_nx_prop { \semio_viz_bio_field:n { 1 } } }
+          {
+            \prop_item:Ne \l_semio_viz_bio_ny_prop { \semio_viz_bio_field:n { 1 } }
+            + \l_semio_viz_sci_h_fp * ( \semio_viz_bio_field:n { 2 }
+              - \prop_item:Ne \l_semio_viz_bio_start_prop { \semio_viz_bio_field:n { 1 } } )
+              * \prop_item:Ne \l_semio_viz_bio_scale_prop { \semio_viz_bio_field:n { 1 } }
+          }
+      }
+    \int_compare:nNnT { \seq_count:N \l_semio_viz_sci_pts_seq } > { 1 }
+      {
+        \draw [ semio~sci~aux , draw=semio-primary ]
+          ( \fp_eval:n { \semio_viz_points_x:n { \seq_item:Nn \l_semio_viz_sci_pts_seq { 1 } } } ,
+            \fp_eval:n { \semio_viz_points_y:n { \seq_item:Nn \l_semio_viz_sci_pts_seq { 1 } } } ) --
+          ( \fp_eval:n { \semio_viz_points_x:n { \seq_item:Nn \l_semio_viz_sci_pts_seq { -1 } } } ,
+            \fp_eval:n { \semio_viz_points_y:n { \seq_item:Nn \l_semio_viz_sci_pts_seq { -1 } } } ) ;
+      }
+  }
+% 🎚️ Registers one scale's origin and unit for the isopleth, then draws its axis, its title and its ticks.
+\cs_new_protected:Npn \semio_viz_bio_scale_draw:
+  {
+    \prop_put:Nxx \l_semio_viz_bio_nx_prop { \semio_viz_bio_field:n { 1 } }
+      { \semio_viz_bio_field:n { 2 } }
+    \prop_put:Nxx \l_semio_viz_bio_ny_prop { \semio_viz_bio_field:n { 1 } } { 0 }
+    \prop_put:Nxx \l_semio_viz_bio_start_prop { \semio_viz_bio_field:n { 1 } }
+      { \semio_viz_bio_field:n { 3 } }
+    \prop_put:Nxx \l_semio_viz_bio_scale_prop { \semio_viz_bio_field:n { 1 } }
+      {
+        \fp_to_decimal:n
+          { 1 / ( \semio_viz_bio_field:n { 4 } - \semio_viz_bio_field:n { 3 } ) }
+      }
+    \draw [ semio~sci~axis ]
+      ( \semio_viz_bio_field:n { 2 } , 0 ) --
+      ( \semio_viz_bio_field:n { 2 } , \fp_eval:n { \l_semio_viz_sci_h_fp } ) ;
+    \node [ font=\c_semio_viz_theme_font_label_tl , text=semio-chrome-text-normal , anchor=south ]
+      at ( \semio_viz_bio_field:n { 2 } , \fp_eval:n { \l_semio_viz_sci_h_fp + 1 } )
+      { \semio_viz_bio_field:n { 1 } } ;
+    \int_step_inline:nnnn { 0 } { 1 } { \semio_viz_bio_field:n { 5 } }
+      { \semio_viz_bio_scale_tick:n {##1} }
+  }
+% 🎯 Draws tick #1 of the current scale and prints the interpolated value it stands for beside it.
+\cs_new_protected:Npn \semio_viz_bio_scale_tick:n #1
+  {
+    \fp_set:Nn \l_semio_viz_sci_g_fp
+      { \l_semio_viz_sci_h_fp * (#1) / \semio_viz_bio_field:n { 5 } }
+    \draw [ semio~sci~thin ]
+      ( \fp_eval:n { \semio_viz_bio_field:n { 2 } - 1.4 } , \fp_eval:n { \l_semio_viz_sci_g_fp } ) --
+      ( \fp_eval:n { \semio_viz_bio_field:n { 2 } + 1.4 } , \fp_eval:n { \l_semio_viz_sci_g_fp } ) ;
+    \node [ font=\c_semio_viz_theme_font_label_tl , text=semio-chrome-text-normal , anchor=east ]
+      at ( \fp_eval:n { \semio_viz_bio_field:n { 2 } - 1.8 } , \fp_eval:n { \l_semio_viz_sci_g_fp } )
+      {
+        \semio_viz_sci_num:nn
+          {
+            \semio_viz_bio_field:n { 3 }
+            + ( \semio_viz_bio_field:n { 4 } - \semio_viz_bio_field:n { 3 } )
+              * (#1) / \semio_viz_bio_field:n { 5 }
+          }
+          { 0 }
+      } ;
+  }
+
+%region 🔖️Keys
+% 🔑 Keys of `sci-schematic` (§22/§34 labelled schematics):
+%    shapes (clist of `kind/x/y/w/h/label`): kinds ellipse, rect, rounded, blob.
+%    leaders (clist of `x1/y1/x2/y2/label`): the label leaders drawn from a part to its caption.
+%    outline (clist of `x/y`): an enclosing membrane drawn behind the parts.
+\clist_new:N \l_semio_viz_bio_shapes_clist
+\clist_new:N \l_semio_viz_bio_leaders_clist
+\clist_new:N \l_semio_viz_bio_outline_clist
+%endregion 🔖️Keys
+
+\semio_viz_sci_keys_canvas:n { sci-schematic }
+% 🖇️ Binds the `sci-schematic` keys to the part shapes, the label leaders and the enclosing outline.
+\keys_define:nn { semio / viz / family / sci-schematic }
+  {
+    shapes  .clist_set:N = \l_semio_viz_bio_shapes_clist ,
+    leaders .clist_set:N = \l_semio_viz_bio_leaders_clist ,
+    outline .clist_set:N = \l_semio_viz_bio_outline_clist ,
+  }
+
+% 🧫 §22/§34 labelled schematic: an outline membrane, the parts inside it and the leaders that name them.
+\SemioVizFamily { sci-schematic }
+  {
+    \semio_viz_sci_enter:nnn { sci-schematic }
+      {
+        axes=false , grid=false ,
+        outline={ 2/16 , 10/30 , 28/34 , 44/26 , 46/12 , 34/2 , 14/3 } ,
+        shapes={ ellipse/22/18/12/9/nucleus , ellipse/12/10/6/4/mito ,
+                 ellipse/34/22/7/4/golgi , rounded/32/9/8/4/ER } ,
+        leaders={ 22/18/52/30/nucleus , 12/10/52/20/mitochondrion , 34/22/52/10/Golgi }
+      }
+      {#1}
+    \int_compare:nNnT { \clist_count:N \l_semio_viz_bio_outline_clist } > { 2 }
+      { \semio_viz_bio_membrane: }
+    \clist_map_inline:Nn \l_semio_viz_bio_shapes_clist
+      {
+        \semio_viz_bio_record:n {##1}
+        \semio_viz_bio_shape:
+      }
+    \clist_map_inline:Nn \l_semio_viz_bio_leaders_clist
+      {
+        \semio_viz_bio_record:n {##1}
+        \draw [ semio~sci~thin , draw=semio-chrome-border-normal ]
+          ( \semio_viz_bio_field:n { 1 } , \semio_viz_bio_field:n { 2 } ) --
+          ( \semio_viz_bio_field:n { 3 } , \semio_viz_bio_field:n { 4 } ) ;
+        \node [ font=\c_semio_viz_theme_font_label_tl , text=semio-chrome-foreground , anchor=west ]
+          at ( \fp_eval:n { \semio_viz_bio_field:n { 3 } + 1 } , \semio_viz_bio_field:n { 4 } )
+          { \semio_viz_bio_field:n { 5 } } ;
+      }
+  }
+% 🫧 Builds the closed outline path from the recorded points and fills it as a rounded translucent membrane.
+\cs_new_protected:Npn \semio_viz_bio_membrane:
+  {
+    \tl_clear:N \l_semio_viz_sci_path_tl
+    \clist_map_inline:Nn \l_semio_viz_bio_outline_clist
+      {
+        \semio_viz_bio_record:n {##1}
+        \tl_if_empty:NF \l_semio_viz_sci_path_tl { \tl_put_right:Nn \l_semio_viz_sci_path_tl { -- } }
+        \tl_put_right:Nx \l_semio_viz_sci_path_tl
+          { ( \semio_viz_bio_field:n { 1 } , \semio_viz_bio_field:n { 2 } ) }
+      }
+    \use:x
+      {
+        \exp_not:N \draw [ semio~sci~thin , fill=semio-secondary , fill~opacity=0.12 , rounded~corners=3mm ]
+          \exp_not:V \l_semio_viz_sci_path_tl ~ -- ~ cycle ;
+      }
+  }
+% 🥚 Draws one part at its centre and size as a rectangle, a rounded rectangle or, by default, an ellipse.
+\cs_new_protected:Npn \semio_viz_bio_shape:
+  {
+    \tl_set:Nx \l_semio_viz_bio_key_tl { \semio_viz_bio_field:n { 1 } }
+    \str_case:VnF \l_semio_viz_bio_key_tl
+      {
+        { rect }
+          {
+            \draw [ semio~sci~glyph ]
+              ( \fp_eval:n { \semio_viz_bio_field:n { 2 } - \semio_viz_bio_field:n { 4 } / 2 } ,
+                \fp_eval:n { \semio_viz_bio_field:n { 3 } - \semio_viz_bio_field:n { 5 } / 2 } )
+              rectangle
+              ( \fp_eval:n { \semio_viz_bio_field:n { 2 } + \semio_viz_bio_field:n { 4 } / 2 } ,
+                \fp_eval:n { \semio_viz_bio_field:n { 3 } + \semio_viz_bio_field:n { 5 } / 2 } ) ;
+          }
+        { rounded }
+          {
+            \draw [ semio~sci~glyph , rounded~corners=1.2mm ]
+              ( \fp_eval:n { \semio_viz_bio_field:n { 2 } - \semio_viz_bio_field:n { 4 } / 2 } ,
+                \fp_eval:n { \semio_viz_bio_field:n { 3 } - \semio_viz_bio_field:n { 5 } / 2 } )
+              rectangle
+              ( \fp_eval:n { \semio_viz_bio_field:n { 2 } + \semio_viz_bio_field:n { 4 } / 2 } ,
+                \fp_eval:n { \semio_viz_bio_field:n { 3 } + \semio_viz_bio_field:n { 5 } / 2 } ) ;
+          }
+      }
+      {
+        \draw [ semio~sci~glyph ]
+          ( \semio_viz_bio_field:n { 2 } , \semio_viz_bio_field:n { 3 } )
+          ellipse [ x~radius=\fp_eval:n { \semio_viz_bio_field:n { 4 } / 2 } ,
+                    y~radius=\fp_eval:n { \semio_viz_bio_field:n { 5 } / 2 } ] ;
+      }
+    \semio_viz_sci_report_values:nn { schematic/shape }
+      { \semio_viz_bio_field:n { 2 } , \semio_viz_bio_field:n { 3 } }
+  }
+%endregion 🔖️Families
+
+
+\ExplSyntaxOff

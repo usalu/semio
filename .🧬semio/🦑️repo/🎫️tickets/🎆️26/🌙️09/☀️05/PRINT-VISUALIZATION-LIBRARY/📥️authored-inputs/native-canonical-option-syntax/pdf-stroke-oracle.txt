@@ -1,0 +1,17 @@
+/** 🔭️ Resolves actual painted PDF line spans through the independent graphics-state interpreter. */
+function canonicalStrokeSegments(operators:Awaited<ReturnType<PDFPageProxy["getOperatorList"]>>):{paint:string,delta:number[]}[]{
+ const results:{paint:string,delta:number[]}[]=[],stack:{matrix:number[],paint:string}[]=[];let matrix=[1,0,0,1,0,0],paint="";
+ for(const[index,operation]of operators.fnArray.entries()){
+  const args=operators.argsArray[index];
+  if(operation===OPS.save||operation===OPS.paintFormXObjectBegin){stack.push({matrix:[...matrix],paint});if(operation===OPS.paintFormXObjectBegin&&args[0])matrix=Util.transform(matrix,args[0]);}
+  else if(operation===OPS.restore||operation===OPS.paintFormXObjectEnd){const previous=stack.pop();if(!previous)throw Error("Canonical PDF graphics state underflow");matrix=previous.matrix;paint=previous.paint;}
+  else if(operation===OPS.transform)matrix=Util.transform(matrix,args);
+  else if(operation===OPS.setStrokeRGBColor)paint=String(args[0]).toLowerCase();
+  else if(operation===OPS.constructPath&&args[0]===OPS.stroke){
+   const values=Array.from(args[1]?.[0]??[],Number),points:number[][]=[];let cursor=0;
+   while(cursor<values.length){const command=values[cursor++]!;if(command!==0&&command!==1){points.length=0;break;}const point=[values[cursor++]!,values[cursor++]!];Util.applyTransform(point,matrix);points.push(point);}
+   if(points.length===2)results.push({paint,delta:[0,1].map(axis=>Math.abs(points[1]![axis]!-points[0]![axis]!)*25.4/72)});
+  }
+ }
+ if(stack.length)throw Error("Canonical PDF graphics state imbalance");return results;
+}

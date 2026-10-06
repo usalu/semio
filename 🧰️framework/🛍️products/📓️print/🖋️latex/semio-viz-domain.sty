@@ -683,9 +683,33 @@
 %endregion 🔖️Keys-spatial-layout
 
 %region 🔖️SpatialLayout
+\prop_new:N \l_semio_viz_dom_sl_categories_prop
+\seq_new:N \l_semio_viz_dom_sl_categories_seq
+\int_new:N \l_semio_viz_dom_sl_category_int
+\tl_new:N \l_semio_viz_dom_sl_category_tl
+\cs_new_protected:Npn \semio_viz_dom_sl_group_string:w \SemioVizString #1 \q_stop
+  { \tl_set:Nn \l_semio_viz_dom_cell_tl {#1} }
+\cs_new_protected:Npn \semio_viz_dom_sl_group:n #1 {
+  \semio_viz_table_cell_opt:nnnN { \l_semio_viz_dom_data_tl } {#1} { \l_semio_viz_dom_group_tl }
+    \l_semio_viz_dom_cell_tl
+  \tl_if_head_eq_meaning:VNTF \l_semio_viz_dom_cell_tl \SemioVizString
+    { \exp_after:wN \semio_viz_dom_sl_group_string:w \l_semio_viz_dom_cell_tl \q_stop } { }
+  \prop_get:NVNTF \l_semio_viz_dom_sl_categories_prop \l_semio_viz_dom_cell_tl
+    \l_semio_viz_dom_sl_category_tl { }
+    {
+      \int_incr:N \l_semio_viz_dom_sl_category_int
+      \tl_set:Nx \l_semio_viz_dom_sl_category_tl { \int_use:N \l_semio_viz_dom_sl_category_int }
+      \prop_put:NVV \l_semio_viz_dom_sl_categories_prop \l_semio_viz_dom_cell_tl
+        \l_semio_viz_dom_sl_category_tl
+    }
+  \seq_put_right:NV \l_semio_viz_dom_sl_categories_seq \l_semio_viz_dom_sl_category_tl
+}
 % 📥 Reads the node table and maps its two coordinate columns into the frame, publishing the
 % result as the point set every layout algorithm below consumes.
 \cs_new_protected:Npn \semio_viz_dom_sl_field: {
+  \prop_clear:N \l_semio_viz_dom_sl_categories_prop
+  \seq_clear:N \l_semio_viz_dom_sl_categories_seq
+  \int_zero:N \l_semio_viz_dom_sl_category_int
   \semio_viz_table_nrows:VN \l_semio_viz_dom_data_tl \l_semio_viz_dom_n_int
   \semio_viz_table_col_min:VVN \l_semio_viz_dom_data_tl \l_semio_viz_dom_x_tl
     \l_semio_viz_dom_lo_fp
@@ -709,6 +733,7 @@
 
 % 📥 One node of the source table: its frame position, its caption and its size channel.
 \cs_new_protected:Npn \semio_viz_dom_sl_node:n #1 {
+  \semio_viz_dom_sl_group:n {#1}
   \semio_viz_table_cell:nnnN { \l_semio_viz_dom_data_tl } {#1} { \l_semio_viz_dom_x_tl }
     \l_semio_viz_dom_cell_tl
   \fp_set:Nn \l_semio_viz_dom_x_fp
@@ -781,7 +806,7 @@
     { \seq_put_right:Nn \l_semio_viz_dom_stack_seq {##1} }
   \semio_viz_g_polygon:xn { \seq_use:Nn \l_semio_viz_dom_stack_seq { , } }
     {
-      fill = \semio_viz_palette:n { \l_semio_viz_dom_k_int } , fill~opacity = 0.14 ,
+      fill = \semio_viz_palette:n { \seq_item:Nn \l_semio_viz_dom_sl_categories_seq { \l_semio_viz_dom_k_int } } , fill~opacity = 0.14 ,
       draw = semio-chrome-border-normal , line~width = \semio@stroke@hairline
     }
 }
@@ -1060,7 +1085,7 @@
       \l_semio_viz_dom_gamma_fp
       * sqrt ( max ( 0.2 , \seq_item:Nn \l_semio_viz_dom_cols_seq {#1} / 10 ) )
     }
-    { fill = \semio_viz_palette:n {#1} , draw = none , fill~opacity = 0.85 }
+    { fill = \semio_viz_palette:n { \seq_item:Nn \l_semio_viz_dom_sl_categories_seq {#1} } , draw = none , fill~opacity = 0.85 }
   \bool_if:NT \l_semio_viz_dom_labels_bool {
     \semio_viz_g_text:nnnn { \l_semio_viz_dom_x_fp }
       { \l_semio_viz_dom_y_fp + \l_semio_viz_dom_gamma_fp + 0.6 } { south }
@@ -1116,9 +1141,27 @@
 %endregion 🔖️SpatialLayout
 
 %region 🔖️Partition
-% 🌲 The stratified reader every partition-shaped domain family shares: parent, depth, own value
-% and caption of each node, and the tree's greatest depth.
-\cs_new_protected:Npn \semio_viz_dom_tree_load: {
+% 🌲 Validates complete stratified records before resolving memoized ancestry.
+\bool_new:N \l_semio_viz_dom_tree_valid_bool
+\prop_new:N \l_semio_viz_dom_tree_state_prop
+\msg_new:nnn { semio-viz-dom } { hierarchy } { Domain~hierarchy~'#1':~#2. }
+\cs_new_protected:Npn \semio_viz_dom_tree_reject:n #1 {
+  \bool_set_false:N \l_semio_viz_dom_tree_valid_bool
+  \msg_error:nnxx { semio-viz-dom } { hierarchy } { \l_semio_viz_dom_data_tl } {#1}
+}
+\cs_new_protected:Npn \semio_viz_dom_tree_value:N #1 {
+  \regex_match:nVTF { \A \s* [-+]? ( \d+ (\.\d*)? | \.\d+ ) ([eE][-+]?\d+)? \s* \Z } #1
+    {
+      \fp_compare:nNnTF { abs ( #1 ) } < { inf }
+        { \fp_compare:nNnT {#1} < {0} { \semio_viz_dom_tree_reject:n { values~must~be~nonnegative } } }
+        { \semio_viz_dom_tree_reject:n { values~must~be~finite } }
+    }
+    { \semio_viz_dom_tree_reject:n { values~must~be~finite~numbers } }
+}
+% 🌳 Resolves a complete scalar forest before consumers evaluate their own values.
+\cs_new_protected:Npn \semio_viz_dom_tree_read: {
+  \bool_set_true:N \l_semio_viz_dom_tree_valid_bool
+  \prop_clear:N \l_semio_viz_dom_tree_state_prop
   \prop_clear:N \l_semio_viz_dom_par_prop
   \prop_clear:N \l_semio_viz_dom_dep_prop
   \prop_clear:N \l_semio_viz_dom_bag_prop
@@ -1127,40 +1170,91 @@
   \seq_clear:N \l_semio_viz_dom_keys_seq
   \int_set:Nn \l_semio_viz_dom_rows_int { 1 }
   \semio_viz_table_nrows:VN \l_semio_viz_dom_data_tl \l_semio_viz_dom_n_int
-  \int_step_inline:nn { \l_semio_viz_dom_n_int } { \semio_viz_dom_tree_row:n {##1} }
-  \int_step_inline:nn { \l_semio_viz_dom_rows_int - 1 }
-    { \semio_viz_dom_tree_fold:n { \l_semio_viz_dom_rows_int - ##1 + 1 } }
+  \int_step_inline:nn { \l_semio_viz_dom_n_int }
+    { \bool_if:NT \l_semio_viz_dom_tree_valid_bool { \semio_viz_dom_tree_row:n {##1} } }
+  \seq_map_inline:Nn \l_semio_viz_dom_keys_seq
+    { \bool_if:NT \l_semio_viz_dom_tree_valid_bool { \semio_viz_dom_tree_depth:n {##1} } }
+  \bool_if:NF \l_semio_viz_dom_tree_valid_bool { \seq_clear:N \l_semio_viz_dom_keys_seq }
 }
-
-% 🌲 One stratified row: its parent, its depth, its own value and its caption.
+% 🌲 Folds descendants into subtree totals after the common forest has been validated.
+\cs_new_protected:Npn \semio_viz_dom_tree_load: {
+  \semio_viz_dom_tree_read:
+  \bool_if:NT \l_semio_viz_dom_tree_valid_bool {
+    \int_step_inline:nn { \l_semio_viz_dom_rows_int - 1 }
+      { \semio_viz_dom_tree_fold:n { \l_semio_viz_dom_rows_int - ##1 + 1 } }
+  }
+}
+% 🪪 Preserves string carrier provenance before scalar hierarchy lookup.
+\cs_new_protected:Npn \semio_viz_dom_tree_string:Nn #1#2 {
+  \clist_map_inline:nn { \SemioVizNull , \SemioVizUndefined , \SemioVizBoolean }
+    { \tl_if_head_eq_meaning:VNTF #1 ##1
+        { \semio_viz_dom_tree_reject:n { #2~must~be~strings } } { } }
+  \tl_if_head_eq_meaning:VNTF #1 \SemioVizString { }
+    { \regex_match:nVTF
+        { \A \s* [-+]? ( \d+ (\.\d*)? | \.\d+ ) ([eE][-+]?\d+)? \s* \Z }
+        #1
+        { \semio_viz_dom_tree_reject:n { #2~must~be~strings } } { } }
+  \semio_viz_table_scalar:N #1
+}
+% 🌲 Stores a unique scalar identity, optional parent, nonnegative own value and unchanged caption.
 \cs_new_protected:Npn \semio_viz_dom_tree_row:n #1 {
   \semio_viz_table_cell:nnnN { \l_semio_viz_dom_data_tl } {#1} { \l_semio_viz_dom_id_tl }
     \l_semio_viz_dom_key_tl
+  \semio_viz_dom_tree_string:Nn \l_semio_viz_dom_key_tl { node~IDs }
+  \tl_if_blank:VTF \l_semio_viz_dom_key_tl
+    { \semio_viz_dom_tree_reject:n { node~IDs~must~be~nonempty } }
+    { \prop_if_in:NVTF \l_semio_viz_dom_par_prop \l_semio_viz_dom_key_tl
+        { \semio_viz_dom_tree_reject:n { duplicate~node~ID } } { } }
   \semio_viz_table_cell_opt:nnnN { \l_semio_viz_dom_data_tl } {#1} { \l_semio_viz_dom_group_tl }
     \l_semio_viz_dom_tmp_tl
+  \semio_viz_dom_tree_string:Nn \l_semio_viz_dom_tmp_tl { parent~references }
   \semio_viz_table_cell_opt:nnnN { \l_semio_viz_dom_data_tl } {#1} { \l_semio_viz_dom_value_tl }
     \l_semio_viz_dom_cell_tl
+  \semio_viz_table_scalar:N \l_semio_viz_dom_cell_tl
   \tl_if_empty:NT \l_semio_viz_dom_cell_tl { \tl_set:Nn \l_semio_viz_dom_cell_tl { 0 } }
-  \seq_put_right:NV \l_semio_viz_dom_keys_seq \l_semio_viz_dom_key_tl
-  \prop_put:NVV \l_semio_viz_dom_par_prop \l_semio_viz_dom_key_tl \l_semio_viz_dom_tmp_tl
-  \prop_put:NVV \l_semio_viz_dom_bag_prop \l_semio_viz_dom_key_tl \l_semio_viz_dom_cell_tl
-  \prop_put:NVV \l_semio_viz_dom_sum_prop \l_semio_viz_dom_key_tl \l_semio_viz_dom_cell_tl
-  \semio_viz_table_cell_opt:nnnN { \l_semio_viz_dom_data_tl } {#1} { \l_semio_viz_dom_label_tl }
-    \l_semio_viz_dom_cell_tl
-  \prop_put:NVV \l_semio_viz_dom_lab_prop \l_semio_viz_dom_key_tl \l_semio_viz_dom_cell_tl
-  \tl_if_empty:NTF \l_semio_viz_dom_tmp_tl
-    { \prop_put:NVn \l_semio_viz_dom_dep_prop \l_semio_viz_dom_key_tl { 1 } }
-    {
-      \prop_get:NVNTF \l_semio_viz_dom_dep_prop \l_semio_viz_dom_tmp_tl \l_semio_viz_dom_cell_tl
-        {
-          \prop_put:NVx \l_semio_viz_dom_dep_prop \l_semio_viz_dom_key_tl
-            { \int_eval:n { \l_semio_viz_dom_cell_tl + 1 } }
+  \semio_viz_dom_tree_value:N \l_semio_viz_dom_cell_tl
+  \bool_if:NT \l_semio_viz_dom_tree_valid_bool {
+    \seq_put_right:NV \l_semio_viz_dom_keys_seq \l_semio_viz_dom_key_tl
+    \prop_put:NVV \l_semio_viz_dom_par_prop \l_semio_viz_dom_key_tl \l_semio_viz_dom_tmp_tl
+    \prop_put:NVV \l_semio_viz_dom_bag_prop \l_semio_viz_dom_key_tl \l_semio_viz_dom_cell_tl
+    \prop_put:NVV \l_semio_viz_dom_sum_prop \l_semio_viz_dom_key_tl \l_semio_viz_dom_cell_tl
+    \semio_viz_table_cell_opt:nnnN { \l_semio_viz_dom_data_tl } {#1} { \l_semio_viz_dom_label_tl }
+      \l_semio_viz_dom_cell_tl
+    \semio_viz_table_scalar:N \l_semio_viz_dom_cell_tl
+    \prop_put:NVV \l_semio_viz_dom_lab_prop \l_semio_viz_dom_key_tl \l_semio_viz_dom_cell_tl
+  }
+}
+% 🌲 Resolves each ancestry chain once, diagnosing missing parents and cycles before numeric lookup.
+\cs_new_protected:Npn \semio_viz_dom_tree_depth:n #1 {
+  \prop_if_in:NnF \l_semio_viz_dom_dep_prop {#1} {
+    \prop_if_in:NnTF \l_semio_viz_dom_tree_state_prop {#1}
+      { \semio_viz_dom_tree_reject:n { parent~references~must~be~acyclic } }
+      {
+        \prop_put:Nnn \l_semio_viz_dom_tree_state_prop {#1} {1}
+        \prop_get:NnN \l_semio_viz_dom_par_prop {#1} \l_semio_viz_dom_tmp_tl
+        \tl_if_empty:NTF \l_semio_viz_dom_tmp_tl
+          { \prop_put:Nnn \l_semio_viz_dom_dep_prop {#1} {1} }
+          {
+            \prop_if_in:NVTF \l_semio_viz_dom_par_prop \l_semio_viz_dom_tmp_tl
+              {
+                \exp_args:NV \semio_viz_dom_tree_depth:n \l_semio_viz_dom_tmp_tl
+                \bool_if:NT \l_semio_viz_dom_tree_valid_bool {
+                  \prop_get:NnN \l_semio_viz_dom_par_prop {#1} \l_semio_viz_dom_tmp_tl
+                  \prop_get:NVN \l_semio_viz_dom_dep_prop \l_semio_viz_dom_tmp_tl \l_semio_viz_dom_cell_tl
+                  \prop_put:Nnx \l_semio_viz_dom_dep_prop {#1}
+                    { \int_eval:n { \l_semio_viz_dom_cell_tl + 1 } }
+                }
+              }
+              { \semio_viz_dom_tree_reject:n { parent~reference~does~not~name~a~node } }
+          }
+        \bool_if:NT \l_semio_viz_dom_tree_valid_bool {
+          \prop_get:NnN \l_semio_viz_dom_dep_prop {#1} \l_semio_viz_dom_cell_tl
+          \int_set:Nn \l_semio_viz_dom_rows_int
+            { \int_max:nn { \l_semio_viz_dom_rows_int } { \l_semio_viz_dom_cell_tl } }
+          \prop_remove:Nn \l_semio_viz_dom_tree_state_prop {#1}
         }
-        { \prop_put:NVn \l_semio_viz_dom_dep_prop \l_semio_viz_dom_key_tl { 2 } }
-    }
-  \prop_get:NVN \l_semio_viz_dom_dep_prop \l_semio_viz_dom_key_tl \l_semio_viz_dom_cell_tl
-  \int_compare:nNnT { \l_semio_viz_dom_cell_tl } > { \l_semio_viz_dom_rows_int }
-    { \int_set:Nn \l_semio_viz_dom_rows_int { \l_semio_viz_dom_cell_tl } }
+      }
+  }
 }
 
 % 🌲 Folds every node of depth #1 into its parent's subtree total.
@@ -1239,7 +1333,7 @@
 % label       (column)  frame caption                                   default `label`
 % mode        (choice `flame|icicle|tree|histogram|graph`)               default `flame`
 % orientation (choice `bottom-up|top-down`) growth direction of the rows default `bottom-up`
-% order       (choice `none|value|label`) sibling order                  default `none`
+% order       (choice `none|value|label`) input / descending subtree / ascending caption order default `none`
 % bins        (int)     bins of the latency histogram                    default 12
 % percentiles (clist)   marked quantiles of the latency histogram        default empty
 % rowgap      (mm)      gap between two depth rows                       default 0.4
@@ -1268,9 +1362,38 @@
 %endregion 🔖️Keys-performance
 
 %region 🔖️Performance
+\seq_new:N \l_semio_viz_dom_pf_sorted_seq
+\seq_new:N \l_semio_viz_dom_pf_ordered_seq
+
+% 🔀 Sorts sibling frames by descending subtree value or ascending caption, retaining parent-first traversal.
+\cs_new_protected:Npn \semio_viz_dom_pf_order: {
+  \str_if_eq:VnF \l_semio_viz_dom_order_tl { none } {
+    \seq_set_eq:NN \l_semio_viz_dom_pf_sorted_seq \l_semio_viz_dom_keys_seq
+    \seq_sort:Nn \l_semio_viz_dom_pf_sorted_seq {
+      \str_if_eq:VnTF \l_semio_viz_dom_order_tl { value }
+        { \fp_compare:nNnTF { \prop_item:Nn \l_semio_viz_dom_sum_prop {##1} } < { \prop_item:Nn \l_semio_viz_dom_sum_prop {##2} }
+            { \sort_return_swapped: } { \sort_return_same: } }
+        { \str_compare:eNeTF { \prop_item:Nn \l_semio_viz_dom_lab_prop {##1} } > { \prop_item:Nn \l_semio_viz_dom_lab_prop {##2} }
+            { \sort_return_swapped: } { \sort_return_same: } }
+    }
+    \seq_clear:N \l_semio_viz_dom_pf_ordered_seq
+    \semio_viz_dom_pf_children:n { }
+    \seq_set_eq:NN \l_semio_viz_dom_keys_seq \l_semio_viz_dom_pf_ordered_seq
+  }
+}
+
+% 🌳 Appends ordered children and their descendants without changing the sorted source sequence.
+\cs_new_protected:Npn \semio_viz_dom_pf_children:n #1 {
+  \seq_map_inline:Nn \l_semio_viz_dom_pf_sorted_seq {
+    \str_if_eq:eeT { \prop_item:Nn \l_semio_viz_dom_par_prop {##1} } {#1}
+      { \seq_put_right:Nn \l_semio_viz_dom_pf_ordered_seq {##1} \semio_viz_dom_pf_children:n {##1} }
+  }
+}
+
 % 🔥 The flame shapes: one rectangle per frame, its width the subtree total, its row the depth.
 \cs_new_protected:Npn \semio_viz_dom_pf_flame: {
   \semio_viz_dom_tree_load:
+  \semio_viz_dom_pf_order:
   \semio_viz_dom_tree_offsets:
   \fp_set:Nn \l_semio_viz_dom_h_fp
     {
@@ -1329,6 +1452,7 @@
 % 🌳 The indented call tree: one row per frame, its indent the depth, its bar the subtree total.
 \cs_new_protected:Npn \semio_viz_dom_pf_tree: {
   \semio_viz_dom_tree_load:
+  \semio_viz_dom_pf_order:
   \semio_viz_dom_tree_offsets:
   \fp_set:Nn \l_semio_viz_dom_h_fp
     {
@@ -1567,6 +1691,14 @@
 %region 🔖️Series
 % 📈 The multi-series cartesian renderer shared by the two families whose charts are a set of
 % named columns over a time axis: §16 delivery burn charts and §64 repository churn.
+\seq_new:N \l_semio_viz_dom_sr_times_seq
+\seq_new:N \l_semio_viz_dom_sr_sorted_times_seq
+\fp_new:N \l_semio_viz_dom_sr_min_fp
+\fp_new:N \l_semio_viz_dom_sr_max_fp
+\fp_new:N \l_semio_viz_dom_sr_step_fp
+\fp_new:N \l_semio_viz_dom_sr_previous_fp
+\msg_new:nnn { semio-viz-dom } { series-time }
+  { Series~time~column~must~contain~finite~numbers:~'#1'. }
 \cs_new_protected:Npn \semio_viz_dom_sr_extent: {
   \semio_viz_table_nrows:VN \l_semio_viz_dom_data_tl \l_semio_viz_dom_n_int
   \fp_zero:N \l_semio_viz_dom_lo_fp
@@ -1576,11 +1708,42 @@
   \bool_if:NT \l_semio_viz_dom_fill_bool { \semio_viz_dom_sr_stacked_span: }
   \bool_if:NT \l_semio_viz_dom_mirror_bool
     { \fp_set:Nn \l_semio_viz_dom_lo_fp { - \l_semio_viz_dom_hi_fp } }
-  \fp_set:Nn \l_semio_viz_dom_w_fp
-    {
-      ( \l_semio_viz_dom_xb_fp - \l_semio_viz_dom_xa_fp )
-      / max ( 1 , \l_semio_viz_dom_n_int - 1 )
-    }
+  \semio_viz_dom_sr_times:
+}
+
+% 🕰️ Reads authored times and the minimum positive separation without reordering the sample rows.
+\cs_new_protected:Npn \semio_viz_dom_sr_times: {
+  \seq_clear:N \l_semio_viz_dom_sr_times_seq
+  \fp_set:Nn \l_semio_viz_dom_sr_min_fp { inf }
+  \fp_set:Nn \l_semio_viz_dom_sr_max_fp { -inf }
+  \int_step_inline:nn { \l_semio_viz_dom_n_int } {
+    \semio_viz_table_cell:nnnN { \l_semio_viz_dom_data_tl } {##1} { \l_semio_viz_dom_id_tl } \l_semio_viz_dom_cell_tl
+    \bool_if:nF { \fp_compare_p:n { \l_semio_viz_dom_cell_tl > -inf } && \fp_compare_p:n { \l_semio_viz_dom_cell_tl < inf } }
+      { \msg_error:nnx { semio-viz-dom } { series-time } { \l_semio_viz_dom_cell_tl } }
+    \seq_put_right:NV \l_semio_viz_dom_sr_times_seq \l_semio_viz_dom_cell_tl
+    \fp_set:Nn \l_semio_viz_dom_sr_min_fp { min ( \l_semio_viz_dom_sr_min_fp , \l_semio_viz_dom_cell_tl ) }
+    \fp_set:Nn \l_semio_viz_dom_sr_max_fp { max ( \l_semio_viz_dom_sr_max_fp , \l_semio_viz_dom_cell_tl ) }
+  }
+  \seq_set_eq:NN \l_semio_viz_dom_sr_sorted_times_seq \l_semio_viz_dom_sr_times_seq
+  \seq_sort:Nn \l_semio_viz_dom_sr_sorted_times_seq
+    { \fp_compare:nNnTF {##1} > {##2} { \sort_return_swapped: } { \sort_return_same: } }
+  \fp_set:Nn \l_semio_viz_dom_sr_step_fp { inf }
+  \fp_set:Nn \l_semio_viz_dom_sr_previous_fp { \l_semio_viz_dom_sr_min_fp }
+  \seq_map_inline:Nn \l_semio_viz_dom_sr_sorted_times_seq {
+    \fp_compare:nNnT {##1} > { \l_semio_viz_dom_sr_previous_fp }
+      { \fp_set:Nn \l_semio_viz_dom_sr_step_fp { min ( \l_semio_viz_dom_sr_step_fp , ##1 - \l_semio_viz_dom_sr_previous_fp ) } }
+    \fp_set:Nn \l_semio_viz_dom_sr_previous_fp {##1}
+  }
+  \fp_set:Nn \l_semio_viz_dom_w_fp { \l_semio_viz_dom_xb_fp - \l_semio_viz_dom_xa_fp }
+  \fp_compare:nNnT { \l_semio_viz_dom_sr_max_fp } > { \l_semio_viz_dom_sr_min_fp }
+    { \fp_set:Nn \l_semio_viz_dom_w_fp { \l_semio_viz_dom_w_fp * \l_semio_viz_dom_sr_step_fp / ( \l_semio_viz_dom_sr_max_fp - \l_semio_viz_dom_sr_min_fp ) } }
+}
+
+% ⏱️ Projects one authored time, centring a singleton or equal-time extent.
+\cs_new:Npn \semio_viz_dom_sr_x:n #1 {
+  \fp_compare:nNnTF { \l_semio_viz_dom_sr_max_fp } = { \l_semio_viz_dom_sr_min_fp }
+    { \fp_eval:n { ( \l_semio_viz_dom_xa_fp + \l_semio_viz_dom_xb_fp ) / 2 } }
+    { \fp_eval:n { \l_semio_viz_dom_xa_fp + ( \seq_item:Nn \l_semio_viz_dom_sr_times_seq {#1} - \l_semio_viz_dom_sr_min_fp ) * ( \l_semio_viz_dom_xb_fp - \l_semio_viz_dom_xa_fp ) / ( \l_semio_viz_dom_sr_max_fp - \l_semio_viz_dom_sr_min_fp ) } }
 }
 
 % 📐 Widens the value extent by one series column.
@@ -1633,6 +1796,12 @@
   \int_set:Nn \l_semio_viz_dom_m_int { \clist_count:N \l_semio_viz_dom_series_clist }
   \clist_map_inline:Nn \l_semio_viz_dom_series_clist { \semio_viz_dom_sr_series:n {##1} }
   \bool_if:NT \l_semio_viz_dom_highlight_bool { \semio_viz_dom_sr_reference: }
+  \bool_if:NT \l_semio_viz_dom_labels_bool {
+    \int_step_inline:nn { \l_semio_viz_dom_n_int } {
+      \node [ font=\c_semio_viz_theme_font_chip_tl , text=semio-chrome-text-normal , anchor=north , inner~sep=0 ]
+        at ( \semio_viz_dom_sr_x:n {##1} , \fp_eval:n { \l_semio_viz_dom_ya_fp - 1 } ) { \seq_item:Nn \l_semio_viz_dom_sr_times_seq {##1} } ;
+    }
+  }
 }
 
 % 📈 One series column in the active mode.
@@ -1649,6 +1818,10 @@
       { area } { \semio_viz_dom_sr_area:n {#1} }
     }
     { \semio_viz_dom_sr_line:n {#1} }
+  \bool_if:NT \l_semio_viz_dom_labels_bool {
+    \node [ font=\c_semio_viz_theme_font_chip_tl , text=semio-chrome-text-normal , anchor=west , inner~sep=0 ]
+      at ( \fp_eval:n { \semio_viz_dom_sr_x:n { \l_semio_viz_dom_n_int } + 1 } , \semio_viz_dom_sr_y:n { \l_semio_viz_dom_c_fp } ) {#1} ;
+  }
 }
 
 % 📈 A polyline through the samples of column #1.
@@ -1673,7 +1846,7 @@
       { \fp_eval:n { \l_semio_viz_dom_c_fp } }
   }
   \seq_put_right:Nx \l_semio_viz_dom_path_seq
-    { \fp_eval:n { \l_semio_viz_dom_xa_fp + ( (#2) - 1 ) * \l_semio_viz_dom_w_fp } }
+    { \semio_viz_dom_sr_x:n {#2} }
   \seq_put_right:Nx \l_semio_viz_dom_path_seq
     { \semio_viz_dom_sr_y:n { \l_semio_viz_dom_c_fp } }
 }
@@ -1695,11 +1868,7 @@
 \cs_new_protected:Npn \semio_viz_dom_sr_floor:n #1 {
   \seq_put_right:Nx \l_semio_viz_dom_path_seq
     {
-      \fp_eval:n
-        {
-          \l_semio_viz_dom_xa_fp
-          + ( \l_semio_viz_dom_n_int - (#1) ) * \l_semio_viz_dom_w_fp
-        }
+      \semio_viz_dom_sr_x:n { \l_semio_viz_dom_n_int - (#1) + 1 }
     }
   \seq_put_right:Nx \l_semio_viz_dom_path_seq
     {
@@ -1719,12 +1888,12 @@
   \fp_set:Nn \l_semio_viz_dom_c_fp { \l_semio_viz_dom_b_fp * \l_semio_viz_dom_cell_tl }
   \fp_set:Nn \l_semio_viz_dom_d_fp
     {
-      ( \l_semio_viz_dom_w_fp - \l_semio_viz_dom_alpha_fp ) / \l_semio_viz_dom_m_int
+      max ( 0.01 , \l_semio_viz_dom_w_fp - \l_semio_viz_dom_alpha_fp ) / \l_semio_viz_dom_m_int
     }
   \semio_viz_g_rect:nnnnn
     {
-      \l_semio_viz_dom_xa_fp + ( (#2) - 1 ) * \l_semio_viz_dom_w_fp
-      - ( \l_semio_viz_dom_w_fp - \l_semio_viz_dom_alpha_fp ) / 2
+      \semio_viz_dom_sr_x:n {#2}
+      - max ( 0.01 , \l_semio_viz_dom_w_fp - \l_semio_viz_dom_alpha_fp ) / 2
       + ( \l_semio_viz_dom_j_int - 1 ) * \l_semio_viz_dom_d_fp
     }
     { \semio_viz_dom_sr_y:n { 0 } } { \l_semio_viz_dom_d_fp * 0.86 }
@@ -1739,8 +1908,8 @@
 \cs_new_protected:Npn \semio_viz_dom_sr_reference: {
   \semio_viz_table_cell:nnnN { \l_semio_viz_dom_data_tl } { 1 }
     { \clist_item:Nn \l_semio_viz_dom_series_clist { 1 } } \l_semio_viz_dom_cell_tl
-  \semio_viz_g_line:nnnnn { \l_semio_viz_dom_xa_fp }
-    { \semio_viz_dom_sr_y:n { \l_semio_viz_dom_cell_tl } } { \l_semio_viz_dom_xb_fp }
+  \semio_viz_g_line:nnnnn { \semio_viz_dom_sr_x:n { 1 } }
+    { \semio_viz_dom_sr_y:n { \l_semio_viz_dom_cell_tl } } { \semio_viz_dom_sr_x:n { \l_semio_viz_dom_n_int } }
     { \semio_viz_dom_sr_y:n { 0 } }
     {
       draw = semio-chrome-border-emphasized , line~width = \semio@stroke@hairline ,
@@ -1862,6 +2031,8 @@
 % leaders (bool)    dashed leader from nominal to displaced place  default false
 % ground  (bool)    hatch the fixed part                           default false
 % labels  (bool)    print part captions                            default true
+\bool_new:N \l_semio_viz_dom_eng_explode_supplied_bool
+\msg_new:nnn { semio-viz-engineering } { mode } { Unknown~engineering~mode~'#1'. }
 \keys_define:nn { semio / viz / family / engineering-diagram } {
   data    .tl_set:N   = \l_semio_viz_dom_data_tl,
   id      .tl_set:N   = \l_semio_viz_dom_id_tl,
@@ -1873,7 +2044,7 @@
   teeth   .tl_set:N   = \l_semio_viz_dom_second_tl,
   link    .tl_set:N   = \l_semio_viz_dom_edges_tl,
   mode    .tl_set:N   = \l_semio_viz_dom_mode_tl,
-  explode .fp_set:N   = \l_semio_viz_dom_alpha_fp,
+  explode .code:n     = { \bool_set_true:N \l_semio_viz_dom_eng_explode_supplied_bool \fp_set:Nn \l_semio_viz_dom_alpha_fp {#1} },
   body    .fp_set:N   = \l_semio_viz_dom_beta_fp,
   node    .fp_set:N   = \l_semio_viz_dom_gamma_fp,
   pad     .fp_set:N   = \l_semio_viz_dom_pad_fp,
@@ -1887,6 +2058,17 @@
 %endregion 🔖️Keys-engineering-diagram
 
 %region 🔖️EngineeringDiagram
+\tl_new:N \l_semio_viz_dom_eng_scalar_tl
+\msg_new:nnn { semio-viz-engineering } { endpoint }
+  { Unknown~engineering~part~'#1'. }
+\cs_new_protected:Npn \semio_viz_dom_eng_string:w \SemioVizString #1 \q_stop
+  { \tl_set:Nn \l_semio_viz_dom_eng_scalar_tl {#1} }
+\cs_new_protected:Npn \semio_viz_dom_eng_cell:N #1 {
+  \tl_set_eq:NN \l_semio_viz_dom_eng_scalar_tl #1
+  \tl_if_head_eq_meaning:VNTF \l_semio_viz_dom_eng_scalar_tl \SemioVizString
+    { \exp_after:wN \semio_viz_dom_eng_string:w \l_semio_viz_dom_eng_scalar_tl \q_stop } { }
+  \tl_set_eq:NN #1 \l_semio_viz_dom_eng_scalar_tl
+}
 % ⚙️ Reads the part table and maps every nominal position into the frame; the props it fills are
 % the only state the seven schematics below share.
 \cs_new_protected:Npn \semio_viz_dom_eng_load: {
@@ -1913,9 +2095,11 @@
 \cs_new_protected:Npn \semio_viz_dom_eng_part:n #1 {
   \semio_viz_table_cell:nnnN { \l_semio_viz_dom_data_tl } {#1} { \l_semio_viz_dom_id_tl }
     \l_semio_viz_dom_key_tl
+  \semio_viz_dom_eng_cell:N \l_semio_viz_dom_key_tl
   \seq_put_right:NV \l_semio_viz_dom_keys_seq \l_semio_viz_dom_key_tl
   \semio_viz_table_cell:nnnN { \l_semio_viz_dom_data_tl } {#1} { \l_semio_viz_dom_x_tl }
     \l_semio_viz_dom_cell_tl
+  \semio_viz_dom_eng_cell:N \l_semio_viz_dom_cell_tl
   \fp_set:Nn \l_semio_viz_dom_x_fp
     {
       \l_semio_viz_dom_xa_fp + 5
@@ -1925,6 +2109,7 @@
     }
   \semio_viz_table_cell:nnnN { \l_semio_viz_dom_data_tl } {#1} { \l_semio_viz_dom_y_tl }
     \l_semio_viz_dom_cell_tl
+  \semio_viz_dom_eng_cell:N \l_semio_viz_dom_cell_tl
   \fp_set:Nn \l_semio_viz_dom_y_fp
     {
       \l_semio_viz_dom_ya_fp + 4
@@ -1936,27 +2121,33 @@
     { \fp_eval:n { \l_semio_viz_dom_x_fp } , \fp_eval:n { \l_semio_viz_dom_y_fp } }
   \semio_viz_table_cell_opt:nnnN { \l_semio_viz_dom_data_tl } {#1} { \l_semio_viz_dom_value_tl }
     \l_semio_viz_dom_cell_tl
+  \semio_viz_dom_eng_cell:N \l_semio_viz_dom_cell_tl
   \tl_if_empty:NT \l_semio_viz_dom_cell_tl { \tl_set:Nn \l_semio_viz_dom_cell_tl { 4 } }
   \prop_put:NVx \l_semio_viz_dom_bag_prop \l_semio_viz_dom_key_tl
     { \fp_eval:n { \l_semio_viz_dom_cell_tl * \l_semio_viz_dom_beta_fp } }
   \semio_viz_table_cell_opt:nnnN { \l_semio_viz_dom_data_tl } {#1} { \l_semio_viz_dom_group_tl }
     \l_semio_viz_dom_cell_tl
+  \semio_viz_dom_eng_cell:N \l_semio_viz_dom_cell_tl
   \prop_put:NVV \l_semio_viz_dom_kid_prop \l_semio_viz_dom_key_tl \l_semio_viz_dom_cell_tl
   \semio_viz_table_cell_opt:nnnN { \l_semio_viz_dom_data_tl } {#1} { \l_semio_viz_dom_label_tl }
     \l_semio_viz_dom_cell_tl
+  \semio_viz_dom_eng_cell:N \l_semio_viz_dom_cell_tl
   \prop_put:NVV \l_semio_viz_dom_lab_prop \l_semio_viz_dom_key_tl \l_semio_viz_dom_cell_tl
   \semio_viz_table_cell_opt:nnnN { \l_semio_viz_dom_data_tl } {#1} { \l_semio_viz_dom_edges_tl }
     \l_semio_viz_dom_cell_tl
+  \semio_viz_dom_eng_cell:N \l_semio_viz_dom_cell_tl
   \prop_put:NVV \l_semio_viz_dom_par_prop \l_semio_viz_dom_key_tl \l_semio_viz_dom_cell_tl
   \semio_viz_table_cell_opt:nnnN { \l_semio_viz_dom_data_tl } {#1} { \l_semio_viz_dom_second_tl }
     \l_semio_viz_dom_cell_tl
+  \semio_viz_dom_eng_cell:N \l_semio_viz_dom_cell_tl
   \tl_if_empty:NT \l_semio_viz_dom_cell_tl { \tl_set:Nn \l_semio_viz_dom_cell_tl { 0 } }
   \prop_put:NVV \l_semio_viz_dom_sum_prop \l_semio_viz_dom_key_tl \l_semio_viz_dom_cell_tl
 }
 
 % 📍 Reads the frame position of part #1 into the fp variables #2 and #3.
 \cs_new_protected:Npn \semio_viz_dom_eng_at:nNN #1#2#3 {
-  \prop_get:NnN \l_semio_viz_dom_pos_prop {#1} \l_semio_viz_dom_key_tl
+  \prop_get:NnNTF \l_semio_viz_dom_pos_prop {#1} \l_semio_viz_dom_key_tl { }
+    { \msg_fatal:nnn { semio-viz-engineering } { endpoint } {#1} }
   \seq_set_split:NnV \l_semio_viz_dom_aux_seq { , } \l_semio_viz_dom_key_tl
   \fp_set:Nn #2 { \seq_item:Nn \l_semio_viz_dom_aux_seq { 1 } }
   \fp_set:Nn #3 { \seq_item:Nn \l_semio_viz_dom_aux_seq { 2 } }
@@ -2266,7 +2457,15 @@
   \fp_set:Nn \l_semio_viz_dom_beta_fp { 1 }
   \fp_set:Nn \l_semio_viz_dom_gamma_fp { 0.9 }
   \int_set:Nn \l_semio_viz_dom_iter_int { 7 }
+  \bool_set_false:N \l_semio_viz_dom_eng_explode_supplied_bool
   \keys_set:nn { semio / viz / family / engineering-diagram } {#1}
+  \exp_args:NnV \clist_if_in:nnF { assembly,exploded,gear,kinematic,linkage,mechanism,truss }
+    \l_semio_viz_dom_mode_tl
+    { \msg_fatal:nnx { semio-viz-engineering } { mode } { \l_semio_viz_dom_mode_tl } }
+  \bool_if:NF \l_semio_viz_dom_eng_explode_supplied_bool {
+    \str_if_eq:VnT \l_semio_viz_dom_mode_tl { exploded }
+      { \fp_set:Nn \l_semio_viz_dom_alpha_fp {7} }
+  }
   \semio_viz_dom_frame:
   \semio_viz_dom_eng_load:
   \fp_compare:nNnT { \l_semio_viz_dom_alpha_fp } > { 0 } { \semio_viz_dom_eng_explode: }
@@ -2384,77 +2583,47 @@
   }
 }
 
-% 🕓 The activity network: earliest start and chain depth of every activity, then the node-link
-% drawing with the longest chain to the last finish drawn as the critical path.
+% 🕓 Evaluates earliest starts once in ancestry order and draws activities in authored order.
 \cs_new_protected:Npn \semio_viz_dom_op_critical: {
-  \prop_clear:N \l_semio_viz_dom_par_prop
-  \prop_clear:N \l_semio_viz_dom_bag_prop
-  \prop_clear:N \l_semio_viz_dom_dep_prop
-  \prop_clear:N \l_semio_viz_dom_sum_prop
-  \prop_clear:N \l_semio_viz_dom_lab_prop
-  \prop_clear:N \l_semio_viz_dom_cur_prop
-  \seq_clear:N \l_semio_viz_dom_keys_seq
-  \semio_viz_table_nrows:VN \l_semio_viz_dom_data_tl \l_semio_viz_dom_n_int
-  \int_step_inline:nn { \l_semio_viz_dom_n_int } { \semio_viz_dom_op_activity:n {##1} }
-  \int_step_inline:nn { \l_semio_viz_dom_n_int } { \semio_viz_dom_op_relax: }
-  \semio_viz_dom_op_chain:
-  \semio_viz_dom_op_lanes:
-  \seq_map_inline:Nn \l_semio_viz_dom_keys_seq { \semio_viz_dom_op_arc:n {##1} }
-  \seq_map_inline:Nn \l_semio_viz_dom_keys_seq { \semio_viz_dom_op_task:n {##1} }
+  \semio_viz_dom_tree_read:
+  \bool_if:NT \l_semio_viz_dom_tree_valid_bool {
+    \prop_clear:N \l_semio_viz_dom_cur_prop
+    \seq_map_inline:Nn \l_semio_viz_dom_keys_seq
+      { \prop_put:Nnn \l_semio_viz_dom_sum_prop {##1} {0} }
+    \semio_viz_dom_op_relax:
+    \semio_viz_dom_op_chain:
+    \semio_viz_dom_op_lanes:
+    \seq_map_inline:Nn \l_semio_viz_dom_keys_seq { \semio_viz_dom_op_arc:n {##1} }
+    \seq_map_inline:Nn \l_semio_viz_dom_keys_seq { \semio_viz_dom_op_task:n {##1} }
+  }
 }
 
-% 🕓 One activity: its predecessor, its duration, its caption and the neutral start it begins with.
-\cs_new_protected:Npn \semio_viz_dom_op_activity:n #1 {
-  \semio_viz_table_cell:nnnN { \l_semio_viz_dom_data_tl } {#1} { \l_semio_viz_dom_id_tl }
-    \l_semio_viz_dom_key_tl
-  \seq_put_right:NV \l_semio_viz_dom_keys_seq \l_semio_viz_dom_key_tl
-  \semio_viz_table_cell_opt:nnnN { \l_semio_viz_dom_data_tl } {#1} { \l_semio_viz_dom_group_tl }
-    \l_semio_viz_dom_cell_tl
-  \prop_put:NVV \l_semio_viz_dom_par_prop \l_semio_viz_dom_key_tl \l_semio_viz_dom_cell_tl
-  \semio_viz_table_cell:nnnN { \l_semio_viz_dom_data_tl } {#1} { \l_semio_viz_dom_value_tl }
-    \l_semio_viz_dom_cell_tl
-  \prop_put:NVV \l_semio_viz_dom_bag_prop \l_semio_viz_dom_key_tl \l_semio_viz_dom_cell_tl
-  \semio_viz_table_cell_opt:nnnN { \l_semio_viz_dom_data_tl } {#1} { \l_semio_viz_dom_label_tl }
-    \l_semio_viz_dom_cell_tl
-  \prop_put:NVV \l_semio_viz_dom_lab_prop \l_semio_viz_dom_key_tl \l_semio_viz_dom_cell_tl
-  \prop_put:NVn \l_semio_viz_dom_sum_prop \l_semio_viz_dom_key_tl { 0 }
-  \prop_put:NVn \l_semio_viz_dom_dep_prop \l_semio_viz_dom_key_tl { 1 }
-}
-
-% 🕓 One relaxation sweep of the earliest start and of the chain depth over every activity.
+% 🗓️ Orders validated activities by dependency depth without changing their published row order.
 \cs_new_protected:Npn \semio_viz_dom_op_relax: {
-  \seq_map_inline:Nn \l_semio_viz_dom_keys_seq { \semio_viz_dom_op_ease:n {##1} }
+  \seq_set_eq:NN \l_semio_viz_dom_stack_seq \l_semio_viz_dom_keys_seq
+  \seq_sort:Nn \l_semio_viz_dom_stack_seq {
+    \int_compare:nNnTF { \prop_item:Nn \l_semio_viz_dom_dep_prop {##1} }
+      > { \prop_item:Nn \l_semio_viz_dom_dep_prop {##2} }
+      { \sort_return_swapped: } { \sort_return_same: }
+  }
+  \seq_map_inline:Nn \l_semio_viz_dom_stack_seq { \semio_viz_dom_op_ease:n {##1} }
 }
 
-% 🕓 Pushes one activity behind its predecessor.
+% ⏱️ Starts an activity at its validated predecessor's finish.
 \cs_new_protected:Npn \semio_viz_dom_op_ease:n #1 {
   \prop_get:NnN \l_semio_viz_dom_par_prop {#1} \l_semio_viz_dom_tmp_tl
   \tl_if_empty:NF \l_semio_viz_dom_tmp_tl {
     \prop_get:NVN \l_semio_viz_dom_sum_prop \l_semio_viz_dom_tmp_tl \l_semio_viz_dom_key_tl
     \prop_get:NVN \l_semio_viz_dom_bag_prop \l_semio_viz_dom_tmp_tl \l_semio_viz_dom_cell_tl
     \prop_put:Nnx \l_semio_viz_dom_sum_prop {#1}
-      {
-        \fp_eval:n
-          {
-            max ( \prop_item:Nn \l_semio_viz_dom_sum_prop {#1} ,
-                  \l_semio_viz_dom_key_tl + \l_semio_viz_dom_cell_tl )
-          }
-      }
-    \prop_get:NVN \l_semio_viz_dom_dep_prop \l_semio_viz_dom_tmp_tl \l_semio_viz_dom_key_tl
-    \prop_put:Nnx \l_semio_viz_dom_dep_prop {#1}
-      {
-        \fp_to_int:n
-          {
-            max ( \prop_item:Nn \l_semio_viz_dom_dep_prop {#1} ,
-                  \l_semio_viz_dom_key_tl + 1 )
-          }
-      }
+      { \fp_eval:n { \l_semio_viz_dom_key_tl + \l_semio_viz_dom_cell_tl } }
   }
 }
 
 % 🕓 Walks back from the latest finish and marks every activity of that chain as critical.
 \cs_new_protected:Npn \semio_viz_dom_op_chain: {
-  \fp_set:Nn \l_semio_viz_dom_hi_fp { -1e9 }
+  \fp_set:Nn \l_semio_viz_dom_hi_fp { -1 }
+  \seq_if_empty:NT \l_semio_viz_dom_keys_seq { \fp_zero:N \l_semio_viz_dom_hi_fp }
   \tl_clear:N \l_semio_viz_dom_tmp_tl
   \seq_map_inline:Nn \l_semio_viz_dom_keys_seq { \semio_viz_dom_op_finish:n {##1} }
   \int_step_inline:nn { \l_semio_viz_dom_n_int } { \semio_viz_dom_op_back: }

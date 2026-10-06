@@ -1,0 +1,22 @@
+%region 🔖️GeoSpatialSharedKeyTables
+\section{\ApiText{Shared geographic and spatial key scopes}{Gemeinsame geografische und räumliche Schlüsselbereiche}}
+\ApiText{These values are the geographic base reset before family presets. A family exposes this scope only when its authored options reach that base parser. Family-specific bindings and later presets take precedence in their actual parsing order.}{Diese Werte sind die Vorgaben des geografischen Basisresets vor den Familienvorgaben. Eine Familie bietet diesen Bereich nur an, wenn ihre Aufruferoptionen den Basisparser erreichen. Familienspezifische Bindungen und spätere Vorgaben haben gemäß der tatsächlichen Parserreihenfolge Vorrang.}
+
+\subsection{\Key{api-path-geo-base}}
+\ApiScopeSource{api-path-geo-base}{semio / viz / geo / base}
+\SemioTableLong[text-size=8pt]{\Key{api-path-geo-base} \ApiText{Geographic family base options}{Basisoptionen geografischer Familien}}{0.19,0.12,0.16,0.53}{\ApiKey & \ApiType & \ApiDefault & \ApiMeaning}{%
+  \SemioTableRow{\Key{fit} & \Key{string} & \Key{geometry} & \ApiText{Projection fitting reference: geometry fits the selected collection; world fits the world collection. Family presets may choose world.}{Referenz der Projektionsanpassung: geometry passt die gewählte Sammlung an; world passt die Weltsammlung an. Familienvorgaben können world wählen.}}
+  \SemioTableRow{\Key{geometry} & \Key{string} & \Key{demo-geo-regions} & \ApiText{Named geographic geometry collection used by the family.}{Benannte geografische Geometriesammlung der Familie.}}
+  \SemioTableRow{\Key{height} & \Key{number} & \Key{44} & \ApiText{Height of the fitted geographic frame in millimetres.}{Höhe des angepassten geografischen Rahmens in Millimetern.}}
+  \SemioTableRow{\Key{lineWidth} & \Key{string} & \Key{semio@stroke@hairline} & \ApiText{Outline width as a TeX dimension from the theme hairline token.}{Umrissbreite als TeX-Dimension aus dem Haarlinienwert des Themas.}}
+  \SemioTableRow{\Key{opacity} & \Key{number} & \Key{1} & \ApiText{Fill opacity from zero to one.}{Füllungsdeckkraft von null bis eins.}}
+  \SemioTableRow{\Key{palette} & \Key{string} & \Key{sequential} & \ApiText{Colour ramp: sequential, diverging, terrain, bathymetric or neutral.}{Farbverlauf: sequential, diverging, terrain, bathymetric oder neutral.}}
+  \SemioTableRow{\Key{parallels} & \Key{string} & \Key{0,60} & \ApiText{Comma-separated pair of conic standard parallels in degrees.}{Kommagetrenntes Paar der Standardbreiten der Kegelprojektion in Grad.}}
+  \SemioTableRow{\Key{projection} & \Key{string} & \Key{equirectangular} & \ApiText{Projection kind used to define the family projection before fitting its frame.}{Projektionsart zur Definition der Familienprojektion vor der Rahmenanpassung.}}
+  \SemioTableRow{\Key{rotate} & \Key{string} & \Key{0,0,0} & \ApiText{Comma-separated longitude, latitude and roll rotation angles in degrees.}{Kommagetrennte Drehwinkel für Länge, Breite und Rollwinkel in Grad.}}
+  \SemioTableRow{\Key{steps} & \Key{integer} & \Key{5} & \ApiText{Number of discrete colour-ramp levels. Vector families may bind steps to their integration count.}{Anzahl diskreter Farbverlaufsstufen. Vektorfamilien können steps an ihre Integrationszahl binden.}}
+  \SemioTableRow{\Key{stroke} & \Key{string} & \Key{semio-chrome-border-emphasized} & \ApiText{Outline colour as a native colour expression.}{Umrissfarbe als nativer Farbausdruck.}}
+  \SemioTableRow{\Key{width} & \Key{number} & \Key{76} & \ApiText{Width of the fitted geographic frame in millimetres.}{Breite des angepassten geografischen Rahmens in Millimetern.}}
+}
+%endregion 🔖️GeoSpatialSharedKeyTables
+

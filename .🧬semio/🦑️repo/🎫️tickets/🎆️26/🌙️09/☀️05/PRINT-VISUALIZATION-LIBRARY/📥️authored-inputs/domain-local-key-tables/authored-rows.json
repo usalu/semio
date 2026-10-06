@@ -1,0 +1,1789 @@
+{
+  "biology": [
+    [
+      "data",
+      "string",
+      "demo-biodiversity",
+      "Name of the source table.",
+      "Name der Quelltabelle."
+    ],
+    [
+      "mode",
+      "string",
+      "graduated",
+      "Drawing mode: graduated or range.",
+      "Zeichenmodus: graduated oder range."
+    ],
+    [
+      "label",
+      "string",
+      "cell",
+      "Column containing the plot caption.",
+      "Spalte mit der Flächenbeschriftung."
+    ],
+    [
+      "x",
+      "string",
+      "x",
+      "Column containing the grid x coordinate.",
+      "Spalte mit der x-Koordinate im Raster."
+    ],
+    [
+      "y",
+      "string",
+      "y",
+      "Column containing the grid y coordinate.",
+      "Spalte mit der y-Koordinate im Raster."
+    ],
+    [
+      "value",
+      "string",
+      "richness",
+      "Column containing species richness.",
+      "Spalte mit dem Artenreichtum."
+    ],
+    [
+      "group",
+      "string",
+      "species",
+      "Column containing the taxon holding the plot.",
+      "Spalte mit dem Taxon, das die Fläche besetzt."
+    ],
+    [
+      "scheme",
+      "string",
+      "sequential",
+      "Colour ramp: sequential, diverging or cyclic.",
+      "Farbrampe: sequential, diverging oder cyclic."
+    ],
+    [
+      "node",
+      "number",
+      "2.6",
+      "Greatest symbol radius in millimetres.",
+      "Größter Symbolradius in Millimetern."
+    ],
+    [
+      "inset",
+      "number",
+      "0.6",
+      "Gap between plots in millimetres.",
+      "Abstand zwischen Flächen in Millimetern."
+    ],
+    [
+      "labels",
+      "boolean",
+      "false",
+      "Print captions for the selected drawing.",
+      "Beschriftungen der gewählten Zeichnung ausgeben."
+    ],
+    [
+      "pad",
+      "number",
+      "3",
+      "Inset from the figure frame in millimetres.",
+      "Abstand vom Figurenrahmen in Millimetern."
+    ],
+    [
+      "width",
+      "number",
+      "",
+      "Drawing width in millimetres; defaults to the enclosing figure, with 80 mm fallback.",
+      "Zeichnungsbreite in Millimetern; Vorgabe ist die umgebende Figur, mit 80 mm als Ersatz."
+    ],
+    [
+      "height",
+      "number",
+      "",
+      "Drawing height in millimetres; defaults to the enclosing figure, with 40 mm fallback.",
+      "Zeichnungshöhe in Millimetern; Vorgabe ist die umgebende Figur, mit 40 mm als Ersatz."
+    ]
+  ],
+  "election": [
+    [
+      "data",
+      "string",
+      "demo-election",
+      "Name of the source table.",
+      "Name der Quelltabelle."
+    ],
+    [
+      "mode",
+      "string",
+      "tile",
+      "Drawing mode: tile, cartogram or swing.",
+      "Zeichenmodus: tile, cartogram oder swing."
+    ],
+    [
+      "label",
+      "string",
+      "region",
+      "Column containing the constituency caption.",
+      "Spalte mit der Wahlkreisbeschriftung."
+    ],
+    [
+      "x",
+      "string",
+      "x",
+      "Column containing the grid x coordinate.",
+      "Spalte mit der x-Koordinate im Raster."
+    ],
+    [
+      "y",
+      "string",
+      "y",
+      "Column containing the grid y coordinate.",
+      "Spalte mit der y-Koordinate im Raster."
+    ],
+    [
+      "value",
+      "string",
+      "share",
+      "Column containing the quantity mapped to tile colour.",
+      "Spalte mit der auf die Kachelfarbe abgebildeten Größe."
+    ],
+    [
+      "delta",
+      "string",
+      "swing",
+      "Column containing the swing mapped to arrows.",
+      "Spalte mit der auf Pfeile abgebildeten Stimmenverschiebung."
+    ],
+    [
+      "size",
+      "string",
+      "seats",
+      "Column containing the quantity mapped to cartogram tile size.",
+      "Spalte mit der auf die Kartogrammkachelgröße abgebildeten Größe."
+    ],
+    [
+      "scheme",
+      "string",
+      "sequential",
+      "Colour ramp: sequential, diverging or cyclic.",
+      "Farbrampe: sequential, diverging oder cyclic."
+    ],
+    [
+      "inset",
+      "number",
+      "0.6",
+      "Gap between tiles in millimetres.",
+      "Abstand zwischen Kacheln in Millimetern."
+    ],
+    [
+      "arrow",
+      "number",
+      "1.2",
+      "Swing arrowhead length in millimetres.",
+      "Länge der Pfeilspitze einer Stimmenverschiebung in Millimetern."
+    ],
+    [
+      "gain",
+      "number",
+      "4",
+      "Arrow length at the greatest swing in millimetres.",
+      "Pfeillänge bei der größten Stimmenverschiebung in Millimetern."
+    ],
+    [
+      "labels",
+      "boolean",
+      "false",
+      "Print captions for the selected drawing.",
+      "Beschriftungen der gewählten Zeichnung ausgeben."
+    ],
+    [
+      "pad",
+      "number",
+      "3",
+      "Inset from the figure frame in millimetres.",
+      "Abstand vom Figurenrahmen in Millimetern."
+    ],
+    [
+      "width",
+      "number",
+      "",
+      "Drawing width in millimetres; defaults to the enclosing figure, with 80 mm fallback.",
+      "Zeichnungsbreite in Millimetern; Vorgabe ist die umgebende Figur, mit 80 mm als Ersatz."
+    ],
+    [
+      "height",
+      "number",
+      "",
+      "Drawing height in millimetres; defaults to the enclosing figure, with 40 mm fallback.",
+      "Zeichnungshöhe in Millimetern; Vorgabe ist die umgebende Figur, mit 40 mm als Ersatz."
+    ]
+  ],
+  "engineering-diagram": [
+    [
+      "data",
+      "string",
+      "demo-machine",
+      "Name of the source table.",
+      "Name der Quelltabelle."
+    ],
+    [
+      "id",
+      "string",
+      "id",
+      "Column containing the part identity.",
+      "Spalte mit der Bauteilkennung."
+    ],
+    [
+      "label",
+      "string",
+      "label",
+      "Column containing the part caption.",
+      "Spalte mit der Bauteilbeschriftung."
+    ],
+    [
+      "class",
+      "string",
+      "kind",
+      "Column containing the part class: body, gear or link.",
+      "Spalte mit der Bauteilklasse: body, gear oder link."
+    ],
+    [
+      "x",
+      "string",
+      "x",
+      "Column containing the nominal horizontal part position.",
+      "Spalte mit der nominalen horizontalen Bauteilposition."
+    ],
+    [
+      "y",
+      "string",
+      "y",
+      "Column containing the nominal vertical part position.",
+      "Spalte mit der nominalen vertikalen Bauteilposition."
+    ],
+    [
+      "size",
+      "string",
+      "size",
+      "Column containing the body extent in millimetres.",
+      "Spalte mit der Körperausdehnung in Millimetern."
+    ],
+    [
+      "teeth",
+      "string",
+      "teeth",
+      "Column containing the gear tooth count.",
+      "Spalte mit der Zahnzahl des Zahnrads."
+    ],
+    [
+      "link",
+      "string",
+      "link",
+      "Column naming the part connected to this part.",
+      "Spalte, die das mit diesem Bauteil verbundene Bauteil nennt."
+    ],
+    [
+      "mode",
+      "string",
+      "assembly",
+      "Drawing mode: assembly, exploded, gear, kinematic, linkage, mechanism or truss.",
+      "Zeichenmodus: assembly, exploded, gear, kinematic, linkage, mechanism oder truss."
+    ],
+    [
+      "explode",
+      "number",
+      "0",
+      "Radial displacement from the centroid in millimetres.",
+      "Radiale Verschiebung vom Schwerpunkt in Millimetern."
+    ],
+    [
+      "body",
+      "number",
+      "1",
+      "Scale factor applied to part extents.",
+      "Skalierungsfaktor für die Bauteilausdehnungen."
+    ],
+    [
+      "node",
+      "number",
+      "0.9",
+      "Joint and pin radius in millimetres.",
+      "Gelenk- und Bolzenradius in Millimetern."
+    ],
+    [
+      "leaders",
+      "boolean",
+      "false",
+      "Draw dashed leaders from nominal to displaced positions.",
+      "Gestrichelte Führungslinien von nominalen zu verschobenen Positionen zeichnen."
+    ],
+    [
+      "ground",
+      "boolean",
+      "false",
+      "Hatch the fixed part.",
+      "Das feste Bauteil schraffieren."
+    ],
+    [
+      "labels",
+      "boolean",
+      "true",
+      "Print captions for the selected drawing.",
+      "Beschriftungen der gewählten Zeichnung ausgeben."
+    ],
+    [
+      "pad",
+      "number",
+      "3",
+      "Inset from the figure frame in millimetres.",
+      "Abstand vom Figurenrahmen in Millimetern."
+    ],
+    [
+      "width",
+      "number",
+      "",
+      "Drawing width in millimetres; defaults to the enclosing figure, with 80 mm fallback.",
+      "Zeichnungsbreite in Millimetern; Vorgabe ist die umgebende Figur, mit 80 mm als Ersatz."
+    ],
+    [
+      "height",
+      "number",
+      "",
+      "Drawing height in millimetres; defaults to the enclosing figure, with 40 mm fallback.",
+      "Zeichnungshöhe in Millimetern; Vorgabe ist die umgebende Figur, mit 40 mm als Ersatz."
+    ]
+  ],
+  "logistics": [
+    [
+      "data",
+      "string",
+      "demo-shipments",
+      "Name of the source table.",
+      "Name der Quelltabelle."
+    ],
+    [
+      "mode",
+      "string",
+      "matrix",
+      "Drawing mode: matrix or sankey.",
+      "Zeichenmodus: matrix oder sankey."
+    ],
+    [
+      "origin",
+      "string",
+      "origin",
+      "Column containing the shipping depot.",
+      "Spalte mit dem Versanddepot."
+    ],
+    [
+      "destination",
+      "string",
+      "destination",
+      "Column containing the receiving depot.",
+      "Spalte mit dem Empfangsdepot."
+    ],
+    [
+      "value",
+      "string",
+      "volume",
+      "Column containing the shipped quantity.",
+      "Spalte mit der versandten Menge."
+    ],
+    [
+      "scheme",
+      "string",
+      "sequential",
+      "Colour ramp: sequential, diverging or cyclic.",
+      "Farbrampe: sequential, diverging oder cyclic."
+    ],
+    [
+      "gutter",
+      "number",
+      "8",
+      "Space for depot captions in millimetres.",
+      "Raum für Depotbeschriftungen in Millimetern."
+    ],
+    [
+      "node",
+      "number",
+      "2",
+      "Width of an axis node bar in millimetres.",
+      "Breite eines Achsenknotenbalkens in Millimetern."
+    ],
+    [
+      "values",
+      "boolean",
+      "false",
+      "Print shipped quantities.",
+      "Versandmengen ausgeben."
+    ],
+    [
+      "labels",
+      "boolean",
+      "true",
+      "Print captions for the selected drawing.",
+      "Beschriftungen der gewählten Zeichnung ausgeben."
+    ],
+    [
+      "pad",
+      "number",
+      "3",
+      "Inset from the figure frame in millimetres.",
+      "Abstand vom Figurenrahmen in Millimetern."
+    ],
+    [
+      "width",
+      "number",
+      "",
+      "Drawing width in millimetres; defaults to the enclosing figure, with 80 mm fallback.",
+      "Zeichnungsbreite in Millimetern; Vorgabe ist die umgebende Figur, mit 80 mm als Ersatz."
+    ],
+    [
+      "height",
+      "number",
+      "",
+      "Drawing height in millimetres; defaults to the enclosing figure, with 40 mm fallback.",
+      "Zeichnungshöhe in Millimetern; Vorgabe ist die umgebende Figur, mit 40 mm als Ersatz."
+    ]
+  ],
+  "monitoring": [
+    [
+      "data",
+      "string",
+      "demo-services",
+      "Name of the source table.",
+      "Name der Quelltabelle."
+    ],
+    [
+      "edges",
+      "string",
+      "demo-services-edges",
+      "Name of the service call table.",
+      "Name der Dienstaufruftabelle."
+    ],
+    [
+      "mode",
+      "string",
+      "layered",
+      "Drawing mode: layered, heat, graph or rings.",
+      "Zeichenmodus: layered, heat, graph oder rings."
+    ],
+    [
+      "id",
+      "string",
+      "id",
+      "Column containing the service identity or latency-grid row.",
+      "Spalte mit der Dienstkennung oder Zeile des Latenzrasters."
+    ],
+    [
+      "column",
+      "string",
+      "bucket",
+      "Column containing the latency-grid column.",
+      "Spalte mit der Spalte des Latenzrasters."
+    ],
+    [
+      "label",
+      "string",
+      "label",
+      "Column containing the service caption.",
+      "Spalte mit der Dienstbeschriftung."
+    ],
+    [
+      "tier",
+      "string",
+      "tier",
+      "Column containing the service layer.",
+      "Spalte mit der Dienstschicht."
+    ],
+    [
+      "value",
+      "string",
+      "latency",
+      "Column containing response time.",
+      "Spalte mit der Antwortzeit."
+    ],
+    [
+      "errors",
+      "string",
+      "errors",
+      "Column containing the error rate mapped to node colour.",
+      "Spalte mit der auf die Knotenfarbe abgebildeten Fehlerrate."
+    ],
+    [
+      "source",
+      "string",
+      "source",
+      "Call-table column containing the calling service.",
+      "Spalte der Aufruftabelle mit dem aufrufenden Dienst."
+    ],
+    [
+      "target",
+      "string",
+      "target",
+      "Call-table column containing the called service.",
+      "Spalte der Aufruftabelle mit dem aufgerufenen Dienst."
+    ],
+    [
+      "weight",
+      "string",
+      "calls",
+      "Call-table column containing call volume.",
+      "Spalte der Aufruftabelle mit dem Aufrufvolumen."
+    ],
+    [
+      "scheme",
+      "string",
+      "sequential",
+      "Colour ramp: sequential, diverging or cyclic.",
+      "Farbrampe: sequential, diverging oder cyclic."
+    ],
+    [
+      "node",
+      "number",
+      "1.6",
+      "Node radius in millimetres.",
+      "Knotenradius in Millimetern."
+    ],
+    [
+      "arrow",
+      "number",
+      "0",
+      "Arrowhead length in millimetres; zero draws plain connectors.",
+      "Länge der Pfeilspitze in Millimetern; null zeichnet einfache Verbinder."
+    ],
+    [
+      "gutter",
+      "number",
+      "8",
+      "Space for captions in millimetres.",
+      "Raum für Beschriftungen in Millimetern."
+    ],
+    [
+      "labels",
+      "boolean",
+      "true",
+      "Print captions for the selected drawing.",
+      "Beschriftungen der gewählten Zeichnung ausgeben."
+    ],
+    [
+      "pad",
+      "number",
+      "3",
+      "Inset from the figure frame in millimetres.",
+      "Abstand vom Figurenrahmen in Millimetern."
+    ],
+    [
+      "width",
+      "number",
+      "",
+      "Drawing width in millimetres; defaults to the enclosing figure, with 80 mm fallback.",
+      "Zeichnungsbreite in Millimetern; Vorgabe ist die umgebende Figur, mit 80 mm als Ersatz."
+    ],
+    [
+      "height",
+      "number",
+      "",
+      "Drawing height in millimetres; defaults to the enclosing figure, with 40 mm fallback.",
+      "Zeichnungshöhe in Millimetern; Vorgabe ist die umgebende Figur, mit 40 mm als Ersatz."
+    ]
+  ],
+  "neural": [
+    [
+      "data",
+      "string",
+      "demo-neural",
+      "Name of the source table.",
+      "Name der Quelltabelle."
+    ],
+    [
+      "mode",
+      "string",
+      "single",
+      "Drawing mode: single or multiples.",
+      "Zeichenmodus: single oder multiples."
+    ],
+    [
+      "channel",
+      "string",
+      "channel",
+      "Column containing the activation channel.",
+      "Spalte mit dem Aktivierungskanal."
+    ],
+    [
+      "row",
+      "string",
+      "row",
+      "Column containing the cell row.",
+      "Spalte mit der Zellzeile."
+    ],
+    [
+      "column",
+      "string",
+      "col",
+      "Column containing the cell column.",
+      "Spalte mit der Zellspalte."
+    ],
+    [
+      "value",
+      "string",
+      "value",
+      "Column containing activation.",
+      "Spalte mit der Aktivierung."
+    ],
+    [
+      "select",
+      "integer",
+      "1",
+      "Channel shown by the single mode.",
+      "Im Modus single angezeigter Kanal."
+    ],
+    [
+      "columns",
+      "integer",
+      "2",
+      "Channel panels per row in small multiples.",
+      "Kanaltafeln je Zeile in kleinen Vielfachen."
+    ],
+    [
+      "scheme",
+      "string",
+      "sequential",
+      "Colour ramp: sequential, diverging or cyclic.",
+      "Farbrampe: sequential, diverging oder cyclic."
+    ],
+    [
+      "threshold",
+      "number",
+      "0.5",
+      "Minimum activation for an outlined cell.",
+      "Mindestaktivierung für eine umrandete Zelle."
+    ],
+    [
+      "outline",
+      "boolean",
+      "false",
+      "Outline cells that reach the threshold.",
+      "Zellen umranden, die den Schwellenwert erreichen."
+    ],
+    [
+      "gutter",
+      "number",
+      "1.5",
+      "Gap between channel panels in millimetres.",
+      "Abstand zwischen Kanaltafeln in Millimetern."
+    ],
+    [
+      "labels",
+      "boolean",
+      "false",
+      "Print captions for the selected drawing.",
+      "Beschriftungen der gewählten Zeichnung ausgeben."
+    ],
+    [
+      "pad",
+      "number",
+      "3",
+      "Inset from the figure frame in millimetres.",
+      "Abstand vom Figurenrahmen in Millimetern."
+    ],
+    [
+      "width",
+      "number",
+      "",
+      "Drawing width in millimetres; defaults to the enclosing figure, with 80 mm fallback.",
+      "Zeichnungsbreite in Millimetern; Vorgabe ist die umgebende Figur, mit 80 mm als Ersatz."
+    ],
+    [
+      "height",
+      "number",
+      "",
+      "Drawing height in millimetres; defaults to the enclosing figure, with 40 mm fallback.",
+      "Zeichnungshöhe in Millimetern; Vorgabe ist die umgebende Figur, mit 40 mm als Ersatz."
+    ]
+  ],
+  "niche": [
+    [
+      "data",
+      "string",
+      "demo-survey",
+      "Name of the source table.",
+      "Name der Quelltabelle."
+    ],
+    [
+      "mode",
+      "string",
+      "alluvial",
+      "Drawing mode: alluvial, coxcomb, icicle or spiral.",
+      "Zeichenmodus: alluvial, coxcomb, icicle oder spiral."
+    ],
+    [
+      "source",
+      "string",
+      "question",
+      "Column containing the left category, part name, node identity or series step.",
+      "Spalte mit der linken Kategorie, dem Teilnamen, der Knotenkennung oder dem Reihenschritt."
+    ],
+    [
+      "target",
+      "string",
+      "group",
+      "Column containing the right category.",
+      "Spalte mit der rechten Kategorie."
+    ],
+    [
+      "value",
+      "string",
+      "value",
+      "Column containing the numeric quantity.",
+      "Spalte mit der numerischen Größe."
+    ],
+    [
+      "parent",
+      "string",
+      "parent",
+      "Column naming the parent node of the stratified tree.",
+      "Spalte, die den Elternknoten des geschichteten Baums nennt."
+    ],
+    [
+      "label",
+      "string",
+      "label",
+      "Column containing the visible caption.",
+      "Spalte mit der sichtbaren Beschriftung."
+    ],
+    [
+      "scheme",
+      "string",
+      "sequential",
+      "Colour ramp: sequential, diverging or cyclic.",
+      "Farbrampe: sequential, diverging oder cyclic."
+    ],
+    [
+      "node",
+      "number",
+      "2",
+      "Axis node width or spiral-cell radial band in millimetres.",
+      "Achsenknotenbreite oder radiales Band einer Spiralzelle in Millimetern."
+    ],
+    [
+      "turns",
+      "number",
+      "2.5",
+      "Number of spiral turns.",
+      "Anzahl der Spiralwindungen."
+    ],
+    [
+      "gutter",
+      "number",
+      "8",
+      "Space for captions in millimetres.",
+      "Raum für Beschriftungen in Millimetern."
+    ],
+    [
+      "values",
+      "boolean",
+      "false",
+      "Print numeric quantities.",
+      "Numerische Größen ausgeben."
+    ],
+    [
+      "labels",
+      "boolean",
+      "true",
+      "Print captions for the selected drawing.",
+      "Beschriftungen der gewählten Zeichnung ausgeben."
+    ],
+    [
+      "pad",
+      "number",
+      "3",
+      "Inset from the figure frame in millimetres.",
+      "Abstand vom Figurenrahmen in Millimetern."
+    ],
+    [
+      "width",
+      "number",
+      "",
+      "Drawing width in millimetres; defaults to the enclosing figure, with 80 mm fallback.",
+      "Zeichnungsbreite in Millimetern; Vorgabe ist die umgebende Figur, mit 80 mm als Ersatz."
+    ],
+    [
+      "height",
+      "number",
+      "",
+      "Drawing height in millimetres; defaults to the enclosing figure, with 40 mm fallback.",
+      "Zeichnungshöhe in Millimetern; Vorgabe ist die umgebende Figur, mit 40 mm als Ersatz."
+    ]
+  ],
+  "notation": [
+    [
+      "data",
+      "string",
+      "demo-molecule",
+      "Name of the source table.",
+      "Name der Quelltabelle."
+    ],
+    [
+      "mode",
+      "string",
+      "molecule",
+      "Drawing mode: molecule, circuit or staff.",
+      "Zeichenmodus: molecule, circuit oder staff."
+    ],
+    [
+      "id",
+      "string",
+      "id",
+      "Column containing the symbol identity.",
+      "Spalte mit der Symbolkennung."
+    ],
+    [
+      "label",
+      "string",
+      "label",
+      "Column containing the printed glyph name.",
+      "Spalte mit dem gedruckten Glyphennamen."
+    ],
+    [
+      "class",
+      "string",
+      "kind",
+      "Column containing the circuit component class.",
+      "Spalte mit der Klasse der Schaltkreiskomponente."
+    ],
+    [
+      "x",
+      "string",
+      "x",
+      "Column containing the horizontal symbol position.",
+      "Spalte mit der horizontalen Symbolposition."
+    ],
+    [
+      "y",
+      "string",
+      "y",
+      "Column containing the vertical symbol position or staff step.",
+      "Spalte mit der vertikalen Symbolposition oder Stufe auf dem Notensystem."
+    ],
+    [
+      "link",
+      "string",
+      "bond",
+      "Column naming the connected symbol.",
+      "Spalte, die das verbundene Symbol nennt."
+    ],
+    [
+      "order",
+      "string",
+      "order",
+      "Column containing bond order or note duration.",
+      "Spalte mit der Bindungsordnung oder Notendauer."
+    ],
+    [
+      "node",
+      "number",
+      "1.4",
+      "Glyph radius in millimetres.",
+      "Glyphenradius in Millimetern."
+    ],
+    [
+      "offset",
+      "number",
+      "0.5",
+      "Gap between double-bond rules in millimetres.",
+      "Abstand zwischen den Linien einer Doppelbindung in Millimetern."
+    ],
+    [
+      "lines",
+      "integer",
+      "5",
+      "Number of staff rules.",
+      "Anzahl der Notensystemlinien."
+    ],
+    [
+      "labels",
+      "boolean",
+      "true",
+      "Print captions for the selected drawing.",
+      "Beschriftungen der gewählten Zeichnung ausgeben."
+    ],
+    [
+      "pad",
+      "number",
+      "3",
+      "Inset from the figure frame in millimetres.",
+      "Abstand vom Figurenrahmen in Millimetern."
+    ],
+    [
+      "width",
+      "number",
+      "",
+      "Drawing width in millimetres; defaults to the enclosing figure, with 80 mm fallback.",
+      "Zeichnungsbreite in Millimetern; Vorgabe ist die umgebende Figur, mit 80 mm als Ersatz."
+    ],
+    [
+      "height",
+      "number",
+      "",
+      "Drawing height in millimetres; defaults to the enclosing figure, with 40 mm fallback.",
+      "Zeichnungshöhe in Millimetern; Vorgabe ist die umgebende Figur, mit 40 mm als Ersatz."
+    ]
+  ],
+  "optimization": [
+    [
+      "data",
+      "string",
+      "demo-assignment",
+      "Name of the source table.",
+      "Name der Quelltabelle."
+    ],
+    [
+      "mode",
+      "string",
+      "assignment",
+      "Drawing mode: assignment, critical-path, flow, transport or schedule.",
+      "Zeichenmodus: assignment, critical-path, flow, transport oder schedule."
+    ],
+    [
+      "row",
+      "string",
+      "agent",
+      "Column containing the agent, machine or arc source; shares the identity binding with id.",
+      "Spalte mit dem Agenten, der Maschine oder der Kantenquelle; teilt die Kennungsbindung mit id."
+    ],
+    [
+      "column",
+      "string",
+      "task",
+      "Column containing the task or arc target.",
+      "Spalte mit der Aufgabe oder dem Kantenziel."
+    ],
+    [
+      "value",
+      "string",
+      "cost",
+      "Column containing cost, flow or duration.",
+      "Spalte mit den Kosten, dem Fluss oder der Dauer."
+    ],
+    [
+      "capacity",
+      "string",
+      "capacity",
+      "Column containing arc capacity.",
+      "Spalte mit der Kantenkapazität."
+    ],
+    [
+      "id",
+      "string",
+      "agent",
+      "Column containing activity identity; shares the row binding and defaults to agent.",
+      "Spalte mit der Vorgangskennung; teilt die Zeilenbindung und hat agent als Vorgabe."
+    ],
+    [
+      "pred",
+      "string",
+      "pred",
+      "Column naming the predecessor activity.",
+      "Spalte, die den Vorgängervorgang nennt."
+    ],
+    [
+      "label",
+      "string",
+      "label",
+      "Column containing the visible caption.",
+      "Spalte mit der sichtbaren Beschriftung."
+    ],
+    [
+      "start",
+      "string",
+      "start",
+      "Column containing scheduled job start.",
+      "Spalte mit dem Beginn eines eingeplanten Auftrags."
+    ],
+    [
+      "scheme",
+      "string",
+      "sequential",
+      "Colour ramp: sequential, diverging or cyclic.",
+      "Farbrampe: sequential, diverging oder cyclic."
+    ],
+    [
+      "gutter",
+      "number",
+      "6",
+      "Space for row and column captions in millimetres.",
+      "Raum für Zeilen- und Spaltenbeschriftungen in Millimetern."
+    ],
+    [
+      "node",
+      "number",
+      "1.6",
+      "Node radius or half bar height in millimetres.",
+      "Knotenradius oder halbe Balkenhöhe in Millimetern."
+    ],
+    [
+      "arrow",
+      "number",
+      "1.4",
+      "Arrowhead length in millimetres.",
+      "Länge der Pfeilspitze in Millimetern."
+    ],
+    [
+      "values",
+      "boolean",
+      "false",
+      "Print numeric cell values.",
+      "Numerische Zellwerte ausgeben."
+    ],
+    [
+      "select",
+      "boolean",
+      "false",
+      "Mark the greedy optimum of each row.",
+      "Das gierige Optimum jeder Zeile markieren."
+    ],
+    [
+      "labels",
+      "boolean",
+      "true",
+      "Print captions for the selected drawing.",
+      "Beschriftungen der gewählten Zeichnung ausgeben."
+    ],
+    [
+      "pad",
+      "number",
+      "3",
+      "Inset from the figure frame in millimetres.",
+      "Abstand vom Figurenrahmen in Millimetern."
+    ],
+    [
+      "width",
+      "number",
+      "",
+      "Drawing width in millimetres; defaults to the enclosing figure, with 80 mm fallback.",
+      "Zeichnungsbreite in Millimetern; Vorgabe ist die umgebende Figur, mit 80 mm als Ersatz."
+    ],
+    [
+      "height",
+      "number",
+      "",
+      "Drawing height in millimetres; defaults to the enclosing figure, with 40 mm fallback.",
+      "Zeichnungshöhe in Millimetern; Vorgabe ist die umgebende Figur, mit 40 mm als Ersatz."
+    ]
+  ],
+  "performance": [
+    [
+      "data",
+      "string",
+      "demo-hierarchy-deep",
+      "Name of the source table.",
+      "Name der Quelltabelle."
+    ],
+    [
+      "id",
+      "string",
+      "id",
+      "Column containing frame identity; shares the graph source binding.",
+      "Spalte mit der Rahmenkennung; teilt die Bindung der Graphquelle."
+    ],
+    [
+      "parent",
+      "string",
+      "parent",
+      "Column naming the calling frame; empty denotes a root.",
+      "Spalte, die den aufrufenden Rahmen nennt; leer bezeichnet eine Wurzel."
+    ],
+    [
+      "value",
+      "string",
+      "value",
+      "Column containing self time.",
+      "Spalte mit der Eigenzeit."
+    ],
+    [
+      "label",
+      "string",
+      "label",
+      "Column containing the frame caption.",
+      "Spalte mit der Rahmenbeschriftung."
+    ],
+    [
+      "source",
+      "string",
+      "id",
+      "Column containing the call-graph source; shares the id binding.",
+      "Spalte mit der Quelle im Aufrufgraphen; teilt die id-Bindung."
+    ],
+    [
+      "target",
+      "string",
+      "target",
+      "Column containing the call-graph target.",
+      "Spalte mit dem Ziel im Aufrufgraphen."
+    ],
+    [
+      "mode",
+      "string",
+      "flame",
+      "Drawing mode: flame, icicle, tree, histogram or graph.",
+      "Zeichenmodus: flame, icicle, tree, histogram oder graph."
+    ],
+    [
+      "orientation",
+      "string",
+      "bottom-up",
+      "Depth-row growth direction: bottom-up or top-down.",
+      "Wachstumsrichtung der Tiefenzeilen: bottom-up oder top-down."
+    ],
+    [
+      "order",
+      "string",
+      "none",
+      "Sibling order: none, value or label.",
+      "Geschwisterreihenfolge: none, value oder label."
+    ],
+    [
+      "bins",
+      "integer",
+      "12",
+      "Number of latency-histogram bins.",
+      "Anzahl der Klassen im Latenzhistogramm."
+    ],
+    [
+      "percentiles",
+      "string",
+      "",
+      "Comma-separated probabilities for marked latency quantiles.",
+      "Kommagetrennte Wahrscheinlichkeiten für markierte Latenzquantile."
+    ],
+    [
+      "rowgap",
+      "number",
+      "0.4",
+      "Gap between depth rows in millimetres.",
+      "Abstand zwischen Tiefenzeilen in Millimetern."
+    ],
+    [
+      "labels",
+      "boolean",
+      "true",
+      "Print captions for the selected drawing.",
+      "Beschriftungen der gewählten Zeichnung ausgeben."
+    ],
+    [
+      "pad",
+      "number",
+      "3",
+      "Inset from the figure frame in millimetres.",
+      "Abstand vom Figurenrahmen in Millimetern."
+    ],
+    [
+      "width",
+      "number",
+      "",
+      "Drawing width in millimetres; defaults to the enclosing figure, with 80 mm fallback.",
+      "Zeichnungsbreite in Millimetern; Vorgabe ist die umgebende Figur, mit 80 mm als Ersatz."
+    ],
+    [
+      "height",
+      "number",
+      "",
+      "Drawing height in millimetres; defaults to the enclosing figure, with 40 mm fallback.",
+      "Zeichnungshöhe in Millimetern; Vorgabe ist die umgebende Figur, mit 40 mm als Ersatz."
+    ]
+  ],
+  "schedule": [
+    [
+      "data",
+      "string",
+      "demo-sprint",
+      "Name of the source table.",
+      "Name der Quelltabelle."
+    ],
+    [
+      "time",
+      "string",
+      "t",
+      "Column containing the sprint index.",
+      "Spalte mit dem Sprintindex."
+    ],
+    [
+      "series",
+      "string",
+      "remaining",
+      "Comma-separated value columns to draw.",
+      "Kommagetrennte zu zeichnende Wertspalten."
+    ],
+    [
+      "mode",
+      "string",
+      "line",
+      "Drawing mode: line, area or bar.",
+      "Zeichenmodus: line, area oder bar."
+    ],
+    [
+      "stacked",
+      "boolean",
+      "false",
+      "Accumulate the series on one another.",
+      "Die Reihen übereinander aufsummieren."
+    ],
+    [
+      "ideal",
+      "boolean",
+      "false",
+      "Draw the ideal burn reference.",
+      "Die ideale Burn-Referenz zeichnen."
+    ],
+    [
+      "zero",
+      "boolean",
+      "false",
+      "Draw the zero rule.",
+      "Die Nulllinie zeichnen."
+    ],
+    [
+      "gap",
+      "number",
+      "1.2",
+      "Gap between time-step bars in millimetres.",
+      "Abstand zwischen Zeitschrittbalken in Millimetern."
+    ],
+    [
+      "labels",
+      "boolean",
+      "true",
+      "Print captions for the selected drawing.",
+      "Beschriftungen der gewählten Zeichnung ausgeben."
+    ],
+    [
+      "pad",
+      "number",
+      "3",
+      "Inset from the figure frame in millimetres.",
+      "Abstand vom Figurenrahmen in Millimetern."
+    ],
+    [
+      "width",
+      "number",
+      "",
+      "Drawing width in millimetres; defaults to the enclosing figure, with 80 mm fallback.",
+      "Zeichnungsbreite in Millimetern; Vorgabe ist die umgebende Figur, mit 80 mm als Ersatz."
+    ],
+    [
+      "height",
+      "number",
+      "",
+      "Drawing height in millimetres; defaults to the enclosing figure, with 40 mm fallback.",
+      "Zeichnungshöhe in Millimetern; Vorgabe ist die umgebende Figur, mit 40 mm als Ersatz."
+    ]
+  ],
+  "spatial-layout": [
+    [
+      "data",
+      "string",
+      "demo-scatter",
+      "Name of the source table.",
+      "Name der Quelltabelle."
+    ],
+    [
+      "x",
+      "string",
+      "x",
+      "Column containing source horizontal coordinates.",
+      "Spalte mit den horizontalen Quellkoordinaten."
+    ],
+    [
+      "y",
+      "string",
+      "y",
+      "Column containing source vertical coordinates.",
+      "Spalte mit den vertikalen Quellkoordinaten."
+    ],
+    [
+      "size",
+      "string",
+      "size",
+      "Column containing node area.",
+      "Spalte mit der Knotenfläche."
+    ],
+    [
+      "label",
+      "string",
+      "label",
+      "Column containing the node caption.",
+      "Spalte mit der Knotenbeschriftung."
+    ],
+    [
+      "group",
+      "string",
+      "grp",
+      "Column containing the category mapped to a palette slot.",
+      "Spalte mit der auf einen Palettenplatz abgebildeten Kategorie."
+    ],
+    [
+      "algorithm",
+      "string",
+      "grid",
+      "Placement algorithm: beeswarm, voronoi, relax, align, grid, matrix, layered, radial or spiral.",
+      "Platzierungsalgorithmus: beeswarm, voronoi, relax, align, grid, matrix, layered, radial oder spiral."
+    ],
+    [
+      "radius",
+      "number",
+      "2.4",
+      "Beeswarm collision radius in millimetres.",
+      "Kollisionsradius der Beeswarm-Anordnung in Millimetern."
+    ],
+    [
+      "amount",
+      "number",
+      "2",
+      "Relaxation step, ring spacing or spiral growth in millimetres.",
+      "Relaxationsschritt, Ringabstand oder Spiralwachstum in Millimetern."
+    ],
+    [
+      "columns",
+      "integer",
+      "5",
+      "Columns of the grid or small multiples.",
+      "Spalten des Rasters oder der kleinen Vielfachen."
+    ],
+    [
+      "rings",
+      "integer",
+      "2",
+      "Number of radial-layout rings.",
+      "Anzahl der Ringe der radialen Anordnung."
+    ],
+    [
+      "iterations",
+      "integer",
+      "24",
+      "Number of relaxation passes.",
+      "Anzahl der Relaxationsdurchläufe."
+    ],
+    [
+      "node",
+      "number",
+      "1.1",
+      "Base node radius in millimetres.",
+      "Basisradius der Knoten in Millimetern."
+    ],
+    [
+      "cells",
+      "boolean",
+      "false",
+      "Draw polygons or panel frames.",
+      "Polygone oder Tafelrahmen zeichnen."
+    ],
+    [
+      "labels",
+      "boolean",
+      "true",
+      "Print captions for the selected drawing.",
+      "Beschriftungen der gewählten Zeichnung ausgeben."
+    ],
+    [
+      "pad",
+      "number",
+      "3",
+      "Inset from the figure frame in millimetres.",
+      "Abstand vom Figurenrahmen in Millimetern."
+    ],
+    [
+      "width",
+      "number",
+      "",
+      "Drawing width in millimetres; defaults to the enclosing figure, with 80 mm fallback.",
+      "Zeichnungsbreite in Millimetern; Vorgabe ist die umgebende Figur, mit 80 mm als Ersatz."
+    ],
+    [
+      "height",
+      "number",
+      "",
+      "Drawing height in millimetres; defaults to the enclosing figure, with 40 mm fallback.",
+      "Zeichnungshöhe in Millimetern; Vorgabe ist die umgebende Figur, mit 40 mm als Ersatz."
+    ]
+  ],
+  "survey": [
+    [
+      "data",
+      "string",
+      "demo-survey",
+      "Name of the source table.",
+      "Name der Quelltabelle."
+    ],
+    [
+      "question",
+      "string",
+      "question",
+      "Column containing the grid row question.",
+      "Spalte mit der Frage der Rasterzeile."
+    ],
+    [
+      "group",
+      "string",
+      "group",
+      "Column containing the grid column respondent group.",
+      "Spalte mit der Befragtengruppe der Rasterspalte."
+    ],
+    [
+      "value",
+      "string",
+      "value",
+      "Column containing the agreeing share.",
+      "Spalte mit dem zustimmenden Anteil."
+    ],
+    [
+      "mark",
+      "string",
+      "cell",
+      "Cell mark: cell or symbol.",
+      "Zellmarke: cell oder symbol."
+    ],
+    [
+      "scheme",
+      "string",
+      "sequential",
+      "Colour ramp: sequential, diverging or cyclic.",
+      "Farbrampe: sequential, diverging oder cyclic."
+    ],
+    [
+      "gutter",
+      "number",
+      "8",
+      "Space for captions in millimetres.",
+      "Raum für Beschriftungen in Millimetern."
+    ],
+    [
+      "node",
+      "number",
+      "2.2",
+      "Greatest symbol radius in millimetres.",
+      "Größter Symbolradius in Millimetern."
+    ],
+    [
+      "values",
+      "boolean",
+      "false",
+      "Print numeric shares.",
+      "Numerische Anteile ausgeben."
+    ],
+    [
+      "labels",
+      "boolean",
+      "true",
+      "Print captions for the selected drawing.",
+      "Beschriftungen der gewählten Zeichnung ausgeben."
+    ],
+    [
+      "pad",
+      "number",
+      "3",
+      "Inset from the figure frame in millimetres.",
+      "Abstand vom Figurenrahmen in Millimetern."
+    ],
+    [
+      "width",
+      "number",
+      "",
+      "Drawing width in millimetres; defaults to the enclosing figure, with 80 mm fallback.",
+      "Zeichnungsbreite in Millimetern; Vorgabe ist die umgebende Figur, mit 80 mm als Ersatz."
+    ],
+    [
+      "height",
+      "number",
+      "",
+      "Drawing height in millimetres; defaults to the enclosing figure, with 40 mm fallback.",
+      "Zeichnungshöhe in Millimetern; Vorgabe ist die umgebende Figur, mit 40 mm als Ersatz."
+    ]
+  ],
+  "text-viz": [
+    [
+      "data",
+      "string",
+      "demo-text-terms",
+      "Name of the source table.",
+      "Name der Quelltabelle."
+    ],
+    [
+      "term",
+      "string",
+      "term",
+      "Column containing token or type identity.",
+      "Spalte mit der Token- oder Typkennung."
+    ],
+    [
+      "count",
+      "string",
+      "count",
+      "Column containing frequency.",
+      "Spalte mit der Häufigkeit."
+    ],
+    [
+      "document",
+      "string",
+      "doc",
+      "Column containing the document key of the term-by-document grid.",
+      "Spalte mit dem Dokumentschlüssel des Term-Dokument-Rasters."
+    ],
+    [
+      "position",
+      "string",
+      "pos",
+      "Column containing occurrence position on the text axis.",
+      "Spalte mit der Fundstellenposition auf der Textachse."
+    ],
+    [
+      "time",
+      "string",
+      "t",
+      "Column containing the reading window or time step.",
+      "Spalte mit dem Lesefenster oder Zeitschritt."
+    ],
+    [
+      "series",
+      "string",
+      "topic",
+      "Column containing topic identity in a long topic table.",
+      "Spalte mit der Themenkennung in einer langen Thementabelle."
+    ],
+    [
+      "value",
+      "string",
+      "weight",
+      "Column containing the numeric curve or river channel.",
+      "Spalte mit dem numerischen Kurven- oder Flusskanal."
+    ],
+    [
+      "layout",
+      "string",
+      "spiral",
+      "Layout: spiral, grid, matrix, lane, curve, band or river.",
+      "Anordnung: spiral, grid, matrix, lane, curve, band oder river."
+    ],
+    [
+      "sort",
+      "string",
+      "count",
+      "Term order: none, count or term.",
+      "Termreihenfolge: none, count oder term."
+    ],
+    [
+      "sizemin",
+      "number",
+      "1.8",
+      "Smallest glyph body height in millimetres.",
+      "Kleinste Glyphenhöhe in Millimetern."
+    ],
+    [
+      "sizemax",
+      "number",
+      "5.4",
+      "Largest glyph body height in millimetres.",
+      "Größte Glyphenhöhe in Millimetern."
+    ],
+    [
+      "growth",
+      "number",
+      "0.9",
+      "Archimedean spiral growth per radian in millimetres.",
+      "Wachstum der archimedischen Spirale je Radiant in Millimetern."
+    ],
+    [
+      "step",
+      "number",
+      "0.35",
+      "Placement-spiral angular step in radians.",
+      "Winkelschritt der Platzierungsspirale in Radiant."
+    ],
+    [
+      "tries",
+      "integer",
+      "220",
+      "Placement attempts before dropping a word.",
+      "Platzierungsversuche, bevor ein Wort entfällt."
+    ],
+    [
+      "aspect",
+      "number",
+      "1.7",
+      "Horizontal stretch factor of the placement spiral.",
+      "Horizontaler Streckungsfaktor der Platzierungsspirale."
+    ],
+    [
+      "collide",
+      "boolean",
+      "true",
+      "Reject a position whose box intersects an already placed box.",
+      "Eine Position ablehnen, deren Kasten einen bereits gesetzten Kasten schneidet."
+    ],
+    [
+      "rotate",
+      "boolean",
+      "false",
+      "Place every second word on its side.",
+      "Jedes zweite Wort hochkant setzen."
+    ],
+    [
+      "columns",
+      "integer",
+      "4",
+      "Number of grid-layout columns.",
+      "Anzahl der Spalten der Rasteranordnung."
+    ],
+    [
+      "marker",
+      "string",
+      "tick",
+      "Lane occurrence glyph: tick, dot or band.",
+      "Fundstellenglyphe einer Spur: tick, dot oder band."
+    ],
+    [
+      "context",
+      "number",
+      "4",
+      "Half-width of a keyword-in-context band in text units.",
+      "Halbe Breite eines Schlüsselwortbandes in Texteinheiten."
+    ],
+    [
+      "guide",
+      "boolean",
+      "false",
+      "Draw the lane centre guide.",
+      "Die Mittellinie der Spur zeichnen."
+    ],
+    [
+      "baseline",
+      "string",
+      "zero",
+      "River offset: zero, silhouette or wiggle.",
+      "Flussversatz: zero, silhouette oder wiggle."
+    ],
+    [
+      "area",
+      "boolean",
+      "true",
+      "Fill curve layouts.",
+      "Kurvenanordnungen füllen."
+    ],
+    [
+      "points",
+      "boolean",
+      "false",
+      "Mark each curve sample.",
+      "Jeden Kurvenmesspunkt markieren."
+    ],
+    [
+      "labels",
+      "boolean",
+      "true",
+      "Print captions for the selected drawing.",
+      "Beschriftungen der gewählten Zeichnung ausgeben."
+    ],
+    [
+      "padding",
+      "number",
+      "0.12",
+      "Relative gap between neighbouring cells and bands.",
+      "Relativer Abstand zwischen benachbarten Zellen und Bändern."
+    ],
+    [
+      "pad",
+      "number",
+      "2.5",
+      "Inset from the figure frame in millimetres.",
+      "Abstand vom Figurenrahmen in Millimetern."
+    ],
+    [
+      "width",
+      "number",
+      "",
+      "Drawing width in millimetres; defaults to the enclosing figure, with 80 mm fallback.",
+      "Zeichnungsbreite in Millimetern; Vorgabe ist die umgebende Figur, mit 80 mm als Ersatz."
+    ],
+    [
+      "height",
+      "number",
+      "",
+      "Drawing height in millimetres; defaults to the enclosing figure, with 40 mm fallback.",
+      "Zeichnungshöhe in Millimetern; Vorgabe ist die umgebende Figur, mit 40 mm als Ersatz."
+    ]
+  ],
+  "version-control": [
+    [
+      "data",
+      "string",
+      "demo-repo",
+      "Name of the source table.",
+      "Name der Quelltabelle."
+    ],
+    [
+      "time",
+      "string",
+      "t",
+      "Column containing the commit window.",
+      "Spalte mit dem Commitfenster."
+    ],
+    [
+      "series",
+      "string",
+      "additions,deletions",
+      "Comma-separated value columns, additions first and deletions second.",
+      "Kommagetrennte Wertspalten, zuerst Hinzufügungen und danach Löschungen."
+    ],
+    [
+      "mode",
+      "string",
+      "area",
+      "Drawing mode: line, area or bar.",
+      "Zeichenmodus: line, area oder bar."
+    ],
+    [
+      "mirror",
+      "boolean",
+      "true",
+      "Draw the second series below zero.",
+      "Die zweite Reihe unter null zeichnen."
+    ],
+    [
+      "zero",
+      "boolean",
+      "true",
+      "Draw the zero rule.",
+      "Die Nulllinie zeichnen."
+    ],
+    [
+      "gap",
+      "number",
+      "1.2",
+      "Gap between window bars in millimetres.",
+      "Abstand zwischen Fensterbalken in Millimetern."
+    ],
+    [
+      "labels",
+      "boolean",
+      "true",
+      "Print captions for the selected drawing.",
+      "Beschriftungen der gewählten Zeichnung ausgeben."
+    ],
+    [
+      "pad",
+      "number",
+      "3",
+      "Inset from the figure frame in millimetres.",
+      "Abstand vom Figurenrahmen in Millimetern."
+    ],
+    [
+      "width",
+      "number",
+      "",
+      "Drawing width in millimetres; defaults to the enclosing figure, with 80 mm fallback.",
+      "Zeichnungsbreite in Millimetern; Vorgabe ist die umgebende Figur, mit 80 mm als Ersatz."
+    ],
+    [
+      "height",
+      "number",
+      "",
+      "Drawing height in millimetres; defaults to the enclosing figure, with 40 mm fallback.",
+      "Zeichnungshöhe in Millimetern; Vorgabe ist die umgebende Figur, mit 40 mm als Ersatz."
+    ]
+  ]
+}

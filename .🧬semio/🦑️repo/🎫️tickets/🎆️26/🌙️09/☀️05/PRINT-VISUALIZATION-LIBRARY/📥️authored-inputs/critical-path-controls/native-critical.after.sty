@@ -1,0 +1,37 @@
+% 🕓 Evaluates earliest starts once in ancestry order and draws activities in authored order.
+\cs_new_protected:Npn \semio_viz_dom_op_critical: {
+  \semio_viz_dom_tree_read:
+  \bool_if:NT \l_semio_viz_dom_tree_valid_bool {
+    \prop_clear:N \l_semio_viz_dom_cur_prop
+    \seq_map_inline:Nn \l_semio_viz_dom_keys_seq
+      { \prop_put:Nnn \l_semio_viz_dom_sum_prop {##1} {0} }
+    \semio_viz_dom_op_relax:
+    \semio_viz_dom_op_chain:
+    \semio_viz_dom_op_lanes:
+    \seq_map_inline:Nn \l_semio_viz_dom_keys_seq { \semio_viz_dom_op_arc:n {##1} }
+    \seq_map_inline:Nn \l_semio_viz_dom_keys_seq { \semio_viz_dom_op_task:n {##1} }
+  }
+}
+
+% 🗓️ Orders validated activities by dependency depth without changing their published row order.
+\cs_new_protected:Npn \semio_viz_dom_op_relax: {
+  \seq_set_eq:NN \l_semio_viz_dom_stack_seq \l_semio_viz_dom_keys_seq
+  \seq_sort:Nn \l_semio_viz_dom_stack_seq {
+    \int_compare:nNnTF { \prop_item:Nn \l_semio_viz_dom_dep_prop {##1} }
+      > { \prop_item:Nn \l_semio_viz_dom_dep_prop {##2} }
+      { \sort_return_swapped: } { \sort_return_same: }
+  }
+  \seq_map_inline:Nn \l_semio_viz_dom_stack_seq { \semio_viz_dom_op_ease:n {##1} }
+}
+
+% ⏱️ Starts an activity at its validated predecessor's finish.
+\cs_new_protected:Npn \semio_viz_dom_op_ease:n #1 {
+  \prop_get:NnN \l_semio_viz_dom_par_prop {#1} \l_semio_viz_dom_tmp_tl
+  \tl_if_empty:NF \l_semio_viz_dom_tmp_tl {
+    \prop_get:NVN \l_semio_viz_dom_sum_prop \l_semio_viz_dom_tmp_tl \l_semio_viz_dom_key_tl
+    \prop_get:NVN \l_semio_viz_dom_bag_prop \l_semio_viz_dom_tmp_tl \l_semio_viz_dom_cell_tl
+    \prop_put:Nnx \l_semio_viz_dom_sum_prop {#1}
+      { \fp_eval:n { \l_semio_viz_dom_key_tl + \l_semio_viz_dom_cell_tl } }
+  }
+}
+

@@ -35,6 +35,7 @@
       "properties": {
         "variant": { "$ref": "#/$defs/PlayVariant" },
         "label": { "type": "string", "minLength": 1 },
+        "shortLabel": { "type": "string", "minLength": 1 },
         "tagline": { "type": "string", "minLength": 1 },
         "description": { "type": "string", "minLength": 1 },
         "icon": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },

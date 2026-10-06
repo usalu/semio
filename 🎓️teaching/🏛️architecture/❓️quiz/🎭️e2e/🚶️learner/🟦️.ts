@@ -792,6 +792,54 @@ export async function boxOf(target: Locator): Promise<{ readonly x: number; read
   return box;
 }
 
+/** 📍️ The page whose cell the swiped overview rests on — its cell lies exactly over the overview — or `null` while it moves. */
+export async function restingPage(page: Page): Promise<string | null> {
+  return page.evaluate(() => {
+    const root = document.querySelector<HTMLElement>("[data-layered-overview]")?.getBoundingClientRect();
+    if (root === undefined) return null;
+    const resting = [...document.querySelectorAll<HTMLElement>("[data-layered-cell]")].find((cell) => {
+      const box = cell.getBoundingClientRect();
+      return Math.abs(box.left - root.left) < 1 && Math.abs(box.top - root.top) < 1;
+    });
+    return resting?.dataset.layeredCell ?? null;
+  });
+}
+
+/** 👆️ One finger drawn across the overview by `dx`, `dy` px in `steps` moves over about `ms`, as a touch screen sends it. */
+export async function touchSwipe(page: Page, dx: number, dy: number, ms = 160, steps = 12): Promise<void> {
+  const box = await boxOf(page.locator("[data-layered-overview]"));
+  const [x, y] = [box.x + box.width / 2 - dx / 2, box.y + box.height / 2 - dy / 2];
+  const cdp = await page.context().newCDPSession(page);
+  await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x, y }] });
+  for (let step = 1; step <= steps; step += 1) {
+    await cdp.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x: x + (dx * step) / steps, y: y + (dy * step) / steps }] });
+    await page.waitForTimeout(ms / steps);
+  }
+  await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+  await cdp.detach();
+}
+
+/** 👆️ Swipes the overview of a phone one neighbouring page at a time — along the rows first, then along the columns — until
+ * the card of `id` rests in front, and checks that every swipe lands on the cell it heads for. */
+export async function swipeTo(device: Device, id: string): Promise<void> {
+  const page = device.page;
+  await expect(page.locator("[data-layered-overview]")).toHaveAttribute("data-mode", "swipe");
+  const cells = await page.locator("[data-layered-cell]").evaluateAll((all) => all.map((cell) => ({ id: (cell as HTMLElement).dataset.layeredCell!, column: Number((cell as HTMLElement).style.gridColumn) - 1, row: Number((cell as HTMLElement).style.gridRow) - 1 })));
+  const target = cells.find((cell) => cell.id === id)!;
+  const box = await boxOf(page.locator("[data-layered-overview]"));
+  for (let swipes = 0; swipes < cells.length * 2; swipes += 1) {
+    await expect.poll(() => restingPage(page)).not.toBeNull();
+    const still = await restingPage(page);
+    const from = cells.find((cell) => cell.id === still)!;
+    if (from.id === id) break;
+    const [dx, dy] = from.column !== target.column ? [Math.sign(target.column - from.column), 0] : [0, Math.sign(target.row - from.row)];
+    const next = cells.find((cell) => cell.column === from.column + dx && cell.row === from.row + dy)!;
+    await touchSwipe(page, -dx * box.width * 0.6, -dy * box.height * 0.4);
+    await expect.poll(() => restingPage(page), { message: `a swipe from ${from.id} lands on ${next.id}` }).toBe(next.id);
+  }
+  await expect(card(page, id).locator("[data-card]").first()).toBeInViewport();
+}
+
 /** 🙅️ The text of the screen in front. */
 export async function shownText(device: Device): Promise<string> {
   return device.page.locator("#quiz-main").innerText();

@@ -6,9 +6,9 @@ import type { RegistryCatalogInputView } from "../../../../../🦑️repo/🔨�
 import { discoverCatalogPackages, discoverPackageProblems, getWorkspaceRoot, parseRegistryCatalogProjection, registryCatalogInputView, registryCatalogProjectedInputView, validateGeneratorContractsAgainstWorkspace } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { declaredProjectTargets, generateLaunchJson, LAUNCH_OUTPUT_REL_PATH, reconcileRepositoryLaunchSeed } from "../🚀️launch/🟦️.ts";
-import { MODULE_BRIDGE_FILE, MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, moduleDirectoryName } from "../📦️deployment/🟦️.ts";
+import { MODULE_BRIDGE_FILE, MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, moduleDirectoryName, parseModuleDirectories, type ModuleDirectory } from "../📦️deployment/🟦️.ts";
 import { validateDescriptors } from "../🛂️descriptor-verification/🟦️.ts";
-import { ON_ARTIFACT_KIND_PREFIX, PLUGIN_AREAS, PLUGIN_AREAS_STATE, DeployedRegistryEntryV1, REGISTRY_DIAGNOSTICS_FILE, type RegistryChannelDiagnosticV1, TAXONOMY, generatePluginRegistry, generatePluginRegistryReport } from "../🔎️discovery/🟦️.ts";
+import { ON_ARTIFACT_KIND_PREFIX, PLUGIN_AREAS, PLUGIN_AREAS_STATE, DeployedRegistryEntryV1, REGISTRY_DIAGNOSTICS_FILE, type RegistryChannelDiagnosticV1, TAXONOMY, generateComponentSourceRegistry, generatePluginRegistry, generatePluginRegistryReport } from "../🔎️discovery/🟦️.ts";
 import { FrameworkPackageEntry, emitFrameworkPackagesTypeScript, generateFrameworkPackageRegistry } from "../🧰️framework-catalog/🟦️.ts";
 import { AssetSpecRow, PlaygroundEntry, generatePlaygroundRegistry, generateWithheldPlaygroundRegistry } from "../🎮️playground/🔎️discovery/🟦️.ts";
 import { buildPlaygroundSession } from "../🎮️playground/🧭️session/🟦️.ts";
@@ -18,8 +18,9 @@ import { publicationComponentAdmission, renderOwnerPublications } from "../../..
 import { publicationWasmPath } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
 
 
-export function emitTypeScript(entries: DeployedRegistryEntryV1[]): string {
+export function emitTypeScript(entries: DeployedRegistryEntryV1[], directories: readonly ModuleDirectory[]): string {
   registryModuleDirectories(entries);
+  parseModuleDirectories({version:1,modules:directories});
   const pluginEntries = entries.filter((entry) => entry.role === "plugin");
   const extensionEntries = entries.filter((entry) => entry.role === "extension");
   const hostRows = entries
@@ -89,7 +90,7 @@ ${extensionRows}
 
 export const COMPONENT_MODULE_DIRECTORIES = parseModuleDirectories({
 \tversion: 1,
-\tmodules: [...PLUGIN_BUILD_TARGETS, ...EXTENSION_TARGETS].map(({ pluginId, directoryName }) => ({ pluginId, directoryName })),
+\tmodules: ${JSON.stringify(directories)},
 });
 
 export const PROGRAM_TARGETS = PLUGIN_BUILD_TARGETS.map((target) => ({
@@ -307,9 +308,10 @@ export function renderCatalogFiles(repoRoot: string, view: RegistryCatalogInputV
     files: {
       "🔌️plugins.json": `${JSON.stringify(entries, null, 2)}\n`,
       [REGISTRY_DIAGNOSTICS_FILE]: `${JSON.stringify(diagnostics, null, 2)}\n`,
-      "🧩️plugins/🟦️.ts": emitTypeScript(entries),
+      "🧩️plugins/🟦️.ts": emitTypeScript(entries, registryModuleDirectories(generateComponentSourceRegistry(repoRoot, {packages,view}).flatMap(row => row.directoryName === undefined ? [] : [{pluginId:row.pluginId,directoryName:row.directoryName}]))),
       "🎠️playgrounds.json": `${JSON.stringify(playgrounds, null, 2)}\n`,
-      "🎮️playgrounds/🟦️.ts": emitPlaygroundsTypeScript(playgrounds),
+      "🚀️playgrounds.json": `${JSON.stringify(launchPlaygrounds, null, 2)}\n`,
+      "🎮️playgrounds/🟦️.ts": emitPlaygroundsTypeScript(launchPlaygrounds),
       "🧰️framework.json": `${JSON.stringify(frameworkPackages, null, 2)}\n`,
       "🏗️framework/🟦️.ts": emitFrameworkPackagesTypeScript(frameworkPackages),
       "🖥️hosts/🦀️.rs": emitRustHosts(entries, playgrounds),

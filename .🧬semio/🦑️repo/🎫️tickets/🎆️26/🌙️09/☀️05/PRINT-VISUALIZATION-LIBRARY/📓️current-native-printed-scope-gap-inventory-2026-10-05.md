@@ -1,0 +1,129 @@
+# Current Actual Native Printed Scope Gaps
+
+The read-only complete namespace inspection below is source-based; scoped missing rows remain unproven until actual authoring or reachability repair. Equivalent expl3 slash whitespace is canonicalized. Explicit table source bindings now own references up to the next binding or heading. Root owns data and geo core authoring; catalogue lane owns Plot/Spatial/other resolver closure.
+
+- semio-viz-charts-area:semio / viz / family / area:data:row
+- semio-viz-charts-area:semio / viz / family / area:gridLines:row
+- semio-viz-charts-area:semio / viz / family / area:ticks:row
+- semio-viz-charts-bar:semio / viz / family / bar:data:row
+- semio-viz-charts-bar:semio / viz / family / bar:gridLines:row
+- semio-viz-charts-bar:semio / viz / family / bar:ticks:row
+- semio-viz-data:semio / viz / data:col:row
+- semio-viz-data:semio / viz / data:columns:row
+- semio-viz-data:semio / viz / data:delimiter:row
+- semio-viz-data:semio / viz / data:domain:row
+- semio-viz-data:semio / viz / data:edges:row
+- semio-viz-data:semio / viz / data:header:row
+- semio-viz-data:semio / viz / data:id:row
+- semio-viz-data:semio / viz / data:label:row
+- semio-viz-data:semio / viz / data:lat:row
+- semio-viz-data:semio / viz / data:lon:row
+- semio-viz-data:semio / viz / data:nodes:row
+- semio-viz-data:semio / viz / data:parent:row
+- semio-viz-data:semio / viz / data:quote:row
+- semio-viz-data:semio / viz / data:ring:row
+- semio-viz-data:semio / viz / data:row:row
+- semio-viz-data:semio / viz / data:samples:row
+- semio-viz-data:semio / viz / data:source:row
+- semio-viz-data:semio / viz / data:target:row
+- semio-viz-data:semio / viz / data:value:row
+- semio-viz-data:semio / viz / data:weight:row
+- semio-viz-data:semio / viz / geo / part:id:row
+- semio-viz-data:semio / viz / geo / part:value:row
+- semio-viz-geo:semio / viz / geo / graticule:extent:row
+- semio-viz-geo:semio / viz / geo / graticule:extentMajor:row
+- semio-viz-geo:semio / viz / geo / graticule:extentMinor:row
+- semio-viz-geo:semio / viz / geo / graticule:precision:row
+- semio-viz-geo:semio / viz / geo / graticule:step:row
+- semio-viz-geo:semio / viz / geo / graticule:stepMajor:row
+- semio-viz-geo:semio / viz / geo / graticule:stepMinor:row
+- semio-viz-geo:semio / viz / geo / layout:fit:row
+- semio-viz-geo:semio / viz / geo / layout:projection:row
+- semio-viz-geo:semio / viz / geo / layout:x0:row
+- semio-viz-geo:semio / viz / geo / layout:x1:row
+- semio-viz-geo:semio / viz / geo / layout:y0:row
+- semio-viz-geo:semio / viz / geo / layout:y1:row
+- semio-viz-geo:semio / viz / geo / projection:center:row
+- semio-viz-geo:semio / viz / geo / projection:clipAngle:row
+- semio-viz-geo:semio / viz / geo / projection:clipExtent:row
+- semio-viz-geo:semio / viz / geo / projection:kind:row
+- semio-viz-geo:semio / viz / geo / projection:parallels:row
+- semio-viz-geo:semio / viz / geo / projection:precision:row
+- semio-viz-geo:semio / viz / geo / projection:rotate:row
+- semio-viz-geo:semio / viz / geo / projection:scale:row
+- semio-viz-geo:semio / viz / geo / projection:translate:row
+- semio-viz-geo:semio / viz / geo / solver:clipSteps:row
+- semio-viz-geo:semio / viz / geo / solver:invertSteps:row
+- semio-viz-mark:semio / viz / curve:alpha:row
+- semio-viz-mark:semio / viz / curve:beta:row
+- semio-viz-mark:semio / viz / curve:tension:row
+- semio-viz-network:semio / viz / graph / bind:edges:row
+- semio-viz-network:semio / viz / graph / bind:group:row
+- semio-viz-network:semio / viz / graph / bind:id:row
+- semio-viz-network:semio / viz / graph / bind:nodes:row
+- semio-viz-network:semio / viz / graph / bind:source:row
+- semio-viz-network:semio / viz / graph / bind:target:row
+- semio-viz-network:semio / viz / graph / bind:weight:row
+- semio-viz-network:semio / viz / layout / chord:pad-angle:row
+- semio-viz-network:semio / viz / layout / chord:sort-groups:row
+- semio-viz-network:semio / viz / layout / chord:sort-subgroups:row
+- semio-viz-network:semio / viz / layout / chord:symmetric:row
+- semio-viz-plot:semio / viz / plot / channel:column:row
+- semio-viz-plot:semio / viz / plot / channel:scale:row
+- semio-viz-plot:semio / viz / plot:anchor:row
+- semio-viz-plot:semio / viz / plot:annotation:row
+- semio-viz-plot:semio / viz / plot:clip:row
+- semio-viz-plot:semio / viz / plot:colorIndex:row
+- semio-viz-plot:semio / viz / plot:coordinate:row
+- semio-viz-plot:semio / viz / plot:coordinateOptions:row
+- semio-viz-plot:semio / viz / plot:curve:row
+- semio-viz-plot:semio / viz / plot:data:row
+- semio-viz-plot:semio / viz / plot:guide:row
+- semio-viz-plot:semio / viz / plot:height:row
+- semio-viz-plot:semio / viz / plot:layout:row
+- semio-viz-plot:semio / viz / plot:layoutCoordinates:row
+- semio-viz-plot:semio / viz / plot:mark:row
+- semio-viz-plot:semio / viz / plot:orientation:row
+- semio-viz-plot:semio / viz / plot:theme:row
+- semio-viz-plot:semio / viz / plot:transform:row
+- semio-viz-plot:semio / viz / plot:x0:row
+- semio-viz-plot:semio / viz / plot:x1:row
+- semio-viz-plot:semio / viz / plot:y0:row
+- semio-viz-plot:semio / viz / plot:y1:row
+- semio-viz-scale:semio / viz / scale / solver:niceIterations:row
+- semio-viz-spatial:semio / viz / quadtree:x:row
+- semio-viz-spatial:semio / viz / quadtree:y:row
+- semio-viz-spatial:semio / viz / spatial / layout:amount:row
+- semio-viz-spatial:semio / viz / spatial / layout:bandwidth:row
+- semio-viz-spatial:semio / viz / spatial / layout:cell:row
+- semio-viz-spatial:semio / viz / spatial / layout:height:row
+- semio-viz-spatial:semio / viz / spatial / layout:radius:row
+- semio-viz-spatial:semio / viz / spatial / layout:threshold:row
+- semio-viz-spatial:semio / viz / spatial / layout:width:row
+- semio-viz-spatial:semio / viz / spatial / layout:x0:row
+- semio-viz-spatial:semio / viz / spatial / layout:x1:row
+- semio-viz-spatial:semio / viz / spatial / layout:y0:row
+- semio-viz-spatial:semio / viz / spatial / layout:y1:row
+- semio-viz-transform:semio / viz / transform:as:row
+- semio-viz-transform:semio / viz / transform:centred:row
+- semio-viz-transform:semio / viz / transform:column:row
+- semio-viz-transform:semio / viz / transform:columns:row
+- semio-viz-transform:semio / viz / transform:groupby:row
+- semio-viz-transform:semio / viz / transform:index:row
+- semio-viz-transform:semio / viz / transform:key:row
+- semio-viz-transform:semio / viz / transform:keys:row
+- semio-viz-transform:semio / viz / transform:kind:row
+- semio-viz-transform:semio / viz / transform:left:row
+- semio-viz-transform:semio / viz / transform:max:row
+- semio-viz-transform:semio / viz / transform:method:row
+- semio-viz-transform:semio / viz / transform:min:row
+- semio-viz-transform:semio / viz / transform:mode:row
+- semio-viz-transform:semio / viz / transform:operation:row
+- semio-viz-transform:semio / viz / transform:operator:row
+- semio-viz-transform:semio / viz / transform:prefix:row
+- semio-viz-transform:semio / viz / transform:right:row
+- semio-viz-transform:semio / viz / transform:size:row
+- semio-viz-transform:semio / viz / transform:table:row
+- semio-viz-transform:semio / viz / transform:value:row
+- semio-viz-transform:semio / viz / transform:x:row
+- semio-viz-transform:semio / viz / transform:y:row

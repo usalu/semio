@@ -1,0 +1,517 @@
+\documentclass[type=paper,language=de,theme=dark]{semio}
+\usepackage{semio-viz-probe}
+\usepackage{semio-viz}
+\errorcontextlines=200
+\title{Specialized Placement}
+\author{Semio}
+\date{}
+\definecolor{placement-color0}{HTML}{cc3300}
+\definecolor{placement-color1}{HTML}{0077cc}
+\definecolor{placement-color2}{HTML}{339933}
+\definecolor{placement-color3}{HTML}{aa33bb}
+\definecolor{placement-color4}{HTML}{cc9900}
+\definecolor{placement-color5}{HTML}{33aaaa}
+\begin{document}
+\SemioVizProbeBegin{specialized-placement-controls}{dark}
+\SemioVizProbeOn
+\SemioVizProbePage
+\clearpage\SemioVizProbeBegin{specialized-placement-controls}{commit-graph-grid2}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{de}\ExplSyntaxOff
+\begin{VizFigure}[width=80,height=40,title={}]
+\draw[line width=.01mm] (0,0) rectangle (80,40);\special{pdf:literal direct /SemioVizControlcommit-graph-grid2 BMC}
+\SemioVizTable{placement-nodes}{id,parent,group,other,value}
+\SemioVizRow{placement-nodes}{{\SemioVizString{Z}},{\SemioVizString{}},{\SemioVizString{G0}},{\SemioVizString{G0}},{1}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{A}},{\SemioVizString{Z}},{\SemioVizString{G1}},{\SemioVizString{G1}},{2}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{E}},{\SemioVizString{Z}},{\SemioVizString{G2}},{\SemioVizString{G2}},{3}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{B}},{\SemioVizString{A}},{\SemioVizString{G3}},{\SemioVizString{G3}},{4}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{D}},{\SemioVizString{E}},{\SemioVizString{G4}},{\SemioVizString{G4}},{5}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{C}},{\SemioVizString{B}},{\SemioVizString{G5}},{\SemioVizString{G5}},{6}}
+\SemioVizTable{placement-edges}{source,target}
+\SemioVizRow{placement-edges}{{\SemioVizString{Z}},{\SemioVizString{A}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{Z}},{\SemioVizString{E}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{A}},{\SemioVizString{B}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{E}},{\SemioVizString{D}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{B}},{\SemioVizString{C}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{D}},{\SemioVizString{C}}}
+\SemioVizTheme{default}[appearance=dark]\SemioVizThemeSet[colors={placement-color0,placement-color1,placement-color2,placement-color3,placement-color4,placement-color5}]
+\SemioVizChart{commit-graph}[colorBy={group},columns={2},data={placement-edges},group={group},id={id},label={id},labels={true},layout={grid},nodes={placement-nodes},order={index},orientation={horizontal},padding={3},root={1},seed={1},size={1.3},source={source},sweeps={4},target={target}]
+% 80mm × 40mm, dark appearance
+\special{pdf:literal direct EMC}\end{VizFigure}
+\endgroup
+
+\clearpage\SemioVizProbeBegin{specialized-placement-controls}{commit-graph-grid3}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{de}\ExplSyntaxOff
+\begin{VizFigure}[width=80,height=40,title={}]
+\draw[line width=.01mm] (0,0) rectangle (80,40);\special{pdf:literal direct /SemioVizControlcommit-graph-grid3 BMC}
+\SemioVizTable{placement-nodes}{id,parent,group,other,value}
+\SemioVizRow{placement-nodes}{{\SemioVizString{Z}},{\SemioVizString{}},{\SemioVizString{G0}},{\SemioVizString{G0}},{1}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{A}},{\SemioVizString{Z}},{\SemioVizString{G1}},{\SemioVizString{G1}},{2}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{E}},{\SemioVizString{Z}},{\SemioVizString{G2}},{\SemioVizString{G2}},{3}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{B}},{\SemioVizString{A}},{\SemioVizString{G3}},{\SemioVizString{G3}},{4}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{D}},{\SemioVizString{E}},{\SemioVizString{G4}},{\SemioVizString{G4}},{5}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{C}},{\SemioVizString{B}},{\SemioVizString{G5}},{\SemioVizString{G5}},{6}}
+\SemioVizTable{placement-edges}{source,target}
+\SemioVizRow{placement-edges}{{\SemioVizString{Z}},{\SemioVizString{A}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{Z}},{\SemioVizString{E}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{A}},{\SemioVizString{B}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{E}},{\SemioVizString{D}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{B}},{\SemioVizString{C}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{D}},{\SemioVizString{C}}}
+\SemioVizTheme{default}[appearance=dark]\SemioVizThemeSet[colors={placement-color0,placement-color1,placement-color2,placement-color3,placement-color4,placement-color5}]
+\SemioVizChart{commit-graph}[colorBy={group},columns={3},data={placement-edges},group={group},id={id},label={id},labels={true},layout={grid},nodes={placement-nodes},order={index},orientation={horizontal},padding={3},root={1},seed={1},size={1.3},source={source},sweeps={4},target={target}]
+% 80mm × 40mm, dark appearance
+\special{pdf:literal direct EMC}\end{VizFigure}
+\endgroup
+
+\clearpage\SemioVizProbeBegin{specialized-placement-controls}{commit-graph-circle-index}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{de}\ExplSyntaxOff
+\begin{VizFigure}[width=80,height=40,title={}]
+\draw[line width=.01mm] (0,0) rectangle (80,40);\special{pdf:literal direct /SemioVizControlcommit-graph-circle-index BMC}
+\SemioVizTable{placement-nodes}{id,parent,group,other,value}
+\SemioVizRow{placement-nodes}{{\SemioVizString{Z}},{\SemioVizString{}},{\SemioVizString{G0}},{\SemioVizString{G0}},{1}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{A}},{\SemioVizString{Z}},{\SemioVizString{G1}},{\SemioVizString{G1}},{2}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{E}},{\SemioVizString{Z}},{\SemioVizString{G2}},{\SemioVizString{G2}},{3}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{B}},{\SemioVizString{A}},{\SemioVizString{G3}},{\SemioVizString{G3}},{4}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{D}},{\SemioVizString{E}},{\SemioVizString{G4}},{\SemioVizString{G4}},{5}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{C}},{\SemioVizString{B}},{\SemioVizString{G5}},{\SemioVizString{G5}},{6}}
+\SemioVizTable{placement-edges}{source,target}
+\SemioVizRow{placement-edges}{{\SemioVizString{Z}},{\SemioVizString{A}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{Z}},{\SemioVizString{E}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{A}},{\SemioVizString{B}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{E}},{\SemioVizString{D}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{B}},{\SemioVizString{C}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{D}},{\SemioVizString{C}}}
+\SemioVizTheme{default}[appearance=dark]\SemioVizThemeSet[colors={placement-color0,placement-color1,placement-color2,placement-color3,placement-color4,placement-color5}]
+\SemioVizChart{commit-graph}[colorBy={group},columns={2},data={placement-edges},group={group},id={id},label={id},labels={true},layout={circular},nodes={placement-nodes},order={index},orientation={horizontal},padding={3},root={1},seed={1},size={1.3},source={source},sweeps={4},target={target}]
+% 80mm × 40mm, dark appearance
+\special{pdf:literal direct EMC}\end{VizFigure}
+\endgroup
+
+\clearpage\SemioVizProbeBegin{specialized-placement-controls}{commit-graph-circle-name}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{de}\ExplSyntaxOff
+\begin{VizFigure}[width=80,height=40,title={}]
+\draw[line width=.01mm] (0,0) rectangle (80,40);\special{pdf:literal direct /SemioVizControlcommit-graph-circle-name BMC}
+\SemioVizTable{placement-nodes}{id,parent,group,other,value}
+\SemioVizRow{placement-nodes}{{\SemioVizString{Z}},{\SemioVizString{}},{\SemioVizString{G0}},{\SemioVizString{G0}},{1}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{A}},{\SemioVizString{Z}},{\SemioVizString{G1}},{\SemioVizString{G1}},{2}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{E}},{\SemioVizString{Z}},{\SemioVizString{G2}},{\SemioVizString{G2}},{3}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{B}},{\SemioVizString{A}},{\SemioVizString{G3}},{\SemioVizString{G3}},{4}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{D}},{\SemioVizString{E}},{\SemioVizString{G4}},{\SemioVizString{G4}},{5}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{C}},{\SemioVizString{B}},{\SemioVizString{G5}},{\SemioVizString{G5}},{6}}
+\SemioVizTable{placement-edges}{source,target}
+\SemioVizRow{placement-edges}{{\SemioVizString{Z}},{\SemioVizString{A}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{Z}},{\SemioVizString{E}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{A}},{\SemioVizString{B}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{E}},{\SemioVizString{D}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{B}},{\SemioVizString{C}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{D}},{\SemioVizString{C}}}
+\SemioVizTheme{default}[appearance=dark]\SemioVizThemeSet[colors={placement-color0,placement-color1,placement-color2,placement-color3,placement-color4,placement-color5}]
+\SemioVizChart{commit-graph}[colorBy={group},columns={2},data={placement-edges},group={group},id={id},label={id},labels={true},layout={circular},nodes={placement-nodes},order={name},orientation={horizontal},padding={3},root={1},seed={1},size={1.3},source={source},sweeps={4},target={target}]
+% 80mm × 40mm, dark appearance
+\special{pdf:literal direct EMC}\end{VizFigure}
+\endgroup
+
+\clearpage\SemioVizProbeBegin{specialized-placement-controls}{commit-graph-force-base}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{de}\ExplSyntaxOff
+\begin{VizFigure}[width=80,height=40,title={}]
+\draw[line width=.01mm] (0,0) rectangle (80,40);\special{pdf:literal direct /SemioVizControlcommit-graph-force-base BMC}
+\SemioVizTable{placement-nodes}{id,parent,group,other,value}
+\SemioVizRow{placement-nodes}{{\SemioVizString{Z}},{\SemioVizString{}},{\SemioVizString{G0}},{\SemioVizString{G0}},{1}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{A}},{\SemioVizString{Z}},{\SemioVizString{G1}},{\SemioVizString{G1}},{2}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{E}},{\SemioVizString{Z}},{\SemioVizString{G2}},{\SemioVizString{G2}},{3}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{B}},{\SemioVizString{A}},{\SemioVizString{G3}},{\SemioVizString{G3}},{4}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{D}},{\SemioVizString{E}},{\SemioVizString{G4}},{\SemioVizString{G4}},{5}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{C}},{\SemioVizString{B}},{\SemioVizString{G5}},{\SemioVizString{G5}},{6}}
+\SemioVizTable{placement-edges}{source,target}
+\SemioVizRow{placement-edges}{{\SemioVizString{Z}},{\SemioVizString{A}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{Z}},{\SemioVizString{E}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{A}},{\SemioVizString{B}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{E}},{\SemioVizString{D}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{B}},{\SemioVizString{C}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{D}},{\SemioVizString{C}}}
+\SemioVizTheme{default}[appearance=dark]\SemioVizThemeSet[colors={placement-color0,placement-color1,placement-color2,placement-color3,placement-color4,placement-color5}]
+\SemioVizChart{commit-graph}[charge={-30},colorBy={group},data={placement-edges},forces={{link},{many-body},{center}},group={group},id={id},iterations={24},label={id},labels={true},layout={force},linkDistance={30},nodes={placement-nodes},order={index},orientation={horizontal},padding={3},root={1},seed={1},size={1.3},source={source},sweeps={4},target={target}]
+% 80mm × 40mm, dark appearance
+\special{pdf:literal direct EMC}\end{VizFigure}
+\endgroup
+
+\clearpage\SemioVizProbeBegin{specialized-placement-controls}{commit-graph-force-iterations}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{de}\ExplSyntaxOff
+\begin{VizFigure}[width=80,height=40,title={}]
+\draw[line width=.01mm] (0,0) rectangle (80,40);\special{pdf:literal direct /SemioVizControlcommit-graph-force-iterations BMC}
+\SemioVizTable{placement-nodes}{id,parent,group,other,value}
+\SemioVizRow{placement-nodes}{{\SemioVizString{Z}},{\SemioVizString{}},{\SemioVizString{G0}},{\SemioVizString{G0}},{1}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{A}},{\SemioVizString{Z}},{\SemioVizString{G1}},{\SemioVizString{G1}},{2}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{E}},{\SemioVizString{Z}},{\SemioVizString{G2}},{\SemioVizString{G2}},{3}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{B}},{\SemioVizString{A}},{\SemioVizString{G3}},{\SemioVizString{G3}},{4}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{D}},{\SemioVizString{E}},{\SemioVizString{G4}},{\SemioVizString{G4}},{5}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{C}},{\SemioVizString{B}},{\SemioVizString{G5}},{\SemioVizString{G5}},{6}}
+\SemioVizTable{placement-edges}{source,target}
+\SemioVizRow{placement-edges}{{\SemioVizString{Z}},{\SemioVizString{A}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{Z}},{\SemioVizString{E}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{A}},{\SemioVizString{B}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{E}},{\SemioVizString{D}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{B}},{\SemioVizString{C}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{D}},{\SemioVizString{C}}}
+\SemioVizTheme{default}[appearance=dark]\SemioVizThemeSet[colors={placement-color0,placement-color1,placement-color2,placement-color3,placement-color4,placement-color5}]
+\SemioVizChart{commit-graph}[charge={-30},colorBy={group},data={placement-edges},forces={{link},{many-body},{center}},group={group},id={id},iterations={1},label={id},labels={true},layout={force},linkDistance={30},nodes={placement-nodes},order={index},orientation={horizontal},padding={3},root={1},seed={1},size={1.3},source={source},sweeps={4},target={target}]
+% 80mm × 40mm, dark appearance
+\special{pdf:literal direct EMC}\end{VizFigure}
+\endgroup
+
+\clearpage\SemioVizProbeBegin{specialized-placement-controls}{commit-graph-force-forces}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{de}\ExplSyntaxOff
+\begin{VizFigure}[width=80,height=40,title={}]
+\draw[line width=.01mm] (0,0) rectangle (80,40);\special{pdf:literal direct /SemioVizControlcommit-graph-force-forces BMC}
+\SemioVizTable{placement-nodes}{id,parent,group,other,value}
+\SemioVizRow{placement-nodes}{{\SemioVizString{Z}},{\SemioVizString{}},{\SemioVizString{G0}},{\SemioVizString{G0}},{1}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{A}},{\SemioVizString{Z}},{\SemioVizString{G1}},{\SemioVizString{G1}},{2}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{E}},{\SemioVizString{Z}},{\SemioVizString{G2}},{\SemioVizString{G2}},{3}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{B}},{\SemioVizString{A}},{\SemioVizString{G3}},{\SemioVizString{G3}},{4}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{D}},{\SemioVizString{E}},{\SemioVizString{G4}},{\SemioVizString{G4}},{5}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{C}},{\SemioVizString{B}},{\SemioVizString{G5}},{\SemioVizString{G5}},{6}}
+\SemioVizTable{placement-edges}{source,target}
+\SemioVizRow{placement-edges}{{\SemioVizString{Z}},{\SemioVizString{A}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{Z}},{\SemioVizString{E}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{A}},{\SemioVizString{B}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{E}},{\SemioVizString{D}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{B}},{\SemioVizString{C}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{D}},{\SemioVizString{C}}}
+\SemioVizTheme{default}[appearance=dark]\SemioVizThemeSet[colors={placement-color0,placement-color1,placement-color2,placement-color3,placement-color4,placement-color5}]
+\SemioVizChart{commit-graph}[charge={-30},colorBy={group},data={placement-edges},forces={{link},{center}},group={group},id={id},iterations={24},label={id},labels={true},layout={force},linkDistance={30},nodes={placement-nodes},order={index},orientation={horizontal},padding={3},root={1},seed={1},size={1.3},source={source},sweeps={4},target={target}]
+% 80mm × 40mm, dark appearance
+\special{pdf:literal direct EMC}\end{VizFigure}
+\endgroup
+
+\clearpage\SemioVizProbeBegin{specialized-placement-controls}{commit-graph-force-charge}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{de}\ExplSyntaxOff
+\begin{VizFigure}[width=80,height=40,title={}]
+\draw[line width=.01mm] (0,0) rectangle (80,40);\special{pdf:literal direct /SemioVizControlcommit-graph-force-charge BMC}
+\SemioVizTable{placement-nodes}{id,parent,group,other,value}
+\SemioVizRow{placement-nodes}{{\SemioVizString{Z}},{\SemioVizString{}},{\SemioVizString{G0}},{\SemioVizString{G0}},{1}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{A}},{\SemioVizString{Z}},{\SemioVizString{G1}},{\SemioVizString{G1}},{2}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{E}},{\SemioVizString{Z}},{\SemioVizString{G2}},{\SemioVizString{G2}},{3}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{B}},{\SemioVizString{A}},{\SemioVizString{G3}},{\SemioVizString{G3}},{4}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{D}},{\SemioVizString{E}},{\SemioVizString{G4}},{\SemioVizString{G4}},{5}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{C}},{\SemioVizString{B}},{\SemioVizString{G5}},{\SemioVizString{G5}},{6}}
+\SemioVizTable{placement-edges}{source,target}
+\SemioVizRow{placement-edges}{{\SemioVizString{Z}},{\SemioVizString{A}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{Z}},{\SemioVizString{E}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{A}},{\SemioVizString{B}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{E}},{\SemioVizString{D}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{B}},{\SemioVizString{C}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{D}},{\SemioVizString{C}}}
+\SemioVizTheme{default}[appearance=dark]\SemioVizThemeSet[colors={placement-color0,placement-color1,placement-color2,placement-color3,placement-color4,placement-color5}]
+\SemioVizChart{commit-graph}[charge={-90},colorBy={group},data={placement-edges},forces={{link},{many-body},{center}},group={group},id={id},iterations={24},label={id},labels={true},layout={force},linkDistance={30},nodes={placement-nodes},order={index},orientation={horizontal},padding={3},root={1},seed={1},size={1.3},source={source},sweeps={4},target={target}]
+% 80mm × 40mm, dark appearance
+\special{pdf:literal direct EMC}\end{VizFigure}
+\endgroup
+
+\clearpage\SemioVizProbeBegin{specialized-placement-controls}{commit-graph-force-distance}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{de}\ExplSyntaxOff
+\begin{VizFigure}[width=80,height=40,title={}]
+\draw[line width=.01mm] (0,0) rectangle (80,40);\special{pdf:literal direct /SemioVizControlcommit-graph-force-distance BMC}
+\SemioVizTable{placement-nodes}{id,parent,group,other,value}
+\SemioVizRow{placement-nodes}{{\SemioVizString{Z}},{\SemioVizString{}},{\SemioVizString{G0}},{\SemioVizString{G0}},{1}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{A}},{\SemioVizString{Z}},{\SemioVizString{G1}},{\SemioVizString{G1}},{2}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{E}},{\SemioVizString{Z}},{\SemioVizString{G2}},{\SemioVizString{G2}},{3}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{B}},{\SemioVizString{A}},{\SemioVizString{G3}},{\SemioVizString{G3}},{4}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{D}},{\SemioVizString{E}},{\SemioVizString{G4}},{\SemioVizString{G4}},{5}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{C}},{\SemioVizString{B}},{\SemioVizString{G5}},{\SemioVizString{G5}},{6}}
+\SemioVizTable{placement-edges}{source,target}
+\SemioVizRow{placement-edges}{{\SemioVizString{Z}},{\SemioVizString{A}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{Z}},{\SemioVizString{E}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{A}},{\SemioVizString{B}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{E}},{\SemioVizString{D}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{B}},{\SemioVizString{C}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{D}},{\SemioVizString{C}}}
+\SemioVizTheme{default}[appearance=dark]\SemioVizThemeSet[colors={placement-color0,placement-color1,placement-color2,placement-color3,placement-color4,placement-color5}]
+\SemioVizChart{commit-graph}[charge={-30},colorBy={group},data={placement-edges},forces={{link},{many-body},{center}},group={group},id={id},iterations={24},label={id},labels={true},layout={force},linkDistance={12},nodes={placement-nodes},order={index},orientation={horizontal},padding={3},root={1},seed={1},size={1.3},source={source},sweeps={4},target={target}]
+% 80mm × 40mm, dark appearance
+\special{pdf:literal direct EMC}\end{VizFigure}
+\endgroup
+
+\clearpage\SemioVizProbeBegin{specialized-placement-controls}{commit-graph-force-seed1}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{de}\ExplSyntaxOff
+\begin{VizFigure}[width=80,height=40,title={}]
+\draw[line width=.01mm] (0,0) rectangle (80,40);\special{pdf:literal direct /SemioVizControlcommit-graph-force-seed1 BMC}
+\SemioVizTable{placement-nodes}{id,parent,group,other,value,x,y}
+\SemioVizRow{placement-nodes}{{\SemioVizString{Z}},{\SemioVizString{}},{\SemioVizString{G0}},{\SemioVizString{G0}},{1},{0},{0}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{A}},{\SemioVizString{Z}},{\SemioVizString{G1}},{\SemioVizString{G1}},{2},{0},{0}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{E}},{\SemioVizString{Z}},{\SemioVizString{G2}},{\SemioVizString{G2}},{3},{0},{0}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{B}},{\SemioVizString{A}},{\SemioVizString{G3}},{\SemioVizString{G3}},{4},{0},{0}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{D}},{\SemioVizString{E}},{\SemioVizString{G4}},{\SemioVizString{G4}},{5},{0},{0}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{C}},{\SemioVizString{B}},{\SemioVizString{G5}},{\SemioVizString{G5}},{6},{0},{0}}
+\SemioVizTable{placement-edges}{source,target}
+\SemioVizRow{placement-edges}{{\SemioVizString{Z}},{\SemioVizString{A}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{Z}},{\SemioVizString{E}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{A}},{\SemioVizString{B}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{E}},{\SemioVizString{D}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{B}},{\SemioVizString{C}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{D}},{\SemioVizString{C}}}
+\SemioVizTheme{default}[appearance=dark]\SemioVizThemeSet[colors={placement-color0,placement-color1,placement-color2,placement-color3,placement-color4,placement-color5}]
+\SemioVizChart{commit-graph}[charge={-30},colorBy={group},data={placement-edges},forces={{link},{center}},group={group},id={id},iterations={8},label={id},labels={true},layout={force},linkDistance={30},nodes={placement-nodes},order={index},orientation={horizontal},padding={3},root={1},seed={1},size={1.3},source={source},sweeps={4},target={target}]
+% 80mm × 40mm, dark appearance
+\special{pdf:literal direct EMC}\end{VizFigure}
+\endgroup
+
+\clearpage\SemioVizProbeBegin{specialized-placement-controls}{commit-graph-force-seed1000}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{de}\ExplSyntaxOff
+\begin{VizFigure}[width=80,height=40,title={}]
+\draw[line width=.01mm] (0,0) rectangle (80,40);\special{pdf:literal direct /SemioVizControlcommit-graph-force-seed1000 BMC}
+\SemioVizTable{placement-nodes}{id,parent,group,other,value,x,y}
+\SemioVizRow{placement-nodes}{{\SemioVizString{Z}},{\SemioVizString{}},{\SemioVizString{G0}},{\SemioVizString{G0}},{1},{0},{0}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{A}},{\SemioVizString{Z}},{\SemioVizString{G1}},{\SemioVizString{G1}},{2},{0},{0}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{E}},{\SemioVizString{Z}},{\SemioVizString{G2}},{\SemioVizString{G2}},{3},{0},{0}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{B}},{\SemioVizString{A}},{\SemioVizString{G3}},{\SemioVizString{G3}},{4},{0},{0}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{D}},{\SemioVizString{E}},{\SemioVizString{G4}},{\SemioVizString{G4}},{5},{0},{0}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{C}},{\SemioVizString{B}},{\SemioVizString{G5}},{\SemioVizString{G5}},{6},{0},{0}}
+\SemioVizTable{placement-edges}{source,target}
+\SemioVizRow{placement-edges}{{\SemioVizString{Z}},{\SemioVizString{A}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{Z}},{\SemioVizString{E}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{A}},{\SemioVizString{B}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{E}},{\SemioVizString{D}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{B}},{\SemioVizString{C}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{D}},{\SemioVizString{C}}}
+\SemioVizTheme{default}[appearance=dark]\SemioVizThemeSet[colors={placement-color0,placement-color1,placement-color2,placement-color3,placement-color4,placement-color5}]
+\SemioVizChart{commit-graph}[charge={-30},colorBy={group},data={placement-edges},forces={{link},{center}},group={group},id={id},iterations={8},label={id},labels={true},layout={force},linkDistance={30},nodes={placement-nodes},order={index},orientation={horizontal},padding={3},root={1},seed={1000},size={1.3},source={source},sweeps={4},target={target}]
+% 80mm × 40mm, dark appearance
+\special{pdf:literal direct EMC}\end{VizFigure}
+\endgroup
+
+\clearpage\SemioVizProbeBegin{specialized-placement-controls}{commit-graph-random-seed1}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{de}\ExplSyntaxOff
+\begin{VizFigure}[width=80,height=40,title={}]
+\draw[line width=.01mm] (0,0) rectangle (80,40);\special{pdf:literal direct /SemioVizControlcommit-graph-random-seed1 BMC}
+\SemioVizTable{placement-nodes}{id,parent,group,other,value}
+\SemioVizRow{placement-nodes}{{\SemioVizString{Z}},{\SemioVizString{}},{\SemioVizString{G0}},{\SemioVizString{G0}},{1}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{A}},{\SemioVizString{Z}},{\SemioVizString{G1}},{\SemioVizString{G1}},{2}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{E}},{\SemioVizString{Z}},{\SemioVizString{G2}},{\SemioVizString{G2}},{3}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{B}},{\SemioVizString{A}},{\SemioVizString{G3}},{\SemioVizString{G3}},{4}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{D}},{\SemioVizString{E}},{\SemioVizString{G4}},{\SemioVizString{G4}},{5}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{C}},{\SemioVizString{B}},{\SemioVizString{G5}},{\SemioVizString{G5}},{6}}
+\SemioVizTable{placement-edges}{source,target}
+\SemioVizRow{placement-edges}{{\SemioVizString{Z}},{\SemioVizString{A}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{Z}},{\SemioVizString{E}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{A}},{\SemioVizString{B}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{E}},{\SemioVizString{D}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{B}},{\SemioVizString{C}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{D}},{\SemioVizString{C}}}
+\SemioVizTheme{default}[appearance=dark]\SemioVizThemeSet[colors={placement-color0,placement-color1,placement-color2,placement-color3,placement-color4,placement-color5}]
+\SemioVizChart{commit-graph}[colorBy={group},columns={2},data={placement-edges},group={group},id={id},label={id},labels={true},layout={random},nodes={placement-nodes},order={index},orientation={horizontal},padding={3},root={1},seed={1},size={1.3},source={source},sweeps={4},target={target}]
+% 80mm × 40mm, dark appearance
+\special{pdf:literal direct EMC}\end{VizFigure}
+\endgroup
+
+\clearpage\SemioVizProbeBegin{specialized-placement-controls}{commit-graph-random-seed1000}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{de}\ExplSyntaxOff
+\begin{VizFigure}[width=80,height=40,title={}]
+\draw[line width=.01mm] (0,0) rectangle (80,40);\special{pdf:literal direct /SemioVizControlcommit-graph-random-seed1000 BMC}
+\SemioVizTable{placement-nodes}{id,parent,group,other,value}
+\SemioVizRow{placement-nodes}{{\SemioVizString{Z}},{\SemioVizString{}},{\SemioVizString{G0}},{\SemioVizString{G0}},{1}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{A}},{\SemioVizString{Z}},{\SemioVizString{G1}},{\SemioVizString{G1}},{2}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{E}},{\SemioVizString{Z}},{\SemioVizString{G2}},{\SemioVizString{G2}},{3}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{B}},{\SemioVizString{A}},{\SemioVizString{G3}},{\SemioVizString{G3}},{4}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{D}},{\SemioVizString{E}},{\SemioVizString{G4}},{\SemioVizString{G4}},{5}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{C}},{\SemioVizString{B}},{\SemioVizString{G5}},{\SemioVizString{G5}},{6}}
+\SemioVizTable{placement-edges}{source,target}
+\SemioVizRow{placement-edges}{{\SemioVizString{Z}},{\SemioVizString{A}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{Z}},{\SemioVizString{E}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{A}},{\SemioVizString{B}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{E}},{\SemioVizString{D}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{B}},{\SemioVizString{C}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{D}},{\SemioVizString{C}}}
+\SemioVizTheme{default}[appearance=dark]\SemioVizThemeSet[colors={placement-color0,placement-color1,placement-color2,placement-color3,placement-color4,placement-color5}]
+\SemioVizChart{commit-graph}[colorBy={group},columns={2},data={placement-edges},group={group},id={id},label={id},labels={true},layout={random},nodes={placement-nodes},order={index},orientation={horizontal},padding={3},root={1},seed={1000},size={1.3},source={source},sweeps={4},target={target}]
+% 80mm × 40mm, dark appearance
+\special{pdf:literal direct EMC}\end{VizFigure}
+\endgroup
+
+\clearpage\SemioVizProbeBegin{specialized-placement-controls}{commit-graph-partite-groups}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{de}\ExplSyntaxOff
+\begin{VizFigure}[width=80,height=40,title={}]
+\draw[line width=.01mm] (0,0) rectangle (80,40);\special{pdf:literal direct /SemioVizControlcommit-graph-partite-groups BMC}
+\SemioVizTable{placement-nodes}{id,parent,group,other,value}
+\SemioVizRow{placement-nodes}{{\SemioVizString{Z}},{\SemioVizString{}},{\SemioVizString{G0}},{\SemioVizString{G0}},{1}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{A}},{\SemioVizString{Z}},{\SemioVizString{G1}},{\SemioVizString{G1}},{2}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{E}},{\SemioVizString{Z}},{\SemioVizString{G0}},{\SemioVizString{G2}},{3}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{B}},{\SemioVizString{A}},{\SemioVizString{G1}},{\SemioVizString{G3}},{4}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{D}},{\SemioVizString{E}},{\SemioVizString{G0}},{\SemioVizString{G4}},{5}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{C}},{\SemioVizString{B}},{\SemioVizString{G1}},{\SemioVizString{G5}},{6}}
+\SemioVizTable{placement-edges}{source,target}
+\SemioVizRow{placement-edges}{{\SemioVizString{Z}},{\SemioVizString{A}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{Z}},{\SemioVizString{E}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{A}},{\SemioVizString{B}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{E}},{\SemioVizString{D}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{B}},{\SemioVizString{C}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{D}},{\SemioVizString{C}}}
+\SemioVizTheme{default}[appearance=dark]\SemioVizThemeSet[colors={placement-color0,placement-color1,placement-color2,placement-color3,placement-color4,placement-color5}]
+\SemioVizChart{commit-graph}[colorBy={group},columns={2},data={placement-edges},group={group},id={id},label={id},labels={true},layout={partite},nodes={placement-nodes},order={index},orientation={horizontal},padding={3},root={1},seed={1},size={1.3},source={source},sweeps={4},target={target}]
+% 80mm × 40mm, dark appearance
+\special{pdf:literal direct EMC}\end{VizFigure}
+\endgroup
+
+\clearpage\SemioVizProbeBegin{specialized-placement-controls}{commit-graph-radial-root1}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{de}\ExplSyntaxOff
+\begin{VizFigure}[width=80,height=40,title={}]
+\draw[line width=.01mm] (0,0) rectangle (80,40);\special{pdf:literal direct /SemioVizControlcommit-graph-radial-root1 BMC}
+\SemioVizTable{placement-nodes}{id,parent,group,other,value}
+\SemioVizRow{placement-nodes}{{\SemioVizString{Z}},{\SemioVizString{}},{\SemioVizString{G0}},{\SemioVizString{G0}},{1}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{A}},{\SemioVizString{Z}},{\SemioVizString{G1}},{\SemioVizString{G1}},{2}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{E}},{\SemioVizString{Z}},{\SemioVizString{G2}},{\SemioVizString{G2}},{3}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{B}},{\SemioVizString{A}},{\SemioVizString{G3}},{\SemioVizString{G3}},{4}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{D}},{\SemioVizString{E}},{\SemioVizString{G4}},{\SemioVizString{G4}},{5}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{C}},{\SemioVizString{B}},{\SemioVizString{G5}},{\SemioVizString{G5}},{6}}
+\SemioVizTable{placement-edges}{source,target}
+\SemioVizRow{placement-edges}{{\SemioVizString{Z}},{\SemioVizString{A}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{Z}},{\SemioVizString{E}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{A}},{\SemioVizString{B}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{E}},{\SemioVizString{D}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{B}},{\SemioVizString{C}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{D}},{\SemioVizString{C}}}
+\SemioVizTheme{default}[appearance=dark]\SemioVizThemeSet[colors={placement-color0,placement-color1,placement-color2,placement-color3,placement-color4,placement-color5}]
+\SemioVizChart{commit-graph}[colorBy={group},columns={2},data={placement-edges},group={group},id={id},label={id},labels={true},layout={radial},nodes={placement-nodes},order={index},orientation={horizontal},padding={3},root={1},seed={1},size={1.3},source={source},sweeps={4},target={target}]
+% 80mm × 40mm, dark appearance
+\special{pdf:literal direct EMC}\end{VizFigure}
+\endgroup
+
+\clearpage\SemioVizProbeBegin{specialized-placement-controls}{commit-graph-radial-root4}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{de}\ExplSyntaxOff
+\begin{VizFigure}[width=80,height=40,title={}]
+\draw[line width=.01mm] (0,0) rectangle (80,40);\special{pdf:literal direct /SemioVizControlcommit-graph-radial-root4 BMC}
+\SemioVizTable{placement-nodes}{id,parent,group,other,value}
+\SemioVizRow{placement-nodes}{{\SemioVizString{Z}},{\SemioVizString{}},{\SemioVizString{G0}},{\SemioVizString{G0}},{1}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{A}},{\SemioVizString{Z}},{\SemioVizString{G1}},{\SemioVizString{G1}},{2}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{E}},{\SemioVizString{Z}},{\SemioVizString{G2}},{\SemioVizString{G2}},{3}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{B}},{\SemioVizString{A}},{\SemioVizString{G3}},{\SemioVizString{G3}},{4}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{D}},{\SemioVizString{E}},{\SemioVizString{G4}},{\SemioVizString{G4}},{5}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{C}},{\SemioVizString{B}},{\SemioVizString{G5}},{\SemioVizString{G5}},{6}}
+\SemioVizTable{placement-edges}{source,target}
+\SemioVizRow{placement-edges}{{\SemioVizString{Z}},{\SemioVizString{A}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{Z}},{\SemioVizString{E}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{A}},{\SemioVizString{B}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{E}},{\SemioVizString{D}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{B}},{\SemioVizString{C}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{D}},{\SemioVizString{C}}}
+\SemioVizTheme{default}[appearance=dark]\SemioVizThemeSet[colors={placement-color0,placement-color1,placement-color2,placement-color3,placement-color4,placement-color5}]
+\SemioVizChart{commit-graph}[colorBy={group},columns={2},data={placement-edges},group={group},id={id},label={id},labels={true},layout={radial},nodes={placement-nodes},order={index},orientation={horizontal},padding={3},root={4},seed={1},size={1.3},source={source},sweeps={4},target={target}]
+% 80mm × 40mm, dark appearance
+\special{pdf:literal direct EMC}\end{VizFigure}
+\endgroup
+
+\clearpage\SemioVizProbeBegin{specialized-placement-controls}{commit-graph-layered-sweeps0}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{de}\ExplSyntaxOff
+\begin{VizFigure}[width=80,height=40,title={}]
+\draw[line width=.01mm] (0,0) rectangle (80,40);\special{pdf:literal direct /SemioVizControlcommit-graph-layered-sweeps0 BMC}
+\SemioVizTable{placement-nodes}{id,parent,group,other,value}
+\SemioVizRow{placement-nodes}{{\SemioVizString{Z}},{\SemioVizString{}},{\SemioVizString{G0}},{\SemioVizString{G0}},{1}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{A}},{\SemioVizString{}},{\SemioVizString{G1}},{\SemioVizString{G1}},{2}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{E}},{\SemioVizString{}},{\SemioVizString{G2}},{\SemioVizString{G2}},{3}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{B}},{\SemioVizString{A}},{\SemioVizString{G3}},{\SemioVizString{G3}},{4}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{D}},{\SemioVizString{Z}},{\SemioVizString{G4}},{\SemioVizString{G4}},{5}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{C}},{\SemioVizString{E}},{\SemioVizString{G5}},{\SemioVizString{G5}},{6}}
+\SemioVizTable{placement-edges}{source,target}
+\SemioVizRow{placement-edges}{{\SemioVizString{Z}},{\SemioVizString{D}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{A}},{\SemioVizString{B}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{E}},{\SemioVizString{C}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{Z}},{\SemioVizString{B}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{A}},{\SemioVizString{C}}}
+\SemioVizTheme{default}[appearance=dark]\SemioVizThemeSet[colors={placement-color0,placement-color1,placement-color2,placement-color3,placement-color4,placement-color5}]
+\SemioVizChart{commit-graph}[colorBy={group},columns={2},data={placement-edges},group={group},id={id},label={id},labels={true},layout={layered},nodes={placement-nodes},order={index},orientation={horizontal},padding={3},root={1},seed={1},size={1.3},source={source},sweeps={0},target={target}]
+% 80mm × 40mm, dark appearance
+\special{pdf:literal direct EMC}\end{VizFigure}
+\endgroup
+
+\clearpage\SemioVizProbeBegin{specialized-placement-controls}{commit-graph-layered-sweeps4}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{de}\ExplSyntaxOff
+\begin{VizFigure}[width=80,height=40,title={}]
+\draw[line width=.01mm] (0,0) rectangle (80,40);\special{pdf:literal direct /SemioVizControlcommit-graph-layered-sweeps4 BMC}
+\SemioVizTable{placement-nodes}{id,parent,group,other,value}
+\SemioVizRow{placement-nodes}{{\SemioVizString{Z}},{\SemioVizString{}},{\SemioVizString{G0}},{\SemioVizString{G0}},{1}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{A}},{\SemioVizString{}},{\SemioVizString{G1}},{\SemioVizString{G1}},{2}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{E}},{\SemioVizString{}},{\SemioVizString{G2}},{\SemioVizString{G2}},{3}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{B}},{\SemioVizString{A}},{\SemioVizString{G3}},{\SemioVizString{G3}},{4}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{D}},{\SemioVizString{Z}},{\SemioVizString{G4}},{\SemioVizString{G4}},{5}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{C}},{\SemioVizString{E}},{\SemioVizString{G5}},{\SemioVizString{G5}},{6}}
+\SemioVizTable{placement-edges}{source,target}
+\SemioVizRow{placement-edges}{{\SemioVizString{Z}},{\SemioVizString{D}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{A}},{\SemioVizString{B}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{E}},{\SemioVizString{C}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{Z}},{\SemioVizString{B}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{A}},{\SemioVizString{C}}}
+\SemioVizTheme{default}[appearance=dark]\SemioVizThemeSet[colors={placement-color0,placement-color1,placement-color2,placement-color3,placement-color4,placement-color5}]
+\SemioVizChart{commit-graph}[colorBy={group},columns={2},data={placement-edges},group={group},id={id},label={id},labels={true},layout={layered},nodes={placement-nodes},order={index},orientation={horizontal},padding={3},root={1},seed={1},size={1.3},source={source},sweeps={4},target={target}]
+% 80mm × 40mm, dark appearance
+\special{pdf:literal direct EMC}\end{VizFigure}
+\endgroup
+
+\clearpage\SemioVizProbeBegin{specialized-placement-controls}{commit-graph-layered-vertical}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{de}\ExplSyntaxOff
+\begin{VizFigure}[width=80,height=40,title={}]
+\draw[line width=.01mm] (0,0) rectangle (80,40);\special{pdf:literal direct /SemioVizControlcommit-graph-layered-vertical BMC}
+\SemioVizTable{placement-nodes}{id,parent,group,other,value}
+\SemioVizRow{placement-nodes}{{\SemioVizString{Z}},{\SemioVizString{}},{\SemioVizString{G0}},{\SemioVizString{G0}},{1}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{A}},{\SemioVizString{}},{\SemioVizString{G1}},{\SemioVizString{G1}},{2}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{E}},{\SemioVizString{}},{\SemioVizString{G2}},{\SemioVizString{G2}},{3}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{B}},{\SemioVizString{A}},{\SemioVizString{G3}},{\SemioVizString{G3}},{4}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{D}},{\SemioVizString{Z}},{\SemioVizString{G4}},{\SemioVizString{G4}},{5}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{C}},{\SemioVizString{E}},{\SemioVizString{G5}},{\SemioVizString{G5}},{6}}
+\SemioVizTable{placement-edges}{source,target}
+\SemioVizRow{placement-edges}{{\SemioVizString{Z}},{\SemioVizString{D}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{A}},{\SemioVizString{B}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{E}},{\SemioVizString{C}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{Z}},{\SemioVizString{B}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{A}},{\SemioVizString{C}}}
+\SemioVizTheme{default}[appearance=dark]\SemioVizThemeSet[colors={placement-color0,placement-color1,placement-color2,placement-color3,placement-color4,placement-color5}]
+\SemioVizChart{commit-graph}[colorBy={group},columns={2},data={placement-edges},group={group},id={id},label={id},labels={true},layout={layered},nodes={placement-nodes},order={index},orientation={vertical},padding={3},root={1},seed={1},size={1.3},source={source},sweeps={4},target={target}]
+% 80mm × 40mm, dark appearance
+\special{pdf:literal direct EMC}\end{VizFigure}
+\endgroup
+
+\clearpage\SemioVizProbeBegin{specialized-placement-controls}{commit-graph-force-string-initial}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{de}\ExplSyntaxOff
+\begin{VizFigure}[width=80,height=40,title={}]
+\draw[line width=.01mm] (0,0) rectangle (80,40);\special{pdf:literal direct /SemioVizControlcommit-graph-force-string-initial BMC}
+\SemioVizTable{placement-nodes}{id,parent,group,other,value,x,y}
+\SemioVizRow{placement-nodes}{{\SemioVizString{Z}},{\SemioVizString{}},{\SemioVizString{G0}},{\SemioVizString{G0}},{1},{\SemioVizString{-1.25}},{\SemioVizString{2}}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{A}},{\SemioVizString{Z}},{\SemioVizString{G1}},{\SemioVizString{G1}},{2},{\SemioVizString{0}},{\SemioVizString{-0.25}}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{E}},{\SemioVizString{Z}},{\SemioVizString{G2}},{\SemioVizString{G2}},{3},{\SemioVizString{1.5}},{\SemioVizString{0.3}}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{B}},{\SemioVizString{A}},{\SemioVizString{G3}},{\SemioVizString{G3}},{4},{\SemioVizString{0}},{\SemioVizString{0}}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{D}},{\SemioVizString{E}},{\SemioVizString{G4}},{\SemioVizString{G4}},{5},{\SemioVizString{1e-7}},{\SemioVizString{2e-7}}}
+\SemioVizRow{placement-nodes}{{\SemioVizString{C}},{\SemioVizString{B}},{\SemioVizString{G5}},{\SemioVizString{G5}},{6},{\SemioVizString{0.5}},{\SemioVizString{-2}}}
+\SemioVizTable{placement-edges}{source,target}
+\SemioVizRow{placement-edges}{{\SemioVizString{Z}},{\SemioVizString{A}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{Z}},{\SemioVizString{E}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{A}},{\SemioVizString{B}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{E}},{\SemioVizString{D}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{B}},{\SemioVizString{C}}}
+\SemioVizRow{placement-edges}{{\SemioVizString{D}},{\SemioVizString{C}}}
+\SemioVizTheme{default}[appearance=dark]\SemioVizThemeSet[colors={placement-color0,placement-color1,placement-color2,placement-color3,placement-color4,placement-color5}]
+\SemioVizChart{commit-graph}[charge={-30},colorBy={group},data={placement-edges},forces={{link},{center}},group={group},id={id},iterations={8},label={id},labels={true},layout={force},linkDistance={30},nodes={placement-nodes},order={index},orientation={horizontal},padding={3},root={1},seed={1000},size={1.3},source={source},sweeps={4},target={target}]
+% 80mm × 40mm, dark appearance
+\special{pdf:literal direct EMC}\end{VizFigure}
+\endgroup
+
+\SemioVizProbeValues{native/placement}{1}
+\SemioVizProbeEnd
+\end{document}

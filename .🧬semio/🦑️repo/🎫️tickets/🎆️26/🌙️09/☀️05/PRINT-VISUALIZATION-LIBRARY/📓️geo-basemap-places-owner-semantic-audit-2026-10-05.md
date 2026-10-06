@@ -1,0 +1,3 @@
+# Geographic Basemap Places Owner Semantic Audit
+
+Current schema owning family geo-basemap declares places type string with syntax scalar and EN/de meanings implying a drawing switch. Actual geo-map37 installs a token-list selector, reset53 sets demo-geo-cities, and consumer91 passes it as a named geometry collection to the settlement callback. Therefore string type is correct; identifier syntax, collection default and settlement-geometry meaning are required. Settlements35/resetfalse51 is the separate boolean drawing switch. This is a concrete owner/type/description mismatch, not a count-based inference. Catalogue was notified; no source mutation or duplicate runtime probe was performed.

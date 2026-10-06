@@ -1,0 +1,165 @@
+{
+  "schema": {
+    "type": "object",
+    "required": [
+      "width",
+      "heights",
+      "gapMm",
+      "padding",
+      "panels",
+      "windows",
+      "toleranceMm"
+    ],
+    "additionalProperties": false,
+    "properties": {
+      "width": {
+        "type": "number",
+        "exclusiveMinimum": 0
+      },
+      "heights": {
+        "type": "array",
+        "items": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      },
+      "gapMm": {
+        "type": "number",
+        "minimum": 0
+      },
+      "padding": {
+        "type": "number",
+        "minimum": 0
+      },
+      "panels": {
+        "type": "array",
+        "minItems": 2,
+        "items": {
+          "type": "object",
+          "required": [
+            "label",
+            "points"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "label": {
+              "type": "string"
+            },
+            "points": {
+              "type": "array",
+              "minItems": 2,
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "minItems": 2,
+                "maxItems": 2
+              }
+            }
+          }
+        }
+      },
+      "windows": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": [
+            "id",
+            "domain",
+            "range"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "domain": {
+              "type": "string"
+            },
+            "range": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "toleranceMm": {
+        "type": "number",
+        "exclusiveMinimum": 0
+      }
+    }
+  },
+  "vectors": {
+    "width": 80,
+    "heights": [
+      40,
+      80
+    ],
+    "gapMm": 3,
+    "padding": 0.08,
+    "panels": [
+      {
+        "label": "Temperature",
+        "points": [
+          [
+            0,
+            10
+          ],
+          [
+            1,
+            20
+          ],
+          [
+            2,
+            15
+          ]
+        ]
+      },
+      {
+        "label": "Rain",
+        "points": [
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            8
+          ],
+          [
+            2,
+            4
+          ]
+        ]
+      }
+    ],
+    "windows": [
+      {
+        "id": "omitted",
+        "domain": "",
+        "range": ""
+      },
+      {
+        "id": "domain-only",
+        "domain": "0,4",
+        "range": ""
+      },
+      {
+        "id": "range-only",
+        "domain": "",
+        "range": "0,40"
+      },
+      {
+        "id": "both",
+        "domain": "0,4",
+        "range": "0,40"
+      },
+      {
+        "id": "reversed",
+        "domain": "4,0",
+        "range": "40,0"
+      }
+    ],
+    "toleranceMm": 0.035
+  }
+}

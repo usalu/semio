@@ -97,11 +97,11 @@ function labelOf(items: readonly { readonly id: Slug; readonly label: Text }[], 
   return localized(items.find((item) => item.id === id)?.label ?? { en: id, de: id }, locale);
 }
 
-/** 🏷️ The label of the item or category `id` with its icon before it; `order` is its row. */
-function Labelled(props: { readonly items: readonly { readonly id: Slug; readonly label: Text; readonly icon?: Icon }[]; readonly id: Slug; readonly order: number; readonly locale: QuizLocale }): ReactElement {
+/** 🏷️ The label of the item or category `id` with its icon before it. */
+function Labelled(props: { readonly items: readonly { readonly id: Slug; readonly label: Text; readonly icon?: Icon }[]; readonly id: Slug; readonly locale: QuizLocale }): ReactElement {
   const { items, id } = props;
   return (
-    <IconLabel icon={items.find((item) => item.id === id)?.icon} order={props.order}>
+    <IconLabel icon={items.find((item) => item.id === id)?.icon}>
       {labelOf(items, id, props.locale)}
     </IconLabel>
   );
@@ -137,16 +137,16 @@ function ClassificationResult(props: { readonly name: string; readonly task: She
   const { task, result, text, locale } = props;
   return (
     <ResultTable name={props.name} fold={56} head={[text("quiz.results.item"), text("quiz.results.yourAnswer"), text("quiz.results.solution"), text("quiz.results.credit"), text("quiz.results.explanation")]}>
-      {result.items.map((item, row) => (
-        <tr key={item.item} {...TABLE.row}>
+      {result.items.map((item) => (
+        <tr key={item.item} {...TABLE.row} data-icon-host="">
           <th {...TABLE.name} data-cell="name" className={cn(EDGE, "font-semibold")}>
-            <Labelled items={task.items} id={item.item} order={row} locale={locale} />
+            <Labelled items={task.items} id={item.item} locale={locale} />
           </th>
           <td {...TABLE.cell} data-label={text("quiz.results.yourAnswer")} className={ANSWER}>
-            {item.assigned === undefined ? text("quiz.results.unanswered") : <Labelled items={task.categories} id={item.assigned} order={row} locale={locale} />}
+            {item.assigned === undefined ? text("quiz.results.unanswered") : <Labelled items={task.categories} id={item.assigned} locale={locale} />}
           </td>
           <td {...TABLE.cell} data-label={text("quiz.results.solution")} className={ANSWER}>
-            <Labelled items={task.categories} id={item.correct} order={row} locale={locale} />
+            <Labelled items={task.categories} id={item.correct} locale={locale} />
           </td>
           <td {...TABLE.cell} data-cell="lead" className={ANSWER}>
             <Verdict credit={item.credit} text={text} /> ({formatScore(item.credit, locale)})
@@ -171,13 +171,13 @@ function SortingResult(props: { readonly name: string; readonly task: SheetSorti
     <>
       <ToleranceNote id={`${props.name}-tolerance`} within={within} text={text} />
       <ResultTable name={props.name} note={within === undefined ? undefined : `${props.name}-tolerance`} fold={58} head={[text("quiz.results.position"), text("quiz.results.item"), ...(guessed ? [text("quiz.results.yourGuess")] : []), text("quiz.results.value"), text("quiz.results.rank"), text("quiz.results.explanation")]}>
-        {result.items.map((item, row) => (
-          <tr key={item.item} {...TABLE.row}>
+        {result.items.map((item) => (
+          <tr key={item.item} {...TABLE.row} data-icon-host="">
             <td {...TABLE.cell} data-label={text("quiz.results.position")} className={unanswered ? ANSWER : NUMBER}>
               {unanswered ? text("quiz.results.unanswered") : item.position + 1}
             </td>
             <th {...TABLE.name} data-cell="name" className={cn(EDGE, "font-semibold")}>
-              <Labelled items={task.items} id={item.item} order={row} locale={locale} />
+              <Labelled items={task.items} id={item.item} locale={locale} />
             </th>
             {guessed ? (
               <td {...TABLE.cell} data-label={text("quiz.results.yourGuess")} className={NUMBER}>
@@ -206,9 +206,9 @@ function SortingResult(props: { readonly name: string; readonly task: SheetSorti
       <ol className="m-0 flex flex-col gap-single ps-double text-sm">
         {[...result.items]
           .sort((left, right) => left.rank - right.rank)
-          .map((item, row) => (
-            <li key={item.item} data-pet-prop={petProp(topic, item.item)}>
-              <Labelled items={task.items} id={item.item} order={row} locale={locale} /> — {value(item.value)}
+          .map((item) => (
+            <li key={item.item} data-icon-host="" data-pet-prop={petProp(topic, item.item)}>
+              <Labelled items={task.items} id={item.item} locale={locale} /> — {value(item.value)}
             </li>
           ))}
       </ol>
@@ -230,15 +230,15 @@ function MatchingResult(props: { readonly name: string; readonly task: SheetMatc
         const note = `${props.name}-${dimension.dimension}-tolerance`;
         return (
           <section key={dimension.dimension} className="flex flex-col gap-single">
-            <h3 id={`${props.name}-${dimension.dimension}`} className="m-0 text-sm font-semibold">
+            <h3 data-icon-host="" id={`${props.name}-${dimension.dimension}`} className="m-0 text-sm font-semibold">
               <IconLabel icon={sheet?.icon}>{text("quiz.results.dimension", { quantity, score: formatScore(dimension.score, locale) })}</IconLabel>
             </h3>
             <ToleranceNote id={note} within={within} text={text} />
             <ResultTable name={`${props.name}-${dimension.dimension}`} note={within === undefined ? undefined : note} fold={52} head={[text("quiz.results.item"), answered, text("quiz.results.solution"), text("quiz.results.explanation")]}>
-              {dimension.items.map((item, row) => (
-                <tr key={item.item} {...TABLE.row}>
+              {dimension.items.map((item) => (
+                <tr key={item.item} {...TABLE.row} data-icon-host="">
                   <th {...TABLE.name} data-cell="name" className={cn(EDGE, "font-semibold")}>
-                    <Labelled items={task.items} id={item.item} order={row} locale={locale} />
+                    <Labelled items={task.items} id={item.item} locale={locale} />
                   </th>
                   <td {...TABLE.cell} data-label={answered} className={NUMBER}>
                     {guessed && sheet !== undefined ? (

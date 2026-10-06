@@ -1,0 +1,194 @@
+{
+  "schema": {
+    "type": "object",
+    "required": [
+      "cases"
+    ],
+    "additionalProperties": false,
+    "properties": {
+      "cases": {
+        "type": "array",
+        "minItems": 9,
+        "maxItems": 9,
+        "items": {
+          "type": "object",
+          "required": [
+            "family",
+            "kind",
+            "unit",
+            "nodeShape",
+            "modes"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "family": {
+              "enum": [
+                "sci-pathway",
+                "sci-circuit",
+                "sci-abstract-diagram"
+              ]
+            },
+            "kind": {
+              "type": "string"
+            },
+            "unit": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "nodeShape": {
+              "enum": [
+                "box",
+                "circle",
+                "none"
+              ]
+            },
+            "modes": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1,
+              "items": {
+                "type": "object",
+                "required": [
+                  "mode"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "mode": {
+                    "type": "string"
+                  },
+                  "nodes": {
+                    "type": "string"
+                  },
+                  "edges": {
+                    "type": "string"
+                  },
+                  "elements": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "vectors": {
+    "cases": [
+      {
+        "family": "sci-pathway",
+        "kind": "phylogenetic-network",
+        "unit": 1,
+        "nodeShape": "box",
+        "modes": [
+          {
+            "mode": "interaction",
+            "nodes": "r/0/28/ancestor,a/22/14/lineageA,b/22/42/lineageB,c/44/7/taxonA,d/44/21/taxonB,e/44/42/taxonC",
+            "edges": "r/a/plain/,r/b/plain/,a/c/plain/,a/d/plain/,b/e/plain/"
+          }
+        ]
+      },
+      {
+        "family": "sci-pathway",
+        "kind": "food-chain",
+        "unit": 1,
+        "nodeShape": "box",
+        "modes": [
+          {
+            "mode": "food-web",
+            "nodes": "p/0/0/producer,h/22/0/herbivore,c/44/0/carnivore",
+            "edges": "p/h/flux/,h/c/flux/"
+          }
+        ]
+      },
+      {
+        "family": "sci-pathway",
+        "kind": "metabolic-network-diagram",
+        "unit": 1,
+        "nodeShape": "circle",
+        "modes": [
+          {
+            "mode": "metabolic",
+            "nodes": "g/0/0/glucose,p/22/0/pyruvate,a/44/0/acetyl-CoA,l/22/-18/lactate,t/44/18/TCA",
+            "edges": "g/p/flux/glycolysis,p/a/flux/,p/l/flux/,a/t/flux/"
+          }
+        ]
+      },
+      {
+        "family": "sci-circuit",
+        "kind": "ladder-diagram",
+        "unit": 1,
+        "nodeShape": "none",
+        "modes": [
+          {
+            "mode": "ladder",
+            "elements": "wire/0/0/0/30/,wire/40/0/40/30/,contact/0/24/16/24/K1,wire/16/24/24/24/,coil/24/24/40/24/Q1,contact/0/12/16/12/K2,wire/16/12/24/12/,coil/24/12/40/12/Q2"
+          }
+        ]
+      },
+      {
+        "family": "sci-circuit",
+        "kind": "block-diagram",
+        "unit": 1,
+        "nodeShape": "none",
+        "modes": [
+          {
+            "mode": "block",
+            "elements": "block/0/0/16/0/in,signal/16/0/24/0/,block/24/0/44/0/G,signal/44/0/52/0/,block/52/0/68/0/out"
+          }
+        ]
+      },
+      {
+        "family": "sci-circuit",
+        "kind": "signal-flow-graph",
+        "unit": 1,
+        "nodeShape": "none",
+        "modes": [
+          {
+            "mode": "signal-flow",
+            "elements": "node/0/0/0/0/x,signal/0/0/20/0/a,node/20/0/20/0/y,signal/20/0/40/0/b,node/40/0/40/0/z"
+          }
+        ]
+      },
+      {
+        "family": "sci-abstract-diagram",
+        "kind": "cayley-graph",
+        "unit": 18,
+        "nodeShape": "circle",
+        "modes": [
+          {
+            "mode": "cayley",
+            "nodes": "a/0/0/e,b/1/0/r,c/1/1/r2,d/0/1/r3",
+            "edges": "a/b/arrow/r,b/c/arrow/r,c/d/arrow/r,d/a/arrow/r"
+          }
+        ]
+      },
+      {
+        "family": "sci-abstract-diagram",
+        "kind": "proof-tree",
+        "unit": 18,
+        "nodeShape": "none",
+        "modes": [
+          {
+            "mode": "proof",
+            "nodes": "a/-0.7/1/P,b/0.7/1/Q,c/0/0/R",
+            "edges": "a/c/order/,b/c/order/"
+          }
+        ]
+      },
+      {
+        "family": "sci-abstract-diagram",
+        "kind": "inference-tree",
+        "unit": 18,
+        "nodeShape": "box",
+        "modes": [
+          {
+            "mode": "proof",
+            "nodes": "a/-0.7/1/P,b/0.7/1/Q,c/0/0/R",
+            "edges": "a/c/order/,b/c/order/"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,15 @@
+[
+  {
+    "path": "dashboard/🌀️daemon/🧪️tests/🔬️unit/🦀️.rs",
+    "replace": [
+      {
+        "from": "assert!(output.contains(\"New task\"), \"first frame task controls: {output}\");",
+        "to": "assert!(output.contains(if trial == 0 { \"New task\" } else { \"Neue Aufgabe\" }), \"first frame must replay optional language settings: {output}\");"
+      },
+      {
+        "from": "            view.write_all(b\"\\0l\").unwrap();\n            let deadline = Instant::now() + Duration::from_secs(2);\n            while Instant::now() < deadline { let mut preferences = crate::preferences::Preferences::default(); if crate::preferences::replay(&root.join(\"preferences.jsonl\"), &mut preferences).is_ok_and(|revision| revision == 2) { assert_eq!(preferences.language, \"en\"); break; } std::thread::sleep(Duration::from_millis(10)); }\n",
+        "to": ""
+      }
+    ]
+  }
+]

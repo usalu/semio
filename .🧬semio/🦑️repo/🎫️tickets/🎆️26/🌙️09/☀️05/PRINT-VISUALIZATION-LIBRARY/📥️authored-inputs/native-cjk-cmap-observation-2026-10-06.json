@@ -1,0 +1,49 @@
+{
+  "fontPath": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖼️assets/🔤️font/🌏️noto-sans-cjk-sc/🌏️NotoSansCJKsc-Regular.otf",
+  "sha256": "2C76254F6FC379FDDFCE0A7E84FB5385BB135D3E399294F6EEB6680D0365B74B",
+  "signature": "OTTO",
+  "maps": [
+    {
+      "encoding": 4,
+      "codepoint": 26681,
+      "format": 12,
+      "glyphId": 21167,
+      "platform": 0
+    },
+    {
+      "encoding": 4,
+      "codepoint": 23376,
+      "format": 12,
+      "glyphId": 15353,
+      "platform": 0
+    },
+    {
+      "encoding": 4,
+      "codepoint": 33865,
+      "format": 12,
+      "glyphId": 34583,
+      "platform": 0
+    },
+    {
+      "encoding": 10,
+      "codepoint": 26681,
+      "format": 12,
+      "glyphId": 21167,
+      "platform": 3
+    },
+    {
+      "encoding": 10,
+      "codepoint": 23376,
+      "format": 12,
+      "glyphId": 15353,
+      "platform": 3
+    },
+    {
+      "encoding": 10,
+      "codepoint": 33865,
+      "format": 12,
+      "glyphId": 34583,
+      "platform": 3
+    }
+  ]
+}

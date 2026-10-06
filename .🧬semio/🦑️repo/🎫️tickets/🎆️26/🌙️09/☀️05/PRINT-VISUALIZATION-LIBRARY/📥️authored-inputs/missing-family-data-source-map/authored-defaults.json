@@ -1,0 +1,779 @@
+{
+  "families": [
+    {
+      "family": "adjacency-matrix",
+      "type": "string",
+      "syntax": "identifier",
+      "default": "demo-graph-community",
+      "source": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-network-matrix.sty",
+      "variable": "l_semio_viz_net_data_tl",
+      "reset": "semio_viz_mat_keys_reset: → semio_viz_net_keys_reset:",
+      "setter": "semio_viz_net_keys_add:n; data .tl_set:N (network-graph432)",
+      "consumer": "semio_viz_layout_structure with selected data; shared network binding",
+      "effective": true,
+      "registration": [
+        {
+          "text": "\\SemioVizFamily { adjacency-matrix } { \\semio_viz_mat_render:n {#1} }",
+          "line": 241
+        }
+      ],
+      "explicitDefaultSourceLines": []
+    },
+    {
+      "family": "node-link-matrix",
+      "type": "string",
+      "syntax": "identifier",
+      "default": "demo-graph-community",
+      "source": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-network-matrix.sty",
+      "variable": "l_semio_viz_net_data_tl",
+      "reset": "semio_viz_mat_keys_reset: → semio_viz_net_keys_reset:",
+      "setter": "semio_viz_net_keys_add:n; data .tl_set:N (network-graph432)",
+      "consumer": "semio_viz_layout_structure with selected data; shared network binding",
+      "effective": true,
+      "registration": [
+        {
+          "text": "\\SemioVizFamily { node-link-matrix } { \\semio_viz_mat_hybrid_render:n {#1} }",
+          "line": 296
+        }
+      ],
+      "explicitDefaultSourceLines": []
+    },
+    {
+      "family": "biofabric",
+      "type": "string",
+      "syntax": "identifier",
+      "default": "demo-graph-community",
+      "source": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-network-matrix.sty",
+      "variable": "l_semio_viz_net_data_tl",
+      "reset": "semio_viz_mat_keys_reset: → semio_viz_net_keys_reset:",
+      "setter": "semio_viz_net_keys_add:n; data .tl_set:N (network-graph432)",
+      "consumer": "semio_viz_layout_structure with selected data; shared network binding",
+      "effective": true,
+      "registration": [
+        {
+          "text": "\\SemioVizFamily { biofabric } { \\semio_viz_mat_fabric_render:n {#1} }",
+          "line": 365
+        }
+      ],
+      "explicitDefaultSourceLines": []
+    },
+    {
+      "family": "arc-diagram",
+      "type": "string",
+      "syntax": "identifier",
+      "default": "demo-graph-community",
+      "source": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-network-arc.sty",
+      "variable": "l_semio_viz_net_data_tl",
+      "reset": "semio_viz_arc_keys_reset: → semio_viz_net_keys_reset:",
+      "setter": "semio_viz_net_keys_add:n; data .tl_set:N (network-graph432)",
+      "consumer": "semio_viz_layout_structure with selected data; shared network binding",
+      "effective": true,
+      "registration": [
+        {
+          "text": "\\SemioVizFamily { arc-diagram } { \\semio_viz_arc_render:n {#1} }",
+          "line": 147
+        }
+      ],
+      "explicitDefaultSourceLines": []
+    },
+    {
+      "family": "hive-plot",
+      "type": "string",
+      "syntax": "identifier",
+      "default": "demo-graph-community",
+      "source": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-network-arc.sty",
+      "variable": "l_semio_viz_net_data_tl",
+      "reset": "semio_viz_arc_keys_reset: → semio_viz_net_keys_reset:",
+      "setter": "semio_viz_net_keys_add:n; data .tl_set:N (network-graph432)",
+      "consumer": "semio_viz_layout_structure with selected data; shared network binding",
+      "effective": true,
+      "registration": [
+        {
+          "text": "\\SemioVizFamily { hive-plot } { \\semio_viz_hive_render:n {#1} }",
+          "line": 242
+        }
+      ],
+      "explicitDefaultSourceLines": []
+    },
+    {
+      "family": "chord",
+      "type": "string",
+      "syntax": "identifier",
+      "default": "demo-graph-community",
+      "source": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-network-chord.sty",
+      "variable": "l_semio_viz_net_data_tl",
+      "reset": "semio_viz_chord_keys_reset: → semio_viz_net_keys_reset:",
+      "setter": "semio_viz_net_keys_add:n; data .tl_set:N (network-graph432)",
+      "consumer": "semio_viz_layout_structure with selected data; shared network binding",
+      "effective": true,
+      "registration": [
+        {
+          "text": "\\SemioVizFamily { chord } { \\semio_viz_chord_render:nn { chord } {#1} }",
+          "line": 218
+        }
+      ],
+      "explicitDefaultSourceLines": []
+    },
+    {
+      "family": "dependency-wheel",
+      "type": "string",
+      "syntax": "identifier",
+      "default": "demo-graph-community",
+      "source": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-network-chord.sty",
+      "variable": "l_semio_viz_net_data_tl",
+      "reset": "semio_viz_chord_keys_reset: → semio_viz_net_keys_reset:",
+      "setter": "semio_viz_net_keys_add:n; data .tl_set:N (network-graph432)",
+      "consumer": "semio_viz_layout_structure with selected data; shared network binding",
+      "effective": true,
+      "registration": [
+        {
+          "text": "\\SemioVizFamily { dependency-wheel } { \\semio_viz_chord_render:nn { dependency-wheel } {#1} }",
+          "line": 221
+        }
+      ],
+      "explicitDefaultSourceLines": []
+    },
+    {
+      "family": "edge-bundled",
+      "type": "string",
+      "syntax": "identifier",
+      "default": "demo-graph-community",
+      "source": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-network-bundling.sty",
+      "variable": "l_semio_viz_net_data_tl",
+      "reset": "semio_viz_bun_keys_reset: → semio_viz_net_keys_reset:",
+      "setter": "semio_viz_net_keys_add:n; data .tl_set:N (network-graph432)",
+      "consumer": "semio_viz_layout_structure with selected data; shared network binding",
+      "effective": true,
+      "registration": [
+        {
+          "text": "\\SemioVizFamily { edge-bundled } { \\semio_viz_bun_render:n {#1} }",
+          "line": 206
+        }
+      ],
+      "explicitDefaultSourceLines": []
+    },
+    {
+      "family": "sankey",
+      "type": "string",
+      "syntax": "identifier",
+      "default": "demo-flow",
+      "source": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-flow-sankey.sty",
+      "variable": "l_semio_viz_net_data_tl",
+      "reset": "semio_viz_snk_keys_reset:",
+      "setter": "semio_viz_net_keys_add:n; data .tl_set:N (network-graph432)",
+      "consumer": "semio_viz_layout_structure with selected data; shared network binding",
+      "effective": true,
+      "registration": [
+        {
+          "text": "\\SemioVizFamily { sankey } { \\semio_viz_snk_render:nnn { sankey } { sankey } {#1} }",
+          "line": 363
+        }
+      ],
+      "explicitDefaultSourceLines": []
+    },
+    {
+      "family": "alluvial",
+      "type": "string",
+      "syntax": "identifier",
+      "default": "demo-flow",
+      "source": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-flow-sankey.sty",
+      "variable": "l_semio_viz_net_data_tl",
+      "reset": "semio_viz_snk_keys_reset:",
+      "setter": "semio_viz_net_keys_add:n; data .tl_set:N (network-graph432)",
+      "consumer": "semio_viz_layout_structure with selected data; shared network binding",
+      "effective": true,
+      "registration": [
+        {
+          "text": "\\SemioVizFamily { alluvial } { \\semio_viz_snk_render:nnn { alluvial } { alluvial } {#1} }",
+          "line": 62,
+          "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-flow-alluvial.sty"
+        }
+      ],
+      "explicitDefaultSourceLines": []
+    },
+    {
+      "family": "parallel-sets",
+      "type": "string",
+      "syntax": "identifier",
+      "default": "demo-flow",
+      "source": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-flow-sankey.sty",
+      "variable": "l_semio_viz_net_data_tl",
+      "reset": "semio_viz_snk_keys_reset:",
+      "setter": "semio_viz_net_keys_add:n; data .tl_set:N (network-graph432)",
+      "consumer": "semio_viz_layout_structure with selected data; shared network binding",
+      "effective": true,
+      "registration": [
+        {
+          "text": "\\SemioVizFamily { parallel-sets }",
+          "line": 62,
+          "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-flow-parallelsets.sty"
+        }
+      ],
+      "explicitDefaultSourceLines": []
+    },
+    {
+      "family": "cycle",
+      "type": "string",
+      "syntax": "identifier",
+      "default": "demo-diagram-cycle",
+      "source": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-diagram-flowchart.sty",
+      "reset": "explicit selected family entrypoint; flow/swimlane/state-selection inherit semio_viz_dg_reset:",
+      "setter": "data .tl_set:N to diagram table selector",
+      "consumer": "selected table rows/cells in family renderer; diagram layout where applicable",
+      "effective": true,
+      "registration": [
+        {
+          "text": "\\SemioVizFamily { cycle } { \\semio_viz_dg_cycle:n {#1} }",
+          "line": 1531
+        }
+      ],
+      "explicitDefaultSourceLines": []
+    },
+    {
+      "family": "decision-table",
+      "type": "string",
+      "syntax": "identifier",
+      "default": "demo-diagram-rules",
+      "source": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-diagram-flowchart.sty",
+      "reset": "explicit selected family entrypoint; flow/swimlane/state-selection inherit semio_viz_dg_reset:",
+      "setter": "data .tl_set:N to diagram table selector",
+      "consumer": "selected table rows/cells in family renderer; diagram layout where applicable",
+      "effective": true,
+      "registration": [
+        {
+          "text": "\\SemioVizFamily { decision-table } { \\semio_viz_dg_decision_table:n {#1} }",
+          "line": 1738
+        }
+      ],
+      "explicitDefaultSourceLines": []
+    },
+    {
+      "family": "fishbone",
+      "type": "string",
+      "syntax": "identifier",
+      "default": "demo-diagram-cause",
+      "source": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-diagram-flowchart.sty",
+      "reset": "explicit selected family entrypoint; flow/swimlane/state-selection inherit semio_viz_dg_reset:",
+      "setter": "data .tl_set:N to diagram table selector",
+      "consumer": "selected table rows/cells in family renderer; diagram layout where applicable",
+      "effective": true,
+      "registration": [
+        {
+          "text": "\\SemioVizFamily { fishbone } { \\semio_viz_dg_fishbone:n {#1} }",
+          "line": 1241
+        }
+      ],
+      "explicitDefaultSourceLines": []
+    },
+    {
+      "family": "flow",
+      "type": "string",
+      "syntax": "identifier",
+      "default": "demo-diagram-flow",
+      "source": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-diagram-flowchart.sty",
+      "reset": "explicit selected family entrypoint; flow/swimlane/state-selection inherit semio_viz_dg_reset:",
+      "setter": "data .tl_set:N to diagram table selector",
+      "consumer": "selected table rows/cells in family renderer; diagram layout where applicable",
+      "effective": true,
+      "registration": [
+        {
+          "text": "\\SemioVizFamily { flow } { \\semio_viz_dg_run:n {#1} }",
+          "line": 1115
+        }
+      ],
+      "explicitDefaultSourceLines": []
+    },
+    {
+      "family": "infographic-icon",
+      "type": "string",
+      "syntax": "identifier",
+      "default": "demo-infographic",
+      "source": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-infographic.sty",
+      "reset": "explicit selected family entrypoint; flow/swimlane/state-selection inherit semio_viz_dg_reset:",
+      "setter": "data .tl_set:N to diagram table selector",
+      "consumer": "selected table rows/cells in family renderer; diagram layout where applicable",
+      "effective": true,
+      "registration": [
+        {
+          "text": "\\SemioVizFamily { infographic-icon } { \\semio_viz_ig_icon:n {#1} }",
+          "line": 303
+        }
+      ],
+      "explicitDefaultSourceLines": []
+    },
+    {
+      "family": "infographic-illustration",
+      "type": "string",
+      "syntax": "identifier",
+      "default": "demo-illustration",
+      "source": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-infographic.sty",
+      "reset": "explicit selected family entrypoint; flow/swimlane/state-selection inherit semio_viz_dg_reset:",
+      "setter": "data .tl_set:N to diagram table selector",
+      "consumer": "selected table rows/cells in family renderer; diagram layout where applicable",
+      "effective": true,
+      "registration": [
+        {
+          "text": "\\SemioVizFamily { infographic-illustration } { \\semio_viz_ig_illustration:n {#1} }",
+          "line": 437
+        }
+      ],
+      "explicitDefaultSourceLines": []
+    },
+    {
+      "family": "infographic-list",
+      "type": "string",
+      "syntax": "identifier",
+      "default": "demo-infographic",
+      "source": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-infographic.sty",
+      "reset": "explicit selected family entrypoint; flow/swimlane/state-selection inherit semio_viz_dg_reset:",
+      "setter": "data .tl_set:N to diagram table selector",
+      "consumer": "selected table rows/cells in family renderer; diagram layout where applicable",
+      "effective": true,
+      "registration": [
+        {
+          "text": "\\SemioVizFamily { infographic-list } { \\semio_viz_ig_list:n {#1} }",
+          "line": 189
+        }
+      ],
+      "explicitDefaultSourceLines": []
+    },
+    {
+      "family": "infographic-number",
+      "type": "string",
+      "syntax": "identifier",
+      "default": "demo-infographic",
+      "source": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-infographic.sty",
+      "reset": "explicit selected family entrypoint; flow/swimlane/state-selection inherit semio_viz_dg_reset:",
+      "setter": "data .tl_set:N to diagram table selector",
+      "consumer": "selected table rows/cells in family renderer; diagram layout where applicable",
+      "effective": true,
+      "registration": [
+        {
+          "text": "\\SemioVizFamily { infographic-number } { \\semio_viz_ig_number:n {#1} }",
+          "line": 112
+        }
+      ],
+      "explicitDefaultSourceLines": []
+    },
+    {
+      "family": "logic-tree",
+      "type": "string",
+      "syntax": "identifier",
+      "default": "demo-diagram-tree",
+      "source": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-diagram-flowchart.sty",
+      "reset": "explicit selected family entrypoint; flow/swimlane/state-selection inherit semio_viz_dg_reset:",
+      "setter": "data .tl_set:N to diagram table selector",
+      "consumer": "selected table rows/cells in family renderer; diagram layout where applicable",
+      "effective": true,
+      "registration": [
+        {
+          "text": "\\SemioVizFamily { logic-tree } { \\semio_viz_dg_logic_tree:n {#1} }",
+          "line": 1415
+        }
+      ],
+      "explicitDefaultSourceLines": []
+    },
+    {
+      "family": "matrix-grid",
+      "type": "string",
+      "syntax": "identifier",
+      "default": "demo-matrix-grid",
+      "source": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-diagram-process.sty",
+      "reset": "explicit selected family entrypoint; flow/swimlane/state-selection inherit semio_viz_dg_reset:",
+      "setter": "data .tl_set:N to diagram table selector",
+      "consumer": "selected table rows/cells in family renderer; diagram layout where applicable",
+      "effective": true,
+      "registration": [
+        {
+          "text": "\\SemioVizFamily { matrix-grid } { \\semio_viz_pm_matrix:n {#1} }",
+          "line": 696
+        }
+      ],
+      "explicitDefaultSourceLines": []
+    },
+    {
+      "family": "notation-board",
+      "type": "string",
+      "syntax": "identifier",
+      "default": "demo-board",
+      "source": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-diagram-process.sty",
+      "reset": "explicit selected family entrypoint; flow/swimlane/state-selection inherit semio_viz_dg_reset:",
+      "setter": "data .tl_set:N to diagram table selector",
+      "consumer": "selected table rows/cells in family renderer; diagram layout where applicable",
+      "effective": true,
+      "registration": [
+        {
+          "text": "\\SemioVizFamily { notation-board } { \\semio_viz_pm_board_game:n {#1} }",
+          "line": 1265
+        }
+      ],
+      "explicitDefaultSourceLines": []
+    },
+    {
+      "family": "notation-railroad",
+      "type": "string",
+      "syntax": "identifier",
+      "default": "demo-railroad",
+      "source": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-diagram-process.sty",
+      "reset": "explicit selected family entrypoint; flow/swimlane/state-selection inherit semio_viz_dg_reset:",
+      "setter": "data .tl_set:N to diagram table selector",
+      "consumer": "selected table rows/cells in family renderer; diagram layout where applicable",
+      "effective": true,
+      "registration": [
+        {
+          "text": "\\SemioVizFamily { notation-railroad } { \\semio_viz_pm_railroad:n {#1} }",
+          "line": 1344
+        }
+      ],
+      "explicitDefaultSourceLines": []
+    },
+    {
+      "family": "pm-board",
+      "type": "string",
+      "syntax": "identifier",
+      "default": "demo-pm-board",
+      "source": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-diagram-process.sty",
+      "reset": "explicit selected family entrypoint; flow/swimlane/state-selection inherit semio_viz_dg_reset:",
+      "setter": "data .tl_set:N to diagram table selector",
+      "consumer": "selected table rows/cells in family renderer; diagram layout where applicable",
+      "effective": true,
+      "registration": [
+        {
+          "text": "\\SemioVizFamily { pm-board } { \\semio_viz_pm_board:n {#1} }",
+          "line": 540
+        }
+      ],
+      "explicitDefaultSourceLines": []
+    },
+    {
+      "family": "pm-gantt",
+      "type": "string",
+      "syntax": "identifier",
+      "default": "demo-pm-gantt",
+      "source": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-diagram-process.sty",
+      "reset": "explicit selected family entrypoint; flow/swimlane/state-selection inherit semio_viz_dg_reset:",
+      "setter": "data .tl_set:N to diagram table selector",
+      "consumer": "selected table rows/cells in family renderer; diagram layout where applicable",
+      "effective": true,
+      "registration": [
+        {
+          "text": "\\SemioVizFamily { pm-gantt } { \\semio_viz_pm_gantt:n {#1} }",
+          "line": 327
+        }
+      ],
+      "explicitDefaultSourceLines": []
+    },
+    {
+      "family": "pm-network",
+      "type": "string",
+      "syntax": "identifier",
+      "default": "demo-pm-gantt",
+      "source": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-diagram-process.sty",
+      "reset": "explicit selected family entrypoint; flow/swimlane/state-selection inherit semio_viz_dg_reset:",
+      "setter": "data .tl_set:N to diagram table selector",
+      "consumer": "selected table rows/cells in family renderer; diagram layout where applicable",
+      "effective": true,
+      "registration": [
+        {
+          "text": "\\SemioVizFamily { pm-network } { \\semio_viz_pm_network:n {#1} }",
+          "line": 440
+        }
+      ],
+      "explicitDefaultSourceLines": []
+    },
+    {
+      "family": "schedule-calendar",
+      "type": "string",
+      "syntax": "identifier",
+      "default": "demo-schedule",
+      "source": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-diagram-process.sty",
+      "reset": "explicit selected family entrypoint; flow/swimlane/state-selection inherit semio_viz_dg_reset:",
+      "setter": "data .tl_set:N to diagram table selector",
+      "consumer": "selected table rows/cells in family renderer; diagram layout where applicable",
+      "effective": true,
+      "registration": [
+        {
+          "text": "\\SemioVizFamily { schedule-calendar } { \\semio_viz_pm_calendar:n {#1} }",
+          "line": 879
+        }
+      ],
+      "explicitDefaultSourceLines": []
+    },
+    {
+      "family": "schedule-timedistance",
+      "type": "string",
+      "syntax": "identifier",
+      "default": "demo-timedistance",
+      "source": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-diagram-process.sty",
+      "reset": "explicit selected family entrypoint; flow/swimlane/state-selection inherit semio_viz_dg_reset:",
+      "setter": "data .tl_set:N to diagram table selector",
+      "consumer": "selected table rows/cells in family renderer; diagram layout where applicable",
+      "effective": true,
+      "registration": [
+        {
+          "text": "\\SemioVizFamily { schedule-timedistance } { \\semio_viz_pm_timedistance:n {#1} }",
+          "line": 991
+        }
+      ],
+      "explicitDefaultSourceLines": []
+    },
+    {
+      "family": "seating",
+      "type": "string",
+      "syntax": "identifier",
+      "default": "demo-seating",
+      "source": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-diagram-process.sty",
+      "reset": "explicit selected family entrypoint; flow/swimlane/state-selection inherit semio_viz_dg_reset:",
+      "setter": "data .tl_set:N to diagram table selector",
+      "consumer": "selected table rows/cells in family renderer; diagram layout where applicable",
+      "effective": true,
+      "registration": [
+        {
+          "text": "\\SemioVizFamily { seating } { \\semio_viz_pm_seating:n {#1} }",
+          "line": 1127
+        }
+      ],
+      "explicitDefaultSourceLines": []
+    },
+    {
+      "family": "stage",
+      "type": "string",
+      "syntax": "identifier",
+      "default": "demo-diagram-cycle",
+      "source": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-diagram-flowchart.sty",
+      "reset": "explicit selected family entrypoint; flow/swimlane/state-selection inherit semio_viz_dg_reset:",
+      "setter": "data .tl_set:N to diagram table selector",
+      "consumer": "selected table rows/cells in family renderer; diagram layout where applicable",
+      "effective": true,
+      "registration": [
+        {
+          "text": "\\SemioVizFamily { stage } { \\semio_viz_dg_stage:n {#1} }",
+          "line": 1663
+        }
+      ],
+      "explicitDefaultSourceLines": []
+    },
+    {
+      "family": "state-overview",
+      "type": "string",
+      "syntax": "identifier",
+      "default": "demo-state-series",
+      "source": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-interactionstate.sty",
+      "reset": "explicit selected family entrypoint; flow/swimlane/state-selection inherit semio_viz_dg_reset:",
+      "setter": "data .tl_set:N to diagram table selector",
+      "consumer": "selected table rows/cells in family renderer; diagram layout where applicable",
+      "effective": true,
+      "registration": [
+        {
+          "text": "\\SemioVizFamily { state-overview } { \\semio_viz_is_overview:n {#1} }",
+          "line": 224
+        }
+      ],
+      "explicitDefaultSourceLines": []
+    },
+    {
+      "family": "state-selection",
+      "type": "string",
+      "syntax": "identifier",
+      "default": "demo-diagram-flow",
+      "source": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-interactionstate.sty",
+      "reset": "explicit selected family entrypoint; flow/swimlane/state-selection inherit semio_viz_dg_reset:",
+      "setter": "data .tl_set:N to diagram table selector",
+      "consumer": "selected table rows/cells in family renderer; diagram layout where applicable",
+      "effective": true,
+      "registration": [
+        {
+          "text": "\\SemioVizFamily { state-selection } { \\semio_viz_is_selection:n {#1} }",
+          "line": 391
+        }
+      ],
+      "explicitDefaultSourceLines": []
+    },
+    {
+      "family": "state-sequence",
+      "type": "string",
+      "syntax": "identifier",
+      "default": "demo-state-frames",
+      "source": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-interactionstate.sty",
+      "reset": "explicit selected family entrypoint; flow/swimlane/state-selection inherit semio_viz_dg_reset:",
+      "setter": "data .tl_set:N to diagram table selector",
+      "consumer": "selected table rows/cells in family renderer; diagram layout where applicable",
+      "effective": true,
+      "registration": [
+        {
+          "text": "\\SemioVizFamily { state-sequence } { \\semio_viz_is_sequence:n {#1} }",
+          "line": 530
+        }
+      ],
+      "explicitDefaultSourceLines": []
+    },
+    {
+      "family": "swimlane",
+      "type": "string",
+      "syntax": "identifier",
+      "default": "demo-diagram-flow",
+      "source": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-diagram-flowchart.sty",
+      "reset": "explicit selected family entrypoint; flow/swimlane/state-selection inherit semio_viz_dg_reset:",
+      "setter": "data .tl_set:N to diagram table selector",
+      "consumer": "selected table rows/cells in family renderer; diagram layout where applicable",
+      "effective": true,
+      "registration": [
+        {
+          "text": "\\SemioVizFamily { swimlane } { \\semio_viz_dg_run:n { lanes=row, routing=orthogonal, #1 } }",
+          "line": 1122
+        }
+      ],
+      "explicitDefaultSourceLines": []
+    },
+    {
+      "family": "uml-class",
+      "type": "string",
+      "syntax": "identifier",
+      "default": "demo-uml-class",
+      "source": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-diagram-uml.sty",
+      "reset": "explicit selected family entrypoint; flow/swimlane/state-selection inherit semio_viz_dg_reset:",
+      "setter": "data .tl_set:N to diagram table selector",
+      "consumer": "selected table rows/cells in family renderer; diagram layout where applicable",
+      "effective": true,
+      "registration": [
+        {
+          "text": "\\SemioVizFamily { uml-class } { \\semio_viz_uml_class:n {#1} }",
+          "line": 201
+        }
+      ],
+      "explicitDefaultSourceLines": []
+    },
+    {
+      "family": "uml-sequence",
+      "type": "string",
+      "syntax": "identifier",
+      "default": "demo-uml-sequence",
+      "source": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-diagram-uml.sty",
+      "reset": "explicit selected family entrypoint; flow/swimlane/state-selection inherit semio_viz_dg_reset:",
+      "setter": "data .tl_set:N to diagram table selector",
+      "consumer": "selected table rows/cells in family renderer; diagram layout where applicable",
+      "effective": true,
+      "registration": [
+        {
+          "text": "\\SemioVizFamily { uml-sequence } { \\semio_viz_uml_sequence:n {#1} }",
+          "line": 511
+        }
+      ],
+      "explicitDefaultSourceLines": []
+    },
+    {
+      "family": "uml-timing",
+      "type": "string",
+      "syntax": "identifier",
+      "default": "demo-uml-timing",
+      "source": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-diagram-uml.sty",
+      "reset": "explicit selected family entrypoint; flow/swimlane/state-selection inherit semio_viz_dg_reset:",
+      "setter": "data .tl_set:N to diagram table selector",
+      "consumer": "selected table rows/cells in family renderer; diagram layout where applicable",
+      "effective": true,
+      "registration": [
+        {
+          "text": "\\SemioVizFamily { uml-timing } { \\semio_viz_uml_timing:n {#1} }",
+          "line": 616
+        }
+      ],
+      "explicitDefaultSourceLines": []
+    },
+    {
+      "family": "uml-usecase",
+      "type": "string",
+      "syntax": "identifier",
+      "default": "demo-uml-usecase",
+      "source": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-diagram-uml.sty",
+      "reset": "explicit selected family entrypoint; flow/swimlane/state-selection inherit semio_viz_dg_reset:",
+      "setter": "data .tl_set:N to diagram table selector",
+      "consumer": "selected table rows/cells in family renderer; diagram layout where applicable",
+      "effective": true,
+      "registration": [
+        {
+          "text": "\\SemioVizFamily { uml-usecase } { \\semio_viz_uml_usecase:n {#1} }",
+          "line": 341
+        }
+      ],
+      "explicitDefaultSourceLines": []
+    },
+    {
+      "family": "axis",
+      "type": "string",
+      "syntax": "identifier",
+      "default": "demo",
+      "source": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-guide.sty",
+      "variable": "l_semio_viz_faxis_data_tl",
+      "setter": "1250 data .tl_set:N",
+      "reset": "1264 semio_viz_faxis_reset:",
+      "consumer": "1280–1286 scale-from-table bindings;1316 table cells",
+      "effective": true,
+      "registration": [
+        {
+          "text": "\\SemioVizFamily{axis}{ \\semio_viz_faxis_render:n {#1} }",
+          "line": 1444
+        }
+      ],
+      "explicitDefaultSourceLines": []
+    }
+  ],
+  "sourceBindings": [
+    {
+      "sha256": "E907ECA8A0E9D065B59BB94DC145E49B9DE5583FD28C8F364A288825F09D11F0",
+      "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-network-matrix.sty"
+    },
+    {
+      "sha256": "67E16AD2F93F6B009B114C7C61C1445CAF5A22487E2EEA81306ADA688CCB348E",
+      "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-network-arc.sty"
+    },
+    {
+      "sha256": "D379FF729DCD0F9392B2AD70A320233854332D5B499154C79E871F0E08DB4137",
+      "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-network-chord.sty"
+    },
+    {
+      "sha256": "E9055A5656E105EB26B8C648D0BF169D7422680723AE4E1104CE61108118967D",
+      "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-network-bundling.sty"
+    },
+    {
+      "sha256": "B734B8AA5DB1165687AECAA38A7ACC236B39A579106CD7C47DE2437F9AB7D32F",
+      "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-flow-sankey.sty"
+    },
+    {
+      "sha256": "E2B5DE23CCBF47B44D505D8E275197C1AA5B505B94E0A6E93711E1D0563E013D",
+      "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-diagram-flowchart.sty"
+    },
+    {
+      "sha256": "AE1C0D5B4C592BE5FB8627B2B5556406AF531E1BCE315A98F2755E8C4EDF83F8",
+      "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-infographic.sty"
+    },
+    {
+      "sha256": "B4E830D9A6AE944A7326A1088B1C78D15ED757F1651549483DED56DB06594CB7",
+      "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-diagram-process.sty"
+    },
+    {
+      "sha256": "4AD31C86ED4101E31745679B716FEEC1F3EB98C95F25282824B9044BD51BFB87",
+      "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-interactionstate.sty"
+    },
+    {
+      "sha256": "829FC63B9248379936862F038E739100D3D04E18D3F18D27A368C085F02DB103",
+      "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-diagram-uml.sty"
+    },
+    {
+      "sha256": "623D4F9EE92C09983F784E484978D01776EC4FF8CF4C4A55712FBE3C93A053ED",
+      "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-guide.sty"
+    },
+    {
+      "sha256": "E7E70BD06B1FA0C720423C58EFEE3537867394BF9FDC2B28545246C46016F4E7",
+      "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-network-graph.sty"
+    },
+    {
+      "sha256": "FD26AEBF9AE306FFD64B574542168C9949801E5F0CDC1F59B38AD8D7532090F0",
+      "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-flow-alluvial.sty"
+    },
+    {
+      "sha256": "06F25750E0BCDBF4369040F9F1CDB0DFD8916DD30DC62FB024C9A93FFFC656AA",
+      "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-flow-parallelsets.sty"
+    }
+  ],
+  "scope": "Explicit source-reset defaults; no metadata-derived default inference"
+}

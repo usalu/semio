@@ -1,0 +1,44 @@
+{
+  "before": "50CDCB158E5CF97FD11EBFA16B365D9F1AC938D08F4C9E531A6BFE1F95B182A3",
+  "after": "75DC9F7E6A7B053A2E8CAA80E418801F9A2890543739E9C5EE851CB98976DD8B",
+  "section": "%region 🔖️GenericMarkFamilyKeyTable\n\\section{\\ApiText{Mark family key scope}{Schlüsselbereich der Markenfamilien}}\n\\ApiScopeSource{api-path-family-mark}{semio / viz / family / mark}\n\\ApiText{The seven section-zero families share these direct bindings. Every other key is forwarded to the mark kernel. Explicit options are applied again after the selected mark defaults, so caller values win. The current data mapping uses an internal 80 by 40 mm rectangle with 6 mm padding.}{Die sieben Familien des Abschnitts null teilen diese direkten Bindungen. Jeder andere Schlüssel wird an den Markenkern weitergeleitet. Explizite Optionen werden nach den Vorgaben der gewählten Marke erneut angewandt, daher gelten die Aufruferwerte. Die derzeitige Datenabbildung verwendet ein internes Rechteck von 80 mal 40 mm mit 6 mm Innenabstand.}\n\\SemioTableLong[text-size=8pt]{\\Key{api-path-family-mark}}{0.19,0.12,0.16,0.53}{\\ApiKey & \\ApiType & \\ApiDefault & \\ApiMeaning}{%\n  \\SemioTableRow{\\Key{variant} & \\Key{string} & \\ApiText{family kind}{Familienart} & \\ApiText{Section-zero mark slug; each family supplies its own initial kind before the explicit caller override.}{Marken-Slug des Abschnitts null; jede Familie liefert ihre Anfangsart vor der expliziten Aufruferüberschreibung.}}\n  \\SemioTableRow{\\Key{data} & \\Key{string} & \\Key{demo} & \\ApiText{Table supplying the mark-family rows.}{Tabelle mit den Reihen der Markenfamilie.}}\n  \\SemioTableRow{\\Key{x} & \\Key{string} & \\Key{t} & \\ApiText{Column mapped to horizontal positions.}{Auf waagerechte Positionen abgebildete Spalte.}}\n  \\SemioTableRow{\\Key{y} & \\Key{string} & \\Key{val} & \\ApiText{Column mapped to vertical positions.}{Auf senkrechte Positionen abgebildete Spalte.}}\n}\n\\ApiKeyScope{api-path-mark}\n%endregion 🔖️GenericMarkFamilyKeyTable\n\n",
+  "insert": "%region 🔖️GeneratedNamespaces",
+  "id": "api-path-family-mark",
+  "scope": "semio / viz / family / mark",
+  "rows": [
+    {
+      "key": "variant",
+      "type": "string",
+      "defaultValue": null,
+      "en": "Section-zero mark slug; each family supplies its own initial kind before the explicit caller override.",
+      "de": "Marken-Slug des Abschnitts null; jede Familie liefert ihre Anfangsart vor der expliziten Aufruferüberschreibung."
+    },
+    {
+      "key": "data",
+      "type": "string",
+      "defaultValue": "demo",
+      "en": "Table supplying the mark-family rows.",
+      "de": "Tabelle mit den Reihen der Markenfamilie."
+    },
+    {
+      "key": "x",
+      "type": "string",
+      "defaultValue": "t",
+      "en": "Column mapped to horizontal positions.",
+      "de": "Auf waagerechte Positionen abgebildete Spalte."
+    },
+    {
+      "key": "y",
+      "type": "string",
+      "defaultValue": "val",
+      "en": "Column mapped to vertical positions.",
+      "de": "Auf senkrechte Positionen abgebildete Spalte."
+    }
+  ],
+  "sourceBindings": [
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🖋️latex\\semio-viz-mark.sty",
+      "sha256": "ADECBA7FB5226DE2ABD1B3901E392C178EC0B8ED8FB6B12F34751B3EB5D2EE66"
+    }
+  ]
+}

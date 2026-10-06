@@ -1,0 +1,22 @@
+[
+  {
+    "file": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-network-graph.sty",
+    "before": "700eb10d37e987524fcddbf5b50c538dcd56f2d0c3f0f3b55ddfdb8cde16c031",
+    "candidate": "340ca330453bbaa460a0694003a6bb8bed2791999e5baaf5add28c67e320ba9f"
+  },
+  {
+    "file": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-network-matrix.sty",
+    "before": "800ca330615d88bea1b90fdb5087b25c5511885dc2f9d6f5a3b9063417e654c4",
+    "candidate": "e907eca8a0e9d065b59bb94dc145e49b9de5583fd28c8f364a288825f09d11f0"
+  },
+  {
+    "file": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-diagram-flowchart.sty",
+    "before": "1b4f0f70fbece1c296913a63b89bce1760179f158272847398ff2891c89ca30d",
+    "candidate": "e2b5de23ccbf47b44d505d8e275197c1aa5b505b94e0a6e93711e1d0563e013d"
+  },
+  {
+    "file": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-mark.sty",
+    "before": "adecba7fb5226de2abd1b3901e392c178ec0b8ed8fb6b12f34751b3eb5d2ee66",
+    "candidate": "401c6500a8afe6cd346507966a769246f649620cad035f4eec7d6b6583073064"
+  }
+]

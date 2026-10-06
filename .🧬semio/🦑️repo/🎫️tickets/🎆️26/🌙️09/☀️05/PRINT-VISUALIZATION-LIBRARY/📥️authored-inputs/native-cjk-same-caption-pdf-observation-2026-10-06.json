@@ -1,0 +1,2277 @@
+[
+  {
+    "language": "en",
+    "path": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\native-cjk-same-caption-fixed\\en\\🧪️probe-out\\en.pdf",
+    "sha256": "9119d87c8c25b4d7d1457e5c3d03b02a5599f64dc2e231e8d9e0685b22a857fe",
+    "fonts": {
+      "/F1": {
+        "base": "/IHAIZV+Anta-Regular",
+        "embedded": true,
+        "toUnicode": "/CIDInit /ProcSet findresource begin\n12 dict begin\nbegincmap\n/CMapName /IHAIZV+Anta-Regular-UTF16 def\n/CMapType 2 def\n/CIDSystemInfo <<\n  /Registry (Adobe)\n  /Ordering (UCS)\n  /Supplement 0\n>> def\n1 begincodespacerange\n<0000> <FFFF>\nendcodespacerange\n36 beginbfchar\n<0001> <0041>\n<0014> <0044>\n<0019> <0045>\n<0023> <0046>\n<0024> <0047>\n<0039> <004C>\n<0040> <004E>\n<0055> <0052>\n<0058> <0053>\n<0088> <0061>\n<0094> <0062>\n<0096> <0063>\n<009C> <0064>\n<00A1> <0065>\n<00AB> <0066>\n<00AC> <0067>\n<00B3> <0069>\n<00BE> <006A>\n<00C1> <006B>\n<00C3> <006C>\n<00C8> <006D>\n<00CA> <006E>\n<00D0> <006F>\n<00D4> <00F6>\n<00DC> <0070>\n<00E0> <0072>\n<00E3> <0073>\n<00E9> <00DF>\n<00EA> <0074>\n<00EE> <0075>\n<0102> <0076>\n<0103> <0077>\n<0112> <00660069>\n<0113> <0066006C>\n<0138> <002F>\n<013C> <002D>\nendbfchar\nendcmap\nCMapName currentdict /CMap defineresource pop\nend\nend\n",
+        "widths": {
+          "1": 665.0,
+          "20": 692.0,
+          "25": 666.0,
+          "35": 592.0,
+          "36": 694.0,
+          "57": 626.0,
+          "64": 676.0,
+          "85": 671.0,
+          "88": 683.0,
+          "150": 580.0,
+          "171": 353.0,
+          "179": 221.0,
+          "190": 257.0,
+          "193": 548.0,
+          "195": 220.0,
+          "200": 839.0,
+          "202": 582.0,
+          "208": 583.0,
+          "212": 583.0,
+          "224": 351.0,
+          "227": 583.0,
+          "233": 587.0,
+          "234": 393.0,
+          "238": 582.0,
+          "258": 525.0,
+          "259": 729.0,
+          "274": 574.0,
+          "275": 571.0,
+          "312": 679.0,
+          "316": 423.0
+        },
+        "defaultWidth": 577.0,
+        "mapping": {
+          "0": "￿",
+          "1": "A",
+          "20": "D",
+          "25": "E",
+          "35": "F",
+          "36": "G",
+          "57": "L",
+          "64": "N",
+          "85": "R",
+          "88": "S",
+          "136": "a",
+          "148": "b",
+          "150": "c",
+          "156": "d",
+          "161": "e",
+          "171": "f",
+          "172": "g",
+          "179": "i",
+          "190": "j",
+          "193": "k",
+          "195": "l",
+          "200": "m",
+          "202": "n",
+          "208": "o",
+          "212": "ö",
+          "220": "p",
+          "224": "r",
+          "227": "s",
+          "233": "ß",
+          "234": "t",
+          "238": "u",
+          "258": "v",
+          "259": "w",
+          "274": "fi",
+          "275": "fl",
+          "312": "/",
+          "316": "-"
+        },
+        "cidBytes": 2
+      },
+      "/F3": {
+        "base": "/BZIVMZ+NotoSansCJKsc-Regular-Identity-H",
+        "embedded": true,
+        "toUnicode": "/CIDInit /ProcSet findresource begin\n12 dict begin\nbegincmap\n/CMapName /BZIVMZ+NotoSansCJKsc-Regular-UTF16 def\n/CMapType 2 def\n/CIDSystemInfo <<\n  /Registry (Adobe)\n  /Ordering (UCS)\n  /Supplement 0\n>> def\n1 begincodespacerange\n<0000> <FFFF>\nendcodespacerange\n3 beginbfchar\n<3BF9> <5B50>\n<52AF> <6839>\n<8717> <8449>\nendbfchar\nendcmap\nCMapName currentdict /CMap defineresource pop\nend\nend\n",
+        "widths": {},
+        "defaultWidth": 1000.0,
+        "mapping": {
+          "0": "￿",
+          "15353": "子",
+          "21167": "根",
+          "34583": "葉"
+        },
+        "cidBytes": 2
+      },
+      "/F5": {
+        "base": "/IXFAWU+ShareTechMono-Regular",
+        "embedded": true,
+        "toUnicode": "/CIDInit /ProcSet findresource begin\n12 dict begin\nbegincmap\n/CMapName /IXFAWU+ShareTechMono-Regular-UTF16 def\n/CMapType 2 def\n/CIDSystemInfo <<\n  /Registry (Adobe)\n  /Ordering (UCS)\n  /Supplement 0\n>> def\n1 begincodespacerange\n<0000> <FFFF>\nendcodespacerange\n9 beginbfchar\n<001F> <004C>\n<002F> <0052>\n<0040> <0061>\n<004D> <0065>\n<0052> <0066>\n<0062> <006F>\n<0071> <0074>\n<0089> <0031>\n<00A9> <002F>\nendbfchar\nendcmap\nCMapName currentdict /CMap defineresource pop\nend\nend\n",
+        "widths": {},
+        "defaultWidth": 540.0,
+        "mapping": {
+          "0": "￿",
+          "31": "L",
+          "47": "R",
+          "64": "a",
+          "77": "e",
+          "82": "f",
+          "98": "o",
+          "113": "t",
+          "137": "1",
+          "169": "/"
+        },
+        "cidBytes": 2
+      }
+    },
+    "runs": [
+      {
+        "page": 1,
+        "text": "Font Run Audit",
+        "font": "/IHAIZV+Anta-Regular",
+        "size": 7.173098
+      },
+      {
+        "page": 1,
+        "text": " Frontmatter",
+        "font": "/IHAIZV+Anta-Regular",
+        "size": 7.173098
+      },
+      {
+        "page": 1,
+        "text": "probe native-cjk-same-caption / en",
+        "font": "/IHAIZV+Anta-Regular",
+        "size": 10.909088
+      },
+      {
+        "page": 1,
+        "text": "根子葉",
+        "font": "/BZIVMZ+NotoSansCJKsc-Regular-Identity-H",
+        "size": 7.970112
+      },
+      {
+        "page": 1,
+        "text": "LatinFollowing END",
+        "font": "/IHAIZV+Anta-Regular",
+        "size": 10.909088
+      },
+      {
+        "page": 1,
+        "text": "Root",
+        "font": "/IHAIZV+Anta-Regular",
+        "size": 7.970112
+      },
+      {
+        "page": 1,
+        "text": " 根",
+        "font": "/BZIVMZ+NotoSansCJKsc-Regular-Identity-H",
+        "size": 7.970112
+      },
+      {
+        "page": 1,
+        "text": " / Leaf",
+        "font": "/IHAIZV+Anta-Regular",
+        "size": 7.970112
+      },
+      {
+        "page": 1,
+        "text": " 葉",
+        "font": "/BZIVMZ+NotoSansCJKsc-Regular-Identity-H",
+        "size": 7.970112
+      },
+      {
+        "page": 1,
+        "text": "LatinFollowing END",
+        "font": "/IHAIZV+Anta-Regular",
+        "size": 10.909088
+      },
+      {
+        "page": 1,
+        "text": "Root",
+        "font": "/IHAIZV+Anta-Regular",
+        "size": 7.970112
+      },
+      {
+        "page": 1,
+        "text": " 根",
+        "font": "/BZIVMZ+NotoSansCJKsc-Regular-Identity-H",
+        "size": 7.970112
+      },
+      {
+        "page": 1,
+        "text": " / Leaf",
+        "font": "/IHAIZV+Anta-Regular",
+        "size": 7.970112
+      },
+      {
+        "page": 1,
+        "text": " 葉",
+        "font": "/BZIVMZ+NotoSansCJKsc-Regular-Identity-H",
+        "size": 7.970112
+      },
+      {
+        "page": 1,
+        "text": "LatinFollowing END",
+        "font": "/IHAIZV+Anta-Regular",
+        "size": 10.909088
+      },
+      {
+        "page": 1,
+        "text": "Root",
+        "font": "/IXFAWU+ShareTechMono-Regular",
+        "size": 7.970112
+      },
+      {
+        "page": 1,
+        "text": " 根",
+        "font": "/BZIVMZ+NotoSansCJKsc-Regular-Identity-H",
+        "size": 7.970112
+      },
+      {
+        "page": 1,
+        "text": " / Leaf",
+        "font": "/IXFAWU+ShareTechMono-Regular",
+        "size": 7.970112
+      },
+      {
+        "page": 1,
+        "text": " 葉",
+        "font": "/BZIVMZ+NotoSansCJKsc-Regular-Identity-H",
+        "size": 7.970112
+      },
+      {
+        "page": 1,
+        "text": "LatinFollowing END",
+        "font": "/IHAIZV+Anta-Regular",
+        "size": 10.909088
+      },
+      {
+        "page": 1,
+        "text": "office affine fi fl Straße Größe",
+        "font": "/IHAIZV+Anta-Regular",
+        "size": 7.970112
+      },
+      {
+        "page": 1,
+        "text": "LatinFollowing END",
+        "font": "/IHAIZV+Anta-Regular",
+        "size": 10.909088
+      },
+      {
+        "page": 1,
+        "text": "根子葉",
+        "font": "/BZIVMZ+NotoSansCJKsc-Regular-Identity-H",
+        "size": 11.955168
+      },
+      {
+        "page": 1,
+        "text": "LatinFollowing END",
+        "font": "/IHAIZV+Anta-Regular",
+        "size": 10.909088
+      },
+      {
+        "page": 1,
+        "text": "Root",
+        "font": "/IHAIZV+Anta-Regular",
+        "size": 11.955168
+      },
+      {
+        "page": 1,
+        "text": " 根",
+        "font": "/BZIVMZ+NotoSansCJKsc-Regular-Identity-H",
+        "size": 11.955168
+      },
+      {
+        "page": 1,
+        "text": " / Leaf",
+        "font": "/IHAIZV+Anta-Regular",
+        "size": 11.955168
+      },
+      {
+        "page": 1,
+        "text": " 葉",
+        "font": "/BZIVMZ+NotoSansCJKsc-Regular-Identity-H",
+        "size": 11.955168
+      },
+      {
+        "page": 1,
+        "text": "LatinFollowing END",
+        "font": "/IHAIZV+Anta-Regular",
+        "size": 10.909088
+      },
+      {
+        "page": 1,
+        "text": "Root",
+        "font": "/IHAIZV+Anta-Regular",
+        "size": 11.955168
+      },
+      {
+        "page": 1,
+        "text": " 根",
+        "font": "/BZIVMZ+NotoSansCJKsc-Regular-Identity-H",
+        "size": 11.955168
+      },
+      {
+        "page": 1,
+        "text": " / Leaf",
+        "font": "/IHAIZV+Anta-Regular",
+        "size": 11.955168
+      },
+      {
+        "page": 1,
+        "text": " 葉",
+        "font": "/BZIVMZ+NotoSansCJKsc-Regular-Identity-H",
+        "size": 11.955168
+      },
+      {
+        "page": 1,
+        "text": "LatinFollowing END",
+        "font": "/IHAIZV+Anta-Regular",
+        "size": 10.909088
+      },
+      {
+        "page": 1,
+        "text": "Root",
+        "font": "/IXFAWU+ShareTechMono-Regular",
+        "size": 11.955168
+      },
+      {
+        "page": 1,
+        "text": " 根",
+        "font": "/BZIVMZ+NotoSansCJKsc-Regular-Identity-H",
+        "size": 11.955168
+      },
+      {
+        "page": 1,
+        "text": " / Leaf",
+        "font": "/IXFAWU+ShareTechMono-Regular",
+        "size": 11.955168
+      },
+      {
+        "page": 1,
+        "text": " 葉",
+        "font": "/BZIVMZ+NotoSansCJKsc-Regular-Identity-H",
+        "size": 11.955168
+      },
+      {
+        "page": 1,
+        "text": "LatinFollowing END",
+        "font": "/IHAIZV+Anta-Regular",
+        "size": 10.909088
+      },
+      {
+        "page": 1,
+        "text": "office affine fi fl Straße Größe",
+        "font": "/IHAIZV+Anta-Regular",
+        "size": 11.955168
+      },
+      {
+        "page": 1,
+        "text": "LatinFollowing END",
+        "font": "/IHAIZV+Anta-Regular",
+        "size": 10.909088
+      },
+      {
+        "page": 1,
+        "text": "1",
+        "font": "/IXFAWU+ShareTechMono-Regular",
+        "size": 7.173098
+      }
+    ],
+    "textOperators": [
+      {
+        "page": 1,
+        "font": "/IHAIZV+Anta-Regular",
+        "sizePdfPt": 7.173098,
+        "codes": [
+          35,
+          208,
+          202,
+          234,
+          85,
+          238,
+          202,
+          1,
+          238,
+          156,
+          179,
+          234
+        ],
+        "text": "FontRunAudit",
+        "advanceMm": 17.723689043844445,
+        "adjust": -581.0
+      },
+      {
+        "page": 1,
+        "font": "/IHAIZV+Anta-Regular",
+        "sizePdfPt": 7.173098,
+        "codes": [
+          35,
+          224,
+          208,
+          202,
+          234,
+          200,
+          136,
+          234,
+          234,
+          161,
+          224
+        ],
+        "text": "Frontmatter",
+        "advanceMm": 14.201219719311112,
+        "adjust": 19.0
+      },
+      {
+        "page": 1,
+        "font": "/IHAIZV+Anta-Regular",
+        "sizePdfPt": 10.909088,
+        "codes": [
+          220,
+          224,
+          208,
+          148,
+          161,
+          202,
+          136,
+          234,
+          179,
+          258,
+          161,
+          316,
+          150,
+          190,
+          193,
+          316,
+          227,
+          136,
+          200,
+          161,
+          316,
+          150,
+          136,
+          220,
+          234,
+          179,
+          208,
+          202,
+          312,
+          161,
+          202
+        ],
+        "text": "probenative-cjk-same-caption/en",
+        "advanceMm": 65.34725530133333,
+        "adjust": -859.0
+      },
+      {
+        "page": 1,
+        "font": "/BZIVMZ+NotoSansCJKsc-Regular-Identity-H",
+        "sizePdfPt": 7.970112,
+        "codes": [
+          21167,
+          15353,
+          34583
+        ],
+        "text": "根子葉",
+        "advanceMm": 8.4350352,
+        "adjust": 0
+      },
+      {
+        "page": 1,
+        "font": "/IHAIZV+Anta-Regular",
+        "sizePdfPt": 10.909088,
+        "codes": [
+          57,
+          136,
+          234,
+          179,
+          202,
+          35,
+          208,
+          195,
+          195,
+          208,
+          259,
+          179,
+          202,
+          172,
+          25,
+          64,
+          20
+        ],
+        "text": "LatinFollowingEND",
+        "advanceMm": 34.74411194702222,
+        "adjust": -288.0
+      },
+      {
+        "page": 1,
+        "font": "/IHAIZV+Anta-Regular",
+        "sizePdfPt": 7.970112,
+        "codes": [
+          85,
+          208,
+          208,
+          234
+        ],
+        "text": "Root",
+        "advanceMm": 6.270042832000001,
+        "adjust": 0
+      },
+      {
+        "page": 1,
+        "font": "/BZIVMZ+NotoSansCJKsc-Regular-Identity-H",
+        "sizePdfPt": 7.970112,
+        "codes": [
+          21167
+        ],
+        "text": "根",
+        "advanceMm": 2.8116784,
+        "adjust": 0
+      },
+      {
+        "page": 1,
+        "font": "/IHAIZV+Anta-Regular",
+        "sizePdfPt": 7.970112,
+        "codes": [
+          312,
+          57,
+          161,
+          136,
+          171
+        ],
+        "text": "/Leaf",
+        "advanceMm": 8.719014718399999,
+        "adjust": -289.0
+      },
+      {
+        "page": 1,
+        "font": "/BZIVMZ+NotoSansCJKsc-Regular-Identity-H",
+        "sizePdfPt": 7.970112,
+        "codes": [
+          34583
+        ],
+        "text": "葉",
+        "advanceMm": 2.8116784,
+        "adjust": 0
+      },
+      {
+        "page": 1,
+        "font": "/IHAIZV+Anta-Regular",
+        "sizePdfPt": 10.909088,
+        "codes": [
+          57,
+          136,
+          234,
+          179,
+          202,
+          35,
+          208,
+          195,
+          195,
+          208,
+          259,
+          179,
+          202,
+          172,
+          25,
+          64,
+          20
+        ],
+        "text": "LatinFollowingEND",
+        "advanceMm": 34.74411194702222,
+        "adjust": -288.0
+      },
+      {
+        "page": 1,
+        "font": "/IHAIZV+Anta-Regular",
+        "sizePdfPt": 7.970112,
+        "codes": [
+          85,
+          208,
+          208,
+          234
+        ],
+        "text": "Root",
+        "advanceMm": 6.270042832000001,
+        "adjust": 0
+      },
+      {
+        "page": 1,
+        "font": "/BZIVMZ+NotoSansCJKsc-Regular-Identity-H",
+        "sizePdfPt": 7.970112,
+        "codes": [
+          21167
+        ],
+        "text": "根",
+        "advanceMm": 2.8116784,
+        "adjust": 0
+      },
+      {
+        "page": 1,
+        "font": "/IHAIZV+Anta-Regular",
+        "sizePdfPt": 7.970112,
+        "codes": [
+          312,
+          57,
+          161,
+          136,
+          171
+        ],
+        "text": "/Leaf",
+        "advanceMm": 8.719014718399999,
+        "adjust": -289.0
+      },
+      {
+        "page": 1,
+        "font": "/BZIVMZ+NotoSansCJKsc-Regular-Identity-H",
+        "sizePdfPt": 7.970112,
+        "codes": [
+          34583
+        ],
+        "text": "葉",
+        "advanceMm": 2.8116784,
+        "adjust": 0
+      },
+      {
+        "page": 1,
+        "font": "/IHAIZV+Anta-Regular",
+        "sizePdfPt": 10.909088,
+        "codes": [
+          57,
+          136,
+          234,
+          179,
+          202,
+          35,
+          208,
+          195,
+          195,
+          208,
+          259,
+          179,
+          202,
+          172,
+          25,
+          64,
+          20
+        ],
+        "text": "LatinFollowingEND",
+        "advanceMm": 34.74411194702222,
+        "adjust": -288.0
+      },
+      {
+        "page": 1,
+        "font": "/IXFAWU+ShareTechMono-Regular",
+        "sizePdfPt": 7.970112,
+        "codes": [
+          47,
+          98,
+          98,
+          113
+        ],
+        "text": "Root",
+        "advanceMm": 6.073225344,
+        "adjust": 0
+      },
+      {
+        "page": 1,
+        "font": "/BZIVMZ+NotoSansCJKsc-Regular-Identity-H",
+        "sizePdfPt": 7.970112,
+        "codes": [
+          21167
+        ],
+        "text": "根",
+        "advanceMm": 2.8116784,
+        "adjust": 0
+      },
+      {
+        "page": 1,
+        "font": "/IXFAWU+ShareTechMono-Regular",
+        "sizePdfPt": 7.970112,
+        "codes": [
+          169,
+          31,
+          77,
+          64,
+          82
+        ],
+        "text": "/Leaf",
+        "advanceMm": 9.109838016,
+        "adjust": -540.0
+      },
+      {
+        "page": 1,
+        "font": "/BZIVMZ+NotoSansCJKsc-Regular-Identity-H",
+        "sizePdfPt": 7.970112,
+        "codes": [
+          34583
+        ],
+        "text": "葉",
+        "advanceMm": 2.8116784,
+        "adjust": 0
+      },
+      {
+        "page": 1,
+        "font": "/IHAIZV+Anta-Regular",
+        "sizePdfPt": 10.909088,
+        "codes": [
+          57,
+          136,
+          234,
+          179,
+          202,
+          35,
+          208,
+          195,
+          195,
+          208,
+          259,
+          179,
+          202,
+          172,
+          25,
+          64,
+          20
+        ],
+        "text": "LatinFollowingEND",
+        "advanceMm": 34.74411194702222,
+        "adjust": -288.0
+      },
+      {
+        "page": 1,
+        "font": "/IHAIZV+Anta-Regular",
+        "sizePdfPt": 7.970112,
+        "codes": [
+          208,
+          171,
+          274,
+          150,
+          161,
+          136,
+          171,
+          274,
+          202,
+          161,
+          274,
+          275,
+          88,
+          234,
+          224,
+          136,
+          233,
+          161,
+          36,
+          224,
+          212,
+          233,
+          161
+        ],
+        "text": "officeaffinefiflStraßeGröße",
+        "advanceMm": 39.0570246544,
+        "adjust": -1456.0
+      },
+      {
+        "page": 1,
+        "font": "/IHAIZV+Anta-Regular",
+        "sizePdfPt": 10.909088,
+        "codes": [
+          57,
+          136,
+          234,
+          179,
+          202,
+          35,
+          208,
+          195,
+          195,
+          208,
+          259,
+          179,
+          202,
+          172,
+          25,
+          64,
+          20
+        ],
+        "text": "LatinFollowingEND",
+        "advanceMm": 34.74411194702222,
+        "adjust": -288.0
+      },
+      {
+        "page": 1,
+        "font": "/BZIVMZ+NotoSansCJKsc-Regular-Identity-H",
+        "sizePdfPt": 11.955168,
+        "codes": [
+          21167,
+          15353,
+          34583
+        ],
+        "text": "根子葉",
+        "advanceMm": 12.6525528,
+        "adjust": 0
+      },
+      {
+        "page": 1,
+        "font": "/IHAIZV+Anta-Regular",
+        "sizePdfPt": 10.909088,
+        "codes": [
+          57,
+          136,
+          234,
+          179,
+          202,
+          35,
+          208,
+          195,
+          195,
+          208,
+          259,
+          179,
+          202,
+          172,
+          25,
+          64,
+          20
+        ],
+        "text": "LatinFollowingEND",
+        "advanceMm": 34.74411194702222,
+        "adjust": -288.0
+      },
+      {
+        "page": 1,
+        "font": "/IHAIZV+Anta-Regular",
+        "sizePdfPt": 11.955168,
+        "codes": [
+          85,
+          208,
+          208,
+          234
+        ],
+        "text": "Root",
+        "advanceMm": 9.405064247999999,
+        "adjust": 0
+      },
+      {
+        "page": 1,
+        "font": "/BZIVMZ+NotoSansCJKsc-Regular-Identity-H",
+        "sizePdfPt": 11.955168,
+        "codes": [
+          21167
+        ],
+        "text": "根",
+        "advanceMm": 4.2175176,
+        "adjust": 0
+      },
+      {
+        "page": 1,
+        "font": "/IHAIZV+Anta-Regular",
+        "sizePdfPt": 11.955168,
+        "codes": [
+          312,
+          57,
+          161,
+          136,
+          171
+        ],
+        "text": "/Leaf",
+        "advanceMm": 13.0785220776,
+        "adjust": -289.0
+      },
+      {
+        "page": 1,
+        "font": "/BZIVMZ+NotoSansCJKsc-Regular-Identity-H",
+        "sizePdfPt": 11.955168,
+        "codes": [
+          34583
+        ],
+        "text": "葉",
+        "advanceMm": 4.2175176,
+        "adjust": 0
+      },
+      {
+        "page": 1,
+        "font": "/IHAIZV+Anta-Regular",
+        "sizePdfPt": 10.909088,
+        "codes": [
+          57,
+          136,
+          234,
+          179,
+          202,
+          35,
+          208,
+          195,
+          195,
+          208,
+          259,
+          179,
+          202,
+          172,
+          25,
+          64,
+          20
+        ],
+        "text": "LatinFollowingEND",
+        "advanceMm": 34.74411194702222,
+        "adjust": -288.0
+      },
+      {
+        "page": 1,
+        "font": "/IHAIZV+Anta-Regular",
+        "sizePdfPt": 11.955168,
+        "codes": [
+          85,
+          208,
+          208,
+          234
+        ],
+        "text": "Root",
+        "advanceMm": 9.405064247999999,
+        "adjust": 0
+      },
+      {
+        "page": 1,
+        "font": "/BZIVMZ+NotoSansCJKsc-Regular-Identity-H",
+        "sizePdfPt": 11.955168,
+        "codes": [
+          21167
+        ],
+        "text": "根",
+        "advanceMm": 4.2175176,
+        "adjust": 0
+      },
+      {
+        "page": 1,
+        "font": "/IHAIZV+Anta-Regular",
+        "sizePdfPt": 11.955168,
+        "codes": [
+          312,
+          57,
+          161,
+          136,
+          171
+        ],
+        "text": "/Leaf",
+        "advanceMm": 13.0785220776,
+        "adjust": -289.0
+      },
+      {
+        "page": 1,
+        "font": "/BZIVMZ+NotoSansCJKsc-Regular-Identity-H",
+        "sizePdfPt": 11.955168,
+        "codes": [
+          34583
+        ],
+        "text": "葉",
+        "advanceMm": 4.2175176,
+        "adjust": 0
+      },
+      {
+        "page": 1,
+        "font": "/IHAIZV+Anta-Regular",
+        "sizePdfPt": 10.909088,
+        "codes": [
+          57,
+          136,
+          234,
+          179,
+          202,
+          35,
+          208,
+          195,
+          195,
+          208,
+          259,
+          179,
+          202,
+          172,
+          25,
+          64,
+          20
+        ],
+        "text": "LatinFollowingEND",
+        "advanceMm": 34.74411194702222,
+        "adjust": -288.0
+      },
+      {
+        "page": 1,
+        "font": "/IXFAWU+ShareTechMono-Regular",
+        "sizePdfPt": 11.955168,
+        "codes": [
+          47,
+          98,
+          98,
+          113
+        ],
+        "text": "Root",
+        "advanceMm": 9.109838016,
+        "adjust": 0
+      },
+      {
+        "page": 1,
+        "font": "/BZIVMZ+NotoSansCJKsc-Regular-Identity-H",
+        "sizePdfPt": 11.955168,
+        "codes": [
+          21167
+        ],
+        "text": "根",
+        "advanceMm": 4.2175176,
+        "adjust": 0
+      },
+      {
+        "page": 1,
+        "font": "/IXFAWU+ShareTechMono-Regular",
+        "sizePdfPt": 11.955168,
+        "codes": [
+          169,
+          31,
+          77,
+          64,
+          82
+        ],
+        "text": "/Leaf",
+        "advanceMm": 13.664757023999998,
+        "adjust": -540.0
+      },
+      {
+        "page": 1,
+        "font": "/BZIVMZ+NotoSansCJKsc-Regular-Identity-H",
+        "sizePdfPt": 11.955168,
+        "codes": [
+          34583
+        ],
+        "text": "葉",
+        "advanceMm": 4.2175176,
+        "adjust": 0
+      },
+      {
+        "page": 1,
+        "font": "/IHAIZV+Anta-Regular",
+        "sizePdfPt": 10.909088,
+        "codes": [
+          57,
+          136,
+          234,
+          179,
+          202,
+          35,
+          208,
+          195,
+          195,
+          208,
+          259,
+          179,
+          202,
+          172,
+          25,
+          64,
+          20
+        ],
+        "text": "LatinFollowingEND",
+        "advanceMm": 34.74411194702222,
+        "adjust": -288.0
+      },
+      {
+        "page": 1,
+        "font": "/IHAIZV+Anta-Regular",
+        "sizePdfPt": 11.955168,
+        "codes": [
+          208,
+          171,
+          274,
+          150,
+          161,
+          136,
+          171,
+          274,
+          202,
+          161,
+          274,
+          275,
+          88,
+          234,
+          224,
+          136,
+          233,
+          161,
+          36,
+          224,
+          212,
+          233,
+          161
+        ],
+        "text": "officeaffinefiflStraßeGröße",
+        "advanceMm": 58.58553698160001,
+        "adjust": -1456.0
+      },
+      {
+        "page": 1,
+        "font": "/IHAIZV+Anta-Regular",
+        "sizePdfPt": 10.909088,
+        "codes": [
+          57,
+          136,
+          234,
+          179,
+          202,
+          35,
+          208,
+          195,
+          195,
+          208,
+          259,
+          179,
+          202,
+          172,
+          25,
+          64,
+          20
+        ],
+        "text": "LatinFollowingEND",
+        "advanceMm": 34.74411194702222,
+        "adjust": -288.0
+      },
+      {
+        "page": 1,
+        "font": "/IXFAWU+ShareTechMono-Regular",
+        "sizePdfPt": 7.173098,
+        "codes": [
+          137
+        ],
+        "text": "1",
+        "advanceMm": 1.366475169,
+        "adjust": 0
+      }
+    ]
+  },
+  {
+    "language": "de",
+    "path": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\native-cjk-same-caption-fixed\\de\\🧪️probe-out\\de.pdf",
+    "sha256": "e1dc2d17354e83bd549f9ba53c02f4654a26f2d8fce377e079e59ca16a84bea4",
+    "fonts": {
+      "/F1": {
+        "base": "/IHAIZV+Anta-Regular",
+        "embedded": true,
+        "toUnicode": "/CIDInit /ProcSet findresource begin\n12 dict begin\nbegincmap\n/CMapName /IHAIZV+Anta-Regular-UTF16 def\n/CMapType 2 def\n/CIDSystemInfo <<\n  /Registry (Adobe)\n  /Ordering (UCS)\n  /Supplement 0\n>> def\n1 begincodespacerange\n<0000> <FFFF>\nendcodespacerange\n37 beginbfchar\n<0001> <0041>\n<0014> <0044>\n<0019> <0045>\n<0023> <0046>\n<0024> <0047>\n<0039> <004C>\n<0040> <004E>\n<0055> <0052>\n<0058> <0053>\n<006F> <0056>\n<0088> <0061>\n<0094> <0062>\n<0096> <0063>\n<009C> <0064>\n<00A1> <0065>\n<00AB> <0066>\n<00AC> <0067>\n<00B3> <0069>\n<00BE> <006A>\n<00C1> <006B>\n<00C3> <006C>\n<00C8> <006D>\n<00CA> <006E>\n<00D0> <006F>\n<00D4> <00F6>\n<00DC> <0070>\n<00E0> <0072>\n<00E3> <0073>\n<00E9> <00DF>\n<00EA> <0074>\n<00EE> <0075>\n<0102> <0076>\n<0103> <0077>\n<0112> <00660069>\n<0113> <0066006C>\n<0138> <002F>\n<013C> <002D>\nendbfchar\nendcmap\nCMapName currentdict /CMap defineresource pop\nend\nend\n",
+        "widths": {
+          "1": 665.0,
+          "20": 692.0,
+          "25": 666.0,
+          "35": 592.0,
+          "36": 694.0,
+          "57": 626.0,
+          "64": 676.0,
+          "85": 671.0,
+          "88": 683.0,
+          "111": 665.0,
+          "150": 580.0,
+          "171": 353.0,
+          "179": 221.0,
+          "190": 257.0,
+          "193": 548.0,
+          "195": 220.0,
+          "200": 839.0,
+          "202": 582.0,
+          "208": 583.0,
+          "212": 583.0,
+          "224": 351.0,
+          "227": 583.0,
+          "233": 587.0,
+          "234": 393.0,
+          "238": 582.0,
+          "258": 525.0,
+          "259": 729.0,
+          "274": 574.0,
+          "275": 571.0,
+          "312": 679.0,
+          "316": 423.0
+        },
+        "defaultWidth": 577.0,
+        "mapping": {
+          "0": "￿",
+          "1": "A",
+          "20": "D",
+          "25": "E",
+          "35": "F",
+          "36": "G",
+          "57": "L",
+          "64": "N",
+          "85": "R",
+          "88": "S",
+          "111": "V",
+          "136": "a",
+          "148": "b",
+          "150": "c",
+          "156": "d",
+          "161": "e",
+          "171": "f",
+          "172": "g",
+          "179": "i",
+          "190": "j",
+          "193": "k",
+          "195": "l",
+          "200": "m",
+          "202": "n",
+          "208": "o",
+          "212": "ö",
+          "220": "p",
+          "224": "r",
+          "227": "s",
+          "233": "ß",
+          "234": "t",
+          "238": "u",
+          "258": "v",
+          "259": "w",
+          "274": "fi",
+          "275": "fl",
+          "312": "/",
+          "316": "-"
+        },
+        "cidBytes": 2
+      },
+      "/F3": {
+        "base": "/BZIVMZ+NotoSansCJKsc-Regular-Identity-H",
+        "embedded": true,
+        "toUnicode": "/CIDInit /ProcSet findresource begin\n12 dict begin\nbegincmap\n/CMapName /BZIVMZ+NotoSansCJKsc-Regular-UTF16 def\n/CMapType 2 def\n/CIDSystemInfo <<\n  /Registry (Adobe)\n  /Ordering (UCS)\n  /Supplement 0\n>> def\n1 begincodespacerange\n<0000> <FFFF>\nendcodespacerange\n3 beginbfchar\n<3BF9> <5B50>\n<52AF> <6839>\n<8717> <8449>\nendbfchar\nendcmap\nCMapName currentdict /CMap defineresource pop\nend\nend\n",
+        "widths": {},
+        "defaultWidth": 1000.0,
+        "mapping": {
+          "0": "￿",
+          "15353": "子",
+          "21167": "根",
+          "34583": "葉"
+        },
+        "cidBytes": 2
+      },
+      "/F5": {
+        "base": "/IXFAWU+ShareTechMono-Regular",
+        "embedded": true,
+        "toUnicode": "/CIDInit /ProcSet findresource begin\n12 dict begin\nbegincmap\n/CMapName /IXFAWU+ShareTechMono-Regular-UTF16 def\n/CMapType 2 def\n/CIDSystemInfo <<\n  /Registry (Adobe)\n  /Ordering (UCS)\n  /Supplement 0\n>> def\n1 begincodespacerange\n<0000> <FFFF>\nendcodespacerange\n9 beginbfchar\n<001F> <004C>\n<002F> <0052>\n<0040> <0061>\n<004D> <0065>\n<0052> <0066>\n<0062> <006F>\n<0071> <0074>\n<0089> <0031>\n<00A9> <002F>\nendbfchar\nendcmap\nCMapName currentdict /CMap defineresource pop\nend\nend\n",
+        "widths": {},
+        "defaultWidth": 540.0,
+        "mapping": {
+          "0": "￿",
+          "31": "L",
+          "47": "R",
+          "64": "a",
+          "77": "e",
+          "82": "f",
+          "98": "o",
+          "113": "t",
+          "137": "1",
+          "169": "/"
+        },
+        "cidBytes": 2
+      }
+    },
+    "runs": [
+      {
+        "page": 1,
+        "text": "Font Run Audit",
+        "font": "/IHAIZV+Anta-Regular",
+        "size": 7.173098
+      },
+      {
+        "page": 1,
+        "text": " Vorspann",
+        "font": "/IHAIZV+Anta-Regular",
+        "size": 7.173098
+      },
+      {
+        "page": 1,
+        "text": "probe native-cjk-same-caption / de",
+        "font": "/IHAIZV+Anta-Regular",
+        "size": 10.909088
+      },
+      {
+        "page": 1,
+        "text": "根子葉",
+        "font": "/BZIVMZ+NotoSansCJKsc-Regular-Identity-H",
+        "size": 7.970112
+      },
+      {
+        "page": 1,
+        "text": "LatinFollowing END",
+        "font": "/IHAIZV+Anta-Regular",
+        "size": 10.909088
+      },
+      {
+        "page": 1,
+        "text": "Root",
+        "font": "/IHAIZV+Anta-Regular",
+        "size": 7.970112
+      },
+      {
+        "page": 1,
+        "text": " 根",
+        "font": "/BZIVMZ+NotoSansCJKsc-Regular-Identity-H",
+        "size": 7.970112
+      },
+      {
+        "page": 1,
+        "text": " / Leaf",
+        "font": "/IHAIZV+Anta-Regular",
+        "size": 7.970112
+      },
+      {
+        "page": 1,
+        "text": " 葉",
+        "font": "/BZIVMZ+NotoSansCJKsc-Regular-Identity-H",
+        "size": 7.970112
+      },
+      {
+        "page": 1,
+        "text": "LatinFollowing END",
+        "font": "/IHAIZV+Anta-Regular",
+        "size": 10.909088
+      },
+      {
+        "page": 1,
+        "text": "Root",
+        "font": "/IHAIZV+Anta-Regular",
+        "size": 7.970112
+      },
+      {
+        "page": 1,
+        "text": " 根",
+        "font": "/BZIVMZ+NotoSansCJKsc-Regular-Identity-H",
+        "size": 7.970112
+      },
+      {
+        "page": 1,
+        "text": " / Leaf",
+        "font": "/IHAIZV+Anta-Regular",
+        "size": 7.970112
+      },
+      {
+        "page": 1,
+        "text": " 葉",
+        "font": "/BZIVMZ+NotoSansCJKsc-Regular-Identity-H",
+        "size": 7.970112
+      },
+      {
+        "page": 1,
+        "text": "LatinFollowing END",
+        "font": "/IHAIZV+Anta-Regular",
+        "size": 10.909088
+      },
+      {
+        "page": 1,
+        "text": "Root",
+        "font": "/IXFAWU+ShareTechMono-Regular",
+        "size": 7.970112
+      },
+      {
+        "page": 1,
+        "text": " 根",
+        "font": "/BZIVMZ+NotoSansCJKsc-Regular-Identity-H",
+        "size": 7.970112
+      },
+      {
+        "page": 1,
+        "text": " / Leaf",
+        "font": "/IXFAWU+ShareTechMono-Regular",
+        "size": 7.970112
+      },
+      {
+        "page": 1,
+        "text": " 葉",
+        "font": "/BZIVMZ+NotoSansCJKsc-Regular-Identity-H",
+        "size": 7.970112
+      },
+      {
+        "page": 1,
+        "text": "LatinFollowing END",
+        "font": "/IHAIZV+Anta-Regular",
+        "size": 10.909088
+      },
+      {
+        "page": 1,
+        "text": "office affine fi fl Straße Größe",
+        "font": "/IHAIZV+Anta-Regular",
+        "size": 7.970112
+      },
+      {
+        "page": 1,
+        "text": "LatinFollowing END",
+        "font": "/IHAIZV+Anta-Regular",
+        "size": 10.909088
+      },
+      {
+        "page": 1,
+        "text": "根子葉",
+        "font": "/BZIVMZ+NotoSansCJKsc-Regular-Identity-H",
+        "size": 11.955168
+      },
+      {
+        "page": 1,
+        "text": "LatinFollowing END",
+        "font": "/IHAIZV+Anta-Regular",
+        "size": 10.909088
+      },
+      {
+        "page": 1,
+        "text": "Root",
+        "font": "/IHAIZV+Anta-Regular",
+        "size": 11.955168
+      },
+      {
+        "page": 1,
+        "text": " 根",
+        "font": "/BZIVMZ+NotoSansCJKsc-Regular-Identity-H",
+        "size": 11.955168
+      },
+      {
+        "page": 1,
+        "text": " / Leaf",
+        "font": "/IHAIZV+Anta-Regular",
+        "size": 11.955168
+      },
+      {
+        "page": 1,
+        "text": " 葉",
+        "font": "/BZIVMZ+NotoSansCJKsc-Regular-Identity-H",
+        "size": 11.955168
+      },
+      {
+        "page": 1,
+        "text": "LatinFollowing END",
+        "font": "/IHAIZV+Anta-Regular",
+        "size": 10.909088
+      },
+      {
+        "page": 1,
+        "text": "Root",
+        "font": "/IHAIZV+Anta-Regular",
+        "size": 11.955168
+      },
+      {
+        "page": 1,
+        "text": " 根",
+        "font": "/BZIVMZ+NotoSansCJKsc-Regular-Identity-H",
+        "size": 11.955168
+      },
+      {
+        "page": 1,
+        "text": " / Leaf",
+        "font": "/IHAIZV+Anta-Regular",
+        "size": 11.955168
+      },
+      {
+        "page": 1,
+        "text": " 葉",
+        "font": "/BZIVMZ+NotoSansCJKsc-Regular-Identity-H",
+        "size": 11.955168
+      },
+      {
+        "page": 1,
+        "text": "LatinFollowing END",
+        "font": "/IHAIZV+Anta-Regular",
+        "size": 10.909088
+      },
+      {
+        "page": 1,
+        "text": "Root",
+        "font": "/IXFAWU+ShareTechMono-Regular",
+        "size": 11.955168
+      },
+      {
+        "page": 1,
+        "text": " 根",
+        "font": "/BZIVMZ+NotoSansCJKsc-Regular-Identity-H",
+        "size": 11.955168
+      },
+      {
+        "page": 1,
+        "text": " / Leaf",
+        "font": "/IXFAWU+ShareTechMono-Regular",
+        "size": 11.955168
+      },
+      {
+        "page": 1,
+        "text": " 葉",
+        "font": "/BZIVMZ+NotoSansCJKsc-Regular-Identity-H",
+        "size": 11.955168
+      },
+      {
+        "page": 1,
+        "text": "LatinFollowing END",
+        "font": "/IHAIZV+Anta-Regular",
+        "size": 10.909088
+      },
+      {
+        "page": 1,
+        "text": "office affine fi fl Straße Größe",
+        "font": "/IHAIZV+Anta-Regular",
+        "size": 11.955168
+      },
+      {
+        "page": 1,
+        "text": "LatinFollowing END",
+        "font": "/IHAIZV+Anta-Regular",
+        "size": 10.909088
+      },
+      {
+        "page": 1,
+        "text": "1",
+        "font": "/IXFAWU+ShareTechMono-Regular",
+        "size": 7.173098
+      }
+    ],
+    "textOperators": [
+      {
+        "page": 1,
+        "font": "/IHAIZV+Anta-Regular",
+        "sizePdfPt": 7.173098,
+        "codes": [
+          35,
+          208,
+          202,
+          234,
+          85,
+          238,
+          202,
+          1,
+          238,
+          156,
+          179,
+          234
+        ],
+        "text": "FontRunAudit",
+        "advanceMm": 17.723689043844445,
+        "adjust": -581.0
+      },
+      {
+        "page": 1,
+        "font": "/IHAIZV+Anta-Regular",
+        "sizePdfPt": 7.173098,
+        "codes": [
+          111,
+          208,
+          224,
+          227,
+          220,
+          136,
+          202,
+          202
+        ],
+        "text": "Vorspann",
+        "advanceMm": 11.265828615533334,
+        "adjust": 48.0
+      },
+      {
+        "page": 1,
+        "font": "/IHAIZV+Anta-Regular",
+        "sizePdfPt": 10.909088,
+        "codes": [
+          220,
+          224,
+          208,
+          148,
+          161,
+          202,
+          136,
+          234,
+          179,
+          258,
+          161,
+          316,
+          150,
+          190,
+          193,
+          316,
+          227,
+          136,
+          200,
+          161,
+          316,
+          150,
+          136,
+          220,
+          234,
+          179,
+          208,
+          202,
+          312,
+          156,
+          161
+        ],
+        "text": "probenative-cjk-same-caption/de",
+        "advanceMm": 65.32801288222223,
+        "adjust": -859.0
+      },
+      {
+        "page": 1,
+        "font": "/BZIVMZ+NotoSansCJKsc-Regular-Identity-H",
+        "sizePdfPt": 7.970112,
+        "codes": [
+          21167,
+          15353,
+          34583
+        ],
+        "text": "根子葉",
+        "advanceMm": 8.4350352,
+        "adjust": 0
+      },
+      {
+        "page": 1,
+        "font": "/IHAIZV+Anta-Regular",
+        "sizePdfPt": 10.909088,
+        "codes": [
+          57,
+          136,
+          234,
+          179,
+          202,
+          35,
+          208,
+          195,
+          195,
+          208,
+          259,
+          179,
+          202,
+          172,
+          25,
+          64,
+          20
+        ],
+        "text": "LatinFollowingEND",
+        "advanceMm": 34.74411194702222,
+        "adjust": -288.0
+      },
+      {
+        "page": 1,
+        "font": "/IHAIZV+Anta-Regular",
+        "sizePdfPt": 7.970112,
+        "codes": [
+          85,
+          208,
+          208,
+          234
+        ],
+        "text": "Root",
+        "advanceMm": 6.270042832000001,
+        "adjust": 0
+      },
+      {
+        "page": 1,
+        "font": "/BZIVMZ+NotoSansCJKsc-Regular-Identity-H",
+        "sizePdfPt": 7.970112,
+        "codes": [
+          21167
+        ],
+        "text": "根",
+        "advanceMm": 2.8116784,
+        "adjust": 0
+      },
+      {
+        "page": 1,
+        "font": "/IHAIZV+Anta-Regular",
+        "sizePdfPt": 7.970112,
+        "codes": [
+          312,
+          57,
+          161,
+          136,
+          171
+        ],
+        "text": "/Leaf",
+        "advanceMm": 8.719014718399999,
+        "adjust": -289.0
+      },
+      {
+        "page": 1,
+        "font": "/BZIVMZ+NotoSansCJKsc-Regular-Identity-H",
+        "sizePdfPt": 7.970112,
+        "codes": [
+          34583
+        ],
+        "text": "葉",
+        "advanceMm": 2.8116784,
+        "adjust": 0
+      },
+      {
+        "page": 1,
+        "font": "/IHAIZV+Anta-Regular",
+        "sizePdfPt": 10.909088,
+        "codes": [
+          57,
+          136,
+          234,
+          179,
+          202,
+          35,
+          208,
+          195,
+          195,
+          208,
+          259,
+          179,
+          202,
+          172,
+          25,
+          64,
+          20
+        ],
+        "text": "LatinFollowingEND",
+        "advanceMm": 34.74411194702222,
+        "adjust": -288.0
+      },
+      {
+        "page": 1,
+        "font": "/IHAIZV+Anta-Regular",
+        "sizePdfPt": 7.970112,
+        "codes": [
+          85,
+          208,
+          208,
+          234
+        ],
+        "text": "Root",
+        "advanceMm": 6.270042832000001,
+        "adjust": 0
+      },
+      {
+        "page": 1,
+        "font": "/BZIVMZ+NotoSansCJKsc-Regular-Identity-H",
+        "sizePdfPt": 7.970112,
+        "codes": [
+          21167
+        ],
+        "text": "根",
+        "advanceMm": 2.8116784,
+        "adjust": 0
+      },
+      {
+        "page": 1,
+        "font": "/IHAIZV+Anta-Regular",
+        "sizePdfPt": 7.970112,
+        "codes": [
+          312,
+          57,
+          161,
+          136,
+          171
+        ],
+        "text": "/Leaf",
+        "advanceMm": 8.719014718399999,
+        "adjust": -289.0
+      },
+      {
+        "page": 1,
+        "font": "/BZIVMZ+NotoSansCJKsc-Regular-Identity-H",
+        "sizePdfPt": 7.970112,
+        "codes": [
+          34583
+        ],
+        "text": "葉",
+        "advanceMm": 2.8116784,
+        "adjust": 0
+      },
+      {
+        "page": 1,
+        "font": "/IHAIZV+Anta-Regular",
+        "sizePdfPt": 10.909088,
+        "codes": [
+          57,
+          136,
+          234,
+          179,
+          202,
+          35,
+          208,
+          195,
+          195,
+          208,
+          259,
+          179,
+          202,
+          172,
+          25,
+          64,
+          20
+        ],
+        "text": "LatinFollowingEND",
+        "advanceMm": 34.74411194702222,
+        "adjust": -288.0
+      },
+      {
+        "page": 1,
+        "font": "/IXFAWU+ShareTechMono-Regular",
+        "sizePdfPt": 7.970112,
+        "codes": [
+          47,
+          98,
+          98,
+          113
+        ],
+        "text": "Root",
+        "advanceMm": 6.073225344,
+        "adjust": 0
+      },
+      {
+        "page": 1,
+        "font": "/BZIVMZ+NotoSansCJKsc-Regular-Identity-H",
+        "sizePdfPt": 7.970112,
+        "codes": [
+          21167
+        ],
+        "text": "根",
+        "advanceMm": 2.8116784,
+        "adjust": 0
+      },
+      {
+        "page": 1,
+        "font": "/IXFAWU+ShareTechMono-Regular",
+        "sizePdfPt": 7.970112,
+        "codes": [
+          169,
+          31,
+          77,
+          64,
+          82
+        ],
+        "text": "/Leaf",
+        "advanceMm": 9.109838016,
+        "adjust": -540.0
+      },
+      {
+        "page": 1,
+        "font": "/BZIVMZ+NotoSansCJKsc-Regular-Identity-H",
+        "sizePdfPt": 7.970112,
+        "codes": [
+          34583
+        ],
+        "text": "葉",
+        "advanceMm": 2.8116784,
+        "adjust": 0
+      },
+      {
+        "page": 1,
+        "font": "/IHAIZV+Anta-Regular",
+        "sizePdfPt": 10.909088,
+        "codes": [
+          57,
+          136,
+          234,
+          179,
+          202,
+          35,
+          208,
+          195,
+          195,
+          208,
+          259,
+          179,
+          202,
+          172,
+          25,
+          64,
+          20
+        ],
+        "text": "LatinFollowingEND",
+        "advanceMm": 34.74411194702222,
+        "adjust": -288.0
+      },
+      {
+        "page": 1,
+        "font": "/IHAIZV+Anta-Regular",
+        "sizePdfPt": 7.970112,
+        "codes": [
+          208,
+          171,
+          274,
+          150,
+          161,
+          136,
+          171,
+          274,
+          202,
+          161,
+          274,
+          275,
+          88,
+          234,
+          224,
+          136,
+          233,
+          161,
+          36,
+          224,
+          212,
+          233,
+          161
+        ],
+        "text": "officeaffinefiflStraßeGröße",
+        "advanceMm": 39.0570246544,
+        "adjust": -1456.0
+      },
+      {
+        "page": 1,
+        "font": "/IHAIZV+Anta-Regular",
+        "sizePdfPt": 10.909088,
+        "codes": [
+          57,
+          136,
+          234,
+          179,
+          202,
+          35,
+          208,
+          195,
+          195,
+          208,
+          259,
+          179,
+          202,
+          172,
+          25,
+          64,
+          20
+        ],
+        "text": "LatinFollowingEND",
+        "advanceMm": 34.74411194702222,
+        "adjust": -288.0
+      },
+      {
+        "page": 1,
+        "font": "/BZIVMZ+NotoSansCJKsc-Regular-Identity-H",
+        "sizePdfPt": 11.955168,
+        "codes": [
+          21167,
+          15353,
+          34583
+        ],
+        "text": "根子葉",
+        "advanceMm": 12.6525528,
+        "adjust": 0
+      },
+      {
+        "page": 1,
+        "font": "/IHAIZV+Anta-Regular",
+        "sizePdfPt": 10.909088,
+        "codes": [
+          57,
+          136,
+          234,
+          179,
+          202,
+          35,
+          208,
+          195,
+          195,
+          208,
+          259,
+          179,
+          202,
+          172,
+          25,
+          64,
+          20
+        ],
+        "text": "LatinFollowingEND",
+        "advanceMm": 34.74411194702222,
+        "adjust": -288.0
+      },
+      {
+        "page": 1,
+        "font": "/IHAIZV+Anta-Regular",
+        "sizePdfPt": 11.955168,
+        "codes": [
+          85,
+          208,
+          208,
+          234
+        ],
+        "text": "Root",
+        "advanceMm": 9.405064247999999,
+        "adjust": 0
+      },
+      {
+        "page": 1,
+        "font": "/BZIVMZ+NotoSansCJKsc-Regular-Identity-H",
+        "sizePdfPt": 11.955168,
+        "codes": [
+          21167
+        ],
+        "text": "根",
+        "advanceMm": 4.2175176,
+        "adjust": 0
+      },
+      {
+        "page": 1,
+        "font": "/IHAIZV+Anta-Regular",
+        "sizePdfPt": 11.955168,
+        "codes": [
+          312,
+          57,
+          161,
+          136,
+          171
+        ],
+        "text": "/Leaf",
+        "advanceMm": 13.0785220776,
+        "adjust": -289.0
+      },
+      {
+        "page": 1,
+        "font": "/BZIVMZ+NotoSansCJKsc-Regular-Identity-H",
+        "sizePdfPt": 11.955168,
+        "codes": [
+          34583
+        ],
+        "text": "葉",
+        "advanceMm": 4.2175176,
+        "adjust": 0
+      },
+      {
+        "page": 1,
+        "font": "/IHAIZV+Anta-Regular",
+        "sizePdfPt": 10.909088,
+        "codes": [
+          57,
+          136,
+          234,
+          179,
+          202,
+          35,
+          208,
+          195,
+          195,
+          208,
+          259,
+          179,
+          202,
+          172,
+          25,
+          64,
+          20
+        ],
+        "text": "LatinFollowingEND",
+        "advanceMm": 34.74411194702222,
+        "adjust": -288.0
+      },
+      {
+        "page": 1,
+        "font": "/IHAIZV+Anta-Regular",
+        "sizePdfPt": 11.955168,
+        "codes": [
+          85,
+          208,
+          208,
+          234
+        ],
+        "text": "Root",
+        "advanceMm": 9.405064247999999,
+        "adjust": 0
+      },
+      {
+        "page": 1,
+        "font": "/BZIVMZ+NotoSansCJKsc-Regular-Identity-H",
+        "sizePdfPt": 11.955168,
+        "codes": [
+          21167
+        ],
+        "text": "根",
+        "advanceMm": 4.2175176,
+        "adjust": 0
+      },
+      {
+        "page": 1,
+        "font": "/IHAIZV+Anta-Regular",
+        "sizePdfPt": 11.955168,
+        "codes": [
+          312,
+          57,
+          161,
+          136,
+          171
+        ],
+        "text": "/Leaf",
+        "advanceMm": 13.0785220776,
+        "adjust": -289.0
+      },
+      {
+        "page": 1,
+        "font": "/BZIVMZ+NotoSansCJKsc-Regular-Identity-H",
+        "sizePdfPt": 11.955168,
+        "codes": [
+          34583
+        ],
+        "text": "葉",
+        "advanceMm": 4.2175176,
+        "adjust": 0
+      },
+      {
+        "page": 1,
+        "font": "/IHAIZV+Anta-Regular",
+        "sizePdfPt": 10.909088,
+        "codes": [
+          57,
+          136,
+          234,
+          179,
+          202,
+          35,
+          208,
+          195,
+          195,
+          208,
+          259,
+          179,
+          202,
+          172,
+          25,
+          64,
+          20
+        ],
+        "text": "LatinFollowingEND",
+        "advanceMm": 34.74411194702222,
+        "adjust": -288.0
+      },
+      {
+        "page": 1,
+        "font": "/IXFAWU+ShareTechMono-Regular",
+        "sizePdfPt": 11.955168,
+        "codes": [
+          47,
+          98,
+          98,
+          113
+        ],
+        "text": "Root",
+        "advanceMm": 9.109838016,
+        "adjust": 0
+      },
+      {
+        "page": 1,
+        "font": "/BZIVMZ+NotoSansCJKsc-Regular-Identity-H",
+        "sizePdfPt": 11.955168,
+        "codes": [
+          21167
+        ],
+        "text": "根",
+        "advanceMm": 4.2175176,
+        "adjust": 0
+      },
+      {
+        "page": 1,
+        "font": "/IXFAWU+ShareTechMono-Regular",
+        "sizePdfPt": 11.955168,
+        "codes": [
+          169,
+          31,
+          77,
+          64,
+          82
+        ],
+        "text": "/Leaf",
+        "advanceMm": 13.664757023999998,
+        "adjust": -540.0
+      },
+      {
+        "page": 1,
+        "font": "/BZIVMZ+NotoSansCJKsc-Regular-Identity-H",
+        "sizePdfPt": 11.955168,
+        "codes": [
+          34583
+        ],
+        "text": "葉",
+        "advanceMm": 4.2175176,
+        "adjust": 0
+      },
+      {
+        "page": 1,
+        "font": "/IHAIZV+Anta-Regular",
+        "sizePdfPt": 10.909088,
+        "codes": [
+          57,
+          136,
+          234,
+          179,
+          202,
+          35,
+          208,
+          195,
+          195,
+          208,
+          259,
+          179,
+          202,
+          172,
+          25,
+          64,
+          20
+        ],
+        "text": "LatinFollowingEND",
+        "advanceMm": 34.74411194702222,
+        "adjust": -288.0
+      },
+      {
+        "page": 1,
+        "font": "/IHAIZV+Anta-Regular",
+        "sizePdfPt": 11.955168,
+        "codes": [
+          208,
+          171,
+          274,
+          150,
+          161,
+          136,
+          171,
+          274,
+          202,
+          161,
+          274,
+          275,
+          88,
+          234,
+          224,
+          136,
+          233,
+          161,
+          36,
+          224,
+          212,
+          233,
+          161
+        ],
+        "text": "officeaffinefiflStraßeGröße",
+        "advanceMm": 58.58553698160001,
+        "adjust": -1456.0
+      },
+      {
+        "page": 1,
+        "font": "/IHAIZV+Anta-Regular",
+        "sizePdfPt": 10.909088,
+        "codes": [
+          57,
+          136,
+          234,
+          179,
+          202,
+          35,
+          208,
+          195,
+          195,
+          208,
+          259,
+          179,
+          202,
+          172,
+          25,
+          64,
+          20
+        ],
+        "text": "LatinFollowingEND",
+        "advanceMm": 34.74411194702222,
+        "adjust": -288.0
+      },
+      {
+        "page": 1,
+        "font": "/IXFAWU+ShareTechMono-Regular",
+        "sizePdfPt": 7.173098,
+        "codes": [
+          137
+        ],
+        "text": "1",
+        "advanceMm": 1.366475169,
+        "adjust": 0
+      }
+    ]
+  }
+]

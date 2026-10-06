@@ -1,0 +1,15 @@
+{
+  "helper": {
+    "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧪️tests\\🧬️native-chart-grammar\\🟦️.ts",
+    "sha256": "6ECE2212D42A117E63EBE962086863662514CCBB21FC9A161EBE6C774D86E7D6"
+  },
+  "fixture": {
+    "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧪️tests\\🧬️native-chart-grammar\\🔣️.json",
+    "sha256": "A3F470B6A72E6265A3CB9F953D6130E3E67C26EDDE0089D905A8432473C8BEE9"
+  },
+  "source": {
+    "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🖋️latex\\semio-viz-geo-symbols.sty",
+    "sha256": "72E4EDFE02E5C85C0087C862231E156C84C9ABC2B46B8869BCF2D86A914CE0EF"
+  },
+  "corrections": "Count probes inside family scope; rectangle duplicate closing move; half-stroke display clearance; no production edit"
+}

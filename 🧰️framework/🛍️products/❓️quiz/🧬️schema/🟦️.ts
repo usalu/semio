@@ -146,6 +146,7 @@ export type Quiz = {
   readonly id: Slug;
   readonly emoji: string;
   readonly title: Text;
+  readonly short?: ShortText;
   readonly description: Text;
   readonly tasks: readonly Task[];
 };
@@ -170,6 +171,7 @@ export type Catalog = {
   readonly schema: "semio.quiz.catalog/v1";
   readonly id: Slug;
   readonly title: Text;
+  readonly short?: ShortText;
   readonly introduction: Introduction;
   readonly quizzes: readonly string[];
   readonly badges: readonly Badge[];
@@ -368,13 +370,13 @@ export type Event = LearnerRegisteredEvent | RunStartedEvent | RunVoidedEvent | 
 export type CatalogTaskView = { readonly id: Slug; readonly kind: TaskKind; readonly title: Text; readonly icon?: Icon };
 
 /** 🗒️ One quiz of the catalog without its solutions. */
-export type CatalogQuizView = { readonly id: Slug; readonly emoji: string; readonly title: Text; readonly description: Text; readonly tasks: readonly CatalogTaskView[] };
+export type CatalogQuizView = { readonly id: Slug; readonly emoji: string; readonly title: Text; readonly short?: ShortText; readonly description: Text; readonly tasks: readonly CatalogTaskView[] };
 
 /** 🏵️ One badge of the catalog without its rule. */
 export type CatalogBadgeView = { readonly id: Slug; readonly emoji: string; readonly label: Text; readonly description: Text };
 
 /** 📖️ The solution-free catalog a client renders. */
-export type CatalogView = { readonly id: Slug; readonly title: Text; readonly introduction: Introduction; readonly quizzes: readonly CatalogQuizView[]; readonly badges: readonly CatalogBadgeView[] };
+export type CatalogView = { readonly id: Slug; readonly title: Text; readonly short?: ShortText; readonly introduction: Introduction; readonly quizzes: readonly CatalogQuizView[]; readonly badges: readonly CatalogBadgeView[] };
 
 /** 🚥️ The states of a run. */
 export const RUN_STATUSES = ["open", "submitted", "voided"] as const;

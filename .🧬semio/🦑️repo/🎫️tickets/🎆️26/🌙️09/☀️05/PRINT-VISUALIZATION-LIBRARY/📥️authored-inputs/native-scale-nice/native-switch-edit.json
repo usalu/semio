@@ -1,0 +1,4 @@
+{
+  "before": "  \\str_if_eq:VnT \\l_semio_viz_scale_opt_tl { true }\n    { \\tl_set:Nn \\l_semio_viz_scale_opt_tl { 10 } }",
+  "after": "  \\str_case:Vn \\l_semio_viz_scale_opt_tl {\n    { true } { \\tl_set:Nn \\l_semio_viz_scale_opt_tl { 10 } }\n    { false } { \\tl_set:Nn \\l_semio_viz_scale_opt_tl { 0 } }\n  }"
+}

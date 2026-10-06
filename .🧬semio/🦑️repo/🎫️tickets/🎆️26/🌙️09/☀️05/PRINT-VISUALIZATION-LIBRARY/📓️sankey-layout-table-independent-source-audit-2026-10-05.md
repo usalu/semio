@@ -1,0 +1,5 @@
+# Sankey Layout Table Independent Source Audit
+
+Replacing exact retained after-table literal with before-table reconstructs F6DD0F532E5467A39B01500564A70A10BD23667E0640D5E17A3372B5109E4616, expected F6DD0F532E5467A39B01500564A70A10BD23667E0640D5E17A3372B5109E4616, equality True. Current flow source 0E79C84406EB9EC79E9D82628A7EBBA9F63B9351B64A8C2E1A3F96AFD32411F9 equals retained 0E79C84406EB9EC79E9D82628A7EBBA9F63B9351B64A8C2E1A3F96AFD32411F9: True.
+
+Actual sankey namespace65 installs ten keys: node-width/node-padding and x0/y0/x1/y1 are floating arithmetic; iterations integer; node-align/node-sort/link-sort token choices. Constant defaults78 are24/8/justify/auto/auto/6/0/0/1/1. Three public layout entrypoints first apply common defaults, then their named preset defaults, then caller options; authored caller overrides therefore retain precedence. Explicit ten-row scope replaces the seven grouped rows without outside-byte changes. No native runtime or full printed semantic closure claim.

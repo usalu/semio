@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "windowsStackReserveBytes": 8388608,
+  "request": "readPage",
+  "document": {
+    "controlPlane": "dashboard",
+    "locale": "en",
+    "terminology": "native"
+  },
+  "terminalIoOwners": 0,
+  "localComponentMaxBytes": 268435456,
+  "networkComponentMaxBytes": 67108864,
+  "localComponentTestBytes": 67108865,
+  "emptySmoke": {
+    "exitCode": 1,
+    "booted": false,
+    "descriptor": {
+      "descriptorVersion": 1,
+      "packageId": "empty-smoke",
+      "role": "plugin",
+      "manifest": {
+        "pluginId": "empty-smoke",
+        "label": "Empty Smoke",
+        "version": "1.0.0",
+        "apps": [],
+        "examples": []
+      },
+      "execution": "isolated",
+      "executionProtocol": {
+        "appChannelVersion": 21
+      },
+      "hashes": {
+        "wasmSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+        "coreWasmSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+        "descriptorSha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    },
+    "runtime": {
+      "version": 1,
+      "variant": "empty-smoke",
+      "profile": "dev",
+      "modules": [
+        {
+          "pluginId": "empty-smoke",
+          "wasmSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "wasmPath": "component.wasm",
+          "descriptorPath": "descriptor.json"
+        }
+      ]
+    }
+  }
+}

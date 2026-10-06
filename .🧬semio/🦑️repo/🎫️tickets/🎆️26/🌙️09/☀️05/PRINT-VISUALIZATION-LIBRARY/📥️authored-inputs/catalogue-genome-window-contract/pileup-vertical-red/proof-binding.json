@@ -1,0 +1,45 @@
+{
+  "session": 85953,
+  "exitCode": 1,
+  "compilerSession": 89420,
+  "actualFailures": 2,
+  "passingCases": 36,
+  "themes": {
+    "light": {
+      "pdf": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\gn2\\genome-window-controls\\light\\🧪️probe-out\\light.pdf",
+      "sha256": "724ceb452c0b1e07523a454dc9883ffbad05ba8ffcab991f8abb3ee16c43e641",
+      "firstActualBounds": [
+        11.853223790062797,
+        2.0000136812527973,
+        20.65328688091702,
+        3.6000265439351398
+      ],
+      "expectedOriginY": 1,
+      "expectedPhysicalHeight": 1.6
+    },
+    "dark": {
+      "pdf": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\gn2\\genome-window-controls\\dark\\🧪️probe-out\\dark.pdf",
+      "sha256": "e9ffd6012dffe571fb590b35142480a538867b499a5bd1ae4c572516f8b36a7d",
+      "firstActualBounds": [
+        11.853223790062797,
+        2.0000136812527973,
+        20.65328688091702,
+        3.6000265439351398
+      ],
+      "expectedOriginY": 1,
+      "expectedPhysicalHeight": 1.6
+    }
+  },
+  "sources": {
+    "light.tex": "3269241d7c363830fec011a2a06014760441cdf1ee5fb14763f806739cfa769d",
+    "light-semio-viz-scientific-biology.sty": "7c8d938f60dcd90c7ac6d7607c2164ab716dffb681d52b032a407915780b773f",
+    "dark.tex": "3e49e3dbfe805411ae517897d66b608f936560a98a27475601d73b032da27551",
+    "dark-semio-viz-scientific-biology.sty": "7c8d938f60dcd90c7ac6d7607c2164ab716dffb681d52b032a407915780b773f",
+    "neutral.json": "c43c77679d915f91d01e3e8c37372d193bfc81bfb8eb74ff3fc3774fb59bd0dd",
+    "helper.txt": "23dd981e18806e6763b834bd9a05c356ca0fd890b511622c457a721f1e1eb783"
+  },
+  "log": {
+    "path": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\catalogue-genome-pileup-vertical-native-red.log",
+    "sha256": "5690f886abbb3dd6f1511ded4585800c486f8edb12dae1ca7aa0147ca71b2f3b"
+  }
+}

@@ -1,0 +1,159 @@
+{
+      "owner": "GEO-SPATIAL",
+      "options": {
+        "bandwidth": {
+          "syntax": "expression",
+          "type": "number",
+          "description": {
+            "en": "Kernel bandwidth of the density estimate; `0` uses Silverman's rule.",
+            "de": "Bandbreite des Kerns der Dichteschätzung; `0` nutzt Silvermans Regel."
+          }
+        },
+        "fit": {
+          "syntax": "identifier",
+          "type": "string",
+          "enum": [
+            "geometry",
+            "world"
+          ],
+          "description": {
+            "en": "What the projection is fitted to; families that draw a graticule default to `world`.",
+            "de": "Woran die Projektion eingepasst wird; Familien mit Gradnetz verwenden `world`."
+          }
+        },
+        "geometry": {
+          "syntax": "identifier",
+          "type": "string",
+          "description": {
+            "en": "Name of the geometry table the map draws.",
+            "de": "Name der Geometrietabelle, die die Karte zeichnet."
+          }
+        },
+        "height": {
+          "syntax": "expression",
+          "type": "number",
+          "description": {
+            "en": "Frame height in millimetres.",
+            "de": "Rahmenhöhe in Millimetern."
+          }
+        },
+        "levels": {
+          "syntax": "expression",
+          "type": "integer",
+          "description": {
+            "en": "Number of contour levels.",
+            "de": "Anzahl der Höhenlinienniveaus."
+          }
+        },
+        "lineWidth": {
+          "syntax": "expression",
+          "type": "string",
+          "description": {
+            "en": "Outline width as a TeX dimension; the hairline stroke token by default.",
+            "de": "Umrissbreite als TeX-Dimension; standardmäßig das Haarlinien-Token."
+          }
+        },
+        "opacity": {
+          "syntax": "expression",
+          "type": "number",
+          "description": {
+            "en": "Draw opacity of the layer.",
+            "de": "Zeichendeckkraft der Ebene."
+          }
+        },
+        "palette": {
+          "syntax": "identifier",
+          "type": "string",
+          "description": {
+            "en": "Named colour palette resolved by semio-viz-theme.",
+            "de": "Benannte Farbpalette, die semio-viz-theme auflöst."
+          }
+        },
+        "paletteSteps": {
+          "syntax": "expression",
+          "type": "integer",
+          "minimum": 1,
+          "default": 5,
+          "description": {
+            "en": "Number of geographic palette levels, independently of vector integration steps; one level uses the palette midpoint.",
+            "de": "Anzahl der geografischen Palettenstufen unabhängig von den Vektorintegrationsschritten; eine Stufe nutzt die Palettenmitte."
+          }
+        },
+        "parallels": {
+          "syntax": "number-list",
+          "type": "string",
+          "default": "0,60",
+          "description": {
+            "en": "Conic standard parallels `p0,p1` in degrees.",
+            "de": "Standardparallelen `p0,p1` der Kegelprojektion in Grad."
+          }
+        },
+        "points": {
+          "syntax": "identifier",
+          "type": "string",
+          "description": {
+            "en": "Named geographic point collection binned into hexagonal cells.",
+            "de": "Benannte geografische Punktsammlung für die Aufteilung in sechseckige Zellen."
+          },
+          "default": "demo-points-dense"
+        },
+        "projection": {
+          "syntax": "identifier",
+          "type": "string",
+          "description": {
+            "en": "Map or camera projection used.",
+            "de": "Verwendete Karten- bzw. Kameraprojektion."
+          }
+        },
+        "radius": {
+          "syntax": "expression",
+          "type": "number",
+          "description": {
+            "en": "Radius in millimetres, or the column that drives it.",
+            "de": "Radius in Millimetern oder die Spalte, die ihn steuert."
+          }
+        },
+        "render": {
+          "syntax": "identifier",
+          "type": "string",
+          "description": {
+            "en": "How the cells or units are rendered.",
+            "de": "Wie die Zellen bzw. Einheiten gezeichnet werden."
+          }
+        },
+        "rotate": {
+          "syntax": "number-list",
+          "type": "string",
+          "default": "0,0,0",
+          "description": {
+            "en": "Projection rotation `lambda,phi,gamma` in degrees.",
+            "de": "Projektionsdrehung `lambda,phi,gamma` in Grad."
+          }
+        },
+        "stroke": {
+          "syntax": "paint",
+          "type": "string",
+          "default": "semio-chrome-border-emphasized",
+          "description": {
+            "en": "Outline colour token.",
+            "de": "Farbtoken der Umrisslinie."
+          }
+        },
+        "variant": {
+          "syntax": "identifier",
+          "type": "string",
+          "description": {
+            "en": "Sub-kind the family renders; the catalogue slug of the chart kind. The family must draw a different geometry for every variant it declares.",
+            "de": "Untertyp, den die Familie zeichnet; der Katalog-Slug der Diagrammart. Die Familie muss für jede deklarierte Variante eine andere Geometrie zeichnen."
+          }
+        },
+        "width": {
+          "syntax": "expression",
+          "type": "number",
+          "description": {
+            "en": "Frame width in millimetres.",
+            "de": "Rahmenbreite in Millimetern."
+          }
+        }
+      }
+    }

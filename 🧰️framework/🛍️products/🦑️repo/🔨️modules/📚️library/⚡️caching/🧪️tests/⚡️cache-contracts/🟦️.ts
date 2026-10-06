@@ -832,7 +832,10 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
     for (const variant of vectors.playgroundSessions.variants) {
       const session = sessionProject.targets[`session-${variant}`];
       assert.equal(session?.cache, true, `${variant} needs its own cacheable playground session`);
-      assert.deepEqual(session.dependsOn, [vectors.playgroundSessions.prerequisite]);
+      assert.ok(session.dependsOn.includes(vectors.playgroundSessions.prerequisite));
+      const descriptors=session.dependsOn.filter((dependency:string)=>dependency!==vectors.playgroundSessions.prerequisite);
+      assert.ok(descriptors.length>0);
+      assert.ok(descriptors.every((dependency:string)=>dependency.endsWith(vectors.playgroundSessions.descriptorPrerequisiteSuffix)));
       assert.deepEqual(session.outputs, [`{projectRoot}/dist/sessions/${variant}`]);
       assert.ok(session.inputs.some((input: any) => input.dependentTasksOutputFiles === "**/*"));
     }

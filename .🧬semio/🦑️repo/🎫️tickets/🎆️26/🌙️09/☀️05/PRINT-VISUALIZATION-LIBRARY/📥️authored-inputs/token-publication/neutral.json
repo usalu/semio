@@ -1,0 +1,39 @@
+{
+  "schema": {
+    "type": "object",
+    "required": [
+      "entrypoints",
+      "repeats",
+      "unchanged"
+    ],
+    "additionalProperties": false,
+    "properties": {
+      "entrypoints": {
+        "type": "array",
+        "minItems": 2,
+        "maxItems": 2,
+        "uniqueItems": true,
+        "items": {
+          "enum": [
+            "exported-writer",
+            "generate-command"
+          ]
+        }
+      },
+      "repeats": {
+        "const": 2
+      },
+      "unchanged": {
+        "const": true
+      }
+    }
+  },
+  "vectors": {
+    "entrypoints": [
+      "exported-writer",
+      "generate-command"
+    ],
+    "repeats": 2,
+    "unchanged": true
+  }
+}

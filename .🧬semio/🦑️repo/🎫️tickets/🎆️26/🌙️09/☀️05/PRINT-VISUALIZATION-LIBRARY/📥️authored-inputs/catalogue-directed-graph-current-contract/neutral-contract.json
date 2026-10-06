@@ -1,0 +1,18 @@
+{
+  "rows": [["a","b",1],["a","c",1],["a","d",1],["d","a",1],["b","b",1]],
+  "cases": [
+    {"name":"circle-straight","shape":"circle","sizeBy":"none","curvature":0},
+    {"name":"square-straight","shape":"square","sizeBy":"none","curvature":0},
+    {"name":"diamond-straight","shape":"diamond","sizeBy":"none","curvature":0},
+    {"name":"accept-straight","shape":"accept","sizeBy":"none","curvature":0},
+    {"name":"box-straight","shape":"box","sizeBy":"none","curvature":0},
+    {"name":"circle-curved","shape":"circle","sizeBy":"none","curvature":0.3},
+    {"name":"square-curved","shape":"square","sizeBy":"none","curvature":0.3},
+    {"name":"diamond-curved","shape":"diamond","sizeBy":"none","curvature":0.3},
+    {"name":"accept-curved","shape":"accept","sizeBy":"none","curvature":0.3},
+    {"name":"box-curved","shape":"box","sizeBy":"none","curvature":0.2},
+    {"name":"degree-curved","shape":"diamond","sizeBy":"degree","curvature":0.3},
+    {"name":"weight-curved","shape":"box","sizeBy":"weight","curvature":0.2}
+  ],
+  "angularTitle": {"center":[50,40],"radius":10,"startAngle":0,"endAngle":180,"tickSize":2,"titleGap":5,"anchors":["start","middle","end"]}
+}

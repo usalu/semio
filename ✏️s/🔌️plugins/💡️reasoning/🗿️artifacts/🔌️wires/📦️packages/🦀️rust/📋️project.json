@@ -162,6 +162,15 @@
         "command": "bun ./📜️script.ts graph-wire-check"
       },
       "outputs": []
+    },
+    "preview-generated": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts preview-generated"
+      }
     }
   }
 }

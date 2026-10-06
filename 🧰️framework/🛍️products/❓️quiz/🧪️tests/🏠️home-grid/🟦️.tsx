@@ -16,7 +16,7 @@ import userEvent from "@testing-library/user-event";
 import { transform } from "lightningcss";
 import { useState, type ReactElement } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { UI_MOBILE_MAX_WIDTH_PX, UI_TABLET_MAX_WIDTH_PX } from "@semio-tech/ui-react/chrome";
+import { UI_MOBILE_MAX_WIDTH_PX, UI_TABLET_MAX_WIDTH_PX, type LayeredMode } from "@semio-tech/ui-react/chrome";
 import { LEADERBOARD_TOP, learnerTag, roomScope, type CatalogView, type Challenge, type CursorState, type Leaderboard, type LeaderboardRow, type LearnerView } from "@semio-tech/quiz";
 import {
   EMPTY_PRESENCE_VIEW,
@@ -39,6 +39,7 @@ import {
   shownLeaderboard,
   homeCells,
   homeGridMinHeight,
+  homeLayout,
   homeLayoutQueries,
   homePages,
   homeTrackTemplate,
@@ -50,21 +51,22 @@ import {
   type QuizSession,
   type QuizState,
   type QuizStep,
+  type HomeGrid,
 } from "@semio-tech/quiz-react";
 import stylesheet from "../../🎯️targets/⚛️react/🎨️.css?raw";
 import grid from "../../🧫️fixtures/🏠️home-grid/🔣️.json";
 
 interface Fixture {
   readonly breakpoints: { readonly mobileMaxPx: number; readonly tabletMaxPx: number };
-  readonly layouts: readonly { readonly width: number; readonly layout: string; readonly columns: readonly number[]; readonly rows: readonly number[] | null }[];
-  readonly heights: { readonly rowHeightPx: number; readonly chromeHeightPx: number; readonly minimum: { readonly desktop: number; readonly tablet: number }; readonly vectors: readonly { readonly width: number; readonly height: number; readonly scale: number; readonly layout: string }[] };
+  readonly layouts: readonly { readonly width: number; readonly grid: HomeGrid; readonly mode: LayeredMode; readonly columns: readonly number[]; readonly rows: readonly number[] }[];
+  readonly heights: { readonly rowHeightPx: number; readonly chromeHeightPx: number; readonly minimum: { readonly desktop: number; readonly tablet: number }; readonly vectors: readonly { readonly width: number; readonly height: number; readonly scale: number; readonly grid: HomeGrid; readonly mode: LayeredMode }[] };
   readonly orders: readonly { readonly quizzes: readonly string[]; readonly pages: readonly string[] }[];
-  readonly cells: readonly { readonly quizzes: number; readonly layout: string; readonly cells: Readonly<Partial<Record<string, { readonly column: number; readonly row: number }>>> }[];
+  readonly cells: readonly { readonly quizzes: number; readonly grid: HomeGrid; readonly cells: Readonly<Partial<Record<string, { readonly column: number; readonly row: number }>>> }[];
   readonly excerpts: readonly { readonly id: string; readonly ranks: number; readonly mine: number | null; readonly top: readonly number[]; readonly own: number | null }[];
   readonly board: { readonly sentRows: number; readonly page: readonly { readonly id: string; readonly ranks: number; readonly mine: number | null; readonly rows: number; readonly apart: number | null; readonly count: string; readonly shown: string | null }[] };
 }
 
-const fixture: Fixture = grid;
+const fixture = grid as Fixture;
 const SNOW_EMOJI = String.fromCodePoint(0x2744, 0xfe0f);
 const SNOW_TEXT = String.fromCodePoint(0x2744, 0xfe0e);
 const LEARNER = "a".repeat(32);
@@ -357,9 +359,9 @@ describe("🏠️ home overview", () => {
   }
 
   for (const vector of fixture.cells) {
-    it(`lays the pages of ${vector.quizzes} quizzes on the ${vector.layout} strip where their cards sit`, () => {
+    it(`lays the pages of ${vector.quizzes} quizzes on the ${vector.grid} strip where their cards sit`, () => {
       const order = fixture.orders.find((candidate) => candidate.quizzes.length === vector.quizzes)!;
-      expect(homeCells(order.pages, vector.layout as "desktop" | "tablet")).toEqual(vector.cells);
+      expect(homeCells(order.pages, vector.grid)).toEqual(vector.cells);
     });
   }
 
@@ -544,7 +546,7 @@ describe("🏠️ home overview", () => {
       const cell = cardHost(page).querySelector<HTMLElement>(".quiz-home-cell")!;
       expect([Number(cell.style.gridColumn) - 1, Number(cell.style.gridRow) - 1], page).toEqual([cells[page]!.column, cells[page]!.row]);
     }
-    const desktop = fixture.layouts.find((layout) => layout.layout === "desktop")!;
+    const desktop = fixture.layouts.find((layout) => layout.grid === "desktop" && layout.mode === "strip")!;
     expect(HOME_GRID_TRACKS).toEqual({ columns: desktop.columns, rows: desktop.rows });
     const overlay = document.querySelector<HTMLElement>(".quiz-home-grid")!;
     expect(weights(overlay.style.getPropertyValue("--quiz-home-columns"))).toEqual(desktop.columns);
@@ -691,28 +693,36 @@ describe("🏠️ home overview", () => {
   it("takes its breakpoints from the design system, shares the grid's tracks with no spacing between them and spaces the cards inside their cells", () => {
     expect(fixture.breakpoints).toEqual({ mobileMaxPx: UI_MOBILE_MAX_WIDTH_PX, tabletMaxPx: UI_TABLET_MAX_WIDTH_PX });
     const rules = layerRules(stylesheet);
-    expect([...new Set(rules.filter((rule) => rule.selector === ".quiz-home-grid").map((rule) => rule.minWidth))].sort((a, b) => a - b)).toEqual([0, UI_MOBILE_MAX_WIDTH_PX + 1]);
+    expect([...new Set(rules.filter((rule) => rule.selector === ".quiz-home-grid").map((rule) => rule.minWidth))]).toEqual([0]);
     expect(rules.filter((rule) => rule.selector.startsWith(".quiz-home-grid") && SPACING.includes(rule.property))).toEqual([]);
     expect(rules.filter((rule) => rule.selector === ".quiz-home-cell").map((rule) => rule.property)).toEqual(expect.arrayContaining(["padding", "align-items", "justify-content", "min-width", "min-height"]));
   });
 
   for (const expected of fixture.layouts) {
-    it(`lays the cards over the ${expected.layout} at ${expected.width} px`, () => {
+    it(`lays the cards over the ${expected.grid} grid at ${expected.width} px, ${expected.mode === "swipe" ? "swiped one page at a time" : "fixed over the pages"}`, () => {
       const { mobileMaxPx, tabletMaxPx } = fixture.breakpoints;
-      expect(expected.width <= mobileMaxPx ? "list" : expected.width <= tabletMaxPx ? "tablet" : "desktop").toBe(expected.layout);
+      expect(homeLayout({ narrow: expected.width <= mobileMaxPx, medium: expected.width > mobileMaxPx && expected.width <= tabletMaxPx, short: { desktop: false, tablet: false } })).toEqual({ grid: expected.grid, mode: expected.mode });
       atViewport(expected.width);
       render(<Home session={stubSession()} />);
-      const layer = layerAt(layerRules(stylesheet), expected.width);
-      if (expected.rows === null) {
-        expect(layer).toEqual({ columns: expected.columns.length });
+      expect(document.querySelector("[data-layered-overview]")!.getAttribute("data-mode")).toBe(expected.mode);
+      const cells = homeCells(PAGES, expected.grid);
+      if (expected.mode === "swipe") {
+        expect(document.querySelector(".quiz-home-grid")).toBeNull();
         expect(document.querySelectorAll(".quiz-home-cell")).toHaveLength(0);
+        expect([...expected.columns, ...expected.rows].every((weight) => weight === 1)).toBe(true);
+        const overlay = document.querySelector<HTMLElement>("[data-layered-overlay]")!;
+        expect([overlay.style.gridTemplateColumns, overlay.style.gridTemplateRows]).toEqual([`repeat(${expected.columns.length}, minmax(0, 1fr))`, `repeat(${expected.rows.length}, minmax(0, 1fr))`]);
+        for (const page of PAGES) {
+          const cell = document.querySelector<HTMLElement>(`[data-layered-cell="${page}"]`)!;
+          expect([Number(cell.style.gridColumn) - 1, Number(cell.style.gridRow) - 1], page).toEqual([cells[page]!.column, cells[page]!.row]);
+          expect(cell.querySelector("[data-layered-card] .quiz-home-entry"), page).not.toBeNull();
+        }
         return;
       }
-      expect(layer).toEqual({ columns: "var(--quiz-home-columns)", rows: "var(--quiz-home-rows)" });
+      expect(layerAt(layerRules(stylesheet), expected.width)).toEqual({ columns: "var(--quiz-home-columns)", rows: "var(--quiz-home-rows)" });
       const overlay = document.querySelector<HTMLElement>(".quiz-home-grid")!;
       expect(weights(overlay.style.getPropertyValue("--quiz-home-columns"))).toEqual(expected.columns);
       expect(weights(overlay.style.getPropertyValue("--quiz-home-rows"))).toEqual(expected.rows);
-      const cells = homeCells(PAGES, expected.layout as "desktop" | "tablet");
       for (const page of PAGES) {
         const cell = cardHost(page).querySelector<HTMLElement>(".quiz-home-cell")!;
         expect([Number(cell.style.gridColumn) - 1, Number(cell.style.gridRow) - 1], page).toEqual([cells[page]!.column, cells[page]!.row]);
@@ -1171,18 +1181,18 @@ describe("🏠️ the layout in the learner's text size", () => {
     expect(homeLayoutQueries(1.5, PAGES)).toEqual({ narrow: "(max-width: 1150px)", medium: "(min-width: 1151px) and (max-width: 1534px)", short: { desktop: "(max-height: 899px)", tablet: "(max-height: 1283px)" } });
   });
 
-  for (const { width, height, scale, layout } of fixture.heights.vectors) {
+  for (const { width, height, scale, grid, mode } of fixture.heights.vectors) {
     const textSize = TEXT_SIZES.find((size) => size.scale === scale)!.value;
-    it(`lays ${width} × ${height} px at the text size "${textSize}" out as ${layout}`, () => {
+    it(`lays ${width} × ${height} px at the text size "${textSize}" out on the ${grid} grid, ${mode === "swipe" ? "swiped" : "fixed"}`, () => {
       atViewport(width, height);
       render(<HomeScreen session={stubSession() as unknown as QuizSession} state={STATE} text={quizText("en")} locale="en" preferences={{ ...PREFERENCES, textSize }} onPreferences={() => undefined} />);
       const overview = document.querySelector("[data-layered-overview]")!;
-      expect(overview.getAttribute("data-mode")).toBe(layout === "list" ? "list" : "strip");
-      if (layout === "list") return;
-      const cells = homeCells(PAGES, layout as "desktop" | "tablet");
+      expect(overview.getAttribute("data-mode")).toBe(mode);
+      const cells = homeCells(PAGES, grid);
       for (const page of PAGES) {
-        const cell = cardHost(page).querySelector<HTMLElement>(".quiz-home-cell")!;
+        const cell = mode === "swipe" ? document.querySelector<HTMLElement>(`[data-layered-cell="${page}"]`)! : cardHost(page).querySelector<HTMLElement>(".quiz-home-cell")!;
         expect([Number(cell.style.gridColumn) - 1, Number(cell.style.gridRow) - 1], page).toEqual([cells[page]!.column, cells[page]!.row]);
+        expect([Number(pane(page).style.gridColumn) - 1, Number(pane(page).style.gridRow) - 1], page).toEqual([cells[page]!.column, cells[page]!.row]);
       }
     });
   }
@@ -1201,16 +1211,35 @@ describe("🥞️ the opened page and the short viewport", () => {
     for (const stop of stops) expect(pane("board").contains(stop)).toBe(true);
   });
 
-  it("lets the card of a list section scroll instead of clipping it when the viewport is short", () => {
+  it("names the pages one swipe away at the edges of a phone's view, in the learner's language", () => {
+    atViewport(375, 812);
+    for (const [locale, right, down] of [["en", "Go right to Quiz physics", "Go down to Quiz heating"], ["de", "Nach rechts zu Quiz physics", "Nach unten zu Quiz heating"]] as const) {
+      const { unmount } = render(<HomeScreen session={stubSession() as unknown as QuizSession} state={STATE} text={quizText(locale)} locale={locale} preferences={PREFERENCES} onPreferences={() => undefined} />);
+      const hints = [...document.querySelectorAll<HTMLElement>("[data-layered-neighbour]")].map((hint) => [hint.dataset.layeredNeighbour, hint.dataset.pane, hint.getAttribute("aria-label"), hint.textContent?.trim()]);
+      expect(hints.map(([direction, page]) => [direction, page]), `${locale}: the ring wraps, so the badges lie above the learner and how it works on the left`).toEqual([
+        ["up", "badges"],
+        ["left", "intro"],
+        ["right", "physics"],
+        ["down", "heating"],
+      ]);
+      expect(hints.slice(2), locale).toEqual([
+        ["right", "physics", right, "Quiz physics"],
+        ["down", "heating", down, "Quiz heating"],
+      ]);
+      unmount();
+    }
+  });
+
+  it("lets a card the learner swipes to scroll inside its page's cell instead of clipping it when the viewport is short", () => {
     atViewport(700, 360);
     render(<Home session={stubSession()} />);
-    const layers = [...document.querySelectorAll<HTMLElement>("[data-layered-section] > div.pointer-events-none")].filter((layer) => layer.querySelector("[data-layered-card]") !== null);
-    expect(layers.length).toBeGreaterThan(0);
+    const layers = [...document.querySelectorAll<HTMLElement>("[data-layered-cell]")].filter((layer) => layer.querySelector("[data-layered-card]") !== null);
+    expect(layers).toHaveLength(PAGES.length);
     for (const layer of layers) {
       const classes = layer.className.split(" ");
       expect(classes).toContain("overflow-y-auto");
       expect(classes).toContain("items-center-safe");
-      expect(classes.some((name) => /^pb-\[\d+px\]$/u.test(name))).toBe(true);
+      expect(layer.style.paddingBottom, "room for the hint below, in px so large text never narrows it").toMatch(/^calc\((0px \+ )?\d+px\)$/u);
       expect(classes.some((name) => name.endsWith("rem]"))).toBe(false);
     }
   });

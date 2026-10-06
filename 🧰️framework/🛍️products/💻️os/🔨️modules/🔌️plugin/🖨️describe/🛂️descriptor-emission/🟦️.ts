@@ -5,7 +5,7 @@ import { join, resolve } from "node:path";
 import { devToolingEnv, runCmdStatus } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { verifyDescriptorPairBytesV1 } from "../../📇️registry/✅️catalog-verification/🟦️.ts";
-import { CRATE_NAME, DESCRIPTOR_JSON_FILENAME, DESCRIPTOR_PACK_FILENAME, FRESH_COMPONENT_MAX_BYTES, FRESH_IO_CHUNK_BYTES, cargoTargetRoot, ensureBuiltBin } from "../🏗️component-build/🟦️.ts";
+import { CRATE_NAME, DESCRIPTOR_JSON_FILENAME, DESCRIPTOR_PACK_FILENAME, FRESH_COMPONENT_MAX_BYTES, FRESH_IO_CHUNK_BYTES, cargoTargetRoot, publishedDescriptorEmitter } from "../🏗️component-build/🟦️.ts";
 import { freshPathIsWithin } from "../🧾️source-epoch/🟦️.ts";
 export type DescriptorEmissionRequestV1 = Readonly<{
   rawComponentPath: string;
@@ -109,7 +109,7 @@ export function emitOwnerDescriptorPairV1(repoRoot: string, request: DescriptorE
   emissionGuard(control, startedAt, budgetMs, "emit");
   const staging = mkdtempSync(join(ownerRoot, ".🛂️descriptor-staging-"));
   try {
-    const emitter = ensureBuiltBin(repoRoot, remainingDescriptorEmissionBudgetMs(budgetMs, Date.now() - startedAt));
+    const emitter = publishedDescriptorEmitter(repoRoot);
     emissionGuard(control, startedAt, budgetMs, "describe");
     const status = runCmdStatus(emitter, ["describe", raw.path, "--core", core.path, "--out", staging], { cwd: repoRoot, env: devToolingEnv(), budgetMs: remainingDescriptorEmissionBudgetMs(budgetMs, Date.now() - startedAt) });
     if (status !== 0) throw new Error(`descriptor emitter exited with ${status}`);

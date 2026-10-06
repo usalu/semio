@@ -190,3 +190,15 @@ fn record_borrowed_preflight_pack_authored_coord_and_direction_exact_original_wo
  for(id,key)in[("0","coordinate"),("1","direction")]{let expected=serde_json::Value::Array(recipe[key]["words"].as_array().unwrap().iter().map(|word|serde_json::json!({"bits":word.as_str().unwrap()})).collect());assert_eq!(readback[id],expected);}
  parity(&source,&spatial_spec(),true,false);eprintln!("[DEBUG] canonical borrowed Coord and Dir retain exact ordinary packed-f64 words with zero scratch");
 }
+
+#[derive(Debug,PartialEq,DslRecord)]
+struct IntrinsicOwner{value:semio_framework_value::DslValue}
+static INTRINSIC:[F;1]=[F::new(0,"value",H::Value)];
+fn intrinsic_spec()->S{S{keyword:None,layout:RecordLayout::Inline,fields:&INTRINSIC}}
+/// 🧿️ The neutral intrinsic corpus forecasts exact actual Pack bytes with owned cancellation and no source mirror.
+#[test]
+fn record_borrowed_preflight_intrinsic_values_match_canonical_bytes_and_controls(){
+ let fixture=fixture();for row in fixture["intrinsic"].as_array().unwrap(){let value=semio_framework_value::DslValue::from(row);assert_eq!(serde_json::Value::from(&value),*row);let source=IntrinsicOwner{value};let(spec,record)=owned(&source);let bytes=encode_document(&spec,&record,&EncodeOptions::default()).unwrap();let(decoded,_)=super::decode_document(&bytes,&spec,&Default::default()).unwrap();assert_eq!(decoded,record);let Some(FieldValue::Value(decoded))=decoded.fields.get(&0)else{panic!("canonical intrinsic field tag")};assert_eq!(serde_json::Value::from(decoded),*row);let text=semio_framework_dsl_record::print(&record,&spec,JoinMode::Document);let decoded=semio_framework_dsl_record::parse_exact(&text,&spec,&Default::default()).unwrap();assert_eq!(decoded,record,"Text preserves intrinsic field and exact number kinds");let Some(FieldValue::Value(decoded))=decoded.fields.get(&0)else{panic!("Text intrinsic field tag")};assert_eq!(serde_json::Value::from(decoded),*row);parity(&source,&intrinsic_spec(),true,false);parity(&source,&intrinsic_spec(),false,false);}
+ let prefix=fixture["distinctSymbols"]["prefix"].as_str().unwrap();let count=fixture["distinctSymbols"]["count"].as_u64().unwrap();let source=IntrinsicOwner{value:semio_framework_value::DslValue::Array((0..count).map(|index|semio_framework_value::DslValue::String(format!("{prefix}{index}"))).collect())};parity(&source,&intrinsic_spec(),true,true);
+ eprintln!("[DEBUG] Neutral intrinsic null/bool/numbers/UTF8/nested arrays/objects match actual canonical Pack and Text lengths, exact bounds, spill ownership and cancellation");
+}

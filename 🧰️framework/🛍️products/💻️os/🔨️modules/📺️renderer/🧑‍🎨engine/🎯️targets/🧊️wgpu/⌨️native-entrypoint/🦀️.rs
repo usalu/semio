@@ -1,3 +1,28 @@
+/// 🚪️ Drives a headless process future and retires its mounted native I/O owners.
+#[cfg(not(target_arch = "wasm32"))]
+pub(crate) fn drive_native_entrypoint<F: std::future::Future>(future: F) -> F::Output {
+    use std::sync::atomic::Ordering;
+    use std::task::Poll;
+    let mut future = Some(Box::pin(future));
+    let mut output = None;
+    semio_framework_async::block_on(std::future::poll_fn(|context| {
+        if let Some(active) = future.as_mut() {
+            if let Poll::Ready(value) = active.as_mut().poll(context) {
+                output = Some(value);
+                future = None;
+            }
+        }
+        crate::pump_renderer_io_sessions(16);
+        let pending = crate::RENDERER_IO_SLOTS.iter().any(|slot| matches!(slot.state.load(Ordering::Acquire), crate::RENDERER_IO_LIVE | crate::RENDERER_IO_CHECKED_OUT));
+        if !pending {
+            if let Some(value) = output.take() { return Poll::Ready(value); }
+        } else {
+            context.waker().wake_by_ref();
+        }
+        Poll::Pending
+    }))
+}
+
 /// ⌨️ Runs the native application with a caller-owned inventory of installed document services.
 #[cfg(not(target_arch = "wasm32"))]
 pub fn run_native_entrypoint(services: Vec<semio_framework_os_kernel::os_directory::client::InstalledServiceContributionV1>) {
@@ -10,9 +35,6 @@ pub fn run_native_entrypoint(services: Vec<semio_framework_os_kernel::os_directo
         env::args().position(|arg| arg == flag).and_then(|index| env::args().nth(index + 1))
     }
 
-    fn drive_entrypoint<F: std::future::Future>(future: F) -> F::Output {
-        semio_framework_async::block_on(future)
-    }
 
     #[cfg(unix)]
     fn inherited_credential_fd_is_closed() -> bool {
@@ -78,7 +100,7 @@ pub fn run_native_entrypoint(services: Vec<semio_framework_os_kernel::os_directo
         std::process::exit(1);
     }
     if env::args().any(|arg| arg == "--socket-grant-probe") {
-        let status = drive_entrypoint(crate::run_socket_grant_probe());
+        let status = drive_native_entrypoint(crate::run_socket_grant_probe());
         if status == 0 {
             println!("native-socket-grant-probe-ok");
         }
@@ -119,7 +141,7 @@ pub fn run_native_entrypoint(services: Vec<semio_framework_os_kernel::os_directo
             std::process::exit(1);
         };
         let shard_count: u16 = arg_value("--shards").and_then(|v| v.parse().ok()).unwrap_or(8);
-        std::process::exit(drive_entrypoint(crate::scale_bench::run(PathBuf::from(registry_path), PathBuf::from(wasm_path), shard_count, PathBuf::from(report_path))));
+        std::process::exit(drive_native_entrypoint(crate::scale_bench::run(PathBuf::from(registry_path), PathBuf::from(wasm_path), shard_count, PathBuf::from(report_path))));
     }
     let modules_root = match env::var("SEMIO_PLUGIN_MODULES") {
         Ok(value) if !value.trim().is_empty() => PathBuf::from(value),
@@ -129,7 +151,7 @@ pub fn run_native_entrypoint(services: Vec<semio_framework_os_kernel::os_directo
         }
     };
     if env::args().any(|arg| arg == "--smoke") {
-        std::process::exit(drive_entrypoint(run_smoke(&plugin_filter, modules_root, services)));
+        std::process::exit(drive_native_entrypoint(run_smoke(&plugin_filter, modules_root, services)));
     }
     run_native(&plugin_filter, modules_root, services);
 }

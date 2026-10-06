@@ -1,0 +1,48 @@
+{
+  "capturedAt": "2026-10-05T06:44:00.1504977Z",
+  "purpose": "Exact owned retention repair paths and prospective checker inputs; valid RED11443 precedes production owner A5A; actualGREEN79205 scope is16neutral reference and5top-level lifecycle controls; symlinksubtestSkipped=true",
+  "files": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🧩️component/🐹️.go",
+      "sha256": "A5A2717B3FC2D061CE143A80F601081088A3CAB1284F735E9AB3ACC9C63B17C3"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🧪️tests/🔬️component/🐹️.go",
+      "sha256": "46E33A1ABF23CA3F45C17348E103EA6D594F7E00E95A90D0A746D48D86B76711"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🧪️tests/🃏️glob/🟦️.ts",
+      "sha256": "74605640BC33D581DD5079D33A439A31F57046623734DC1E5C4FA9E53A38319C"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/📦️packages/🟦️typescript/📜️script.ts",
+      "sha256": "08347662042DE7BA686F7CC68DB13B409F51FAE278A7E270A8855C95FCD1AF71"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎫️tickets/🧬️schema/🔣️.json",
+      "sha256": "B0B557806C7B5FEF9B2EA1FDC33C70C6A9053C40320C37479E0FCD079E8A5F62"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎫️tickets/🧫️fixtures/🔓️open-close-reopen-lifecycle/🔓️lifecycle.json",
+      "sha256": "2A2B92C7664348B15EF39BC9DBDBB3FB2130E3AB7AA3A1F46FBDDE7C59C24D06"
+    }
+  ],
+  "logs": [
+    {
+      "name": "ticket-retention-red.log",
+      "sha256": "ECF8299E0B9AD4B5590CFD783B7BFD875A246F37FD364836D7199D81C8DB822C"
+    },
+    {
+      "name": "ticket-retention-red2.log",
+      "sha256": "16B6610BD84F520634435E61F935F79F8E2D65C696A5861A5C6F7E3F39069968"
+    },
+    {
+      "name": "ticket-retention-red3.log",
+      "sha256": "9954EC224F771D19C35E49A028D11D0F3DA02B072CA605AAFD8DCEB929174FE0"
+    },
+    {
+      "name": "ticket-retention-green.log",
+      "sha256": "66980955FBC24125E43A9D5ABADE858CC2DFD2FF1FD31FAA2676613FD121EA7C"
+    }
+  ]
+}

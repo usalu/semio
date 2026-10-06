@@ -1,0 +1,536 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-viz-scientific-surface}[2026/09/05 v0.2.0 semio viz namespace scientific-surface and earth-science families]
+
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+\RequirePackage{semio-viz-scientific-field}
+
+\ExplSyntaxOn
+
+%region 🔖️Parsing
+\cs_generate_variant:Nn \seq_set_split:Nnn { Nnx }
+\tl_new:N \l_semio_viz_surf_key_tl
+\seq_new:N \l_semio_viz_surf_rec_seq
+% ✂️ Splits one `/`-delimited record of a family key into the shared field sequence.
+\cs_new_protected:Npn \semio_viz_surf_record:n #1
+  { \seq_set_split:Nnx \l_semio_viz_surf_rec_seq { / } {#1} }
+% 🔢 Expands to the n-th field of the record read last.
+\cs_new:Npn \semio_viz_surf_field:n #1
+  { \seq_item:Nn \l_semio_viz_surf_rec_seq {#1} }
+\tl_new:N \l_semio_viz_surf_mode_tl
+\tl_new:N \l_semio_viz_surf_expr_tl
+%endregion 🔖️Parsing
+
+%region 🔖️Families
+
+%region 🔖️Keys
+% 🔑 Keys of `sci-skewt` (§35 thermodynamic diagrams):
+%    mode (skew-t|tephigram, skew-t): the coordinate skew of the diagram.
+%    profile (clist of `pressure/temperature/dewpoint`): the sounding, pressure in hPa.
+%    skew (fp, 45): the isotherm slope in degrees. top, bottom (fp, 100/1000): the pressure window.
+%    isotherms (bool, true), adiabats (bool, true): the background line families.
+\clist_new:N \l_semio_viz_surf_profile_clist
+\fp_new:N \l_semio_viz_surf_skew_fp
+\fp_new:N \l_semio_viz_surf_top_fp
+\fp_new:N \l_semio_viz_surf_bottom_fp
+\bool_new:N \l_semio_viz_surf_isotherms_bool
+\bool_new:N \l_semio_viz_surf_adiabats_bool
+%endregion 🔖️Keys
+
+\semio_viz_sci_keys_canvas:n { sci-skewt }
+% 🎛️ Binds the `sci-skewt` keys onto the skew angle, the pressure window, the sounding and the two background line switches.
+\keys_define:nn { semio / viz / family / sci-skewt }
+  {
+    mode      .tl_set:N    = \l_semio_viz_surf_mode_tl ,
+    profile   .clist_set:N = \l_semio_viz_surf_profile_clist ,
+    skew      .fp_set:N    = \l_semio_viz_surf_skew_fp ,
+    top       .fp_set:N    = \l_semio_viz_surf_top_fp ,
+    bottom    .fp_set:N    = \l_semio_viz_surf_bottom_fp ,
+    isotherms .bool_set:N  = \l_semio_viz_surf_isotherms_bool ,
+    adiabats  .bool_set:N  = \l_semio_viz_surf_adiabats_bool ,
+  }
+
+% 🌡️ §35 skew-T log-P: pressure on a logarithmic vertical axis and temperature skewed by the chosen angle, with the sounding drawn on it.
+\SemioVizFamily { sci-skewt }
+  {
+    \semio_viz_sci_enter:nnn { sci-skewt }
+      {
+        mode=skew-t , skew=45 , top=100 , bottom=1000 , isotherms=true , adiabats=true ,
+        domain={-40,40} , range={} , grid=false ,
+        profile={ 1000/24/18 , 925/19/15 , 850/14/11 , 700/6/2 , 500/-9/-16 ,
+                  400/-19/-28 , 300/-33/-44 , 250/-42/-54 , 200/-52/-62 , 150/-58/-68 , 100/-62/-74 }
+      }
+      {#1}
+    \semio_viz_sci_window:nnnn
+      { \clist_item:Nn \l_semio_viz_sci_domain_clist { 1 } }
+      { \clist_item:Nn \l_semio_viz_sci_domain_clist { 2 } }
+      { \fp_eval:n { ln ( \l_semio_viz_surf_bottom_fp ) } }
+      { \fp_eval:n { ln ( \l_semio_viz_surf_top_fp ) } }
+    \semio_viz_sci_frame:
+    \bool_if:NT \l_semio_viz_surf_isotherms_bool { \semio_viz_surf_isotherms: }
+    \bool_if:NT \l_semio_viz_surf_adiabats_bool { \semio_viz_surf_adiabats: }
+    \semio_viz_surf_sounding:n { 2 }
+    \semio_viz_surf_sounding:n { 3 }
+  }
+% 🌡️ Skewed coordinate: the temperature axis is displaced by the height above the bottom pressure.
+\cs_new:Npn \semio_viz_surf_skewx:nn #1#2
+  {
+    \fp_eval:n
+      {
+        \semio_viz_sci_mx:n {#1}
+        + tand ( \l_semio_viz_surf_skew_fp )
+          * ( \semio_viz_sci_my:n { ln (#2) } - \semio_viz_sci_my:n { ln ( \l_semio_viz_surf_bottom_fp ) } )
+      }
+  }
+% 📐 Seventeen isotherms every ten degrees, each a straight grid line from the bottom to the top pressure in the skewed frame.
+\cs_new_protected:Npn \semio_viz_surf_isotherms:
+  {
+    \int_step_inline:nnnn { -8 } { 1 } { 8 }
+      {
+        \draw [ semio~sci~grid ]
+          ( \semio_viz_surf_skewx:nn { 10 * ##1 } { \l_semio_viz_surf_bottom_fp } ,
+            \semio_viz_sci_my:n { ln ( \l_semio_viz_surf_bottom_fp ) } ) --
+          ( \semio_viz_surf_skewx:nn { 10 * ##1 } { \l_semio_viz_surf_top_fp } ,
+            \semio_viz_sci_my:n { ln ( \l_semio_viz_surf_top_fp ) } ) ;
+      }
+  }
+% 🌡️ Dry adiabats: potential temperature held constant, T = θ (p/1000)^(R/cp) with R/cp = 0.286.
+\cs_new_protected:Npn \semio_viz_surf_adiabats:
+  {
+    \int_step_inline:nnnn { -2 } { 1 } { 8 }
+      {
+        \seq_clear:N \l_semio_viz_sci_pts_seq
+        \int_step_inline:nnnn { 0 } { 1 } { 24 }
+          {
+            \fp_set:Nn \l_semio_viz_sci_g_fp
+              {
+                \l_semio_viz_surf_bottom_fp
+                * ( \l_semio_viz_surf_top_fp / \l_semio_viz_surf_bottom_fp ) ^ ( ####1 / 24 )
+              }
+            \semio_viz_points_put:Nnn \l_semio_viz_sci_pts_seq
+              { \l_semio_viz_sci_g_fp }
+              { ( 273.15 + 20 * ##1 ) * ( \l_semio_viz_sci_g_fp / 1000 ) ^ 0.286 - 273.15 }
+          }
+        \semio_viz_surf_skew_path:n { semio~sci~grid }
+      }
+  }
+% 🌡️ Draws a pressure/temperature point sequence in the skewed frame.
+\cs_new_protected:Npn \semio_viz_surf_skew_path:n #1
+  {
+    \tl_clear:N \l_semio_viz_sci_path_tl
+    \seq_map_inline:Nn \l_semio_viz_sci_pts_seq
+      {
+        \tl_if_empty:NF \l_semio_viz_sci_path_tl { \tl_put_right:Nn \l_semio_viz_sci_path_tl { -- } }
+        \tl_put_right:Nx \l_semio_viz_sci_path_tl
+          {
+            ( \semio_viz_surf_skewx:nn { \semio_viz_points_y:n {##1} } { \semio_viz_points_x:n {##1} } ,
+              \semio_viz_sci_my:n { ln ( \semio_viz_points_x:n {##1} ) } )
+          }
+      }
+    \use:x { \exp_not:N \draw [ \exp_not:n {#1} ] \exp_not:V \l_semio_viz_sci_path_tl ; }
+  }
+% 🎈 Traces one sounding curve: pressure against the requested profile field, solid for temperature and alternate for dewpoint.
+\cs_new_protected:Npn \semio_viz_surf_sounding:n #1
+  {
+    \seq_clear:N \l_semio_viz_sci_pts_seq
+    \clist_map_inline:Nn \l_semio_viz_surf_profile_clist
+      {
+        \semio_viz_surf_record:n {##1}
+        \semio_viz_points_put:Nnn \l_semio_viz_sci_pts_seq
+          { \semio_viz_surf_field:n { 1 } } { \semio_viz_surf_field:n {#1} }
+      }
+    \int_compare:nNnTF {#1} = { 2 }
+      { \semio_viz_surf_skew_path:n { semio~sci~curve } }
+      { \semio_viz_surf_skew_path:n { semio~sci~curve~alt } }
+    \semio_viz_sci_report:Nn \l_semio_viz_sci_pts_seq { sounding }
+  }
+
+%region 🔖️Keys
+% 🔑 Keys of `sci-climate-series` (§35 climate series):
+%    mode (stripes|anomaly|meteogram, stripes).
+%    values (clist of `time/value`): the anomaly or observation series.
+%    baseline (fp, 0): the reference the anomaly is measured against.
+%    panels (clist of `label/series`) where series is a `+`-joined `time:value` list, for a meteogram.
+\clist_new:N \l_semio_viz_surf_values_clist
+\clist_new:N \l_semio_viz_surf_panels_clist
+\fp_new:N \l_semio_viz_surf_baseline_fp
+%endregion 🔖️Keys
+
+\semio_viz_sci_keys_canvas:n { sci-climate-series }
+% 🎚️ Binds the `sci-climate-series` keys onto the mode, the observation series, the anomaly baseline and the meteogram panels.
+\keys_define:nn { semio / viz / family / sci-climate-series }
+  {
+    mode     .tl_set:N    = \l_semio_viz_surf_mode_tl ,
+    values   .clist_set:N = \l_semio_viz_surf_values_clist ,
+    baseline .fp_set:N    = \l_semio_viz_surf_baseline_fp ,
+    panels   .clist_set:N = \l_semio_viz_surf_panels_clist ,
+  }
+
+% 🌍 §35 climate series: warming stripes, anomaly bars and the stacked panels of a meteogram.
+\SemioVizFamily { sci-climate-series }
+  {
+    \semio_viz_sci_enter:nnn { sci-climate-series }
+      {
+        mode=stripes , baseline=0 , domain={} , range={} , grid=false ,
+        values={ 1900/-0.3 , 1910/-0.42 , 1920/-0.28 , 1930/-0.14 , 1940/0.04 , 1950/-0.12 ,
+                 1960/-0.02 , 1970/0.02 , 1980/0.26 , 1990/0.44 , 2000/0.6 , 2010/0.86 , 2020/1.02 } ,
+        panels={ temperature/0:12+6:9+12:17+18:14+24:11 , wind/0:3+6:5+12:8+18:6+24:4 ,
+                 pressure/0:1012+6:1010+12:1007+18:1009+24:1013 }
+      }
+      {#1}
+    \str_case:VnF \l_semio_viz_surf_mode_tl
+      {
+        { anomaly }   { \semio_viz_surf_anomaly: }
+        { meteogram } { \semio_viz_surf_meteogram: }
+      }
+      { \semio_viz_surf_stripes: }
+  }
+% 📥 Turns the `values` clist of `time/value` records into the shared point sequence.
+\cs_new_protected:Npn \semio_viz_surf_series_read:
+  {
+    \seq_clear:N \l_semio_viz_sci_pts_seq
+    \clist_map_inline:Nn \l_semio_viz_surf_values_clist
+      {
+        \semio_viz_surf_record:n {##1}
+        \semio_viz_points_put:Nnn \l_semio_viz_sci_pts_seq
+          { \semio_viz_surf_field:n { 1 } } { \semio_viz_surf_field:n { 2 } }
+      }
+  }
+% 🟥 Warming stripes: one full-height band per observation, its colour taken from the diverging ramp at the value normalised by the largest one.
+\cs_new_protected:Npn \semio_viz_surf_stripes:
+  {
+    \semio_viz_surf_series_read:
+    \semio_viz_sci_extent:N \l_semio_viz_sci_pts_seq
+    \semio_viz_sci_window:nnnn
+      { \l_semio_viz_sci_xmin_fp } { \l_semio_viz_sci_xmax_fp } { 0 } { 1 }
+    \int_set:Nn \l_tmpb_int { \seq_count:N \l_semio_viz_sci_pts_seq }
+    \int_zero:N \l_tmpa_int
+    \seq_map_inline:Nn \l_semio_viz_sci_pts_seq
+      {
+        \fill [ fill=\semio_viz_sci_ramp_diverging:n
+            { \semio_viz_points_y:n {##1} / max ( 1e-6 , abs ( \l_semio_viz_sci_ymax_fp ) ) } ]
+          ( \fp_eval:n { \l_semio_viz_sci_w_fp * \l_tmpa_int / \l_tmpb_int } , 0 ) rectangle
+          ( \fp_eval:n { \l_semio_viz_sci_w_fp * ( \l_tmpa_int + 1 ) / \l_tmpb_int } ,
+            \fp_eval:n { \l_semio_viz_sci_h_fp } ) ;
+        \int_incr:N \l_tmpa_int
+      }
+    \semio_viz_sci_report:Nn \l_semio_viz_sci_pts_seq { stripe }
+  }
+% 📊 Anomaly bars in a framed window with zero lines, each bar reaching from the baseline to its value and coloured by the diverging ramp.
+\cs_new_protected:Npn \semio_viz_surf_anomaly:
+  {
+    \semio_viz_surf_series_read:
+    \semio_viz_sci_window_from:Nn \l_semio_viz_sci_pts_seq { 0.08 }
+    \semio_viz_sci_window_keys:
+    \semio_viz_sci_frame:
+    \semio_viz_sci_zero_lines:
+    \int_set:Nn \l_tmpb_int { \seq_count:N \l_semio_viz_sci_pts_seq }
+    \seq_map_inline:Nn \l_semio_viz_sci_pts_seq
+      {
+        \fill [ fill=\semio_viz_sci_ramp_diverging:n
+            { \semio_viz_points_y:n {##1} / max ( 1e-6 , abs ( \l_semio_viz_sci_dymax_fp ) ) } ]
+          ( \fp_eval:n { \semio_viz_sci_mx:n { \semio_viz_points_x:n {##1} }
+              - 0.4 * \l_semio_viz_sci_w_fp / \l_tmpb_int } ,
+            \semio_viz_sci_my:n { \l_semio_viz_surf_baseline_fp } ) rectangle
+          ( \fp_eval:n { \semio_viz_sci_mx:n { \semio_viz_points_x:n {##1} }
+              + 0.4 * \l_semio_viz_sci_w_fp / \l_tmpb_int } ,
+            \semio_viz_sci_my:n { \semio_viz_points_y:n {##1} } ) ;
+      }
+  }
+% 🗂️ Walks the `panels` clist, counting the panels and numbering them so each one knows its share of the height.
+\cs_new_protected:Npn \semio_viz_surf_meteogram:
+  {
+    \int_zero:N \l_tmpa_int
+    \int_set:Nn \l_tmpb_int { \clist_count:N \l_semio_viz_surf_panels_clist }
+    \clist_map_inline:Nn \l_semio_viz_surf_panels_clist
+      {
+        \int_incr:N \l_tmpa_int
+        \semio_viz_surf_record:n {##1}
+        \semio_viz_surf_panel:
+      }
+  }
+% 🪟 One meteogram panel: the `+`-joined `time:value` series becomes a curve in its own hue, drawn in a shortened frame shifted down by the panel index and labelled at its top left.
+\cs_new_protected:Npn \semio_viz_surf_panel:
+  {
+    \seq_set_split:Nnx \l_tmpa_seq { + } { \semio_viz_surf_field:n { 2 } }
+    \seq_clear:N \l_semio_viz_sci_pts_seq
+    \seq_map_inline:Nn \l_tmpa_seq
+      {
+        \semio_viz_sci_split_colon:Nn \l_tmpb_seq {##1}
+        \semio_viz_points_put:Nnn \l_semio_viz_sci_pts_seq
+          { \seq_item:Nn \l_tmpb_seq { 1 } } { \seq_item:Nn \l_tmpb_seq { 2 } }
+      }
+    \fp_set:Nn \l_semio_viz_sci_h_fp
+      { ( 40 - 3 * ( \l_tmpb_int - 1 ) ) / \l_tmpb_int }
+    \begin{scope}
+      [ shift={( 0 , \fp_eval:n { - ( \l_tmpa_int - 1 ) * ( \l_semio_viz_sci_h_fp + 3 ) } )} ]
+      \semio_viz_sci_window_from:Nn \l_semio_viz_sci_pts_seq { 0.08 }
+      \semio_viz_sci_frame:
+      \semio_viz_sci_polyline:Nn \l_semio_viz_sci_pts_seq
+        { semio~sci~curve , draw=\semio_viz_sci_hue:n { \l_tmpa_int } }
+      \node [ font=\c_semio_viz_theme_font_label_tl , text=semio-chrome-text-normal , anchor=north~west ]
+        at ( 1 , \fp_eval:n { \l_semio_viz_sci_h_fp - 1 } ) { \semio_viz_surf_field:n { 1 } } ;
+    \end{scope}
+  }
+
+%region 🔖️Keys
+% 🔑 Keys of `sci-climograph` (§35 climate normals):
+%    mode (climograph|walter-lieth|hydrograph|hyetograph, climograph).
+%    months (clist of `label/temperature/precipitation`): the twelve monthly normals.
+%    discharge (clist of `time/value`): the hydrograph series.
+%    rainfall (clist of `time/depth`): the hyetograph bars.
+%    tempScale (fp, 2): millimetres of precipitation per degree, the Walter–Lieth 2:1 convention.
+\clist_new:N \l_semio_viz_surf_months_clist
+\clist_new:N \l_semio_viz_surf_discharge_clist
+\clist_new:N \l_semio_viz_surf_rainfall_clist
+\fp_new:N \l_semio_viz_surf_tempscale_fp
+%endregion 🔖️Keys
+
+\semio_viz_sci_keys_canvas:n { sci-climograph }
+% 🌂 Binds the `sci-climograph` keys onto the monthly normals, the discharge and rainfall series and the precipitation-per-degree scale.
+\keys_define:nn { semio / viz / family / sci-climograph }
+  {
+    mode      .tl_set:N    = \l_semio_viz_surf_mode_tl ,
+    months    .clist_set:N = \l_semio_viz_surf_months_clist ,
+    discharge .clist_set:N = \l_semio_viz_surf_discharge_clist ,
+    rainfall  .clist_set:N = \l_semio_viz_surf_rainfall_clist ,
+    tempScale .fp_set:N    = \l_semio_viz_surf_tempscale_fp ,
+  }
+
+% 🌦️ §35 climate normals: climographs and Walter–Lieth diagrams on their 2:1 double axis, hydrographs and hyetographs.
+\SemioVizFamily { sci-climograph }
+  {
+    \semio_viz_sci_enter:nnn { sci-climograph }
+      {
+        mode=climograph , tempScale=2 , grid=false , domain={} , range={} ,
+        months={ J/1.2/58 , F/2.1/44 , M/5.4/49 , A/9.6/42 , M/14.1/61 , J/17.2/72 ,
+                 J/19.1/78 , A/18.6/69 , S/14.8/56 , O/9.9/49 , N/5.1/57 , D/2.4/62 } ,
+        discharge={ 0/12 , 2/14 , 4/38 , 6/86 , 8/64 , 10/44 , 12/33 , 14/26 , 16/21 , 18/18 , 20/15 } ,
+        rainfall={ 0/2 , 1/8 , 2/22 , 3/14 , 4/6 , 5/3 , 6/1 }
+      }
+      {#1}
+    \str_case:VnF \l_semio_viz_surf_mode_tl
+      {
+        { hydrograph } { \semio_viz_surf_hydrograph: }
+        { hyetograph } { \semio_viz_surf_hyetograph: }
+      }
+      { \semio_viz_surf_climograph: }
+  }
+% 🌧️ Twelve months across a fixed window: a precipitation bar and a month label per month, with the temperatures multiplied by the scale into one curve over them.
+\cs_new_protected:Npn \semio_viz_surf_climograph:
+  {
+    \semio_viz_sci_window:nnnn { 0.5 } { 12.5 } { 0 } { 120 }
+    \semio_viz_sci_window_keys:
+    \semio_viz_sci_frame:
+    \int_zero:N \l_tmpa_int
+    \seq_clear:N \l_semio_viz_sci_pts_seq
+    \clist_map_inline:Nn \l_semio_viz_surf_months_clist
+      {
+        \int_incr:N \l_tmpa_int
+        \semio_viz_surf_record:n {##1}
+        \fill [ fill=semio-secondary , fill~opacity=0.4 ]
+          ( \semio_viz_sci_mx:n { \l_tmpa_int - 0.36 } , \semio_viz_sci_my:n { 0 } ) rectangle
+          ( \semio_viz_sci_mx:n { \l_tmpa_int + 0.36 } ,
+            \semio_viz_sci_my:n { \semio_viz_surf_field:n { 3 } } ) ;
+        \semio_viz_points_put:Nnn \l_semio_viz_sci_pts_seq { \l_tmpa_int }
+          { \semio_viz_surf_field:n { 2 } * \l_semio_viz_surf_tempscale_fp }
+        \node [ font=\c_semio_viz_theme_font_label_tl , text=semio-chrome-text-normal , anchor=north ]
+          at ( \semio_viz_sci_mx:n { \l_tmpa_int } , -0.6 ) { \semio_viz_surf_field:n { 1 } } ;
+      }
+    \semio_viz_sci_polyline:Nn \l_semio_viz_sci_pts_seq { semio~sci~curve }
+  }
+% 🏞️ Discharge over time as a band filled down to a zero-anchored baseline, with the curve on top.
+\cs_new_protected:Npn \semio_viz_surf_hydrograph:
+  {
+    \seq_clear:N \l_semio_viz_sci_pts_seq
+    \clist_map_inline:Nn \l_semio_viz_surf_discharge_clist
+      {
+        \semio_viz_surf_record:n {##1}
+        \semio_viz_points_put:Nnn \l_semio_viz_sci_pts_seq
+          { \semio_viz_surf_field:n { 1 } } { \semio_viz_surf_field:n { 2 } }
+      }
+    \semio_viz_sci_window_from:Nn \l_semio_viz_sci_pts_seq { 0.08 }
+    \fp_set:Nn \l_semio_viz_sci_dymin_fp { 0 }
+    \semio_viz_sci_window_keys:
+    \semio_viz_sci_frame:
+    \semio_viz_sci_polyarea:Nnn \l_semio_viz_sci_pts_seq { semio~sci~band } { 0 }
+    \semio_viz_sci_polyline:Nn \l_semio_viz_sci_pts_seq { semio~sci~curve }
+  }
+% ☔ Rainfall depths as bars in an inverted window, so the blocks hang down from the top edge.
+\cs_new_protected:Npn \semio_viz_surf_hyetograph:
+  {
+    \seq_clear:N \l_semio_viz_sci_pts_seq
+    \clist_map_inline:Nn \l_semio_viz_surf_rainfall_clist
+      {
+        \semio_viz_surf_record:n {##1}
+        \semio_viz_points_put:Nnn \l_semio_viz_sci_pts_seq
+          { \semio_viz_surf_field:n { 1 } } { \semio_viz_surf_field:n { 2 } }
+      }
+    \semio_viz_sci_extent:N \l_semio_viz_sci_pts_seq
+    \semio_viz_sci_window:nnnn
+      { \l_semio_viz_sci_xmin_fp - 0.6 } { \l_semio_viz_sci_xmax_fp + 1 }
+      { \l_semio_viz_sci_ymax_fp * 1.1 } { 0 }
+    \semio_viz_sci_frame:
+    \seq_map_inline:Nn \l_semio_viz_sci_pts_seq
+      {
+        \fill [ fill=semio-secondary , fill~opacity=0.55 ]
+          ( \semio_viz_sci_mx:n { \semio_viz_points_x:n {##1} } , \semio_viz_sci_my:n { 0 } ) rectangle
+          ( \semio_viz_sci_mx:n { \semio_viz_points_x:n {##1} + 0.8 } ,
+            \semio_viz_sci_my:n { \semio_viz_points_y:n {##1} } ) ;
+      }
+  }
+
+%region 🔖️Keys
+% 🔑 Keys of `sci-geo-section` (§35 geological and seismic sections):
+%    mode (cross-section|stratigraphic-column|seismic|river-profile|seismogram, cross-section).
+%    layers (clist of `label/thickness/pattern`): the stratigraphic pile, top layer first.
+%    horizons (clist of `label/expr`): the layer boundaries of a cross-section, as l3fp over \SemioX;
+%    a record field is `/`-delimited, so write a division as a multiplication by its reciprocal.
+%    profile (clist of `distance/elevation`): the river long profile.
+%    traces (int, 14): the seismic trace count. expr (l3fp over \SemioT): the seismogram signal.
+%    columnWidth (fp, 16): the width of a stratigraphic column in millimetres.
+\clist_new:N \l_semio_viz_surf_layers_clist
+\clist_new:N \l_semio_viz_surf_horizons_clist
+\int_new:N \l_semio_viz_surf_traces_int
+\fp_new:N \l_semio_viz_surf_colw_fp
+%endregion 🔖️Keys
+
+\semio_viz_sci_keys_canvas:n { sci-geo-section }
+% 🧭 Binds the `sci-geo-section` keys onto the horizons, the layer pile, the river profile, the trace count, the seismogram expression and the column width.
+\keys_define:nn { semio / viz / family / sci-geo-section }
+  {
+    mode        .tl_set:N    = \l_semio_viz_surf_mode_tl ,
+    layers      .clist_set:N = \l_semio_viz_surf_layers_clist ,
+    horizons    .clist_set:N = \l_semio_viz_surf_horizons_clist ,
+    profile     .clist_set:N = \l_semio_viz_surf_profile_clist ,
+    traces      .int_set:N   = \l_semio_viz_surf_traces_int ,
+    expr        .tl_set:N    = \l_semio_viz_surf_expr_tl ,
+    columnWidth .fp_set:N    = \l_semio_viz_surf_colw_fp ,
+  }
+
+% ⛰️ §35 geology: cross-sections whose horizons are functions of distance, stratigraphic columns, seismic sections and seismograms.
+\SemioVizFamily { sci-geo-section }
+  {
+    \semio_viz_sci_enter:nnn { sci-geo-section }
+      {
+        mode=cross-section , traces=14 , columnWidth=16 , domain={0,10} , range={-6,2} , grid=false ,
+        expr={ exp ( -0.1667 * \SemioT ) * sin ( 6 * \SemioT )
+               + 0.4 * exp ( - ( \SemioT - 8 ) ^ 2 ) * sin ( 20 * \SemioT ) } ,
+        horizons={ surface/1.2 - 0.35 * sin ( 0.625 * \SemioX ) ,
+                   sand/-0.6 - 0.5 * sin ( 0.5 * \SemioX + 0.6 ) ,
+                   clay/-2.4 - 0.4 * cos ( 0.55 * \SemioX ) ,
+                   rock/-4.4 - 0.25 * sin ( 0.33 * \SemioX ) } ,
+        layers={ topsoil/0.6/soil , sand/1.8/sand , clay/2.4/clay , limestone/3.2/rock } ,
+        profile={ 0/1420 , 12/980 , 26/640 , 44/380 , 62/210 , 84/110 , 110/48 , 140/12 }
+      }
+      {#1}
+    \str_case:VnF \l_semio_viz_surf_mode_tl
+      {
+        { stratigraphic-column } { \semio_viz_surf_column: }
+        { seismic }              { \semio_viz_surf_seismic: }
+        { seismogram }           { \semio_viz_surf_seismogram: }
+        { river-profile }        { \semio_viz_surf_river: }
+      }
+      { \semio_viz_surf_cross_section: }
+  }
+% 🪨 Each horizon expression is sampled sixty times across the domain, filled down to the window floor in its own hue and named at the right-hand end.
+\cs_new_protected:Npn \semio_viz_surf_cross_section:
+  {
+    \semio_viz_sci_window_keys:
+    \semio_viz_sci_frame:
+    \int_zero:N \l_tmpa_int
+    \clist_map_inline:Nn \l_semio_viz_surf_horizons_clist
+      {
+        \int_incr:N \l_tmpa_int
+        \semio_viz_surf_record:n {##1}
+        \semio_viz_sci_sample:Nnnnn \l_semio_viz_sci_pts_seq { \semio_viz_surf_field:n { 2 } }
+          { \l_semio_viz_sci_dxmin_fp } { \l_semio_viz_sci_dxmax_fp } { 60 }
+        \semio_viz_sci_polyarea:Nnn \l_semio_viz_sci_pts_seq
+          { fill=\semio_viz_sci_hue:n { \l_tmpa_int } , fill~opacity=0.22 } { \l_semio_viz_sci_dymin_fp }
+        \semio_viz_sci_polyline:Nn \l_semio_viz_sci_pts_seq { semio~sci~curve }
+        \node [ font=\c_semio_viz_theme_font_label_tl , text=semio-chrome-text-normal , anchor=west ]
+          at ( \fp_eval:n { \l_semio_viz_sci_w_fp + 1 } ,
+               \semio_viz_sci_my:n { \semio_viz_points_y:n { \seq_item:Nn \l_semio_viz_sci_pts_seq { -1 } } } )
+          { \semio_viz_surf_field:n { 1 } } ;
+      }
+  }
+% 🧱 Stacks the stratigraphic layers downward from the origin, each a labelled box eight units per thickness tall, and reports the running depth.
+\cs_new_protected:Npn \semio_viz_surf_column:
+  {
+    \fp_zero:N \l_semio_viz_sci_g_fp
+    \int_zero:N \l_tmpa_int
+    \clist_map_inline:Nn \l_semio_viz_surf_layers_clist
+      {
+        \int_incr:N \l_tmpa_int
+        \semio_viz_surf_record:n {##1}
+        \draw [ semio~sci~thin , fill=\semio_viz_sci_hue:n { \l_tmpa_int } , fill~opacity=0.3 ]
+          ( 0 , \fp_eval:n { - \l_semio_viz_sci_g_fp * 8 } ) rectangle
+          ( \fp_eval:n { \l_semio_viz_surf_colw_fp } ,
+            \fp_eval:n { - ( \l_semio_viz_sci_g_fp + \semio_viz_surf_field:n { 2 } ) * 8 } ) ;
+        \node [ font=\c_semio_viz_theme_font_label_tl , text=semio-chrome-foreground , anchor=west ]
+          at ( \fp_eval:n { \l_semio_viz_surf_colw_fp + 1.5 } ,
+               \fp_eval:n { - ( \l_semio_viz_sci_g_fp + \semio_viz_surf_field:n { 2 } / 2 ) * 8 } )
+          { \semio_viz_surf_field:n { 1 } } ;
+        \fp_add:Nn \l_semio_viz_sci_g_fp { \semio_viz_surf_field:n { 2 } }
+        \semio_viz_sci_report_values:nn { section/layer }
+          { \semio_viz_surf_field:n { 2 } , \fp_to_decimal:N \l_semio_viz_sci_g_fp }
+      }
+  }
+% 📡 A seismic section: the window spans one unit per trace with time increasing downward, then every trace is wiggled in turn.
+\cs_new_protected:Npn \semio_viz_surf_seismic:
+  {
+    \semio_viz_sci_window:nnnn { 0 } { \l_semio_viz_surf_traces_int } { 4 } { 0 }
+    \semio_viz_sci_frame:
+    \int_step_inline:nnnn { 1 } { 1 } { \l_semio_viz_surf_traces_int }
+      { \semio_viz_surf_trace:n {##1} }
+  }
+% 📉 One trace of the section: eighty samples of two Gaussian-windowed wave packets whose arrival times drift with the trace number.
+\cs_new_protected:Npn \semio_viz_surf_trace:n #1
+  {
+    \seq_clear:N \l_semio_viz_sci_pts_seq
+    \int_step_inline:nnnn { 0 } { 1 } { 80 }
+      {
+        \fp_set:Nn \SemioT { 4 * ##1 / 80 }
+        \semio_viz_points_put:Nnn \l_semio_viz_sci_pts_seq
+          {
+            #1 - 0.5 + 0.42 * exp ( - ( \SemioT - 1.2 - 0.06 * (#1) ) ^ 2 * 9 )
+              * sin ( 14 * ( \SemioT - 1.2 ) )
+            + 0.3 * exp ( - ( \SemioT - 2.6 + 0.04 * (#1) ) ^ 2 * 12 ) * sin ( 16 * ( \SemioT - 2.6 ) )
+          }
+          { \SemioT }
+      }
+    \semio_viz_sci_polyline:Nn \l_semio_viz_sci_pts_seq { semio~sci~thin , draw=semio-chrome-foreground }
+  }
+% 💥 A single ground-motion record: the `expr` signal sampled four hundred times over sixteen seconds into an auto-fitted window with zero lines.
+\cs_new_protected:Npn \semio_viz_surf_seismogram:
+  {
+    \clist_clear:N \l_semio_viz_sci_range_clist
+    \semio_viz_sci_sample:Nnnnn \l_semio_viz_sci_pts_seq { \l_semio_viz_surf_expr_tl } { 0 } { 16 } { 400 }
+    \semio_viz_sci_window_from:Nn \l_semio_viz_sci_pts_seq { 0.06 }
+    \semio_viz_sci_window_keys:
+    \semio_viz_sci_frame:
+    \semio_viz_sci_zero_lines:
+    \semio_viz_sci_polyline:Nn \l_semio_viz_sci_pts_seq { semio~sci~thin , draw=semio-primary }
+  }
+% 🚣 The river long profile: elevation against distance, filled to sea level and outlined as a curve.
+\cs_new_protected:Npn \semio_viz_surf_river:
+  {
+    \clist_clear:N \l_semio_viz_sci_range_clist
+    \seq_clear:N \l_semio_viz_sci_pts_seq
+    \clist_map_inline:Nn \l_semio_viz_surf_profile_clist
+      {
+        \semio_viz_surf_record:n {##1}
+        \semio_viz_points_put:Nnn \l_semio_viz_sci_pts_seq
+          { \semio_viz_surf_field:n { 1 } } { \semio_viz_surf_field:n { 2 } }
+      }
+    \semio_viz_sci_window_from:Nn \l_semio_viz_sci_pts_seq { 0.06 }
+    \fp_set:Nn \l_semio_viz_sci_dymin_fp { 0 }
+    \semio_viz_sci_window_keys:
+    \semio_viz_sci_frame:
+    \semio_viz_sci_polyarea:Nnn \l_semio_viz_sci_pts_seq
+      { fill=semio-info , fill~opacity=0.35 } { 0 }
+    \semio_viz_sci_polyline:Nn \l_semio_viz_sci_pts_seq { semio~sci~curve }
+  }
+%endregion 🔖️Families
+
+\ExplSyntaxOff

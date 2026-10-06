@@ -1,0 +1,9 @@
+{
+  "libraries": 180,
+  "libraryValue": 1,
+  "macroValue": 7,
+  "expected": 187,
+  "buildDirectory": "compiler-intermediate-library-output",
+  "minimumUnfilteredCharacters": 32767,
+  "metadataSetting": "DoNotEmbed"
+}

@@ -1,0 +1,554 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-viz-annotation}[2026/09/05 v0.2.0 semio viz annotations: label, callout, leader, bracket, brace, highlight, reference line/band/point, event marker, threshold]
+
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+\RequirePackage{semio-viz-guide}\RequirePackage{semio-viz-mark}
+
+\ExplSyntaxOn
+
+\cs_generate_variant:Nn \semio_viz_probe_geometry:nn { nV }
+
+%region 🔖️Diagnostics
+\msg_new:nnn { semio-viz } { unknown-annotation }
+  { Unknown~viz~annotation~kind~'#1'. }
+\msg_new:nnn { semio-viz } { annotation-no-anchor }
+  { Viz~annotation~'#1'~needs~at=~or~a~data~coordinate~(x=,~y=). }
+%endregion 🔖️Diagnostics
+
+%region 🔖️Keys
+% 🔑 semio / viz / annotation keys
+%   at        (x,y)   anchor in plot millimetres; wins over the data coordinate
+%   to        (x,y)   second point: callout text position, leader end, bracket end
+%   from      (x,y)   first point of a bracket or brace, defaults to `at`
+%   x, y      (data)  anchor in data units, mapped through xScale / yScale
+%   x2, y2    (data)  second data coordinate: band extent, highlight opposite corner
+%   xScale    (name)  scale for x and x2, default `x`
+%   yScale    (name)  scale for y and y2, default `y`
+%   text      (text)  annotation text
+%   width     (mm)    text width; empty = natural width
+%   anchor    (tikz)  anchor of the text node, default south~west
+%   offset    (dx,dy) shift of the text node from its anchor point, default 0,0
+%   rotate    (deg)   text rotation, default 0
+%   shape     (choice) rect|ellipse|polygon for highlight, default rect
+%   points    (list)  {x,y}{x,y}… polygon outline for a polygon highlight
+%   depth     (mm)    bracket arm length / brace amplitude, default 1.6
+%   size      (mm)    marker radius, default 1
+%   color     (token) colour name; empty = the annotation role from the theme
+%   fillOpacity (num) highlight and band fill opacity, default 0.12
+%   dash      (bool)  dashed stroke, default false for most kinds
+%   arrow     (bool)  arrow tip on callout and leader, default true
+%   span      (bool)  reference lines span the whole plot area, default true
+\clist_new:N \l_semio_viz_ann_at_clist
+\clist_new:N \l_semio_viz_ann_to_clist
+\clist_new:N \l_semio_viz_ann_from_clist
+\clist_new:N \l_semio_viz_ann_offset_clist
+\tl_new:N \l_semio_viz_ann_x_tl
+\tl_new:N \l_semio_viz_ann_y_tl
+\tl_new:N \l_semio_viz_ann_xtwo_tl
+\tl_new:N \l_semio_viz_ann_ytwo_tl
+\tl_new:N \l_semio_viz_ann_xscale_tl
+\tl_new:N \l_semio_viz_ann_yscale_tl
+\tl_new:N \l_semio_viz_ann_text_tl
+\tl_new:N \l_semio_viz_ann_width_tl
+\tl_new:N \l_semio_viz_ann_anchor_tl
+\tl_new:N \l_semio_viz_ann_shape_tl
+\tl_new:N \l_semio_viz_ann_points_tl
+\tl_new:N \l_semio_viz_ann_color_tl
+\tl_new:N \l_semio_viz_ann_style_tl
+\fp_new:N \l_semio_viz_ann_rotate_fp
+\fp_new:N \l_semio_viz_ann_depth_fp
+\fp_new:N \l_semio_viz_ann_size_fp
+\fp_new:N \l_semio_viz_ann_fill_opacity_fp
+\bool_new:N \l_semio_viz_ann_dash_bool
+\bool_new:N \l_semio_viz_ann_arrow_bool
+\bool_new:N \l_semio_viz_ann_span_bool
+
+\keys_define:nn { semio / viz / annotation } {
+  at .clist_set:N = \l_semio_viz_ann_at_clist,
+  to .clist_set:N = \l_semio_viz_ann_to_clist,
+  from .clist_set:N = \l_semio_viz_ann_from_clist,
+  offset .clist_set:N = \l_semio_viz_ann_offset_clist,
+  x .tl_set:N = \l_semio_viz_ann_x_tl,
+  y .tl_set:N = \l_semio_viz_ann_y_tl,
+  x2 .tl_set:N = \l_semio_viz_ann_xtwo_tl,
+  y2 .tl_set:N = \l_semio_viz_ann_ytwo_tl,
+  xScale .tl_set:N = \l_semio_viz_ann_xscale_tl,
+  yScale .tl_set:N = \l_semio_viz_ann_yscale_tl,
+  text .tl_set:N = \l_semio_viz_ann_text_tl,
+  width .tl_set:N = \l_semio_viz_ann_width_tl,
+  anchor .tl_set:N = \l_semio_viz_ann_anchor_tl,
+  shape .tl_set:N = \l_semio_viz_ann_shape_tl,
+  points .tl_set:N = \l_semio_viz_ann_points_tl,
+  color .tl_set:N = \l_semio_viz_ann_color_tl,
+  style .tl_set:N = \l_semio_viz_ann_style_tl,
+  rotate .fp_set:N = \l_semio_viz_ann_rotate_fp,
+  depth .fp_set:N = \l_semio_viz_ann_depth_fp,
+  size .fp_set:N = \l_semio_viz_ann_size_fp,
+  fillOpacity .fp_set:N = \l_semio_viz_ann_fill_opacity_fp,
+  dash .bool_set:N = \l_semio_viz_ann_dash_bool,
+  arrow .bool_set:N = \l_semio_viz_ann_arrow_bool,
+  span .bool_set:N = \l_semio_viz_ann_span_bool,
+}
+
+% ♻️ Puts every annotation key back to its documented default before an option list is read.
+\cs_new_protected:Npn \semio_viz_ann_keys_reset: {
+  \clist_clear:N \l_semio_viz_ann_at_clist
+  \clist_clear:N \l_semio_viz_ann_to_clist
+  \clist_clear:N \l_semio_viz_ann_from_clist
+  \clist_set:Nn \l_semio_viz_ann_offset_clist { 0 , 0 }
+  \tl_clear:N \l_semio_viz_ann_x_tl
+  \tl_clear:N \l_semio_viz_ann_y_tl
+  \tl_clear:N \l_semio_viz_ann_xtwo_tl
+  \tl_clear:N \l_semio_viz_ann_ytwo_tl
+  \tl_set:Nn \l_semio_viz_ann_xscale_tl { x }
+  \tl_set:Nn \l_semio_viz_ann_yscale_tl { y }
+  \tl_clear:N \l_semio_viz_ann_text_tl
+  \tl_clear:N \l_semio_viz_ann_width_tl
+  \tl_set:Nn \l_semio_viz_ann_anchor_tl { south~west }
+  \tl_set:Nn \l_semio_viz_ann_shape_tl { rect }
+  \tl_clear:N \l_semio_viz_ann_points_tl
+  \tl_clear:N \l_semio_viz_ann_color_tl
+  \tl_clear:N \l_semio_viz_ann_style_tl
+  \fp_zero:N \l_semio_viz_ann_rotate_fp
+  \fp_set:Nn \l_semio_viz_ann_depth_fp { 1.6 }
+  \fp_set:Nn \l_semio_viz_ann_size_fp { 1 }
+  \fp_set:Nn \l_semio_viz_ann_fill_opacity_fp { 0.12 }
+  \bool_set_false:N \l_semio_viz_ann_dash_bool
+  \bool_set_true:N \l_semio_viz_ann_arrow_bool
+  \bool_set_true:N \l_semio_viz_ann_span_bool
+}
+%endregion 🔖️Keys
+
+%region 🔖️Geometry
+% 🧭 Annotation coordinates: `at`/`to`/`from` are plot millimetres, `x`/`y` are
+% data values mapped through the named scales, so an annotation follows the data
+% when the domain changes instead of being re-typed in millimetres.
+\fp_new:N \l_semio_viz_ann_ax_fp
+\fp_new:N \l_semio_viz_ann_ay_fp
+\fp_new:N \l_semio_viz_ann_tx_fp
+\fp_new:N \l_semio_viz_ann_ty_fp
+\fp_new:N \l_semio_viz_ann_fx_fp
+\fp_new:N \l_semio_viz_ann_fy_fp
+\fp_new:N \l_semio_viz_ann_dx_fp
+\fp_new:N \l_semio_viz_ann_dy_fp
+\fp_new:N \l_semio_viz_ann_plot_left_fp
+\fp_new:N \l_semio_viz_ann_plot_right_fp
+\fp_new:N \l_semio_viz_ann_plot_bottom_fp
+\fp_new:N \l_semio_viz_ann_plot_top_fp
+\tl_new:N \l_semio_viz_ann_stroke_tl
+\tl_new:N \l_semio_viz_ann_fillcolor_tl
+\tl_new:N \l_semio_viz_ann_path_tl
+
+\cs_new_protected:Npn \semio_viz_ann_plot_bounds: {
+  \bool_if:NTF \l_semio_viz_ann_span_bool
+    {
+      \semio_viz_guide_range_bounds:VNN \l_semio_viz_ann_xscale_tl
+        \l_semio_viz_ann_plot_left_fp \l_semio_viz_ann_plot_right_fp
+      \semio_viz_guide_range_bounds:VNN \l_semio_viz_ann_yscale_tl
+        \l_semio_viz_ann_plot_bottom_fp \l_semio_viz_ann_plot_top_fp
+    }
+    {
+      \fp_set_eq:NN \l_semio_viz_ann_plot_left_fp \l_semio_viz_pad_fp
+      \fp_set:Nn \l_semio_viz_ann_plot_right_fp { \l_semio_viz_width_fp - 2 }
+      \fp_set_eq:NN \l_semio_viz_ann_plot_bottom_fp \l_semio_viz_pad_fp
+      \fp_set:Nn \l_semio_viz_ann_plot_top_fp { \l_semio_viz_height_fp - 2 }
+    }
+}
+
+% 📍 Resolves one annotation point into (#1,#2): the figure coordinates #3 when given, otherwise
+% the data values #4 and #5 through their scales — which is what lets an annotation follow the data.
+\cs_new_protected:Npn \semio_viz_ann_resolve_point:NNNNN #1#2#3#4#5 {
+  \clist_if_empty:NTF #3
+    {
+      \tl_if_empty:NF #4 { \semio_viz_scale_map:VVN \l_semio_viz_ann_xscale_tl #4 #1 }
+      \tl_if_empty:NF #5 { \semio_viz_scale_map:VVN \l_semio_viz_ann_yscale_tl #5 #2 }
+    }
+    {
+      \fp_set:Nn #1 { \clist_item:Nn #3 { 1 } }
+      \fp_set:Nn #2 { \clist_item:Nn #3 { 2 } }
+    }
+}
+
+% 📐 Resolves the annotation's three points — the anchor, the text position and the far end of a
+% span — and derives the text position from the anchor and the offset when it was not given.
+\cs_new_protected:Npn \semio_viz_ann_points: {
+  \fp_zero:N \l_semio_viz_ann_ax_fp
+  \fp_zero:N \l_semio_viz_ann_ay_fp
+  \semio_viz_ann_resolve_point:NNNNN
+    \l_semio_viz_ann_ax_fp \l_semio_viz_ann_ay_fp \l_semio_viz_ann_at_clist
+    \l_semio_viz_ann_x_tl \l_semio_viz_ann_y_tl
+  \clist_if_empty:NTF \l_semio_viz_ann_from_clist
+    {
+      \fp_set_eq:NN \l_semio_viz_ann_fx_fp \l_semio_viz_ann_ax_fp
+      \fp_set_eq:NN \l_semio_viz_ann_fy_fp \l_semio_viz_ann_ay_fp
+    }
+    {
+      \fp_set:Nn \l_semio_viz_ann_fx_fp { \clist_item:Nn \l_semio_viz_ann_from_clist { 1 } }
+      \fp_set:Nn \l_semio_viz_ann_fy_fp { \clist_item:Nn \l_semio_viz_ann_from_clist { 2 } }
+    }
+  \fp_set_eq:NN \l_semio_viz_ann_tx_fp \l_semio_viz_ann_ax_fp
+  \fp_set_eq:NN \l_semio_viz_ann_ty_fp \l_semio_viz_ann_ay_fp
+  \semio_viz_ann_resolve_point:NNNNN
+    \l_semio_viz_ann_tx_fp \l_semio_viz_ann_ty_fp \l_semio_viz_ann_to_clist
+    \l_semio_viz_ann_xtwo_tl \l_semio_viz_ann_ytwo_tl
+  \fp_set:Nn \l_semio_viz_ann_dx_fp { \clist_item:Nn \l_semio_viz_ann_offset_clist { 1 } }
+  \fp_set:Nn \l_semio_viz_ann_dy_fp { \clist_item:Nn \l_semio_viz_ann_offset_clist { 2 } }
+  \semio_viz_ann_plot_bounds:
+}
+
+% 🖊️ Stroke style: the caller's colour and style keys over the theme's annotation role.
+\cs_new_protected:Npn \semio_viz_ann_stroke: {
+  \tl_if_empty:NTF \l_semio_viz_ann_color_tl
+    { \semio_viz_guide_style:nN { domain } \l_semio_viz_ann_stroke_tl }
+    {
+      \tl_set:Nx \l_semio_viz_ann_stroke_tl
+        { \exp_not:V \l_semio_viz_ann_color_tl , line~width=\semio_viz_theme_stroke:n { hairline } }
+    }
+  \bool_if:NT \l_semio_viz_ann_dash_bool
+    { \tl_put_right:Nn \l_semio_viz_ann_stroke_tl { , dash~pattern=on~1.2pt~off~1pt } }
+  \tl_if_empty:NF \l_semio_viz_ann_style_tl
+    { \tl_put_right:Nx \l_semio_viz_ann_stroke_tl { , \exp_not:V \l_semio_viz_ann_style_tl } }
+}
+
+% 🎨 The annotation's fill into #1: the `color` key when set, the first palette colour otherwise.
+\cs_new_protected:Npn \semio_viz_ann_fill_color:N #1 {
+  \tl_if_empty:NTF \l_semio_viz_ann_color_tl
+    { \tl_set:Nn #1 { \semio_viz_theme_color:n { 0 } } }
+    { \tl_set_eq:NN #1 \l_semio_viz_ann_color_tl }
+}
+
+% 🏷️ The annotation's own text node, placed at (#1,#2) plus the offset.
+\cs_new_protected:Npn \semio_viz_ann_text_node:nn #1#2 {
+  \tl_if_empty:NF \l_semio_viz_ann_text_tl {
+    \semio_viz_guide_style:nN { label } \l_semio_viz_guide_labelstyle_tl
+    \use:x {
+      \exp_not:N \node [ \exp_not:V \l_semio_viz_guide_labelstyle_tl ,
+                         anchor=\exp_not:V \l_semio_viz_ann_anchor_tl ,
+                         rotate=\fp_eval:n { \l_semio_viz_ann_rotate_fp } , align=left
+                         \tl_if_empty:NF \l_semio_viz_ann_width_tl
+                           { , text~width=\l_semio_viz_ann_width_tl mm } ]
+        at ( \fp_eval:n { (#1) + \l_semio_viz_ann_dx_fp } ,
+             \fp_eval:n { (#2) + \l_semio_viz_ann_dy_fp } )
+        { \exp_not:V \l_semio_viz_ann_text_tl } ;
+    }
+    \semio_viz_probe_geometry:nx { annotation-text } {
+      \fp_eval:n { (#1) + \l_semio_viz_ann_dx_fp } , \fp_eval:n { (#2) + \l_semio_viz_ann_dy_fp }
+    }
+  }
+}
+%endregion 🔖️Geometry
+
+%region 🔖️Kinds
+% 🏷️ `label`: the text alone, at the anchor.
+\cs_new_protected:Npn \semio_viz_ann_label: {
+  \semio_viz_ann_text_node:nn { \l_semio_viz_ann_ax_fp } { \l_semio_viz_ann_ay_fp }
+  \semio_viz_probe_geometry:nx { annotation-label }
+    { \fp_eval:n { \l_semio_viz_ann_ax_fp } , \fp_eval:n { \l_semio_viz_ann_ay_fp } }
+}
+
+% ➡️ The connector path #1 in the annotation's own stroke, with an arrow tip under `arrow`.
+\cs_new_protected:Npn \semio_viz_ann_connector:n #1 {
+  \semio_viz_ann_stroke:
+  \use:x {
+    \exp_not:N \draw [ \exp_not:V \l_semio_viz_ann_stroke_tl
+                       \bool_if:NT \l_semio_viz_ann_arrow_bool { , -{Latex[length=1.2mm]} } ]
+      \exp_not:n {#1} ;
+  }
+}
+
+% 💬 `callout`: the text set away from the anchor, joined to it by a connector.
+\cs_new_protected:Npn \semio_viz_ann_callout: {
+  \semio_viz_ann_connector:n {
+    ( \fp_eval:n { \l_semio_viz_ann_tx_fp } , \fp_eval:n { \l_semio_viz_ann_ty_fp } )
+    -- ( \fp_eval:n { \l_semio_viz_ann_ax_fp } , \fp_eval:n { \l_semio_viz_ann_ay_fp } )
+  }
+  \semio_viz_ann_text_node:nn { \l_semio_viz_ann_tx_fp } { \l_semio_viz_ann_ty_fp }
+  \semio_viz_probe_geometry:nx { annotation-callout } {
+    \fp_eval:n { \l_semio_viz_ann_ax_fp } , \fp_eval:n { \l_semio_viz_ann_ay_fp } ,
+    \fp_eval:n { \l_semio_viz_ann_tx_fp } , \fp_eval:n { \l_semio_viz_ann_ty_fp }
+  }
+}
+
+% ↳ A leader turns at the target's height first, so the horizontal run always
+% carries the text and the diagonal never crosses it.
+\cs_new_protected:Npn \semio_viz_ann_leader: {
+  \semio_viz_ann_connector:n {
+    ( \fp_eval:n { \l_semio_viz_ann_tx_fp } , \fp_eval:n { \l_semio_viz_ann_ty_fp } )
+    -- ( \fp_eval:n { \l_semio_viz_ann_ax_fp + ( \l_semio_viz_ann_tx_fp > \l_semio_viz_ann_ax_fp ? 1 : -1 )
+                      * \l_semio_viz_ann_depth_fp } ,
+         \fp_eval:n { \l_semio_viz_ann_ty_fp } )
+    -- ( \fp_eval:n { \l_semio_viz_ann_ax_fp } , \fp_eval:n { \l_semio_viz_ann_ay_fp } )
+  }
+  \semio_viz_ann_text_node:nn { \l_semio_viz_ann_tx_fp } { \l_semio_viz_ann_ty_fp }
+  \semio_viz_probe_geometry:nx { annotation-leader } {
+    \fp_eval:n { \l_semio_viz_ann_ax_fp } , \fp_eval:n { \l_semio_viz_ann_ay_fp } ,
+    \fp_eval:n { \l_semio_viz_ann_tx_fp } , \fp_eval:n { \l_semio_viz_ann_ty_fp }
+  }
+}
+
+% ⌐ A bracket spans from→to and turns inward by depth at both ends; its normal
+% is the segment's own perpendicular, so a bracket under a bar group and a
+% bracket beside a column need no separate code.
+\cs_new_protected:Npn \semio_viz_ann_bracket: {
+  \fp_set:Nn \l_semio_viz_guide_a_fp
+    { max( 1e-9 , sqrt( ( \l_semio_viz_ann_tx_fp - \l_semio_viz_ann_fx_fp ) ^ 2
+                        + ( \l_semio_viz_ann_ty_fp - \l_semio_viz_ann_fy_fp ) ^ 2 ) ) }
+  \fp_set:Nn \l_semio_viz_guide_nx_fp
+    { ( \l_semio_viz_ann_ty_fp - \l_semio_viz_ann_fy_fp ) / \l_semio_viz_guide_a_fp }
+  \fp_set:Nn \l_semio_viz_guide_ny_fp
+    { - ( \l_semio_viz_ann_tx_fp - \l_semio_viz_ann_fx_fp ) / \l_semio_viz_guide_a_fp }
+  \semio_viz_ann_stroke:
+  \use:x {
+    \exp_not:N \draw [ \exp_not:V \l_semio_viz_ann_stroke_tl ]
+      ( \fp_eval:n { \l_semio_viz_ann_fx_fp + \l_semio_viz_guide_nx_fp * \l_semio_viz_ann_depth_fp } ,
+        \fp_eval:n { \l_semio_viz_ann_fy_fp + \l_semio_viz_guide_ny_fp * \l_semio_viz_ann_depth_fp } )
+      -- ( \fp_eval:n { \l_semio_viz_ann_fx_fp } , \fp_eval:n { \l_semio_viz_ann_fy_fp } )
+      -- ( \fp_eval:n { \l_semio_viz_ann_tx_fp } , \fp_eval:n { \l_semio_viz_ann_ty_fp } )
+      -- ( \fp_eval:n { \l_semio_viz_ann_tx_fp + \l_semio_viz_guide_nx_fp * \l_semio_viz_ann_depth_fp } ,
+           \fp_eval:n { \l_semio_viz_ann_ty_fp + \l_semio_viz_guide_ny_fp * \l_semio_viz_ann_depth_fp } ) ;
+  }
+  \semio_viz_ann_text_node:nn
+    { ( \l_semio_viz_ann_fx_fp + \l_semio_viz_ann_tx_fp ) / 2 }
+    { ( \l_semio_viz_ann_fy_fp + \l_semio_viz_ann_ty_fp ) / 2 }
+  \semio_viz_probe_geometry:nx { annotation-bracket } {
+    \fp_eval:n { \l_semio_viz_ann_fx_fp } , \fp_eval:n { \l_semio_viz_ann_fy_fp } ,
+    \fp_eval:n { \l_semio_viz_ann_tx_fp } , \fp_eval:n { \l_semio_viz_ann_ty_fp } ,
+    \fp_eval:n { \l_semio_viz_ann_depth_fp }
+  }
+}
+
+% 🪢 `brace`: a brace spanning from the `from` point to the `to` point, with the text at its middle.
+\cs_new_protected:Npn \semio_viz_ann_brace: {
+  \semio_viz_ann_stroke:
+  \use:x {
+    \exp_not:N \draw [ \exp_not:V \l_semio_viz_ann_stroke_tl ,
+                       decorate , decoration={ brace , amplitude=\fp_eval:n { \l_semio_viz_ann_depth_fp } mm } ]
+      ( \fp_eval:n { \l_semio_viz_ann_fx_fp } , \fp_eval:n { \l_semio_viz_ann_fy_fp } )
+      -- ( \fp_eval:n { \l_semio_viz_ann_tx_fp } , \fp_eval:n { \l_semio_viz_ann_ty_fp } ) ;
+  }
+  \semio_viz_ann_text_node:nn
+    { ( \l_semio_viz_ann_fx_fp + \l_semio_viz_ann_tx_fp ) / 2 }
+    { ( \l_semio_viz_ann_fy_fp + \l_semio_viz_ann_ty_fp ) / 2 }
+  \semio_viz_probe_geometry:nx { annotation-brace } {
+    \fp_eval:n { \l_semio_viz_ann_fx_fp } , \fp_eval:n { \l_semio_viz_ann_fy_fp } ,
+    \fp_eval:n { \l_semio_viz_ann_tx_fp } , \fp_eval:n { \l_semio_viz_ann_ty_fp } ,
+    \fp_eval:n { \l_semio_viz_ann_depth_fp }
+  }
+}
+
+% 🔆 `highlight`: a translucent ellipse, rectangle or hull drawn behind the region being called out.
+\cs_new_protected:Npn \semio_viz_ann_highlight: {
+  \semio_viz_ann_fill_color:N \l_semio_viz_ann_fillcolor_tl
+  \semio_viz_ann_stroke:
+  \str_case:VnF \l_semio_viz_ann_shape_tl {
+    { ellipse } {
+      \use:x {
+        \exp_not:N \draw [ \exp_not:V \l_semio_viz_ann_stroke_tl ,
+                           fill=\exp_not:V \l_semio_viz_ann_fillcolor_tl ,
+                           fill~opacity=\fp_eval:n { \l_semio_viz_ann_fill_opacity_fp } ]
+          ( \fp_eval:n { ( \l_semio_viz_ann_ax_fp + \l_semio_viz_ann_tx_fp ) / 2 } ,
+            \fp_eval:n { ( \l_semio_viz_ann_ay_fp + \l_semio_viz_ann_ty_fp ) / 2 } )
+          ellipse [ x~radius=\fp_eval:n { abs( \l_semio_viz_ann_tx_fp - \l_semio_viz_ann_ax_fp ) / 2 } mm ,
+                    y~radius=\fp_eval:n { abs( \l_semio_viz_ann_ty_fp - \l_semio_viz_ann_ay_fp ) / 2 } mm ] ;
+      }
+    }
+    { polygon } {
+      \tl_clear:N \l_semio_viz_ann_path_tl
+      \tl_map_inline:Nn \l_semio_viz_ann_points_tl {
+        \tl_put_right:Nx \l_semio_viz_ann_path_tl {
+          \tl_if_empty:NF \l_semio_viz_ann_path_tl { -- }
+          ( \fp_eval:n { \clist_item:nn {##1} { 1 } } , \fp_eval:n { \clist_item:nn {##1} { 2 } } )
+        }
+      }
+      \use:x {
+        \exp_not:N \draw [ \exp_not:V \l_semio_viz_ann_stroke_tl ,
+                           fill=\exp_not:V \l_semio_viz_ann_fillcolor_tl ,
+                           fill~opacity=\fp_eval:n { \l_semio_viz_ann_fill_opacity_fp } ]
+          \exp_not:V \l_semio_viz_ann_path_tl -- cycle ;
+      }
+      \tl_clear:N \l_semio_viz_ann_path_tl
+      \tl_map_inline:Nn \l_semio_viz_ann_points_tl {
+        \tl_put_right:Nx \l_semio_viz_ann_path_tl {
+          \tl_if_empty:NF \l_semio_viz_ann_path_tl { , }
+          \fp_eval:n { \clist_item:nn {##1} { 1 } } , \fp_eval:n { \clist_item:nn {##1} { 2 } }
+        }
+      }
+      \semio_viz_probe_geometry:nV { annotation-highlight-polygon } \l_semio_viz_ann_path_tl
+    }
+  } {
+    \use:x {
+      \exp_not:N \draw [ \exp_not:V \l_semio_viz_ann_stroke_tl ,
+                         fill=\exp_not:V \l_semio_viz_ann_fillcolor_tl ,
+                         fill~opacity=\fp_eval:n { \l_semio_viz_ann_fill_opacity_fp } ]
+        ( \fp_eval:n { \l_semio_viz_ann_ax_fp } , \fp_eval:n { \l_semio_viz_ann_ay_fp } )
+        rectangle ( \fp_eval:n { \l_semio_viz_ann_tx_fp } , \fp_eval:n { \l_semio_viz_ann_ty_fp } ) ;
+    }
+  }
+  \semio_viz_ann_text_node:nn { \l_semio_viz_ann_tx_fp } { \l_semio_viz_ann_ty_fp }
+  \semio_viz_probe_geometry:nx { annotation-highlight } {
+    \fp_eval:n { \l_semio_viz_ann_ax_fp } , \fp_eval:n { \l_semio_viz_ann_ay_fp } ,
+    \fp_eval:n { \l_semio_viz_ann_tx_fp } , \fp_eval:n { \l_semio_viz_ann_ty_fp }
+  }
+}
+
+% ─ A reference line is horizontal when only y= was given and vertical when only
+% x= was; its extent is the opposite scale's own range, not the frame.
+\cs_new_protected:Npn \semio_viz_ann_reference_line: {
+  \semio_viz_ann_stroke:
+  \tl_if_empty:NTF \l_semio_viz_ann_x_tl
+    {
+      \use:x {
+        \exp_not:N \draw [ \exp_not:V \l_semio_viz_ann_stroke_tl ]
+          ( \fp_eval:n { \l_semio_viz_ann_plot_left_fp } , \fp_eval:n { \l_semio_viz_ann_ay_fp } )
+          -- ( \fp_eval:n { \l_semio_viz_ann_plot_right_fp } , \fp_eval:n { \l_semio_viz_ann_ay_fp } ) ;
+      }
+      \semio_viz_ann_text_node:nn { \l_semio_viz_ann_plot_right_fp } { \l_semio_viz_ann_ay_fp }
+      \semio_viz_probe_geometry:nx { annotation-reference-line } {
+        \fp_eval:n { \l_semio_viz_ann_plot_left_fp } , \fp_eval:n { \l_semio_viz_ann_ay_fp } ,
+        \fp_eval:n { \l_semio_viz_ann_plot_right_fp } , \fp_eval:n { \l_semio_viz_ann_ay_fp }
+      }
+    }
+    {
+      \use:x {
+        \exp_not:N \draw [ \exp_not:V \l_semio_viz_ann_stroke_tl ]
+          ( \fp_eval:n { \l_semio_viz_ann_ax_fp } , \fp_eval:n { \l_semio_viz_ann_plot_bottom_fp } )
+          -- ( \fp_eval:n { \l_semio_viz_ann_ax_fp } , \fp_eval:n { \l_semio_viz_ann_plot_top_fp } ) ;
+      }
+      \semio_viz_ann_text_node:nn { \l_semio_viz_ann_ax_fp } { \l_semio_viz_ann_plot_top_fp }
+      \semio_viz_probe_geometry:nx { annotation-reference-line } {
+        \fp_eval:n { \l_semio_viz_ann_ax_fp } , \fp_eval:n { \l_semio_viz_ann_plot_bottom_fp } ,
+        \fp_eval:n { \l_semio_viz_ann_ax_fp } , \fp_eval:n { \l_semio_viz_ann_plot_top_fp }
+      }
+    }
+}
+
+% 🟦 `reference-band`: a band across the frame between two values on one axis.
+\cs_new_protected:Npn \semio_viz_ann_reference_band: {
+  \semio_viz_ann_fill_color:N \l_semio_viz_ann_fillcolor_tl
+  \tl_if_empty:NTF \l_semio_viz_ann_x_tl
+    {
+      \use:x {
+        \exp_not:N \fill [ \exp_not:V \l_semio_viz_ann_fillcolor_tl ,
+                           fill~opacity=\fp_eval:n { \l_semio_viz_ann_fill_opacity_fp } ]
+          ( \fp_eval:n { \l_semio_viz_ann_plot_left_fp } , \fp_eval:n { \l_semio_viz_ann_ay_fp } )
+          rectangle ( \fp_eval:n { \l_semio_viz_ann_plot_right_fp } , \fp_eval:n { \l_semio_viz_ann_ty_fp } ) ;
+      }
+      \semio_viz_probe_geometry:nx { annotation-reference-band } {
+        \fp_eval:n { \l_semio_viz_ann_plot_left_fp } , \fp_eval:n { \l_semio_viz_ann_ay_fp } ,
+        \fp_eval:n { \l_semio_viz_ann_plot_right_fp } , \fp_eval:n { \l_semio_viz_ann_ty_fp }
+      }
+    }
+    {
+      \use:x {
+        \exp_not:N \fill [ \exp_not:V \l_semio_viz_ann_fillcolor_tl ,
+                           fill~opacity=\fp_eval:n { \l_semio_viz_ann_fill_opacity_fp } ]
+          ( \fp_eval:n { \l_semio_viz_ann_ax_fp } , \fp_eval:n { \l_semio_viz_ann_plot_bottom_fp } )
+          rectangle ( \fp_eval:n { \l_semio_viz_ann_tx_fp } , \fp_eval:n { \l_semio_viz_ann_plot_top_fp } ) ;
+      }
+      \semio_viz_probe_geometry:nx { annotation-reference-band } {
+        \fp_eval:n { \l_semio_viz_ann_ax_fp } , \fp_eval:n { \l_semio_viz_ann_plot_bottom_fp } ,
+        \fp_eval:n { \l_semio_viz_ann_tx_fp } , \fp_eval:n { \l_semio_viz_ann_plot_top_fp }
+      }
+    }
+  \semio_viz_ann_text_node:nn { \l_semio_viz_ann_ax_fp } { \l_semio_viz_ann_ay_fp }
+}
+
+% 📌 `reference-point`: a filled dot at the anchor with its text beside it.
+\cs_new_protected:Npn \semio_viz_ann_reference_point: {
+  \semio_viz_ann_fill_color:N \l_semio_viz_ann_fillcolor_tl
+  \semio_viz_ann_stroke:
+  \use:x {
+    \exp_not:N \draw [ \exp_not:V \l_semio_viz_ann_stroke_tl ,
+                       fill=\exp_not:V \l_semio_viz_ann_fillcolor_tl ]
+      ( \fp_eval:n { \l_semio_viz_ann_ax_fp } , \fp_eval:n { \l_semio_viz_ann_ay_fp } )
+      circle [ radius=\fp_eval:n { \l_semio_viz_ann_size_fp } mm ] ;
+  }
+  \semio_viz_ann_text_node:nn { \l_semio_viz_ann_ax_fp } { \l_semio_viz_ann_ay_fp }
+  \semio_viz_probe_geometry:nx { annotation-reference-point } {
+    \fp_eval:n { \l_semio_viz_ann_ax_fp } , \fp_eval:n { \l_semio_viz_ann_ay_fp } ,
+    \fp_eval:n { \l_semio_viz_ann_size_fp }
+  }
+}
+
+% 🚩 An event marker is a vertical rule at a data x with a flag at the top edge.
+\cs_new_protected:Npn \semio_viz_ann_event_marker: {
+  \semio_viz_ann_fill_color:N \l_semio_viz_ann_fillcolor_tl
+  \semio_viz_ann_stroke:
+  \use:x {
+    \exp_not:N \draw [ \exp_not:V \l_semio_viz_ann_stroke_tl ]
+      ( \fp_eval:n { \l_semio_viz_ann_ax_fp } , \fp_eval:n { \l_semio_viz_ann_plot_bottom_fp } )
+      -- ( \fp_eval:n { \l_semio_viz_ann_ax_fp } , \fp_eval:n { \l_semio_viz_ann_plot_top_fp } ) ;
+    \exp_not:N \fill [ \exp_not:V \l_semio_viz_ann_fillcolor_tl ]
+      ( \fp_eval:n { \l_semio_viz_ann_ax_fp } , \fp_eval:n { \l_semio_viz_ann_plot_top_fp } )
+      -- ( \fp_eval:n { \l_semio_viz_ann_ax_fp + 2 * \l_semio_viz_ann_size_fp } ,
+           \fp_eval:n { \l_semio_viz_ann_plot_top_fp - \l_semio_viz_ann_size_fp } )
+      -- ( \fp_eval:n { \l_semio_viz_ann_ax_fp } ,
+           \fp_eval:n { \l_semio_viz_ann_plot_top_fp - 2 * \l_semio_viz_ann_size_fp } ) -- cycle ;
+  }
+  \semio_viz_ann_text_node:nn { \l_semio_viz_ann_ax_fp } { \l_semio_viz_ann_plot_top_fp }
+  \semio_viz_probe_geometry:nx { annotation-event-marker } {
+    \fp_eval:n { \l_semio_viz_ann_ax_fp } , \fp_eval:n { \l_semio_viz_ann_plot_bottom_fp } ,
+    \fp_eval:n { \l_semio_viz_ann_ax_fp } , \fp_eval:n { \l_semio_viz_ann_plot_top_fp }
+  }
+}
+
+% ┄ A threshold is a dashed reference line whose label sits on the line's right end.
+\cs_new_protected:Npn \semio_viz_ann_threshold: {
+  \bool_set_true:N \l_semio_viz_ann_dash_bool
+  \semio_viz_ann_reference_line:
+}
+
+% 🎫 `badge`: the text in a filled pill, for a marker that has to read at a glance.
+\cs_new_protected:Npn \semio_viz_ann_badge: {
+  \semio_viz_ann_fill_color:N \l_semio_viz_ann_fillcolor_tl
+  \semio_viz_guide_style:nN { label } \l_semio_viz_guide_style_tl
+  \use:x {
+    \exp_not:N \node [ \exp_not:V \l_semio_viz_guide_style_tl ,
+                       draw=\exp_not:V \l_semio_viz_ann_fillcolor_tl ,
+                       fill=\exp_not:V \l_semio_viz_ann_fillcolor_tl ,
+                       fill~opacity=\fp_eval:n { \l_semio_viz_ann_fill_opacity_fp } ,
+                       text~opacity=1 , rounded~corners=0.6mm ,
+                       line~width=\semio_viz_theme_stroke:n { hairline } ,
+                       inner~xsep=0.6mm , inner~ysep=0.3mm ,
+                       anchor=\exp_not:V \l_semio_viz_ann_anchor_tl ]
+      at ( \fp_eval:n { \l_semio_viz_ann_ax_fp + \l_semio_viz_ann_dx_fp } ,
+           \fp_eval:n { \l_semio_viz_ann_ay_fp + \l_semio_viz_ann_dy_fp } )
+      { \exp_not:V \l_semio_viz_ann_text_tl } ;
+  }
+  \semio_viz_probe_geometry:nx { annotation-badge } {
+    \fp_eval:n { \l_semio_viz_ann_ax_fp + \l_semio_viz_ann_dx_fp } ,
+    \fp_eval:n { \l_semio_viz_ann_ay_fp + \l_semio_viz_ann_dy_fp }
+  }
+}
+
+% ✏️ The one entry point: annotation kind #1 under the option list #2, points resolved first so
+% every kind works in data coordinates as readily as in figure ones.
+\cs_new_protected:Npn \semio_viz_ann_draw:nn #1#2 {
+  \semio_viz_frame_require:n { SemioVizAnnotate }
+  \semio_viz_ann_keys_reset:
+  \keys_set:nn { semio / viz / annotation } {#2}
+  \semio_viz_ann_points:
+  \str_case:nnF {#1} {
+    { label } { \semio_viz_ann_label: }
+    { callout } { \semio_viz_ann_callout: }
+    { leader } { \semio_viz_ann_leader: }
+    { bracket } { \semio_viz_ann_bracket: }
+    { brace } { \semio_viz_ann_brace: }
+    { highlight } { \semio_viz_ann_highlight: }
+    { reference-line } { \semio_viz_ann_reference_line: }
+    { reference-band } { \semio_viz_ann_reference_band: }
+    { reference-point } { \semio_viz_ann_reference_point: }
+    { event-marker } { \semio_viz_ann_event_marker: }
+    { threshold } { \semio_viz_ann_threshold: }
+    { badge } { \semio_viz_ann_badge: }
+  } { \msg_error:nnn { semio-viz } { unknown-annotation } {#1} }
+}
+%endregion 🔖️Kinds
+
+%region 🔖️PublicApi
+% 🗒️ One annotation of the given kind, anchored in plot millimetres (at=) or in data units (x=, y=).
+\NewDocumentCommand \SemioVizAnnotate { m O{} } { \semio_viz_ann_draw:nn {#1} {#2} }
+%endregion 🔖️PublicApi
+
+\ExplSyntaxOff

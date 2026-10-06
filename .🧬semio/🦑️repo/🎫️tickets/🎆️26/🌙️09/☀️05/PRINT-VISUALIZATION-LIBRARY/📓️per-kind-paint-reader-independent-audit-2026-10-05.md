@@ -1,0 +1,7 @@
+# Per-Kind Paint Reader Independent Audit — 2026-10-05
+
+The neutral fixture now declares 1966 leaves / 1738 kinds and five source-backed glyph exceptions: word-cloud, frequency-cloud, tag-cloud, export-safe-typography, repaired text-mark. The text-mark exception followed actual blank RED98135 and existing-owner repair with GREEN78865 reported by the execution lane; this audit did not execute that job.
+
+Independent reader concerns delivered to the owning execution lane: bbox-positive degenerate fill and duplicate even-odd contours are not visible paint; glyph text content cannot establish geometric distinction; owner-wide visibleText membership may include invisible siblings if visibility is not associated per glyph. The fixture now contains degenerate-fill and cancelled-evenodd-fill negatives. Catalogue reports actual RED63952 reproducing the fill issue, then D3 membership/winding repair and a separate glyphGeometrySignature excluding strings. GREEN17785 remains live as of this note, so no passing current-reader assertion is made here. The owner visibility limitation is explicitly retained.
+
+The complete catalogue census is actual body nonemptiness, painted bounds and geometric digest evidence. It supplements source/neutral effect tests; it does not prove each variant or accepted control's intended semantics merely by title presence or unique input options. Scientific branch timing and ignored window effects remain in the separate shared-completion recommendation.

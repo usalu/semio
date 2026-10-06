@@ -1,0 +1,88 @@
+[
+  {
+    "id": "api-path-geo-field",
+    "scope": "semio / viz / family / geo-field",
+    "en": "Shared grid and contour options",
+    "de": "Gemeinsame Gitter- und Konturoptionen",
+    "rows": [
+      [
+        "cell",
+        "number",
+        "12",
+        "Grid-node pitch in millimetres.",
+        "Abstand der Gitterknoten in Millimetern."
+      ],
+      [
+        "filled",
+        "boolean",
+        "false",
+        "Fill contour rings. The scalar surface filled selects filling after parsing.",
+        "Konturringe füllen. Die skalare Oberfläche filled wählt die Füllung nach dem Parsen."
+      ],
+      [
+        "grid",
+        "string",
+        "demo-grid",
+        "Named scalar grid sampled by the field renderer.",
+        "Benanntes skalares Gitter für den Feldrenderer."
+      ],
+      [
+        "labels",
+        "boolean",
+        "false",
+        "Print threshold labels along generated contour rings.",
+        "Schwellenbeschriftungen entlang der erzeugten Konturringe ausgeben."
+      ],
+      [
+        "levels",
+        "integer",
+        "5",
+        "Number of evenly spaced interior contour thresholds. The scalar levelset surface fixes one threshold.",
+        "Anzahl gleichmäßig verteilter innerer Konturschwellen. Die skalare Oberfläche levelset legt eine Schwelle fest."
+      ],
+      [
+        "raster",
+        "boolean",
+        "false",
+        "Draw the value raster beneath geo-field contours. Scalar heatmap selects raster rendering through surface.",
+        "WertRaster unter geo-field-Konturen zeichnen. Skalare heatmap wählt die Rasterdarstellung über surface."
+      ]
+    ]
+  },
+  {
+    "id": "api-path-geo-terrain",
+    "scope": "semio / viz / family / geo-terrain",
+    "en": "Shared terrain and profile options",
+    "de": "Gemeinsame Gelände- und Profiloptionen",
+    "rows": [
+      [
+        "altitude",
+        "number",
+        "45",
+        "Hillshade illumination altitude in degrees.",
+        "Beleuchtungshöhe der Schummerung in Grad."
+      ],
+      [
+        "azimuth",
+        "number",
+        "315",
+        "Hillshade illumination azimuth in degrees.",
+        "Beleuchtungsazimut der Schummerung in Grad."
+      ],
+      [
+        "mode",
+        "string",
+        "hillshade",
+        "Terrain rendering: hillshade, hypsometric, relief, raster, profile or cross-section. Scalar surfaces select their renderer through surface.",
+        "Geländedarstellung: hillshade, hypsometric, relief, raster, profile oder cross-section. Skalare Oberflächen wählen ihren Renderer über surface."
+      ],
+      [
+        "row",
+        "integer",
+        "3",
+        "Grid row sampled by profile, cross-section and scalar slice.",
+        "Gitterzeile für profile, cross-section und skalare slice."
+      ]
+    ]
+  }
+]

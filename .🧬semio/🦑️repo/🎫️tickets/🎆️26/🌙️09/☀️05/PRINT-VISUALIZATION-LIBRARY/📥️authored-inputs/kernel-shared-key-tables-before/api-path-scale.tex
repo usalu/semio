@@ -1,0 +1,19 @@
+\SemioTableLong[text-size=8pt]{\ApiText{Scale options}{Skalenoptionen}}{0.17,0.16,0.13,0.54}{\ApiKey & \ApiType & \ApiDefault & \ApiMeaning}{%
+  \SemioTableRow{\Key{nice} & \Key{integer|true} & \Key{false} & \ApiText{Extends the domain to round tick values.}{Erweitert den Bereich auf runde Teilstrichwerte.}}
+  \SemioTableRow{\Key{clamp} & \Key{boolean} & \Key{false} & \ApiText{Clamps inputs to the domain extent.}{Beschneidet Eingaben auf die Bereichsgrenzen.}}
+  \SemioTableRow{\Key{padding} & \Key{number} & \Key{0} & \ApiText{Point or band outer padding; on a band scale it sets both paddings.}{Äußerer Abstand bei Punkt- und Bandskalen; bei einer Bandskala setzt er beide Abstände.}}
+  \SemioTableRow{\Key{paddingInner} & \Key{number} & \Key{0} & \ApiText{Band inner padding, as a fraction of the step.}{Innerer Bandabstand als Anteil der Schrittweite.}}
+  \SemioTableRow{\Key{paddingOuter} & \Key{number} & \Key{0} & \ApiText{Band outer padding, as a fraction of the step.}{Äußerer Bandabstand als Anteil der Schrittweite.}}
+  \SemioTableRow{\Key{align} & \Key{number} & \Key{0.5} & \ApiText{How the leftover space of a band or point scale is distributed.}{Wie der Restplatz einer Band- oder Punktskala verteilt wird.}}
+  \SemioTableRow{\Key{base} & \Key{number} & \Key{10} & \ApiText{Logarithm base, also used by the tick generator.}{Logarithmusbasis, die auch der Teilstrichgenerator verwendet.}}
+  \SemioTableRow{\Key{exponent} & \Key{number} & \Key{1} & \ApiText{Exponent of a power scale; \Key{sqrt} fixes it at 0.5.}{Exponent einer Potenzskala; \Key{sqrt} setzt ihn fest auf 0,5.}}
+  \SemioTableRow{\Key{constant} & \Key{number} & \Key{1} & \ApiText{Width of the linear region of a symlog scale.}{Breite des linearen Bereichs einer Symlog-Skala.}}
+  \SemioTableRow{\Key{ticks} & \Key{integer} & \Key{10} & \ApiText{Target tick count.}{Angestrebte Anzahl Teilstriche.}}
+  \SemioTableRow{\Key{tickValues} & \Key{clist} & --- & \ApiText{Explicit tick values, overriding the generator.}{Explizite Teilstrichwerte, die den Generator übergehen.}}
+  \SemioTableRow{\Key{tickFormat} & \Key{spec} & --- & \ApiText{A \Cs{SemioVizFormat} specifier for the tick labels.}{Eine Formatangabe für \Cs{SemioVizFormat} für die Teilstrichbeschriftung.}}
+  \SemioTableRow{\Key{interpolator} & \Key{name} & \Key{oklab} & \ApiText{Colour space a sequential or diverging ramp is sampled in.}{Farbraum, in dem eine sequentielle oder divergierende Rampe abgetastet wird.}}
+  \SemioTableRow{\Key{scheme} & \Key{name} & --- & \ApiText{Named colour scheme, resolved by \Key{semio-viz-theme}.}{Benanntes Farbschema, das \Key{semio-viz-theme} auflöst.}}
+  \SemioTableRow{\Key{reverse} & \Key{boolean} & \Key{false} & \ApiText{Reverses the range.}{Kehrt den Wertebereich um.}}
+  \SemioTableRow{\Key{round} & \Key{boolean} & \Key{false} & \ApiText{Rounds band positions to whole millimetres.}{Rundet Bandpositionen auf ganze Millimeter.}}
+  \SemioTableRow{\Key{interval} & \Key{name} & \Key{auto} & \ApiText{Temporal tick interval: \Key{auto}, \Key{day}, \Key{week}, \Key{month} or \Key{year}.}{Zeitliches Teilstrichintervall: \Key{auto}, \Key{day}, \Key{week}, \Key{month} oder \Key{year}.}}
+}

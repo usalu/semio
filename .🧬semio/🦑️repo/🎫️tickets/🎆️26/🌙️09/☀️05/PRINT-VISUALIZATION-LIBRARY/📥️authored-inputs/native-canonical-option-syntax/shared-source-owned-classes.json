@@ -1,0 +1,184 @@
+{
+  "helper:semio_viz_cart_family_keys": {
+    "identifier": "curve data grid group label labels series sort x y y2",
+    "expression": "yMax yMin padBottom padLeft padRight padTop gridLines ticks",
+    "scalar": "axes"
+  },
+  "helper:semio_viz_net_keys_add": {
+    "identifier": "colorBy data group id layout nodes order orientation root shape sizeBy source target variant weight",
+    "records": "forces",
+    "expression": "charge columns curvature iterations linkDistance linkWidth padding seed size sweeps",
+    "scalar": "directed labels signed weightWidth"
+  },
+  "helper:semio_viz_sci_keys_canvas": {
+    "identifier": "data",
+    "text": "title xlabel ylabel",
+    "number-list": "domain range",
+    "expression": "height width ticks seed",
+    "scalar": "axes grid"
+  },
+  "helper:semio_viz_space_keys_camera": {
+    "identifier": "projection",
+    "expression": "azimuth distance elevation obliqueAngle obliqueScale zoom"
+  },
+  "semio / viz / annotation": {
+    "identifier": "anchor arrow at shape xScale yScale",
+    "paint": "color",
+    "style": "style",
+    "text": "text",
+    "records": "from points span to",
+    "expression": "depth fillOpacity offset rotate size width x x2 y y2"
+  },
+  "semio / viz / concat": {
+    "identifier": "direction",
+    "expression": "gap"
+  },
+  "semio / viz / concat / item": {
+    "expression": "height width"
+  },
+  "semio / viz / dashboard": {
+    "expression": "columns gap rows"
+  },
+  "semio / viz / dashboard / cell": {
+    "expression": "colspan rowspan"
+  },
+  "semio / viz / data": {
+    "identifier": "col edges id label lat lon nodes parent ring row source target value weight",
+    "records": "columns delimiter quote",
+    "number-list": "domain",
+    "expression": "samples",
+    "scalar": "header"
+  },
+  "semio / viz / diagram": {
+    "identifier": "arrow bend col data default-shape direction edge-kind edge-label edges frame group groups id label lane lane-title lanes legend nodes routing row shape source target tone variant",
+    "text": "title",
+    "expression": "col-gap height node-height node-width pad row-gap width",
+    "scalar": "labels"
+  },
+  "semio / viz / facet": {
+    "identifier": "column row xScale yScale",
+    "expression": "columns gap headerGap height pad width",
+    "scalar": "header sharedX sharedY wrap"
+  },
+  "semio / viz / geo / base": {
+    "identifier": "fit geometry palette projection",
+    "number-list": "parallels rotate",
+    "expression": "height lineWidth opacity steps width",
+    "paint": "stroke"
+  },
+  "semio / viz / geo / fromtable": {
+    "identifier": "lat lon ring value"
+  },
+  "semio / viz / geo / part": {
+    "identifier": "id value"
+  },
+  "semio / viz / geo / projection": {
+    "identifier": "kind",
+    "number-list": "center clipExtent parallels rotate translate",
+    "expression": "clipAngle precision scale"
+  },
+  "semio / viz / hierarchy": {
+    "identifier": "aggregate data id parent path sort value",
+    "records": "delimiter"
+  },
+  "semio / viz / hierarchy / layout": {
+    "identifier": "tile",
+    "expression": "padding paddingBottom paddingInner paddingLeft paddingOuter paddingRight paddingTop radialOffset radius ratio relaxation separationOther separationSame",
+    "number-list": "nodeSize size",
+    "scalar": "radial round separationDepth"
+  },
+  "semio / viz / hierarchy / render": {
+    "identifier": "fill labelColumn link node orientation",
+    "expression": "height innerRadius inset nodeHeight nodeRadius nodeWidth opacity width",
+    "paint": "stroke",
+    "style": "strokeWidth",
+    "scalar": "labels leafLabels"
+  },
+  "semio / viz / inset": {
+    "records": "at zoom",
+    "expression": "height pad width",
+    "scalar": "frame link"
+  },
+  "semio / viz / layer": {
+    "identifier": "name",
+    "expression": "opacity",
+    "style": "style"
+  },
+  "semio / viz / text": {
+    "identifier": "align anchor",
+    "style": "font style",
+    "expression": "height width"
+  },
+  "semio / viz / axis": {
+    "style": "style",
+    "identifier": "labelAlign orient scale titleAnchor",
+    "records": "center from gridDash tickValues to",
+    "scalar": "breakMarks domain domainLine grid labels minor minorTicks ticks",
+    "paint": "fill gridStroke stroke",
+    "number-list": "broken",
+    "text": "tickFormat title",
+    "expression": "angle at breakGap endAngle gridLength innerRadius labelRotate labelRotation labelSize minorSize offset outerRadius startAngle strokeWidth tickPadding tickSize tickSizeOuter titleGap titleSize"
+  },
+  "semio / viz / legend": {
+    "style": "style",
+    "identifier": "channel kind orient scale sizeMode symbol",
+    "records": "at gridDash tickValues",
+    "scalar": "columns hatchLines ticks",
+    "paint": "fill gridStroke stroke",
+    "text": "format tickFormat title",
+    "expression": "itemGap labelGap labelSize length offset spacing strokeWidth swatchSize titleSize x y"
+  },
+  "semio / viz / mark": {
+    "style": "arrowSize strokeWidth",
+    "paint": "fill stroke",
+    "records": "dash extent points points2 via",
+    "scalar": "arrow closed",
+    "identifier": "cap curve file join pattern route symbol",
+    "expression": "alpha aspect beta concavity cornerRadius curvature endAngle innerRadius opacity outerRadius padAngle padRadius radius rotate rx ry size startAngle targetEndAngle targetRadius targetStartAngle tension"
+  },
+  "semio / viz / scale": {
+    "text": "tickFormat",
+    "records": "tickValues",
+    "scalar": "clamp nice reverse round",
+    "identifier": "interpolator interval scheme",
+    "value": "unknown",
+    "expression": "align base constant exponent padding paddingInner paddingOuter ticks"
+  },
+  "semio / viz / transform": {
+    "expression": "bandwidth filter",
+    "number-list": "probabilities",
+    "scalar": "degree descending samples",
+    "identifier": "bin group kde kernel normalize offset order quantile sort",
+    "records": "fold join pivot regression rollup stack thresholds window"
+  },
+  "helper:semio_viz_arc_keys_add": {
+    "scalar": "directed labels signed weightWidth",
+    "identifier": "colorBy data group id layout nodes order orientation root shape sizeBy source target variant weight mode side",
+    "expression": "charge columns curvature iterations linkDistance linkWidth padding seed size sweeps bow",
+    "records": "forces"
+  },
+  "helper:semio_viz_bun_keys_add": {
+    "scalar": "directed labels signed weightWidth",
+    "identifier": "colorBy data group id layout nodes order orientation root shape sizeBy source target variant weight",
+    "expression": "charge columns curvature iterations linkDistance linkWidth padding seed size sweeps beta hubRadius samples",
+    "records": "forces"
+  },
+  "helper:semio_viz_chord_keys_add": {
+    "scalar": "directed labels signed weightWidth symmetric",
+    "identifier": "colorBy data group id layout nodes order orientation root shape sizeBy source target variant weight sortGroups sortSubgroups",
+    "expression": "charge columns curvature iterations linkDistance linkWidth padding seed size sweeps innerRadius padAngle ribbonInset tension",
+    "records": "forces"
+  },
+  "helper:semio_viz_mat_keys_add": {
+    "scalar": "directed labels signed weightWidth blocks diagonal symmetric",
+    "identifier": "colorBy data group id layout nodes order orientation root shape sizeBy source target variant weight scaleBy split",
+    "expression": "charge columns curvature iterations linkDistance linkWidth padding seed size sweeps cellGap labelWidth",
+    "records": "forces"
+  },
+  "helper:semio_viz_snk_keys_add": {
+    "scalar": "directed labels signed weightWidth",
+    "identifier": "colorBy data group id layout nodes order orientation root shape sizeBy source target variant weight linkSort nodeAlign nodeSort",
+    "expression": "charge columns curvature iterations linkDistance linkWidth padding seed size sweeps labelWidth nodePadding nodeWidth",
+    "records": "forces"
+  }
+}

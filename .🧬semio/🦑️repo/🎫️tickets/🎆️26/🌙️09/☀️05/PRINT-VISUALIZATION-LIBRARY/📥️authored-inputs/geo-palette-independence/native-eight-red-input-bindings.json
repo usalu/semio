@@ -1,0 +1,27 @@
+{
+  "session": 52724,
+  "status": "Launched native baseline; result pending",
+  "cases": 8,
+  "sources": [
+    {
+      "file": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧪️tests\\🧬️native-chart-grammar\\🟦️.ts",
+      "sha256": "9E493AF377230C8474D752F06123B50337BC72597024BC6E473A25135EF08C96"
+    },
+    {
+      "file": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧪️tests\\🧬️native-chart-grammar\\🔣️.json",
+      "sha256": "D9B204B5D2B2DF299206D817E4FFA253C6312F746CC5E2E76DE049FB3560D91A"
+    },
+    {
+      "file": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\🔣️.json",
+      "sha256": "855CDD6B98CBBA96308C3184A32AF39E011779546ABCA1F38B75DEA518DEDCE1"
+    },
+    {
+      "file": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🖋️latex\\semio-viz-geo.sty",
+      "sha256": "C50E1030BCC2A4F0C9CBE9F27BB187B34947B5BEA3B8D4D85097EDFC3E0589E5"
+    },
+    {
+      "file": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🖋️latex\\semio-viz-geo-routes.sty",
+      "sha256": "D02E1EBAEC78E7960CE03BFDB6D18CB662E739B0D8EC0E807FD503F5115D6E86"
+    }
+  ]
+}

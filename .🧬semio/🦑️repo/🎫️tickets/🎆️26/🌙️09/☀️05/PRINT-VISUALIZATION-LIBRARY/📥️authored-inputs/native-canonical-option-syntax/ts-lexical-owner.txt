@@ -1,0 +1,34 @@
+const METADATA = schema as VizSchemaDocument;
+type OptionValue = VizOptionValue | null | readonly (VizOptionValue | null)[];
+function scalar(value: VizOptionValue | null | undefined): string { if (value === null || value === undefined) return ""; if (typeof value === "number" && !Number.isFinite(value)) throw new Error("grammar numbers must be finite"); return typeof value === "string" ? escape(value) : String(value); }
+function rowScalar(value: VizOptionValue | null | undefined): string { return value === undefined ? "\\SemioVizUndefined{}" : value === null ? "\\SemioVizNull{}" : typeof value === "string" ? `\\SemioVizString{${escape(value)}}` : typeof value === "boolean" ? `\\SemioVizBoolean{${value}}` : scalar(value); }
+function paint(value: VizOptionValue | null | undefined): string {
+ if(typeof value!=="string")return scalar(value);
+ const parsed=color(value);if(parsed)return parsed.name;
+ if(/^(?:\.|[A-Za-z][A-Za-z0-9_-]*(?:!\d+(?:\.[0-9]+)?(?:![A-Za-z][A-Za-z0-9_-]*)?)*|none)$/.test(value))return value;
+ throw Error(`Invalid native or CSS paint ${JSON.stringify(value)}`);
+}
+function recordItems(value:string):string[]{
+ const items:string[]=[];let start=0,depth=0;
+ for(let index=0;index<value.length;index++){const character=value[index];if(character==="\\"){index++;continue;}if(character==="{")depth++;else if(character==="}"&&--depth<0)throw Error("Unbalanced native records");else if(character===","&&depth===0){items.push(value.slice(start,index).trim());start=index+1;}}
+ if(depth)throw Error("Unbalanced native records");items.push(value.slice(start).trim());return items.map(item=>item.startsWith("{")&&item.endsWith("}")?item.slice(1,-1):item);
+}
+function nativeOption(value:OptionValue,descriptor:VizOptionSyntaxDescriptor,paintResult=false):string{
+ const raw=()=>Array.isArray(value)?value.map(item=>typeof item==="string"?item:scalar(item)).join(","):typeof value==="string"?value:scalar(value as VizOptionValue|null);
+ switch(descriptor.syntax){
+  case "text":if(typeof value!=="string")throw Error("Literal option text must be a string");return escape(value);
+  case "identifier":return raw();
+  case "expression":case "key-list":case "style":return raw();
+  case "records":return descriptor.items?recordItems(raw()).map(item=>`{${descriptor.items==="text"?escape(item):token(item)}}`).join(","):raw();
+  case "number-list":return raw();
+  case "scalar":if(typeof value!=="boolean"&&typeof value!=="number")throw Error("Scalar options require a number or boolean");return scalar(value);
+  case "value":return Array.isArray(value)?value.map(rowScalar).join(","):paintResult&&typeof value==="string"?paint(value):rowScalar(value as VizOptionValue|null);
+  case "paint":return Array.isArray(value)?value.map(paint).join(","):typeof value==="string"&&value.includes(",")?recordItems(value).map(paint).join(","):paint(value as VizOptionValue|null);
+  default:throw Error("Unknown source-owned option syntax");
+ }
+}
+function options(owner:string,value:Readonly<Record<string,OptionValue>>={},family=false,paintResult=false):string{
+ const descriptors=family?METADATA["x-semio-family-options"][owner]?.options:METADATA["x-semio-option-syntax"][owner];
+ if(!descriptors)throw Error(`Missing native syntax owner ${owner}`);
+ return Object.keys(value).sort().map(key=>{const descriptor=descriptors[key];if(!descriptor)throw Error(`Undeclared native option ${owner}/${key}`);return `${token(key)}={${nativeOption(value[key]!,descriptor,paintResult)}}`;}).join(",");
+}

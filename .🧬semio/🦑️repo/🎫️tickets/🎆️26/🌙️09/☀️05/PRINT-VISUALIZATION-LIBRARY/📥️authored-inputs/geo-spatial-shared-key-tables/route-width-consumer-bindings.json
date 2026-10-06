@@ -1,0 +1,8 @@
+{
+  "file": "C:/git/semio/🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-api/🔓️viz-api.tex",
+  "before": "C5B2163CDBE74E42E29EF4D6CCE8F463BE76FA8CA741B8388A53CE79E5837B1C",
+  "after": "5FD2BED9D93237B30B2906684E24BACFE91161D48CD240AB80228FB9D391C03A",
+  "old": "\\ApiText{Maximum route stroke or flow-band width in millimetres.}{Maximale Strichbreite der Route oder Bandbreite des Flusses in Millimetern.}",
+  "replacement": "\\ApiText{Width factor: route strokes use 0.3 plus routeWidth times the normalized value in points; flow half-widths use 0.4 plus twice that product in millimetres.}{Breitenfaktor: Routenstriche verwenden 0.3 plus routeWidth mal normiertem Wert in Punkt; Flusshalbbreiten verwenden 0.4 plus dem doppelten Produkt in Millimetern.}",
+  "evidence": "Actual route line175–177 uses0.3+factor*normalizedValue pt; flow halfwidth363 uses0.4+2*factor*normalizedValue in coordinate mm. Headercomment mm/maxwidth was inaccurate."
+}

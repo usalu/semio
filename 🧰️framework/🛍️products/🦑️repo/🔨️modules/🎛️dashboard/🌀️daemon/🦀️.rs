@@ -4,6 +4,9 @@
 use crate::args::ParsedArgs;
 use std::path::{Path, PathBuf};
 
+#[path = "../📎️connection/🦀️.rs"]
+pub mod client;
+
 // #region 🔖️Ipc
 /// ✉️ The length-prefixed control/output framing the dashboard client and daemon speak.
 pub mod ipc {
@@ -15,28 +18,128 @@ pub mod ipc {
     pub const KIND_OUTPUT: u8 = 2;
     pub const MAX_FRAME_BYTES: usize = 16 * 1024 * 1024;
 
+    /// 📂 Canonical workspace paths retain native command-runtime spelling on Windows.
+    pub fn canonical_path(path: &Path) -> PathBuf {
+        let path = std::fs::canonicalize(path).unwrap_or_else(|_| path.to_path_buf());
+        #[cfg(windows)]
+        {
+            let text = path.to_string_lossy();
+            if let Some(rest) = text.strip_prefix(r"\\?\UNC\") { return PathBuf::from(format!(r"\\{rest}")); }
+            if let Some(rest) = text.strip_prefix(r"\\?\") { return PathBuf::from(rest); }
+        }
+        path
+    }
+
     /// 🎛️ Client → daemon control envelope (JSON).
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-    #[serde(tag = "type", rename_all = "snake_case")]
+    #[serde(tag = "type", rename_all = "snake_case", deny_unknown_fields)]
     pub enum ClientMsg {
         Attach { client_id: String },
-        Detach,
-        Spawn { session_id: String, cmd: String, args: Vec<String>, cwd: Option<String>, cols: u16, rows: u16 },
+        Detach {},
+        Spawn { session_id: String, command: SessionCommand },
         Input { session_id: String, data: Vec<u8> },
         Resize { session_id: String, cols: u16, rows: u16 },
         Kill { session_id: String },
-        Ping,
+        Stop { session_id: String },
+        Restart { session_id: String },
+        List {},
+        Shutdown {},
+        Ping {},
     }
 
     /// 📣 Daemon → client control envelope (JSON).
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-    #[serde(tag = "type", rename_all = "snake_case")]
+    #[serde(tag = "type", rename_all = "snake_case", deny_unknown_fields)]
     pub enum ServerMsg {
         Attached { daemon_pid: u32 },
-        SessionStarted { session_id: String },
-        SessionExited { session_id: String, code: i32 },
+        SessionChanged { session: SessionInfo },
+        Sessions { sessions: Vec<SessionInfo> },
+        ReplayComplete {},
         Error { message: String },
-        Pong,
+        Pong {},
+        Shutdown {},
+    }
+
+    /// ▶️ The exact task invocation retained for restart and restored views.
+    #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+    #[serde(deny_unknown_fields)]
+    pub struct SessionCommand {
+        pub cmd: String,
+        pub args: Vec<String>,
+        pub cwd: String,
+        pub env: Vec<(String, String)>,
+        pub cols: u16,
+        pub rows: u16,
+    }
+
+    /// 🚦 The lifecycle projected from the daemon's persisted local-only events.
+    #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+    #[serde(rename_all = "snake_case")]
+    pub enum SessionStatus { Running, Stopping, Exited, Failed }
+
+    /// 📋 A process projection shared by every dashboard attached to this workspace.
+    #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+    #[serde(deny_unknown_fields)]
+    pub struct SessionInfo {
+        pub session_id: String,
+        pub command: SessionCommand,
+        pub status: SessionStatus,
+        #[serde(deserialize_with = "nullable")]
+        pub pid: Option<u32>,
+        #[serde(deserialize_with = "nullable")]
+        pub code: Option<i32>,
+    }
+
+    fn nullable<'de, D: serde::Deserializer<'de>, T: Deserialize<'de>>(deserializer: D) -> Result<Option<T>, D::Error> { Option::<T>::deserialize(deserializer) }
+
+    fn validate_id(id: &str) -> std::io::Result<()> {
+        if id.is_empty() || id.chars().count() > 128 { return Err(std::io::Error::other("invalid session identifier")); }
+        Ok(())
+    }
+
+    impl SessionCommand {
+        pub fn validate(&self) -> std::io::Result<()> {
+            if self.cmd.is_empty() || self.cmd.contains('\0') || self.cols == 0 || self.rows == 0 || self.cols > 32767 || self.rows > 32767
+                || self.cwd.contains('\0') || self.args.iter().any(|arg| arg.contains('\0'))
+                || self.env.iter().any(|(name, value)| name.is_empty() || name.contains(['=', '\0']) || value.contains('\0')) {
+                return Err(std::io::Error::other("invalid session command"));
+            }
+            Ok(())
+        }
+
+        pub fn same_task(&self, other: &Self) -> bool {
+            let env = |pairs: &[(String, String)]| pairs.iter().map(|(key, value)| (if cfg!(windows) { key.to_uppercase() } else { key.clone() }, value.clone())).collect::<std::collections::BTreeMap<_, _>>();
+            self.cmd == other.cmd && self.args == other.args && self.cwd == other.cwd && env(&self.env) == env(&other.env)
+        }
+    }
+
+    impl ClientMsg {
+        pub fn validate(&self) -> std::io::Result<()> {
+            match self {
+                Self::Spawn { session_id, command } => { validate_id(session_id)?; command.validate() }
+                Self::Input { session_id, .. } | Self::Stop { session_id } | Self::Kill { session_id } | Self::Restart { session_id } => validate_id(session_id),
+                Self::Resize { session_id, cols, rows } => {
+                    validate_id(session_id)?;
+                    if *cols == 0 || *rows == 0 || *cols > 32767 || *rows > 32767 { return Err(std::io::Error::other("invalid terminal size")); }
+                    Ok(())
+                }
+                _ => Ok(()),
+            }
+        }
+    }
+
+    impl ServerMsg {
+        pub fn validate(&self) -> std::io::Result<()> {
+            match self {
+                Self::Attached { daemon_pid: 0 } => Err(std::io::Error::other("invalid daemon pid")),
+                Self::SessionChanged { session } => { validate_id(&session.session_id)?; if session.pid == Some(0) { return Err(std::io::Error::other("invalid session pid")); } session.command.validate() },
+                Self::Sessions { sessions } => {
+                    for session in sessions { validate_id(&session.session_id)?; if session.pid == Some(0) { return Err(std::io::Error::other("invalid session pid")); } session.command.validate()?; }
+                    Ok(())
+                }
+                _ => Ok(()),
+            }
+        }
     }
 
     /// 📁 Cache directory for the dashboard daemon socket / pid / event log.
@@ -55,7 +158,10 @@ pub mod ipc {
     pub fn socket_path(root: &Path) -> PathBuf {
         #[cfg(unix)]
         {
-            dashboard_cache_dir(root).join("daemon.sock")
+            use std::hash::{Hash, Hasher};
+            let mut hash = std::collections::hash_map::DefaultHasher::new();
+            root.hash(&mut hash);
+            std::env::temp_dir().join(format!("semio-dashboard-{:x}", hash.finish())).join("daemon.sock")
         }
         #[cfg(windows)]
         {
@@ -75,9 +181,11 @@ pub mod ipc {
         dashboard_cache_dir(root).join("events.jsonl")
     }
 
+    pub fn lock_path(root: &Path) -> PathBuf { dashboard_cache_dir(root).join("daemon.lock") }
+
     /// ✉️ Writes one length-prefixed frame: `u32 le len | u8 kind | payload`.
     pub fn write_frame(out: &mut impl Write, kind: u8, payload: &[u8]) -> std::io::Result<()> {
-        let len = (1u32).saturating_add(payload.len() as u32);
+        let len = payload.len().checked_add(1).filter(|len| *len <= MAX_FRAME_BYTES).ok_or_else(|| std::io::Error::other("frame exceeds limit"))? as u32;
         out.write_all(&len.to_le_bytes())?;
         out.write_all(&[kind])?;
         out.write_all(payload)?;
@@ -155,11 +263,15 @@ pub mod ipc {
 
     #[cfg(unix)]
     pub fn listen(root: &Path) -> std::io::Result<std::os::unix::net::UnixListener> {
-        let dir = dashboard_cache_dir(root);
-        std::fs::create_dir_all(&dir)?;
+        use std::os::unix::fs::{DirBuilderExt, PermissionsExt};
         let path = socket_path(root);
+        let dir = path.parent().ok_or_else(|| std::io::Error::other("dashboard socket needs a parent directory"))?;
+        std::fs::DirBuilder::new().recursive(true).mode(0o700).create(dir)?;
+        std::fs::set_permissions(dir, std::fs::Permissions::from_mode(0o700))?;
         let _ = std::fs::remove_file(&path);
-        std::os::unix::net::UnixListener::bind(&path)
+        let listener = std::os::unix::net::UnixListener::bind(&path)?;
+        std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o600))?;
+        Ok(listener)
     }
 
     #[cfg(windows)]
@@ -175,15 +287,15 @@ pub mod ipc {
 
     #[cfg(windows)]
     pub fn connect(root: &Path) -> std::io::Result<std::fs::File> {
-        // Named-pipe client open; retries briefly while the daemon starts.
         let name = pipe_name(root);
-        for _ in 0..50 {
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(1);
+        loop {
             match std::fs::OpenOptions::new().read(true).write(true).open(&name) {
-                Ok(f) => return Ok(f),
-                Err(_) => std::thread::sleep(std::time::Duration::from_millis(20)),
+                Ok(file) => return Ok(file),
+                Err(error) if matches!(error.raw_os_error(), Some(2 | 231)) && std::time::Instant::now() < deadline => std::thread::sleep(std::time::Duration::from_millis(20)),
+                Err(error) => return Err(error),
             }
         }
-        Err(std::io::Error::new(std::io::ErrorKind::NotFound, format!("named pipe not found: {name}")))
     }
 
     // 🪟 The two Win32 entry points a named-pipe SERVER needs. They are operating-system calls, not a
@@ -251,8 +363,8 @@ pub mod ipc {
 // #region 🔖️Supervisor
 /// 🧠 The session supervisor: pseudo-terminal lifecycle plus fan-out to attached clients.
 pub mod supervisor {
-    use super::ipc::{self, ClientMsg, ServerMsg};
-    use std::collections::HashMap;
+    use super::ipc::{self, ClientMsg, ServerMsg, SessionCommand, SessionInfo, SessionStatus};
+    use std::collections::{BTreeMap, VecDeque};
     use std::io::Write;
     use std::path::{Path, PathBuf};
     use std::sync::atomic::AtomicBool;
@@ -276,7 +388,7 @@ pub mod supervisor {
             Self { id, stream, buffer: Vec::new() }
         }
 
-        fn turn(&mut self, messages: &mut Vec<ClientMsg>) -> std::io::Result<bool> {
+        fn turn(&mut self, messages: &mut Vec<(u64, ClientMsg)>) -> std::io::Result<bool> {
             use std::io::Read;
             let mut chunk = [0u8; 16 * 1024];
             let mut read_bytes = 0usize;
@@ -297,7 +409,7 @@ pub mod supervisor {
                 let Some((kind, payload)) = ipc::try_decode_frame(&mut self.buffer)? else { break };
                 if kind == ipc::KIND_CONTROL {
                     if let Ok(message) = ipc::decode_control::<ClientMsg>(&payload) {
-                        messages.push(message);
+                        messages.push((self.id, message));
                     }
                 }
             }
@@ -322,7 +434,7 @@ pub mod supervisor {
             Self { id, stream, buffer: Vec::new() }
         }
 
-        fn turn(&mut self, messages: &mut Vec<ClientMsg>) -> std::io::Result<bool> {
+        fn turn(&mut self, messages: &mut Vec<(u64, ClientMsg)>) -> std::io::Result<bool> {
             use std::io::Read;
             let mut chunk = [0u8; 16 * 1024];
             let mut read_bytes = 0usize;
@@ -346,7 +458,7 @@ pub mod supervisor {
                 let Some((kind, payload)) = ipc::try_decode_frame(&mut self.buffer)? else { break };
                 if kind == ipc::KIND_CONTROL {
                     if let Ok(message) = ipc::decode_control::<ClientMsg>(&payload) {
-                        messages.push(message);
+                        messages.push((self.id, message));
                     }
                 }
             }
@@ -371,22 +483,37 @@ pub mod supervisor {
             let line = serde_json::to_string(event).map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))?;
             f.write_all(line.as_bytes())?;
             f.write_all(b"\n")?;
+            f.sync_data()?;
             Ok(())
+        }
+
+        pub fn replay(&self) -> std::io::Result<Vec<SessionInfo>> {
+            use std::io::BufRead;
+            let file = match std::fs::File::open(&self.path) { Ok(file) => file, Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(Vec::new()), Err(error) => return Err(error) };
+            let mut sessions = BTreeMap::new();
+            for line in std::io::BufReader::new(file).lines() {
+                if let Ok(ServerMsg::SessionChanged { session }) = serde_json::from_str::<ServerMsg>(&line?) {
+                    sessions.insert(session.session_id.clone(), session);
+                    while sessions.len() > 128 {
+                        let key = sessions.keys().next().expect("session").clone();
+                        sessions.remove(&key);
+                    }
+                }
+            }
+            Ok(sessions.into_values().collect())
         }
     }
 
     /// 🧵 One live pseudo-terminal session. A host with a real pseudo-terminal — `openpty` on unix,
     /// ConPTY on windows — owns the master; every other target keeps the session surface and answers
     /// a spawn with an error instead.
-    #[cfg(any(all(unix, not(target_arch = "wasm32")), windows))]
     struct LiveSession {
-        pty: ui_tui::tui::pty::Pty,
-    }
-
-    /// 🧵 The session placeholder of a host without a pseudo-terminal.
-    #[cfg(not(any(all(unix, not(target_arch = "wasm32")), windows)))]
-    struct LiveSession {
-        _marker: (),
+        info: SessionInfo,
+        output: VecDeque<u8>,
+        stop_deadline: Option<std::time::Instant>,
+        exit_deadline: Option<std::time::Instant>,
+        #[cfg(any(all(unix, not(target_arch = "wasm32")), windows))]
+        pty: Option<ui_tui::tui::pty::Pty>,
     }
 
     /// 🧠 In-process supervisor: sessions + fan-out to attached client streams. `T` is the daemon's
@@ -397,51 +524,109 @@ pub mod supervisor {
     /// macro's DSL cannot express (see `📓️terra-dedyn-fw-hub-repo-report.md`). Only `Write + Send`
     /// is required: `Supervisor` writes to attached clients while the daemon's bounded nonblocking
     /// connection cursors own the read halves.
-    pub struct Supervisor<T: Write + Send> {
-        sessions: HashMap<String, LiveSession>,
-        clients: Vec<(u64, T)>,
+    pub struct Supervisor<T: Write + Send + 'static> {
+        sessions: BTreeMap<String, LiveSession>,
+        clients: Vec<(u64, std::sync::mpsc::SyncSender<Vec<u8>>)>,
         next_client_id: u64,
         event_log: EventLog,
-        _root: PathBuf,
+        root: PathBuf,
+        shutdown: bool,
+        _transport: std::marker::PhantomData<T>,
     }
 
-    impl<T: Write + Send> Supervisor<T> {
+    impl<T: Write + Send + 'static> Supervisor<T> {
         pub fn new(root: &Path) -> std::io::Result<Self> {
-            Ok(Self { sessions: HashMap::new(), clients: Vec::new(), next_client_id: 1, event_log: EventLog::open(root)?, _root: root.to_path_buf() })
+            let event_log = EventLog::open(root)?;
+            let mut sessions = BTreeMap::new();
+            for mut info in event_log.replay()? {
+                if matches!(info.status, SessionStatus::Running | SessionStatus::Stopping) {
+                    info.status = SessionStatus::Exited;
+                    info.code = Some(-1);
+                    event_log.append(&ServerMsg::SessionChanged { session: info.clone() })?;
+                }
+                sessions.insert(info.session_id.clone(), LiveSession { info, output: VecDeque::new(), stop_deadline: None, exit_deadline: None, #[cfg(any(all(unix, not(target_arch = "wasm32")), windows))] pty: None });
+            }
+            Ok(Self { sessions, clients: Vec::new(), next_client_id: 1, event_log, root: root.to_path_buf(), shutdown: false, _transport: std::marker::PhantomData })
         }
 
-        fn broadcast_control(&mut self, msg: &ServerMsg) {
-            let _ = self.event_log.append(msg);
-            let mut dead = Vec::new();
-            for (i, (_, client)) in self.clients.iter_mut().enumerate() {
-                if ipc::write_control(client, msg).is_err() {
-                    dead.push(i);
-                }
-            }
-            for i in dead.into_iter().rev() {
-                self.clients.swap_remove(i);
-            }
+        fn broadcast_control(&mut self, msg: &ServerMsg) -> std::io::Result<()> {
+            if matches!(msg, ServerMsg::SessionChanged { .. } | ServerMsg::Shutdown {}) { self.event_log.append(msg)?; }
+            let mut bytes = Vec::new();
+            if ipc::write_control(&mut bytes, msg).is_ok() { self.broadcast(bytes); }
+            Ok(())
         }
 
         fn broadcast_output(&mut self, session_id: &str, data: &[u8]) {
+            if let Some(session) = self.sessions.get_mut(session_id) {
+                session.output.extend(data);
+                let excess = session.output.len().saturating_sub(64 * 1024);
+                session.output.drain(..excess);
+            }
             let payload = ipc::encode_output(session_id, data);
-            let mut dead = Vec::new();
-            for (i, (_, client)) in self.clients.iter_mut().enumerate() {
-                if ipc::write_frame(client, ipc::KIND_OUTPUT, &payload).is_err() {
-                    dead.push(i);
-                }
-            }
-            for i in dead.into_iter().rev() {
-                self.clients.swap_remove(i);
-            }
+            let mut bytes = Vec::new();
+            if ipc::write_frame(&mut bytes, ipc::KIND_OUTPUT, &payload).is_ok() { self.broadcast(bytes); }
+        }
+
+        fn broadcast(&mut self, bytes: Vec<u8>) {
+            self.clients.retain(|(_, sender)| sender.try_send(bytes.clone()).is_ok());
+        }
+
+        fn send_control(&mut self, id: u64, msg: &ServerMsg) -> std::io::Result<()> {
+            let mut bytes = Vec::new();
+            ipc::write_control(&mut bytes, msg)?;
+            self.send(id, bytes)
+        }
+
+        fn send(&mut self, id: u64, bytes: Vec<u8>) -> std::io::Result<()> {
+            let sender = self.clients.iter().find(|(candidate, _)| *candidate == id).map(|(_, sender)| sender);
+            sender.ok_or_else(|| std::io::Error::other("dashboard client disconnected"))?.try_send(bytes).map_err(|_| std::io::Error::other("dashboard client output backlog exceeded"))
         }
 
         pub fn attach_client(&mut self, mut stream: T) -> std::io::Result<u64> {
+            if self.clients.len() >= 16 { return Err(std::io::Error::other("workspace dashboard view limit reached")); }
             ipc::write_control(&mut stream, &ServerMsg::Attached { daemon_pid: std::process::id() })?;
             let id = self.next_client_id;
             self.next_client_id = self.next_client_id.checked_add(1).ok_or_else(|| std::io::Error::other("dashboard client id space exhausted"))?;
-            self.clients.push((id, stream));
+            let (sender, receiver) = std::sync::mpsc::sync_channel::<Vec<u8>>(4096);
+            std::thread::spawn(move || {
+                while let Ok(bytes) = receiver.recv() {
+                    if stream.write_all(&bytes).and_then(|_| stream.flush()).is_err() { break; }
+                }
+            });
+            self.clients.push((id, sender));
             Ok(id)
+        }
+
+        pub fn snapshot(&self) -> Vec<SessionInfo> { self.sessions.values().map(|session| session.info.clone()).collect() }
+
+        pub fn output(&self, session_id: &str) -> Option<Vec<u8>> { self.sessions.get(session_id).map(|session| session.output.iter().copied().collect()) }
+
+        pub fn is_shutdown(&self) -> bool { self.shutdown }
+
+        pub fn handle_for(&mut self, id: u64, msg: ClientMsg) -> std::io::Result<()> {
+            match msg {
+                ClientMsg::Attach { .. } => {
+                    self.send_control(id, &ServerMsg::Sessions { sessions: self.snapshot() })?;
+                    let replay: Vec<_> = self.sessions.iter().map(|(key, session)| (key.clone(), session.output.iter().copied().collect::<Vec<_>>())).collect();
+                    for (key, output) in replay {
+                        for data in output.chunks(4096) {
+                            let mut bytes = Vec::new();
+                            ipc::write_frame(&mut bytes, ipc::KIND_OUTPUT, &ipc::encode_output(&key, data))?;
+                            self.send(id, bytes)?;
+                        }
+                    }
+                    self.send_control(id, &ServerMsg::ReplayComplete {})
+                }
+                ClientMsg::List {} => self.send_control(id, &ServerMsg::Sessions { sessions: self.snapshot() }),
+                ClientMsg::Detach {} => { self.detach_client(id); Ok(()) }
+                ClientMsg::Ping {} => self.send_control(id, &ServerMsg::Pong {}),
+                message => {
+                    if let Err(error) = self.handle_client_msg(message) {
+                        self.send_control(id, &ServerMsg::Error { message: error.to_string() })?;
+                    }
+                    Ok(())
+                }
+            }
         }
 
         #[cfg(any(unix, windows))]
@@ -449,7 +634,6 @@ pub mod supervisor {
             self.clients.iter().any(|(candidate, _)| *candidate == id)
         }
 
-        #[cfg(any(unix, windows))]
         fn detach_client(&mut self, id: u64) {
             if let Some(index) = self.clients.iter().position(|(candidate, _)| *candidate == id) {
                 self.clients.swap_remove(index);
@@ -457,48 +641,73 @@ pub mod supervisor {
         }
 
         pub fn handle_client_msg(&mut self, msg: ClientMsg) -> std::io::Result<()> {
+            msg.validate()?;
             match msg {
                 ClientMsg::Attach { .. } => Ok(()),
-                ClientMsg::Detach => Ok(()),
-                ClientMsg::Ping => {
-                    self.broadcast_control(&ServerMsg::Pong);
+                ClientMsg::Detach {} => Ok(()),
+                ClientMsg::Ping {} => {
+                    self.broadcast_control(&ServerMsg::Pong {})?;
                     Ok(())
                 }
-                ClientMsg::Spawn { session_id, cmd, args, cwd, cols, rows } => self.spawn_session(&session_id, &cmd, &args, cwd.as_deref(), cols, rows),
+                ClientMsg::Spawn { session_id, command } => self.spawn_session(&session_id, command),
                 ClientMsg::Input { session_id, data } => self.input(&session_id, &data),
                 ClientMsg::Resize { session_id, cols, rows } => self.resize(&session_id, cols, rows),
                 ClientMsg::Kill { session_id } => {
-                    self.kill(&session_id);
+                    self.kill(&session_id)
+                }
+                ClientMsg::Stop { session_id } => self.stop_session(&session_id),
+                ClientMsg::Restart { session_id } => {
+                    let command = self.sessions.get(&session_id).ok_or_else(|| std::io::Error::other("unknown session"))?.info.command.clone();
+                    self.kill(&session_id)?;
+                    self.spawn_session(&session_id, command)
+                }
+                ClientMsg::List {} => { self.broadcast_control(&ServerMsg::Sessions { sessions: self.snapshot() })?; Ok(()) }
+                ClientMsg::Shutdown {} => {
+                    let ids: Vec<_> = self.sessions.keys().cloned().collect();
+                    for id in ids { self.kill(&id)?; }
+                    self.shutdown = true;
+                    self.broadcast_control(&ServerMsg::Shutdown {})?;
                     Ok(())
                 }
             }
         }
 
-        fn spawn_session(&mut self, session_id: &str, cmd: &str, args: &[String], cwd: Option<&str>, cols: u16, rows: u16) -> std::io::Result<()> {
+        fn spawn_session(&mut self, session_id: &str, mut command: SessionCommand) -> std::io::Result<()> {
+            let cwd = self.root.join(&command.cwd);
+            command.cwd = ipc::canonical_path(&cwd).display().to_string();
+            if self.sessions.values().any(|session| matches!(session.info.status, SessionStatus::Running | SessionStatus::Stopping)
+                && (session.info.session_id == session_id || session.info.command.same_task(&command))) {
+                return Err(std::io::Error::other("task is already running; select its session or restart it"));
+            }
+            if !self.sessions.contains_key(session_id) && self.sessions.len() >= 128 {
+                let evict = self.sessions.iter().find(|(_, session)| matches!(session.info.status, SessionStatus::Exited | SessionStatus::Failed)).map(|(id, _)| id.clone());
+                if let Some(id) = evict { self.sessions.remove(&id); } else { return Err(std::io::Error::other("workspace session limit reached")); }
+            }
             #[cfg(any(all(unix, not(target_arch = "wasm32")), windows))]
             {
                 use ui_tui::tui::pty::{Pty, PtySize};
-                let arg_refs: Vec<&str> = args.iter().map(String::as_str).collect();
-                let cwd_path = cwd.map(PathBuf::from);
-                let pty = Pty::spawn(cmd, &arg_refs, &[], cwd_path.as_deref(), PtySize { cols: cols.max(1), rows: rows.max(1) }).map_err(|e| std::io::Error::other(e.message))?;
-                self.sessions.insert(session_id.to_string(), LiveSession { pty });
-                self.broadcast_control(&ServerMsg::SessionStarted { session_id: session_id.to_string() });
-                Ok(())
+                let args: Vec<_> = command.args.iter().map(String::as_str).collect();
+                let env: Vec<_> = command.env.iter().map(|(key, value)| (key.as_str(), value.as_str())).collect();
+                let cwd = if command.cwd.is_empty() { self.root.clone() } else { PathBuf::from(&command.cwd) };
+                let spawned = Pty::spawn(&command.cmd, &args, &env, &["NX_INVOCATION_ROOT_PID"], Some(&cwd), PtySize { cols: command.cols, rows: command.rows });
+                let (pty, error) = match spawned { Ok(pty) => (Some(pty), None), Err(error) => (None, Some(std::io::Error::other(error.message))) };
+                let info = SessionInfo { session_id: session_id.into(), command, status: if error.is_some() { SessionStatus::Failed } else { SessionStatus::Running }, pid: pty.as_ref().map(Pty::pid), code: error.as_ref().map(|_| -1) };
+                self.sessions.insert(session_id.to_string(), LiveSession { info: info.clone(), output: VecDeque::new(), stop_deadline: None, exit_deadline: None, pty });
+                self.broadcast_control(&ServerMsg::SessionChanged { session: info })?;
+                if let Some(error) = error { Err(error) } else { Ok(()) }
             }
             #[cfg(not(any(all(unix, not(target_arch = "wasm32")), windows)))]
             {
-                let _ = (session_id, cmd, args, cwd, cols, rows);
-                self.broadcast_control(&ServerMsg::Error { message: "PTY supervisor requires a unix or windows tui-terminal host".into() });
-                Ok(())
+                let _ = (session_id, command);
+                Err(std::io::Error::other("PTY supervisor requires a unix or windows tui-terminal host"))
             }
         }
 
         fn input(&mut self, session_id: &str, data: &[u8]) -> std::io::Result<()> {
             #[cfg(any(all(unix, not(target_arch = "wasm32")), windows))]
             {
-                if let Some(session) = self.sessions.get_mut(session_id) {
-                    session.pty.write_all(data).map_err(|e| std::io::Error::other(e.message))?;
-                }
+                let pty = self.sessions.get_mut(session_id).and_then(|session| session.pty.as_mut()).ok_or_else(|| std::io::Error::other("session is not running"))?;
+                pty.write_all(data).map_err(|e| std::io::Error::other(e.message))?;
             }
             #[cfg(not(any(all(unix, not(target_arch = "wasm32")), windows)))]
             {
@@ -512,7 +721,9 @@ pub mod supervisor {
             {
                 use ui_tui::tui::pty::PtySize;
                 if let Some(session) = self.sessions.get_mut(session_id) {
-                    session.pty.resize(PtySize { cols: cols.max(1), rows: rows.max(1) }).map_err(|e| std::io::Error::other(e.message))?;
+                    session.info.command.cols = cols;
+                    session.info.command.rows = rows;
+                    if let Some(pty) = session.pty.as_mut() { pty.resize(PtySize { cols, rows }).map_err(|e| std::io::Error::other(e.message))?; }
                 }
             }
             #[cfg(not(any(all(unix, not(target_arch = "wasm32")), windows)))]
@@ -522,18 +733,34 @@ pub mod supervisor {
             Ok(())
         }
 
-        fn kill(&mut self, session_id: &str) {
+        fn stop_session(&mut self, session_id: &str) -> std::io::Result<()> {
+            self.input(session_id, &[3])?;
+            let session = self.sessions.get_mut(session_id).ok_or_else(|| std::io::Error::other("unknown session"))?;
+            session.info.status = SessionStatus::Stopping;
+            session.stop_deadline = Some(std::time::Instant::now() + std::time::Duration::from_secs(2));
+            let info = session.info.clone();
+            self.broadcast_control(&ServerMsg::SessionChanged { session: info })?;
+            Ok(())
+        }
+
+        fn kill(&mut self, session_id: &str) -> std::io::Result<()> {
             #[cfg(any(all(unix, not(target_arch = "wasm32")), windows))]
             {
-                if let Some(mut session) = self.sessions.remove(session_id) {
-                    let _ = session.pty.kill();
-                    self.broadcast_control(&ServerMsg::SessionExited { session_id: session_id.to_string(), code: -1 });
-                }
+                let session = self.sessions.get_mut(session_id).ok_or_else(|| std::io::Error::other("unknown session"))?;
+                let Some(pty) = session.pty.as_mut() else { return Ok(()) };
+                pty.terminate().map_err(|e| std::io::Error::other(e.message))?;
+                session.pty.take();
+                session.stop_deadline = None;
+                session.info.status = SessionStatus::Exited;
+                session.info.code = Some(-1);
+                let info = session.info.clone();
+                self.broadcast_control(&ServerMsg::SessionChanged { session: info })?;
             }
             #[cfg(not(any(all(unix, not(target_arch = "wasm32")), windows)))]
             {
                 let _ = session_id;
             }
+            Ok(())
         }
 
         /// ⏱️ Polls PTY masters and reaps exited children.
@@ -546,24 +773,51 @@ pub mod supervisor {
                 let mut exited = Vec::new();
                 for id in ids {
                     let Some(session) = self.sessions.get_mut(&id) else { continue };
-                    match session.pty.try_read(&mut buf) {
-                        Ok(0) => {}
-                        Ok(n) => outputs.push((id.clone(), buf[..n].to_vec())),
-                        Err(_) => {}
+                    let Some(pty) = session.pty.as_mut() else { continue };
+                    let code = pty.try_wait().ok().flatten();
+                    for _ in 0..16 {
+                        match pty.try_read(&mut buf) { Ok(0) | Err(_) => break, Ok(n) => outputs.push((id.clone(), buf[..n].to_vec())) }
                     }
-                    if let Ok(Some(code)) = session.pty.try_wait() {
-                        exited.push((id, code));
+                    if let Some(code) = code {
+                        let deadline = session.exit_deadline.get_or_insert_with(|| std::time::Instant::now() + std::time::Duration::from_millis(50));
+                        if std::time::Instant::now() >= *deadline { exited.push((id, code)); }
+                    } else if session.stop_deadline.is_some_and(|deadline| std::time::Instant::now() >= deadline) {
+                        exited.push((id, -1));
                     }
                 }
                 for (id, data) in outputs {
                     self.broadcast_output(&id, &data);
                 }
                 for (id, code) in exited {
-                    self.sessions.remove(&id);
-                    self.broadcast_control(&ServerMsg::SessionExited { session_id: id, code });
+                    let session = self.sessions.get_mut(&id).expect("session");
+                    if let Some(mut pty) = session.pty.take() { let _ = pty.terminate(); }
+                    session.info.status = SessionStatus::Exited;
+                    session.info.code = Some(code);
+                    session.stop_deadline = None;
+                    let info = session.info.clone();
+                    self.broadcast_control(&ServerMsg::SessionChanged { session: info })?;
                 }
             }
             Ok(())
+        }
+    }
+
+    /// 🔒 The operating system releases this workspace lease when the daemon exits.
+    struct WorkspaceLease { _file: std::fs::File, root: PathBuf }
+
+    impl WorkspaceLease {
+        fn acquire(root: &Path) -> std::io::Result<Self> {
+            std::fs::create_dir_all(ipc::dashboard_cache_dir(root))?;
+            let file = std::fs::OpenOptions::new().create(true).read(true).write(true).truncate(false).open(ipc::lock_path(root))?;
+            file.try_lock().map_err(|_| std::io::Error::new(std::io::ErrorKind::AlreadyExists, "workspace dashboard daemon is already running"))?;
+            Ok(Self { _file: file, root: root.to_path_buf() })
+        }
+    }
+
+    impl Drop for WorkspaceLease {
+        fn drop(&mut self) {
+            let _ = std::fs::remove_file(ipc::pid_path(&self.root));
+            let _ = std::fs::remove_file(ipc::socket_path(&self.root));
         }
     }
 
@@ -580,35 +834,36 @@ pub mod supervisor {
     }
 
     pub fn status(root: &Path) -> String {
-        match read_pid(root) {
-            Some(pid) => format!("daemon pid {pid} socket {}\n", ipc::socket_path(root).display()),
-            None => "daemon not running\n".into(),
+        match super::client::Connection::connect(root) {
+            Ok(mut connection) => {
+                let _ = connection.send(&ClientMsg::List {});
+                let messages = connection.receive(std::time::Duration::from_secs(2)).unwrap_or_default();
+                let sessions = messages.iter().find_map(|message| match message { super::client::Message::Control(ServerMsg::Sessions { sessions }) => Some(sessions), _ => None });
+                let count = sessions.map_or(0, |sessions| sessions.iter().filter(|session| matches!(session.status, SessionStatus::Running | SessionStatus::Stopping)).count());
+                format!("daemon pid {} · {count} active tasks · {}\n", connection.daemon_pid(), ipc::socket_path(root).display())
+            }
+            Err(_) => "daemon not running\n".into(),
         }
     }
 
     pub fn stop(root: &Path) -> i32 {
-        if let Some(pid) = read_pid(root) {
-            #[cfg(unix)]
-            {
-                let _ = std::process::Command::new("kill").args(["-TERM", &pid.to_string()]).status();
+        match super::client::Connection::connect(root).and_then(|mut connection| {
+            connection.send(&ClientMsg::Shutdown {})?;
+            let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
+            while std::time::Instant::now() < deadline {
+                if connection.receive(std::time::Duration::from_millis(100))?.iter().any(|message| matches!(message, super::client::Message::Control(ServerMsg::Shutdown {}))) { return Ok(()); }
             }
-            #[cfg(windows)]
-            {
-                let _ = std::process::Command::new("taskkill").args(["/PID", &pid.to_string(), "/T", "/F"]).stdout(std::process::Stdio::null()).stderr(std::process::Stdio::null()).status();
-            }
-            let _ = std::fs::remove_file(ipc::pid_path(root));
-            let _ = std::fs::remove_file(ipc::socket_path(root));
-            println!("stopped daemon {pid}");
-            0
-        } else {
-            eprintln!("daemon not running");
-            1
+            Err(std::io::Error::other("daemon shutdown timed out"))
+        }) {
+            Ok(()) => { println!("stopped workspace dashboard daemon"); 0 }
+            Err(error) => { eprintln!("daemon shutdown failed: {error}"); 1 }
         }
     }
 
     /// 🌀 Blocking daemon serve loop (unix domain socket).
     #[cfg(unix)]
     pub fn serve(root: &Path, running: Arc<AtomicBool>) -> std::io::Result<()> {
+        let _lease = WorkspaceLease::acquire(root)?;
         write_pid(root)?;
         let listener = ipc::listen(root)?;
         listener.set_nonblocking(true)?;
@@ -616,13 +871,14 @@ pub mod supervisor {
         use std::time::Duration;
         let mut supervisor = Supervisor::new(root)?;
         let mut readers = Vec::new();
-        while running.load(Ordering::SeqCst) {
+        while running.load(Ordering::SeqCst) && !supervisor.is_shutdown() {
             match listener.accept() {
                 Ok((stream, _)) => {
                     stream.set_nonblocking(true)?;
                     let stream_for_client = stream.try_clone()?;
-                    let client_id = supervisor.attach_client(stream_for_client)?;
-                    readers.push(ClientReader::new(client_id, stream));
+                    if let Ok(client_id) = supervisor.attach_client(stream_for_client) {
+                        readers.push(ClientReader::new(client_id, stream));
+                    }
                 }
                 Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => {}
                 Err(e) => return Err(e),
@@ -639,8 +895,8 @@ pub mod supervisor {
                     index += 1;
                 }
             }
-            for message in messages {
-                supervisor.handle_client_msg(message)?;
+            for (client_id, message) in messages {
+                if supervisor.handle_for(client_id, message).is_err() { supervisor.detach_client(client_id); }
             }
             supervisor.tick()?;
             std::thread::sleep(Duration::from_millis(10));
@@ -661,11 +917,12 @@ pub mod supervisor {
         use std::sync::atomic::Ordering;
         use std::sync::mpsc;
         use std::time::Duration;
+        let _lease = WorkspaceLease::acquire(root)?;
         write_pid(root)?;
         let name = ipc::listen(root)?;
         let (sender, receiver) = mpsc::channel::<std::fs::File>();
         let serving = Arc::clone(&running);
-        std::thread::spawn(move || {
+        let acceptor = std::thread::spawn(move || {
             while running.load(Ordering::SeqCst) {
                 match ipc::accept(&name) {
                     Ok(stream) => {
@@ -679,11 +936,12 @@ pub mod supervisor {
         });
         let mut supervisor = Supervisor::new(root)?;
         let mut readers = Vec::new();
-        while serving.load(Ordering::SeqCst) {
+        while serving.load(Ordering::SeqCst) && !supervisor.is_shutdown() {
             while let Ok(stream) = receiver.try_recv() {
                 let reader = stream.try_clone()?;
-                let client_id = supervisor.attach_client(stream)?;
-                readers.push(ClientReader::new(client_id, reader));
+                if let Ok(client_id) = supervisor.attach_client(stream) {
+                    readers.push(ClientReader::new(client_id, reader));
+                }
             }
             let mut messages = Vec::new();
             let mut index = 0usize;
@@ -697,12 +955,15 @@ pub mod supervisor {
                     index += 1;
                 }
             }
-            for message in messages {
-                supervisor.handle_client_msg(message)?;
+            for (client_id, message) in messages {
+                if supervisor.handle_for(client_id, message).is_err() { supervisor.detach_client(client_id); }
             }
             supervisor.tick()?;
             std::thread::sleep(Duration::from_millis(10));
         }
+        serving.store(false, Ordering::SeqCst);
+        let _ = ipc::connect(root);
+        let _ = acceptor.join();
         let _ = std::fs::remove_file(ipc::pid_path(root));
         let _ = std::fs::remove_file(ipc::socket_path(root));
         Ok(())
@@ -716,17 +977,23 @@ pub mod supervisor {
 
     /// 🚀 Starts a detached daemon process (`semio daemon serve --root …`).
     pub fn start_detached(root: &Path, exe: &Path) -> i32 {
-        if read_pid(root).is_some() {
+        if super::client::Connection::connect(root).is_ok() {
             println!("{}", status(root));
             return 0;
         }
-        let mut cmd = std::process::Command::new(exe);
-        cmd.args(["daemon", "serve", "--root", &root.display().to_string()]);
-        cmd.stdin(std::process::Stdio::null()).stdout(std::process::Stdio::null()).stderr(std::process::Stdio::null());
-        match cmd.spawn() {
-            Ok(child) => {
-                println!("started daemon pid {}", child.id());
-                0
+        let spawned = ui_tui::tui::pty::spawn_detached(&exe.to_string_lossy(), &["daemon", "serve", "--root", &root.display().to_string()], &["NX_INVOCATION_ROOT_PID"], root);
+        match spawned {
+            Ok(pid) => {
+                let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
+                while std::time::Instant::now() < deadline {
+                    if let Ok(connection) = super::client::Connection::connect(root) {
+                        println!("workspace dashboard daemon ready at pid {}", connection.daemon_pid());
+                        return 0;
+                    }
+                    std::thread::sleep(std::time::Duration::from_millis(20));
+                }
+                eprintln!("daemon {pid} did not become ready");
+                1
             }
             Err(e) => {
                 eprintln!("failed to start daemon: {e}");
@@ -736,7 +1003,7 @@ pub mod supervisor {
     }
 
     /// 🧪 Drive a supervisor against an in-memory duplex for unit tests.
-    pub fn handle_one_for_test<T: Write + Send>(sup: &mut Supervisor<T>, msg: ClientMsg) -> std::io::Result<()> {
+    pub fn handle_one_for_test<T: Write + Send + 'static>(sup: &mut Supervisor<T>, msg: ClientMsg) -> std::io::Result<()> {
         sup.handle_client_msg(msg)
     }
 }
@@ -747,6 +1014,7 @@ pub mod supervisor {
 pub fn run(root: &Path, parsed: &ParsedArgs) -> i32 {
     let subcommand = parsed.segments.first().map_or("status", String::as_str);
     let root = parsed.flag("root").map_or_else(|| root.to_path_buf(), PathBuf::from);
+    let root = ipc::canonical_path(&root);
     match subcommand {
         "start" => {
             let executable = std::env::current_exe().unwrap_or_else(|_| PathBuf::from("semio"));

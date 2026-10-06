@@ -1,0 +1,202 @@
+{
+  "path": "C:/git/semio/🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-api/🔓️viz-api.tex",
+  "beforeSha256": "733F5B15D1F2F65F18B0C80EFBA32F4584B8E32AD846B920DCA017FC2AAA78EF",
+  "afterSha256": "9B4CB990E60B071496738A2022B42AD5550A67B65D83CD667C36BF1E46AF61D4",
+  "insertedRows": [
+    {
+      "family": "adjacency-matrix",
+      "position": 351105,
+      "text": "  \\SemioTableRow{\\Key{data} & \\Key{string} & \\Key{demo-graph-community} & \\ApiText{Name of the graph relationship table.}{Name der Graphbeziehungstabelle.}}\n"
+    },
+    {
+      "family": "alluvial",
+      "position": 356857,
+      "text": "  \\SemioTableRow{\\Key{data} & \\Key{string} & \\Key{demo-flow} & \\ApiText{Name of the flow table.}{Name der Flusstabelle.}}\n"
+    },
+    {
+      "family": "arc-diagram",
+      "position": 362316,
+      "text": "  \\SemioTableRow{\\Key{data} & \\Key{string} & \\Key{demo-graph-community} & \\ApiText{Name of the graph relationship table.}{Name der Graphbeziehungstabelle.}}\n"
+    },
+    {
+      "family": "axis",
+      "position": 180809,
+      "text": "  \\SemioTableRow{\\Key{data} & \\Key{string} & \\Key{demo} & \\ApiText{Name of the table used to derive scales and plot the axis data.}{Name der Tabelle für die Skalenermittlung und die Darstellung der Achsendaten.}}\n"
+    },
+    {
+      "family": "biofabric",
+      "position": 367328,
+      "text": "  \\SemioTableRow{\\Key{data} & \\Key{string} & \\Key{demo-graph-community} & \\ApiText{Name of the graph relationship table.}{Name der Graphbeziehungstabelle.}}\n"
+    },
+    {
+      "family": "chord",
+      "position": 373014,
+      "text": "  \\SemioTableRow{\\Key{data} & \\Key{string} & \\Key{demo-graph-community} & \\ApiText{Name of the weighted relationship table.}{Name der gewichteten Beziehungstabelle.}}\n"
+    },
+    {
+      "family": "cycle",
+      "position": 490754,
+      "text": "  \\SemioTableRow{\\Key{data} & \\Key{string} & \\Key{demo-diagram-cycle} & \\ApiText{Name of the stage table.}{Name der Phasentabelle.}}\n"
+    },
+    {
+      "family": "decision-table",
+      "position": 492533,
+      "text": "  \\SemioTableRow{\\Key{data} & \\Key{string} & \\Key{demo-diagram-rules} & \\ApiText{Name of the condition and action table.}{Name der Bedingungs- und Aktionstabelle.}}\n"
+    },
+    {
+      "family": "dependency-wheel",
+      "position": 388441,
+      "text": "  \\SemioTableRow{\\Key{data} & \\Key{string} & \\Key{demo-graph-community} & \\ApiText{Name of the weighted relationship table.}{Name der gewichteten Beziehungstabelle.}}\n"
+    },
+    {
+      "family": "edge-bundled",
+      "position": 394176,
+      "text": "  \\SemioTableRow{\\Key{data} & \\Key{string} & \\Key{demo-graph-community} & \\ApiText{Name of the graph relationship table.}{Name der Graphbeziehungstabelle.}}\n"
+    },
+    {
+      "family": "fishbone",
+      "position": 497461,
+      "text": "  \\SemioTableRow{\\Key{data} & \\Key{string} & \\Key{demo-diagram-cause} & \\ApiText{Name of the cause table.}{Name der Ursachentabelle.}}\n"
+    },
+    {
+      "family": "flow",
+      "position": 498556,
+      "text": "  \\SemioTableRow{\\Key{data} & \\Key{string} & \\Key{demo-diagram-flow} & \\ApiText{Name of the diagram node table.}{Name der Diagrammknotentabelle.}}\n"
+    },
+    {
+      "family": "hive-plot",
+      "position": 403812,
+      "text": "  \\SemioTableRow{\\Key{data} & \\Key{string} & \\Key{demo-graph-community} & \\ApiText{Name of the graph relationship table.}{Name der Graphbeziehungstabelle.}}\n"
+    },
+    {
+      "family": "infographic-icon",
+      "position": 499942,
+      "text": "  \\SemioTableRow{\\Key{data} & \\Key{string} & \\Key{demo-infographic} & \\ApiText{Name of the icon and value table.}{Name der Symbol- und Wertetabelle.}}\n"
+    },
+    {
+      "family": "infographic-illustration",
+      "position": 501314,
+      "text": "  \\SemioTableRow{\\Key{data} & \\Key{string} & \\Key{demo-illustration} & \\ApiText{Name of the illustration table.}{Name der Illustrationstabelle.}}\n"
+    },
+    {
+      "family": "infographic-list",
+      "position": 503067,
+      "text": "  \\SemioTableRow{\\Key{data} & \\Key{string} & \\Key{demo-infographic} & \\ApiText{Name of the infographic item table.}{Name der Infografikelementtabelle.}}\n"
+    },
+    {
+      "family": "infographic-number",
+      "position": 504223,
+      "text": "  \\SemioTableRow{\\Key{data} & \\Key{string} & \\Key{demo-infographic} & \\ApiText{Name of the value and caption table.}{Name der Werte- und Beschriftungstabelle.}}\n"
+    },
+    {
+      "family": "logic-tree",
+      "position": 505743,
+      "text": "  \\SemioTableRow{\\Key{data} & \\Key{string} & \\Key{demo-diagram-tree} & \\ApiText{Name of the hierarchical node table.}{Name der hierarchischen Knotentabelle.}}\n"
+    },
+    {
+      "family": "matrix-grid",
+      "position": 507494,
+      "text": "  \\SemioTableRow{\\Key{data} & \\Key{string} & \\Key{demo-matrix-grid} & \\ApiText{Name of the grid value table.}{Name der Gitterwertetabelle.}}\n"
+    },
+    {
+      "family": "node-link-matrix",
+      "position": 417363,
+      "text": "  \\SemioTableRow{\\Key{data} & \\Key{string} & \\Key{demo-graph-community} & \\ApiText{Name of the graph relationship table.}{Name der Graphbeziehungstabelle.}}\n"
+    },
+    {
+      "family": "notation-board",
+      "position": 512670,
+      "text": "  \\SemioTableRow{\\Key{data} & \\Key{string} & \\Key{demo-board} & \\ApiText{Name of the board element table.}{Name der Brettpositionstabelle.}}\n"
+    },
+    {
+      "family": "notation-railroad",
+      "position": 515856,
+      "text": "  \\SemioTableRow{\\Key{data} & \\Key{string} & \\Key{demo-railroad} & \\ApiText{Name of the grammar element table.}{Name der Grammatikelementtabelle.}}\n"
+    },
+    {
+      "family": "parallel-sets",
+      "position": 423063,
+      "text": "  \\SemioTableRow{\\Key{data} & \\Key{string} & \\Key{demo-flow} & \\ApiText{Name of the flow table.}{Name der Flusstabelle.}}\n"
+    },
+    {
+      "family": "pm-board",
+      "position": 516981,
+      "text": "  \\SemioTableRow{\\Key{data} & \\Key{string} & \\Key{demo-pm-board} & \\ApiText{Name of the task card table.}{Name der Aufgabenkartentabelle.}}\n"
+    },
+    {
+      "family": "pm-gantt",
+      "position": 518434,
+      "text": "  \\SemioTableRow{\\Key{data} & \\Key{string} & \\Key{demo-pm-gantt} & \\ApiText{Name of the task schedule table.}{Name der Aufgabenplantabelle.}}\n"
+    },
+    {
+      "family": "pm-network",
+      "position": 521173,
+      "text": "  \\SemioTableRow{\\Key{data} & \\Key{string} & \\Key{demo-pm-gantt} & \\ApiText{Name of the task dependency table.}{Name der Aufgabenabhängigkeitstabelle.}}\n"
+    },
+    {
+      "family": "sankey",
+      "position": 428512,
+      "text": "  \\SemioTableRow{\\Key{data} & \\Key{string} & \\Key{demo-flow} & \\ApiText{Name of the flow table.}{Name der Flusstabelle.}}\n"
+    },
+    {
+      "family": "schedule-calendar",
+      "position": 523278,
+      "text": "  \\SemioTableRow{\\Key{data} & \\Key{string} & \\Key{demo-schedule} & \\ApiText{Name of the scheduled event table.}{Name der Terminplantabelle.}}\n"
+    },
+    {
+      "family": "schedule-timedistance",
+      "position": 525212,
+      "text": "  \\SemioTableRow{\\Key{data} & \\Key{string} & \\Key{demo-timedistance} & \\ApiText{Name of the time and distance table.}{Name der Zeit- und Entfernungstabelle.}}\n"
+    },
+    {
+      "family": "seating",
+      "position": 526553,
+      "text": "  \\SemioTableRow{\\Key{data} & \\Key{string} & \\Key{demo-seating} & \\ApiText{Name of the seat allocation table.}{Name der Sitzplatzzuordnungstabelle.}}\n"
+    },
+    {
+      "family": "stage",
+      "position": 528244,
+      "text": "  \\SemioTableRow{\\Key{data} & \\Key{string} & \\Key{demo-diagram-cycle} & \\ApiText{Name of the stage table.}{Name der Phasentabelle.}}\n"
+    },
+    {
+      "family": "state-overview",
+      "position": 529767,
+      "text": "  \\SemioTableRow{\\Key{data} & \\Key{string} & \\Key{demo-state-series} & \\ApiText{Name of the state series table.}{Name der Zustandsreihentabelle.}}\n"
+    },
+    {
+      "family": "state-selection",
+      "position": 531444,
+      "text": "  \\SemioTableRow{\\Key{data} & \\Key{string} & \\Key{demo-diagram-flow} & \\ApiText{Name of the selectable node table.}{Name der auswählbaren Knotentabelle.}}\n"
+    },
+    {
+      "family": "state-sequence",
+      "position": 533517,
+      "text": "  \\SemioTableRow{\\Key{data} & \\Key{string} & \\Key{demo-state-frames} & \\ApiText{Name of the state frame table.}{Name der Zustandsbildtabelle.}}\n"
+    },
+    {
+      "family": "swimlane",
+      "position": 535117,
+      "text": "  \\SemioTableRow{\\Key{data} & \\Key{string} & \\Key{demo-diagram-flow} & \\ApiText{Name of the diagram node table, including lane assignments.}{Name der Diagrammknotentabelle einschließlich Bahnzuordnungen.}}\n"
+    },
+    {
+      "family": "uml-class",
+      "position": 536239,
+      "text": "  \\SemioTableRow{\\Key{data} & \\Key{string} & \\Key{demo-uml-class} & \\ApiText{Name of the class definition table.}{Name der Klassendefinitionstabelle.}}\n"
+    },
+    {
+      "family": "uml-sequence",
+      "position": 539523,
+      "text": "  \\SemioTableRow{\\Key{data} & \\Key{string} & \\Key{demo-uml-sequence} & \\ApiText{Name of the interaction message table.}{Name der Interaktionsnachrichtentabelle.}}\n"
+    },
+    {
+      "family": "uml-timing",
+      "position": 541814,
+      "text": "  \\SemioTableRow{\\Key{data} & \\Key{string} & \\Key{demo-uml-timing} & \\ApiText{Name of the timed state table.}{Name der zeitlichen Zustandstabelle.}}\n"
+    },
+    {
+      "family": "uml-usecase",
+      "position": 542856,
+      "text": "  \\SemioTableRow{\\Key{data} & \\Key{string} & \\Key{demo-uml-usecase} & \\ApiText{Name of the actor and use case table.}{Name der Akteur- und Anwendungsfalltabelle.}}\n"
+    }
+  ]
+}

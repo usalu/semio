@@ -5,6 +5,29 @@
     40
   ],
   "tolerance": 0.6,
+  "queueingCases": [
+    {"id":"queueing-default","options":"","labels":["λ","μ","out"],"positions":[0,1,2],"unit":18},
+    {"id":"queueing-authored","options":"unit=10,stations={a/1/1/\\ensuremath{\\lambda},b/2.5/1/\\ensuremath{\\mu},c/4/1/out}","labels":["λ","μ","out"],"positions":[1,2.5,4],"unit":10}
+  ],
+  "mathRecordCases": [
+    {"id":"math-stations-protected","kind":"queueing-network-diagram","options":"unit=10,stations={a/1/1/A \\(\\alpha\\),b/2.5/1/B \\(\\pi\\),c/4/1/out},routes={a/b/arrow/R \\(\\gamma\\),b/c/arrow/}","glyphs":["α","π","γ"],"reference":{"key":"diagram/node","mode":"linear","unit":10,"values":[[1,1],[2.5,1],[4,1]]}},
+    {"id":"math-box-protected","kind":"commutative-diagram","options":"nodeShape=box,unit=10,nodes={a/0/0/A \\(\\alpha\\),b/2/0/B \\(\\pi\\)},edges={a/b/arrow/R \\(\\gamma\\)}","glyphs":["α","π","γ"],"reference":{"key":"diagram/node","mode":"linear","unit":10,"values":[[0,0],[2,0]]}},
+    {"id":"math-bare-protected","kind":"commutative-diagram","options":"nodeShape=none,unit=10,nodes={a/0/0/\\(\\alpha\\),b/2/0/\\(\\pi\\)},edges={a/b/arrow/\\(\\gamma\\)}","glyphs":["α","π","γ"],"reference":{"key":"diagram/node","mode":"linear","unit":10,"values":[[0,0],[2,0]]}},
+    {"id":"math-venn-computed","kind":"venn-diagram","options":"sets={\\(\\alpha\\) A/38,\\(\\pi\\) B/26,C/17},radius=11","glyphs":["α","π"],"reference":{"key":"set/circle","mode":"venn","unit":11,"values":[[38],[26],[17]]}},
+    {"id":"math-euler-computed","kind":"euler-diagram","options":"sets={A/38,B/26,C/17},radius=11","glyphs":[],"reference":{"key":"set/circle","mode":"euler","unit":11,"values":[[38],[26],[17]]}},
+    {"id":"math-proportional-computed","kind":"area-proportional-venn-diagram","options":"sets={A/38,B/26},intersections={AB/12}","glyphs":[],"reference":{"key":"set/circle","mode":"count","unit":1,"values":[[],[]]}},
+    {"id":"math-grid-protected","kind":"karnaugh-map","options":"rowLabels={R},columnLabels={C},cells={1/1/A \\(\\alpha\\),1/2/B \\(\\pi\\)}","glyphs":["α","π"],"reference":{"key":"","mode":"none","unit":1,"values":[]}},
+    {"id":"math-complex-protected","kind":"argand-diagram","options":"values={1/2/A \\(\\alpha\\),-1/1/B \\(\\pi\\)}","glyphs":["α","π"],"reference":{"key":"","mode":"none","unit":1,"values":[]}},
+    {"id":"math-tree-protected","kind":"probability-tree","options":"branches={1/1/0/0.6/\\(\\alpha\\),1/2/0/0.4/\\(\\pi\\)}","glyphs":["α","π"],"reference":{"key":"tree/branch","mode":"linear","unit":1,"values":[[1,1,0.6],[1,2,0.4]]}},
+    {"id":"math-simplex-protected","kind":"probability-simplex","options":"points={0.6/0.3/0.1/A \\(\\alpha\\),0.2/0.5/0.3/B \\(\\pi\\)}","glyphs":["α","π"],"reference":{"key":"","mode":"none","unit":1,"values":[]}},
+    {"id":"math-braid-numeric","kind":"braid-diagram","options":"crossings={1/1,2/-1,1/1}","glyphs":[],"reference":{"key":"braid/crossing","mode":"linear","unit":1,"values":[[1,1],[2,-1],[1,1]]}},
+    {"id":"math-upset-numeric","kind":"upset-plot","options":"sets={A/38,B/26},intersections={A/19,B/9,A+B/12}","glyphs":["A","B"],"reference":{"key":"upset/column","mode":"count","unit":1,"values":[[],[],[]]}},
+    {"id":"math-piecewise-numeric","kind":"piecewise-function","options":"width=60,height=40,samples=12,refine=0","glyphs":[],"reference":{"key":"path","mode":"piecewise","unit":1,"values":[[-3,0],[0,3]]}},
+    {"id":"math-trajectories-numeric","kind":"phase-portrait","options":"steps=12,seeds={-1/0,1/0}","glyphs":[],"reference":{"key":"","mode":"none","unit":1,"values":[]}},
+    {"id":"math-constraints-numeric","kind":"feasible-region-plot","options":"constraints={1/2/8,3/1/9,-1/0/0,0/-1/0}","glyphs":[],"reference":{"key":"","mode":"none","unit":1,"values":[]}},
+    {"id":"math-pareto-numeric","kind":"pareto-frontier","options":"points={1/1,2/0.5,0.5/2}","glyphs":[],"reference":{"key":"","mode":"none","unit":1,"values":[]}}
+  ],
+  "piecewiseControl": {"domain":[-3,3],"range":[-1,4],"canvas":[60,40],"samples":12,"expressions":["negative","squareOverThree"]},
   "flowControls": [
     {
       "source": 0,

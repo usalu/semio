@@ -1,0 +1,15 @@
+{
+  "job": "root-current-viz-generation-and-coverage-2026-10-06",
+  "session": 63124,
+  "status": {
+    "endedUtc": "2026-10-06T01:38:12.4603638Z",
+    "generateExitCode": 1,
+    "coverageExitCode": null,
+    "startedUtc": "2026-10-06T01:35:08.2599544Z"
+  },
+  "observedApiSha256": "447979ab98d81af51e78b83af2aca76041c54c8a942962b368973301587b7250",
+  "observedRoutesRows": [
+    "  \\SemioTableRow{\\Key{routes} & \\Key{string} & \\Key{demo-geo-routes} & \\ApiText{Geometry collection of origin–destination endpoints and values.}{Geometriesammlung mit Quelle-Ziel-Endpunkten und Werten.}}"
+  ],
+  "productionError": "Ambiguous printed key contract: semio / viz / family / geo-flow:routes"
+}

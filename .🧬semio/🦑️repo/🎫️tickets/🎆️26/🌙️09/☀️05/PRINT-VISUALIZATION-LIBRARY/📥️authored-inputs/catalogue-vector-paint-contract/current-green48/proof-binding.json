@@ -1,0 +1,35 @@
+{
+  "session": 1155,
+  "exitCode": 0,
+  "actualCases": 48,
+  "phases": [
+    "light24",
+    "dark24"
+  ],
+  "assertions": [
+    "canonical mutation/replay/inverse/purity/inference",
+    "D3 CSS color and physical width",
+    "actual PDF shaft and head fill/stroke opacity",
+    "zero no-visible-ink"
+  ],
+  "log": {
+    "path": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\catalogue-vector-paint-native-green4.log",
+    "sha256": "6d5f3f5e9239a5e358907dd9767f977e4e5d9841b0b9ab86f0490529c7103dab"
+  },
+  "sources": {
+    "light.tex": "52ae143800e33e96ff5195de2c73ea215d51668122b9977577bbc4b6db29d973",
+    "light-semio-viz-geo-routes.sty": "26c52e3cd3532717f2b1ed73e18332107d319661593ca8194e6a3372e9a765b9",
+    "light.pdf": {
+      "path": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\vp6\\geo-palette\\vector-paint\\light\\🧪️probe-out\\light.pdf",
+      "sha256": "b0ac0057b698eff6441c65b3d4b63add41711af9e2f6fac37ff54a9ea036583b"
+    },
+    "dark.tex": "6e139709a5d04cd483d8476ee71ec14d7098842bb84e576c2684eff9dec1b0e0",
+    "dark-semio-viz-geo-routes.sty": "26c52e3cd3532717f2b1ed73e18332107d319661593ca8194e6a3372e9a765b9",
+    "dark.pdf": {
+      "path": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\vp6\\geo-palette\\vector-paint\\dark\\🧪️probe-out\\dark.pdf",
+      "sha256": "a5e56e0a9c3434ca64fa319b9c6890321088f23a831eec65f0da3328343e716a"
+    },
+    "helper.txt": "38ad09927e590b1b353b25684970e0503be51f2394e7785a5025a0e525112961",
+    "neutral.json": "d3dd882d1464e931657c7bda1d3a437e793bc2000d402c9770672fd08447336b"
+  }
+}

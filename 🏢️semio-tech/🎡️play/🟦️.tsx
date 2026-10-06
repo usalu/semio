@@ -25,6 +25,7 @@ import {
   useMediaQuery,
   type LayeredCardState,
   type LayeredChromeState,
+  type LayeredDirection,
   type LayeredPane,
 } from "@semio-tech/ui-react";
 import { createBrowserStoragePort, resolvePlaygroundBoot } from "@semio-tech/framework";
@@ -42,8 +43,8 @@ const playStorage = createBrowserStoragePort();
 bootstrapElementsSurfaceChromeDocument(readStoredUiChromeAppearance(playStorage));
 initUiLocaleSync(PLAY_LOCALE);
 
-/** 📱️ Touch-first viewports use the vertical snap list even when wider than {@link UI_MOBILE_MEDIA_QUERY}. */
-const PLAY_TOUCH_LIST_MEDIA_QUERY = `${UI_MOBILE_MEDIA_QUERY} and (hover: none) and (pointer: coarse)`;
+/** 📱️ Touch phones swipe through the same grid one app at a time instead of seeing every card at once. */
+const PLAY_SWIPE_MEDIA_QUERY = `${UI_MOBILE_MEDIA_QUERY} and (hover: none) and (pointer: coarse)`;
 
 //#region 🌐️PlayLandingLabels
 /** 🌐️ The landing's own chrome strings. Play locks its shells to {@link PLAY_LOCALE}, but chrome
@@ -59,6 +60,10 @@ export const playLandingUiLabel = registerUiTranslationBundles({
           paneWaiting: { label: { normal: "{{label}} is waiting to start", beginner: "{{label}} is waiting to start" } },
           paneFailed: { label: { normal: "{{label}} could not be loaded.", beginner: "{{label}} could not be loaded." } },
           grid: { label: { normal: "Every semio app", beginner: "Every semio app" } },
+          neighbourUp: { label: { normal: "Go up to {{label}}", beginner: "Swipe down to reach {{label}} above" } },
+          neighbourLeft: { label: { normal: "Go left to {{label}}", beginner: "Swipe right to reach {{label}} on the left" } },
+          neighbourRight: { label: { normal: "Go right to {{label}}", beginner: "Swipe left to reach {{label}} on the right" } },
+          neighbourDown: { label: { normal: "Go down to {{label}}", beginner: "Swipe up to reach {{label}} below" } },
         },
       },
     },
@@ -72,6 +77,10 @@ export const playLandingUiLabel = registerUiTranslationBundles({
           paneWaiting: { label: { normal: "{{label}} wartet auf den Start", beginner: "{{label}} wartet auf den Start" } },
           paneFailed: { label: { normal: "{{label}} konnte nicht geladen werden.", beginner: "{{label}} konnte nicht geladen werden." } },
           grid: { label: { normal: "Alle semio Apps", beginner: "Alle semio Apps" } },
+          neighbourUp: { label: { normal: "Nach oben zu {{label}}", beginner: "Nach unten wischen, um {{label}} oben zu erreichen" } },
+          neighbourLeft: { label: { normal: "Nach links zu {{label}}", beginner: "Nach rechts wischen, um {{label}} links zu erreichen" } },
+          neighbourRight: { label: { normal: "Nach rechts zu {{label}}", beginner: "Nach links wischen, um {{label}} rechts zu erreichen" } },
+          neighbourDown: { label: { normal: "Nach unten zu {{label}}", beginner: "Nach oben wischen, um {{label}} unten zu erreichen" } },
         },
       },
     },
@@ -90,6 +99,9 @@ const PLAY_OVERLAY_STYLE = { gridTemplateColumns: `repeat(${PLAY_GRID.columns}, 
 /** 🧮️ Four shells live at most (the least recently touched pristine one goes to its poster first); the first warm boot waits 4 s so the
  * introduction never fights a wasm boot, every later one a 35 s plugin-load budget; a pristine shell untouched for two minutes is released. */
 const PLAY_LIFECYCLE = { budget: 4, warmStartMs: 4_000, warmIntervalMs: 35_000, suspendIdleMs: 2 * 60_000 } as const;
+
+/** 📏️ When swiping, the cards and the neighbour hints stay below the navbar, which lies over the top of the overview. */
+const PLAY_INSETS = { top: "calc(var(--size-workbench) * 1.5)" } as const;
 
 /** 🎡️ One app's live shell on its own storage namespace; its own tour only while it is opened. */
 function PlayShell({ pane, opened }: { readonly pane: PlayPaneSpec; readonly opened: boolean }) {
@@ -112,13 +124,15 @@ function PlayShell({ pane, opened }: { readonly pane: PlayPaneSpec; readonly ope
   );
 }
 
-const PLAY_PAGES: readonly LayeredPane[] = PLAY_PANES.map((pane) => ({ id: pane.id, label: pane.label, icon: pane.icon, capturePoster: capturePosterFromCanvases, render: ({ opened }) => <PlayShell pane={pane} opened={opened} /> }));
+const playPaneShortLabel = (pane: (typeof PLAY_PANES)[number]): string => pane.brand.shortWindowTitle?.replace(/^semio · /u, "") ?? pane.label;
+
+const PLAY_PAGES: readonly LayeredPane[] = PLAY_PANES.map((pane) => ({ id: pane.id, label: pane.label, shortLabel: playPaneShortLabel(pane), icon: pane.icon, capturePoster: capturePosterFromCanvases, render: ({ opened }) => <PlayShell pane={pane} opened={opened} /> }));
 const PLAY_SPECS = new Map(PLAY_PANES.map((pane) => [pane.id, pane]));
 
-/** 🃏️ An app's card, in its own cell of the card grid (list sections centre it themselves). */
+/** 🃏️ An app's card, in its own cell of the card grid (when swiping, the overview centres it on its page itself). */
 function renderPlayCard(page: LayeredPane, state: LayeredCardState) {
   const card = <PlayCard pane={PLAY_SPECS.get(page.id)!} lifted={state.revealed} onClick={state.open} />;
-  if (state.mode === "list") return card;
+  if (state.mode === "swipe") return card;
   const cell = PLAY_CELLS[page.id]!;
   return (
     <div className="flex min-w-0 justify-center px-single" style={{ gridColumn: cell.column + 1, gridRow: cell.row + 1 }}>
@@ -131,7 +145,7 @@ function renderPlayCard(page: LayeredPane, state: LayeredCardState) {
 //#region 🎡️PlayLanding
 function PlayLanding() {
   const viewportMobile = useMediaQuery(UI_MOBILE_MEDIA_QUERY);
-  const touchList = useMediaQuery(PLAY_TOUCH_LIST_MEDIA_QUERY);
+  const swipe = useMediaQuery(PLAY_SWIPE_MEDIA_QUERY);
   const surfaceChrome = useMemo(() => {
     const device: "mobile" | "tablet" | "desktop" = viewportMobile ? "mobile" : readStoredUiChromeLayout(playStorage) === "tablet" ? "tablet" : "desktop";
     return { appearance: readStoredUiChromeAppearance(playStorage), device, driver: readStoredUiDriver(playStorage) };
@@ -145,9 +159,19 @@ function PlayLanding() {
   const gridLabel = useLabel(playLandingUiLabel("play.landing.grid"));
   const waitingLabel = useLabelFormatter(playLandingUiLabel("play.landing.paneWaiting"));
   const failedLabel = useLabelFormatter(playLandingUiLabel("play.landing.paneFailed"));
+  const up = useLabelFormatter(playLandingUiLabel("play.landing.neighbourUp"));
+  const left = useLabelFormatter(playLandingUiLabel("play.landing.neighbourLeft"));
+  const right = useLabelFormatter(playLandingUiLabel("play.landing.neighbourRight"));
+  const down = useLabelFormatter(playLandingUiLabel("play.landing.neighbourDown"));
   const labels = useMemo(
-    () => ({ grid: gridLabel, overview: overviewLabel, waiting: (page: LayeredPane) => waitingLabel({ label: page.label }), failed: (page: LayeredPane) => failedLabel({ label: page.label }) }),
-    [gridLabel, overviewLabel, waitingLabel, failedLabel],
+    () => ({
+      grid: gridLabel,
+      overview: overviewLabel,
+      waiting: (page: LayeredPane) => waitingLabel({ label: page.label }),
+      failed: (page: LayeredPane) => failedLabel({ label: page.label }),
+      neighbour: (page: LayeredPane, direction: LayeredDirection) => ({ up, left, right, down })[direction]({ label: page.label }),
+    }),
+    [gridLabel, overviewLabel, waitingLabel, failedLabel, up, left, right, down],
   );
   const dismissIntroduction = useCallback((id: string | null) => id !== null && setIntroductionDismissed(true), []);
 
@@ -194,7 +218,8 @@ function PlayLanding() {
       overlayClassName="grid items-center pb-double pt-[calc(var(--size-workbench)*1.5)]"
       overlayStyle={PLAY_OVERLAY_STYLE}
       renderChrome={renderChrome}
-      mode={touchList ? "list" : "strip"}
+      mode={swipe ? "swipe" : "strip"}
+      insets={PLAY_INSETS}
       lifecycle={PLAY_LIFECYCLE}
       labels={labels}
       onOpenedIdChange={dismissIntroduction}

@@ -1,0 +1,11 @@
+{
+  "session": 9015,
+  "terminal": 1,
+  "targetDurationSeconds": 5.2,
+  "log": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\geo-palette-contract-red-retry.log",
+  "logSha256": "9ACE71A19A3649F967362CDBB82600BC9EEFDAFEC68C72486EBE4B786B5CD10E",
+  "helper": "9E493AF377230C8474D752F06123B50337BC72597024BC6E473A25135EF08C96",
+  "fixture": "D9B204B5D2B2DF299206D817E4FFA253C6312F746CC5E2E76DE049FB3560D91A",
+  "nativeBefore": "C50E1030BCC2A4F0C9CBE9F27BB187B34947B5BEA3B8D4D85097EDFC3E0589E5",
+  "failure": "palette-en: print.chart.inference chart Undeclared native option spatial-vector-field/paletteSteps"
+}

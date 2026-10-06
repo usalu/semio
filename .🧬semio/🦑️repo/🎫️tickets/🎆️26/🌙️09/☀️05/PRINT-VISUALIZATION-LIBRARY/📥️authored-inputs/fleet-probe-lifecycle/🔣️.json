@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "scenario": "lifecycle",
+  "content": "Lifecycle content",
+  "values": [1, 2, 3],
+  "cases": [
+    {"id":"inactive-visible-article","document":"article","active":false,"visiblePages":1,"earlyEnd":false,"explicit":false,"padding":false,"expectedPages":1,"expectedIdentity":0},
+    {"id":"inactive-blank-article","document":"article","active":false,"visiblePages":0,"earlyEnd":false,"explicit":false,"padding":false,"expectedPages":0,"expectedIdentity":0},
+    {"id":"inactive-visible-semio","document":"semio","active":false,"visiblePages":1,"earlyEnd":false,"explicit":false,"padding":false,"expectedPages":1,"expectedIdentity":0},
+    {"id":"active-visible-article","document":"article","active":true,"visiblePages":1,"earlyEnd":false,"explicit":false,"padding":false,"expectedPages":1,"expectedIdentity":0},
+    {"id":"active-numeric-article","document":"article","active":true,"visiblePages":0,"earlyEnd":false,"explicit":false,"padding":false,"expectedPages":1,"expectedIdentity":1},
+    {"id":"early-end-numeric-article","document":"article","active":true,"visiblePages":0,"earlyEnd":true,"explicit":false,"padding":false,"expectedPages":1,"expectedIdentity":1},
+    {"id":"early-end-visible-article","document":"article","active":true,"visiblePages":1,"earlyEnd":true,"explicit":false,"padding":false,"expectedPages":1,"expectedIdentity":0},
+    {"id":"active-multipage-article","document":"article","active":true,"visiblePages":2,"earlyEnd":false,"explicit":false,"padding":false,"expectedPages":2,"expectedIdentity":0},
+    {"id":"explicit-identity-article","document":"article","active":true,"visiblePages":0,"earlyEnd":false,"explicit":true,"padding":false,"expectedPages":1,"expectedIdentity":1},
+    {"id":"active-visible-semio","document":"semio","active":true,"visiblePages":1,"earlyEnd":false,"explicit":false,"padding":false,"expectedPages":1,"expectedIdentity":0},
+    {"id":"active-numeric-semio","document":"semio","active":true,"visiblePages":0,"earlyEnd":false,"explicit":false,"padding":false,"expectedPages":1,"expectedIdentity":1},
+    {"id":"active-numeric-signature","document":"semio","active":true,"visiblePages":0,"earlyEnd":false,"explicit":false,"padding":true,"expectedPages":4,"expectedIdentity":1},
+    {"id":"early-end-numeric-signature","document":"semio","active":true,"visiblePages":0,"earlyEnd":true,"explicit":false,"padding":true,"expectedPages":4,"expectedIdentity":1},
+    {"id":"inactive-visible-signature","document":"semio","active":false,"visiblePages":1,"earlyEnd":false,"explicit":false,"padding":true,"expectedPages":4,"expectedIdentity":0}
+  ]
+}

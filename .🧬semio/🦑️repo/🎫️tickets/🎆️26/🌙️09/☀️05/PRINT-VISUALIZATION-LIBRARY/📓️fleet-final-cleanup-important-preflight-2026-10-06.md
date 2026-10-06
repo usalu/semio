@@ -1,0 +1,7 @@
+# Final Cleanup and Important Input Preflight — 2026-10-06
+
+Current Win32 process inventory matched exact absolute ticket generated root in both slash conventions, excluding only this audit process, and found0active referenced processes. No generated-root executable was identified as a live process. This is point-in-time process evidence, not a complete kernel handle-lock scan; root must still require selected close child exit and handle any native filesystem refusal without broad process termination. No processes interrupted and no files deleted.
+
+Ticket 📌️important/📝️.md exists, currently empty SHA256 E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855. Canonical CLI close26065 invokes removeTicketImportantDocument with rollback restoration on save failure. Preserve this exact input preimage outside the lifecycle-managed important folder before close; even empty input ownership should be represented. Root will add it to durable retained SHApreimage and distinguish expected lifecycle deletion from unwanted loss.
+
+Close only through selected exact source-bound MCP candidate, then after its child exits guard exact generated-root containment and delete only that root. Durable retained file preimage must include all newly appended reports/manifests and important copy before finalinventory, and post-close/cleanup verification must independently compare every retained hash. No new script/test created.

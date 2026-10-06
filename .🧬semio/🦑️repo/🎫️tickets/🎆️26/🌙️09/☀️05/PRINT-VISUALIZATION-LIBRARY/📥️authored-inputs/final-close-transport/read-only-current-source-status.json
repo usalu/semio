@@ -1,0 +1,53 @@
+{
+  "capturedAt": "2026-10-05T07:31:53.3601251Z",
+  "session": 2245,
+  "terminal": 0,
+  "route": "bun nx exec --projects=repo-mcp --excludeTaskDependencies -- bun ticket/📜️ticket-retention/📜️script.ts transport",
+  "scriptSha256": "D138C57DA547C5C2CE5463F72C454F71B7FAF572CCBFEF7E59CFA1B5B2F52C42",
+  "sourceCapsuleSha256": "F64460526C6009949DCA5B82879CCA1712A96875F4111A716F5CAF7CAD7490B8",
+  "sourceCount": 18,
+  "sourceDrift": [],
+  "binaryBefore": "a6cce807d844097bcffc3b6b5d1be9e6039b6dd619d786d355ee7737bc3803d6",
+  "binaryAfter": "a6cce807d844097bcffc3b6b5d1be9e6039b6dd619d786d355ee7737bc3803d6",
+  "binaryStable": true,
+  "mutations": 0,
+  "tools": 6,
+  "goalsContents": 1,
+  "actualCloseSchema": {
+    "type": "object",
+    "properties": {
+      "files": {
+        "type": "array",
+        "description": "Changed files.",
+        "items": {
+          "type": "string"
+        }
+      },
+      "no_management": {
+        "type": "boolean",
+        "description": "Skip management integration."
+      },
+      "path": {
+        "type": "string",
+        "description": "YY/MM/DD/SLUG path."
+      },
+      "summary": {
+        "type": "string",
+        "description": "Completion summary."
+      },
+      "title": {
+        "type": "string",
+        "description": "Updated title."
+      }
+    },
+    "required": [
+      "summary"
+    ],
+    "additionalProperties": false
+  },
+  "readOnlyReceiptSha256": "5DEBB3968F90DCD4B9E9EF4843E70F3DD25EC1B2EC04ABBD8A40B379A0B04916",
+  "logSha256": "26F900328C02FC9BC8C849FA66C76FD949BAB2FEF410686806A5CFD2E0979ED7",
+  "selectedHelperExited": true,
+  "ticketStatus": "open",
+  "actualCloseDispatched": false
+}

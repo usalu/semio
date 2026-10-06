@@ -1,0 +1,5 @@
+# Nice Switch Independent Source Reversal
+
+Exactly1 authored normalization span occurs in retained after snapshot. Reversing it reconstructs SHA256 8C3A8022CA7E0289FE9AC84F2AB9C50167A6E3E1940DA73BF7C70A37CFC30B97; retained before 8C3A8022CA7E0289FE9AC84F2AB9C50167A6E3E1940DA73BF7C70A37CFC30B97; equality True. The changed consumer maps true to10 and false to0 before the existing integer comparison. Other native source bytes are preserved.
+
+Revised eight neutral cases cover omitted option, false, true and count4 in EN/de; public count0 remains rejected by existing typed contract. Missing value triggers existing guarded deletion mutation then replay, rather than mutating authored input. D3 omission/false do not call nice, true uses10, count uses4. Records are filtered by exact scenario ID and require exactly four expected nice records. Dynamic clist name with hyphen is a c argument and remains source-compatible. Root reported valid native false RED88834; repaired GREEN22729 pending at audit.

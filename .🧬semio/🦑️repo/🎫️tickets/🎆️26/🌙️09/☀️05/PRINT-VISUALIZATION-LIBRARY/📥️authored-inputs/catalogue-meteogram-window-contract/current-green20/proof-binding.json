@@ -1,0 +1,38 @@
+{
+  "session": 8386,
+  "exitCode": 0,
+  "actualCases": 20,
+  "actualCurveVertices": 120,
+  "assertions": [
+    "AJV neutral schema",
+    "canonical mutation/replay/inverse/purity/inference",
+    "D3 auto-fit or authored windows",
+    "parent height40/80 budgets across both panels",
+    "both actual PDF themes/languages"
+  ],
+  "sources": {
+    "light.tex": "57a73128338c0f0400d24547844f90b53e6b463ea02c4bce14be766c7c3225e8",
+    "light-semio-viz-scientific-surface.sty": "78fea6f26a320c938cd71e5e9b5a790fec3b33c1dea90b713481a74bbd7a28da",
+    "light-semio-viz-scientific-field.sty": "745cf1244ecde64a3da82d5d653a4a1d042029a817b7e785b1258b69e0a07ee8",
+    "dark.tex": "386ca3275c572c0c65c24fca6b74eb5f8645f72e7a32bb59d55b3b5ef9dcc2db",
+    "dark-semio-viz-scientific-surface.sty": "78fea6f26a320c938cd71e5e9b5a790fec3b33c1dea90b713481a74bbd7a28da",
+    "dark-semio-viz-scientific-field.sty": "745cf1244ecde64a3da82d5d653a4a1d042029a817b7e785b1258b69e0a07ee8",
+    "neutral.json": "e4eed364d12144830df38b9e43438a2c972277fe2592140c1ec5398fc2aab27f",
+    "helper.txt": "dcc3ab00839f470f774ca828c3a323c03d24b489df53f1d050ab37b8c7340ff8",
+    "metadata-after.json": "2e4d7b9c16225c035427952a84806f564aee8056586610d23e038c8d6dede7cb"
+  },
+  "themes": {
+    "light": {
+      "pdf": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\mt2\\meteogram-window-controls\\light\\🧪️probe-out\\light.pdf",
+      "sha256": "90b61942c1fb70fa67d38f98d00671308eebbe41c40ccf2a738cf5cd169f6634"
+    },
+    "dark": {
+      "pdf": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\mt2\\meteogram-window-controls\\dark\\🧪️probe-out\\dark.pdf",
+      "sha256": "a2d8f10d4c99e9fd97f963e98871d5c7bf17daf0128b11a0b2d89bb38cd31937"
+    }
+  },
+  "log": {
+    "path": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\catalogue-meteogram-window-native-green.log",
+    "sha256": "36407d77d6b4e383b5e52f31604ec0ecdc3beea9a4136d963a1c5c1af8868e6a"
+  }
+}

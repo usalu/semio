@@ -1,0 +1,8 @@
+# Intrinsic Gallery Carrier Contract — 2026-10-05
+
+Root read the existing semio-viz.sty figure owner at lines 71–118 after independently viewing the current geographic page 5 in both themes. The owner already documents that omitting height lets content grow. Explicit height turns off the automatic flag and invokes useasboundingbox on the fixed rectangle; this pins the figure box and does not clip the subsequently drawn geometry. Automatic mode pins only the horizontal span with a path and lets PGF compute the actual vertical extents, including legitimate below-origin legends.
+
+The existing automatic mode sets logical fallback height to the selected width. The gallery carrier regression therefore must cover ordinary quantitative plots as well as geographic paths and negative legend extents. The carrier correction belongs in the existing central gallery renderer and must preserve explicit author-controlled height. Actual output changes need source-bound PDF/frame checks and fresh affected publication views. No universal layout pass follows from the previous numerical/D3 or glyph checks.
+
+Native separately owns any accepted-but-unused geographic width/height controls. Fixing the enclosing carrier must not conceal ineffective controls or distort data to fit a synthetic box. Catalogue owns the carrier regression/generation after the current old-source publication reaches its actual terminal. The registered full native 94896 remains real numerical before evidence; fresh relevant consumers and final all81/162 publication follow the source repair.
+Inspected existing source SHA256: F2277314E69747B06F8FECE032CA71AF7CD1A3C0765BDDE6A9A52489F80C852C. No source edit was made by Root during this contract read.

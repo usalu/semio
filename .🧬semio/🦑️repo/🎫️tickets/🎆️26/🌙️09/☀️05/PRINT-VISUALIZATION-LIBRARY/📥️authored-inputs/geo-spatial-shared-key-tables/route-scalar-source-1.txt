@@ -1,0 +1,659 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-viz-geo-contours}[2026/09/05 v0.3.0 semio viz namespace geo-contours families: continuous fields, terrain, weather, scalar fields]
+
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+\RequirePackage{semio-tokens}
+\RequirePackage{semio-viz-geo}
+\RequirePackage{semio-viz-spatial}
+\RequirePackage{semio-viz-family}
+
+\ExplSyntaxOn
+
+%region 🔖️Keys
+% 🔑 semio / viz / family / geo-field — inherits semio / viz / geo / base, plus
+% 🔑 grid      (name)   value grid; default demo-grid.
+% 🔑 cell      (mm)     grid pitch on the page; default 12.
+% 🔑 levels    (int)    number of isolines between the grid minimum and maximum; default 5.
+% 🔑 filled    (bool)   fill between isolines instead of stroking them; default false.
+% 🔑 labels    (bool)   annotate every isoline with its threshold; default false.
+% 🔑 raster    (bool)   draw the grid cells as a value raster under the isolines; default false.
+% 🔑 geo-terrain and spatial-scalar-field parse each other's key sets as well, so `row` and `zScale` are available
+% 🔑 to every rendering that samples a grid row or maps values to millimetres.
+\tl_new:N \l_semio_viz_geofld_grid_tl
+\fp_new:N \l_semio_viz_geofld_cell_fp
+\int_new:N \l_semio_viz_geofld_levels_int
+\bool_new:N \l_semio_viz_geofld_filled_bool
+\bool_new:N \l_semio_viz_geofld_labels_bool
+\bool_new:N \l_semio_viz_geofld_raster_bool
+
+\keys_define:nn { semio / viz / family / geo-field }
+  {
+    grid .tl_set:N = \l_semio_viz_geofld_grid_tl ,
+    cell .fp_set:N = \l_semio_viz_geofld_cell_fp ,
+    levels .int_set:N = \l_semio_viz_geofld_levels_int ,
+    filled .bool_set:N = \l_semio_viz_geofld_filled_bool ,
+    labels .bool_set:N = \l_semio_viz_geofld_labels_bool ,
+    raster .bool_set:N = \l_semio_viz_geofld_raster_bool ,
+    unknown .code:n = { } ,
+  }
+
+% 🔑 semio / viz / family / geo-terrain — inherits geo-field, plus
+% 🔑 azimuth   (deg)    illumination azimuth for the hillshade; default 315.
+% 🔑 altitude  (deg)    illumination altitude; default 45.
+% 🔑 mode      (choice) hillshade | hypsometric | relief | raster | profile | cross-section; default hillshade.
+% 🔑 row       (int)    grid row sampled by mode=profile / cross-section; default 3.
+\fp_new:N \l_semio_viz_geofld_azimuth_fp
+\fp_new:N \l_semio_viz_geofld_altitude_fp
+\tl_new:N \l_semio_viz_geofld_mode_tl
+\int_new:N \l_semio_viz_geofld_row_int
+
+\keys_define:nn { semio / viz / family / geo-terrain }
+  {
+    azimuth .fp_set:N = \l_semio_viz_geofld_azimuth_fp ,
+    altitude .fp_set:N = \l_semio_viz_geofld_altitude_fp ,
+    mode .tl_set:N = \l_semio_viz_geofld_mode_tl ,
+    row .int_set:N = \l_semio_viz_geofld_row_int ,
+    unknown .code:n = { } ,
+  }
+
+% 🔑 semio / viz / family / geo-weather — inherits geo-field, plus
+% 🔑 barbs     (bool)   draw wind barbs on the grid nodes; default false.
+% 🔑 fronts    (bool)   draw a frontal boundary along the middle isoline; default false.
+% 🔑 barbScale (mm)     length of a full barb; default 3.
+\bool_new:N \l_semio_viz_geofld_barbs_bool
+\bool_new:N \l_semio_viz_geofld_fronts_bool
+\fp_new:N \l_semio_viz_geofld_barbscale_fp
+
+\keys_define:nn { semio / viz / family / geo-weather }
+  {
+    barbs .bool_set:N = \l_semio_viz_geofld_barbs_bool ,
+    fronts .bool_set:N = \l_semio_viz_geofld_fronts_bool ,
+    barbScale .fp_set:N = \l_semio_viz_geofld_barbscale_fp ,
+    unknown .code:n = { } ,
+  }
+
+% 🔑 semio / viz / family / spatial-scalar-field — inherits geo-field, plus
+% 🔑 surface   (choice) contour | filled | levelset | heatmap | wireframe | mesh | shaded | heightmap |
+% 🔑                    waterfall | curtain | slice; default contour.
+% 🔑 tilt      (deg)    axonometric tilt for the surface modes; default 30.
+% 🔑 turn      (deg)    axonometric turn for the surface modes; default 30.
+% 🔑 zScale    (mm)     millimetres per grid value unit in the surface modes; default 1.6.
+\tl_new:N \l_semio_viz_geofld_surface_tl
+\fp_new:N \l_semio_viz_geofld_tilt_fp
+\fp_new:N \l_semio_viz_geofld_turn_fp
+\fp_new:N \l_semio_viz_geofld_zscale_fp
+
+\keys_define:nn { semio / viz / family / spatial-scalar-field }
+  {
+    surface .tl_set:N = \l_semio_viz_geofld_surface_tl ,
+    tilt .fp_set:N = \l_semio_viz_geofld_tilt_fp ,
+    turn .fp_set:N = \l_semio_viz_geofld_turn_fp ,
+    zScale .fp_set:N = \l_semio_viz_geofld_zscale_fp ,
+    unknown .code:n = { } ,
+  }
+%endregion 🔖️Keys
+
+%region 🔖️Families
+% ♻️ Puts every field key back to its documented default before an option list is read.
+\cs_new_protected:Npn \semio_viz_geofld_reset:
+  {
+    \semio_viz_geo_base_reset:
+    \tl_set:Nn \l_semio_viz_geofld_grid_tl { demo-grid }
+    \fp_set:Nn \l_semio_viz_geofld_cell_fp { 12 }
+    \int_set:Nn \l_semio_viz_geofld_levels_int { 5 }
+    \bool_set_false:N \l_semio_viz_geofld_filled_bool
+    \bool_set_false:N \l_semio_viz_geofld_labels_bool
+    \bool_set_false:N \l_semio_viz_geofld_raster_bool
+    \fp_set:Nn \l_semio_viz_geofld_azimuth_fp { 315 }
+    \fp_set:Nn \l_semio_viz_geofld_altitude_fp { 45 }
+    \tl_set:Nn \l_semio_viz_geofld_mode_tl { hillshade }
+    \int_set:Nn \l_semio_viz_geofld_row_int { 3 }
+    \bool_set_false:N \l_semio_viz_geofld_barbs_bool
+    \bool_set_false:N \l_semio_viz_geofld_fronts_bool
+    \fp_set:Nn \l_semio_viz_geofld_barbscale_fp { 3 }
+    \tl_set:Nn \l_semio_viz_geofld_surface_tl { contour }
+    \fp_set:Nn \l_semio_viz_geofld_tilt_fp { 30 }
+    \fp_set:Nn \l_semio_viz_geofld_turn_fp { 30 }
+    \fp_set:Nn \l_semio_viz_geofld_zscale_fp { 1.6 }
+  }
+
+% 📥 Loads the family's grid and records its extent, width and height.
+\int_new:N \l_semio_viz_geofld_w_int
+\int_new:N \l_semio_viz_geofld_h_int
+
+\cs_new_protected:Npn \semio_viz_geofld_load:
+  {
+    \exp_args:NV \semio_viz_grid_require:n \l_semio_viz_geofld_grid_tl
+    \int_set:Nn \l_semio_viz_geofld_w_int
+      { \use:c { g_semio_viz_grid_ \l_semio_viz_store_name_tl _w_int } }
+    \int_set:Nn \l_semio_viz_geofld_h_int
+      { \use:c { g_semio_viz_grid_ \l_semio_viz_store_name_tl _h_int } }
+    \fp_set:Nn \l_semio_viz_geo_vmin_fp { inf }
+    \fp_set:Nn \l_semio_viz_geo_vmax_fp { -inf }
+    \seq_map_inline:cn
+      { g_semio_viz_grid_ \l_semio_viz_store_name_tl _seq }
+      {
+        \fp_set:Nn \l_semio_viz_geo_vmin_fp
+          { min ( \l_semio_viz_geo_vmin_fp , ##1 ) }
+        \fp_set:Nn \l_semio_viz_geo_vmax_fp
+          { max ( \l_semio_viz_geo_vmax_fp , ##1 ) }
+      }
+  }
+
+% 🔢 The loaded grid's value at column #1, row #2, addressed row-major.
+\cs_new:Npn \semio_viz_geofld_v:nn #1#2
+  {
+    \seq_item:cn
+      { g_semio_viz_grid_ \l_semio_viz_store_name_tl _seq }
+      { (#2) * \l_semio_viz_geofld_w_int + (#1) + 1 }
+  }
+
+% ▦ Value raster: one filled cell per grid node, coloured by the ramp.
+\cs_new_protected:Npn \semio_viz_geofld_raster:
+  {
+    \int_step_inline:nnn { 0 } { \l_semio_viz_geofld_h_int - 1 }
+      {
+        \int_step_inline:nnn { 0 } { \l_semio_viz_geofld_w_int - 1 }
+          {
+            \use:x
+              {
+                \exp_not:N \fill
+                  [
+                    \semio_viz_geo_ramp:n
+                      {
+                        \semio_viz_geo_norm:n
+                          { \semio_viz_geofld_v:nn { ####1 } { ##1 } }
+                      }
+                  ]
+                  ( \fp_eval:n
+                      { ( ####1 - 0.5 ) * \l_semio_viz_geofld_cell_fp } ,
+                    \fp_eval:n
+                      { ( ##1 - 0.5 ) * \l_semio_viz_geofld_cell_fp } )
+                  rectangle
+                  ( \fp_eval:n
+                      { ( ####1 + 0.5 ) * \l_semio_viz_geofld_cell_fp } ,
+                    \fp_eval:n
+                      { ( ##1 + 0.5 ) * \l_semio_viz_geofld_cell_fp } ) ;
+              }
+          }
+      }
+  }
+
+% 〰️ Draws every isoline of the grid at `levels` evenly spaced thresholds.
+\fp_new:N \l_semio_viz_geofld_t_fp
+\cs_new_protected:Npn \semio_viz_geofld_isolines:
+  {
+    \int_step_inline:nn { \l_semio_viz_geofld_levels_int }
+      {
+        \fp_set:Nn \l_semio_viz_geofld_t_fp
+          { ##1 / ( \l_semio_viz_geofld_levels_int + 1 ) }
+        \use:x
+          {
+            \exp_not:N \semio_viz_spatial_contour:nn
+              { \exp_not:V \l_semio_viz_geofld_grid_tl }
+              {
+                \fp_eval:n
+                  {
+                    \l_semio_viz_geo_vmin_fp
+                    + \l_semio_viz_geofld_t_fp
+                      * ( \l_semio_viz_geo_vmax_fp - \l_semio_viz_geo_vmin_fp )
+                  }
+              }
+          }
+        \semio_viz_geofld_rings:
+      }
+  }
+
+% ⭕ Draws every ring the last contour pass left behind, skipping degenerate two-vertex ones.
+\cs_new_protected:Npn \semio_viz_geofld_rings:
+  {
+    \seq_map_inline:Nn \g_semio_viz_spatial_rings_seq
+      {
+        \seq_set_split:Nnn \l_tmpb_seq { ; } {##1}
+        \int_compare:nNnT { \seq_count:N \l_tmpb_seq } > { 2 }
+          { \semio_viz_geofld_ring_draw: }
+      }
+  }
+
+% 〰️ One isoline ring in cell coordinates, filled under `filled`, and its own probe record: the
+% level, the level count and the ring's vertices, so a field family is testable at all.
+\cs_new_protected:Npn \semio_viz_geofld_ring_draw:
+  {
+    \seq_clear:N \l_tmpa_seq
+    \seq_map_inline:Nn \l_tmpb_seq
+      {
+        \seq_put_right:Nx \l_tmpa_seq
+          {
+            (
+              \fp_eval:n
+                { \clist_item:nn {##1} { 1 } * \l_semio_viz_geofld_cell_fp } ,
+              \fp_eval:n
+                { \clist_item:nn {##1} { 2 } * \l_semio_viz_geofld_cell_fp }
+            )
+          }
+      }
+    \use:x
+      {
+        \exp_not:N \path
+          [
+            draw= \semio_viz_geo_ramp:n { \fp_use:N \l_semio_viz_geofld_t_fp } ,
+            line~width=\semio@stroke@default,
+            \bool_if:NT \l_semio_viz_geofld_filled_bool
+              {
+                fill= \semio_viz_geo_ramp:n
+                        { \fp_use:N \l_semio_viz_geofld_t_fp } ,
+                fill~opacity=0.35 ,
+              }
+          ]
+          \seq_use:Nn \l_tmpa_seq { -- } -- cycle ;
+      }
+    \semio_viz_probe_geometry:nx { geo/field/ring }
+      {
+        \fp_to_decimal:N \l_semio_viz_geofld_t_fp ,
+        \int_use:N \l_semio_viz_geofld_levels_int ,
+        \int_eval:n { \seq_count:N \l_tmpb_seq } ,
+        \seq_use:Nn \l_tmpb_seq { , }
+      }
+    \bool_if:NT \l_semio_viz_geofld_labels_bool
+      { \semio_viz_geofld_ring_label: }
+  }
+
+% 🏷️ Threshold label at the ring's first vertex; built outside \use:x so the font switch is never expanded.
+\tl_new:N \l_semio_viz_geofld_at_tl
+\tl_new:N \l_semio_viz_geofld_text_tl
+
+\cs_new_protected:Npn \semio_viz_geofld_ring_label:
+  {
+    \tl_set:Nx \l_semio_viz_geofld_at_tl
+      { \seq_item:Nn \l_tmpa_seq { 1 } }
+    \tl_set:Nx \l_semio_viz_geofld_text_tl
+      {
+        \fp_eval:n
+          {
+            round
+              (
+                \l_semio_viz_geo_vmin_fp
+                + \l_semio_viz_geofld_t_fp
+                  * ( \l_semio_viz_geo_vmax_fp - \l_semio_viz_geo_vmin_fp ) , 1
+              )
+          }
+      }
+    \node [ font=\c_semio_viz_theme_font_label_tl, text=semio-chrome-text-normal,
+            fill=semio-chrome-canvas, inner~sep=0.4pt ]
+      at \l_semio_viz_geofld_at_tl { \l_semio_viz_geofld_text_tl } ;
+  }
+
+% 〰️ Continuous-field family: isolines, filled bands and an optional value raster from a grid.
+\SemioVizFamily { geo-field }
+  {
+    \semio_viz_geofld_reset:
+    \keys_set:nn { semio / viz / geo / base } {#1}
+    \keys_set:nn { semio / viz / family / geo-field } {#1}
+    \semio_viz_geofld_load:
+    \bool_if:NT \l_semio_viz_geofld_raster_bool { \semio_viz_geofld_raster: }
+    \semio_viz_geofld_isolines:
+  }
+
+% ⛰️ Terrain family: Horn-slope hillshade, hypsometric tint, elevation raster, or a profile along one grid row.
+\SemioVizFamily { geo-terrain }
+  {
+    \semio_viz_geofld_reset:
+    \tl_set:Nn \l_semio_viz_geo_f_palette_tl { terrain }
+    \keys_set:nn { semio / viz / geo / base } {#1}
+    \keys_set:nn { semio / viz / family / geo-field } {#1}
+    \keys_set:nn { semio / viz / family / geo-terrain } {#1}
+    \keys_set:nn { semio / viz / family / spatial-scalar-field } {#1}
+    \semio_viz_geofld_load:
+    \str_case:VnF \l_semio_viz_geofld_mode_tl
+      {
+        { hypsometric } { \semio_viz_geofld_raster: \semio_viz_geofld_isolines: }
+        { raster } { \semio_viz_geofld_raster: }
+        { profile } { \semio_viz_geofld_profile:n { 0 } }
+        { cross-section } { \semio_viz_geofld_profile:n { 1 } }
+        { relief } { \semio_viz_geofld_hillshade: \semio_viz_geofld_isolines: }
+      }
+      { \semio_viz_geofld_hillshade: }
+  }
+
+% 🌗 Hillshade: Horn's 3x3 slope and aspect, lit from `azimuth` at `altitude`, rendered as a grey cell raster.
+\cs_new_protected:Npn \semio_viz_geofld_hillshade:
+  {
+    \int_step_inline:nnn { 1 } { \l_semio_viz_geofld_h_int - 2 }
+      {
+        \int_step_inline:nnn { 1 } { \l_semio_viz_geofld_w_int - 2 }
+          { \semio_viz_geofld_shade_cell:nn { ####1 } { ##1 } }
+      }
+  }
+
+% 🌗 One hillshade cell: Horn's 3x3 slope in x and y, lit from `azimuth` at `altitude`.
+\cs_new_protected:Npn \semio_viz_geofld_shade_cell:nn #1#2
+  {
+    \fp_set:Nn \l_tmpa_fp
+      {
+        (
+          ( \semio_viz_geofld_v:nn { #1 + 1 } { #2 - 1 }
+            + 2 * \semio_viz_geofld_v:nn { #1 + 1 } { #2 }
+            + \semio_viz_geofld_v:nn { #1 + 1 } { #2 + 1 } )
+          - ( \semio_viz_geofld_v:nn { #1 - 1 } { #2 - 1 }
+              + 2 * \semio_viz_geofld_v:nn { #1 - 1 } { #2 }
+              + \semio_viz_geofld_v:nn { #1 - 1 } { #2 + 1 } )
+        ) / 8
+      }
+    \fp_set:Nn \l_tmpb_fp
+      {
+        (
+          ( \semio_viz_geofld_v:nn { #1 - 1 } { #2 + 1 }
+            + 2 * \semio_viz_geofld_v:nn { #1 } { #2 + 1 }
+            + \semio_viz_geofld_v:nn { #1 + 1 } { #2 + 1 } )
+          - ( \semio_viz_geofld_v:nn { #1 - 1 } { #2 - 1 }
+              + 2 * \semio_viz_geofld_v:nn { #1 } { #2 - 1 }
+              + \semio_viz_geofld_v:nn { #1 + 1 } { #2 - 1 } )
+        ) / 8
+      }
+    \use:x
+      {
+        \exp_not:N \fill
+          [
+            semio-chrome-foreground !
+            \fp_eval:n
+              {
+                round
+                  (
+                    100 * min ( 1 , max
+                      (
+                        0 , 1 -
+                        (
+                          cosd ( \l_semio_viz_geofld_altitude_fp )
+                          * ( \l_tmpa_fp
+                              * cosd ( \l_semio_viz_geofld_azimuth_fp )
+                              + \l_tmpb_fp
+                                * sind ( \l_semio_viz_geofld_azimuth_fp ) )
+                          + sind ( \l_semio_viz_geofld_altitude_fp )
+                        )
+                        / sqrt ( 1 + \l_tmpa_fp ** 2 + \l_tmpb_fp ** 2 )
+                      ) ) , 0
+                  )
+              }
+            ! semio-chrome-canvas
+          ]
+          ( \fp_eval:n { ( #1 - 0.5 ) * \l_semio_viz_geofld_cell_fp } ,
+            \fp_eval:n { ( #2 - 0.5 ) * \l_semio_viz_geofld_cell_fp } )
+          rectangle
+          ( \fp_eval:n { ( #1 + 0.5 ) * \l_semio_viz_geofld_cell_fp } ,
+            \fp_eval:n { ( #2 + 0.5 ) * \l_semio_viz_geofld_cell_fp } ) ;
+      }
+  }
+
+% 📉 Terrain profile: the grid row `row` as a filled section (#1 = 1 adds the sub-surface hatching of a cross-section).
+\cs_new_protected:Npn \semio_viz_geofld_profile:n #1
+  {
+    \seq_clear:N \l_tmpa_seq
+    \int_step_inline:nnn { 0 } { \l_semio_viz_geofld_w_int - 1 }
+      {
+        \seq_put_right:Nx \l_tmpa_seq
+          {
+            (
+              \fp_eval:n { ##1 * \l_semio_viz_geofld_cell_fp } ,
+              \fp_eval:n
+                {
+                  \semio_viz_geofld_v:nn { ##1 } { \l_semio_viz_geofld_row_int }
+                  * \l_semio_viz_geofld_zscale_fp
+                }
+            )
+          }
+      }
+    \use:x
+      {
+        \exp_not:N \filldraw
+          [
+            draw=semio-chrome-foreground, line~width=\semio@stroke@default,
+            fill= \semio_viz_geo_ramp:n { 0.6 } ,
+            fill~opacity= \int_compare:nNnTF {#1} = { 1 } { 0.65 } { 0.35 }
+          ]
+          \seq_use:Nn \l_tmpa_seq { -- } --
+          ( \fp_eval:n
+              { ( \l_semio_viz_geofld_w_int - 1 )
+                * \l_semio_viz_geofld_cell_fp } , 0 ) --
+          ( 0 , 0 ) -- cycle ;
+      }
+  }
+
+% 🌦️ Weather family: pressure or temperature isolines plus optional wind barbs and a frontal boundary.
+\SemioVizFamily { geo-weather }
+  {
+    \semio_viz_geofld_reset:
+    \tl_set:Nn \l_semio_viz_geo_f_palette_tl { diverging }
+    \keys_set:nn { semio / viz / geo / base } {#1}
+    \keys_set:nn { semio / viz / family / geo-field } {#1}
+    \keys_set:nn { semio / viz / family / geo-weather } {#1}
+    \semio_viz_geofld_load:
+    \bool_if:NT \l_semio_viz_geofld_raster_bool { \semio_viz_geofld_raster: }
+    \semio_viz_geofld_isolines:
+    \bool_if:NT \l_semio_viz_geofld_barbs_bool { \semio_viz_geofld_barbs: }
+    \bool_if:NT \l_semio_viz_geofld_fronts_bool { \semio_viz_geofld_front: }
+  }
+
+% 🎏 Wind barbs: the local gradient gives the direction, its magnitude the number of half barbs.
+\cs_new_protected:Npn \semio_viz_geofld_barbs:
+  {
+    \int_step_inline:nnn { 1 } { \l_semio_viz_geofld_h_int - 2 }
+      {
+        \int_step_inline:nnn { 1 } { \l_semio_viz_geofld_w_int - 2 }
+          { \semio_viz_geofld_barb:nn { ####1 } { ##1 } }
+      }
+  }
+
+% 🎏 One wind barb at grid node (#1,#2): the central-difference gradient as direction and strength.
+\cs_new_protected:Npn \semio_viz_geofld_barb:nn #1#2
+  {
+    \fp_set:Nn \l_tmpa_fp
+      {
+        ( \semio_viz_geofld_v:nn { #1 + 1 } {#2}
+          - \semio_viz_geofld_v:nn { #1 - 1 } {#2} ) / 2
+      }
+    \fp_set:Nn \l_tmpb_fp
+      {
+        ( \semio_viz_geofld_v:nn {#1} { #2 + 1 }
+          - \semio_viz_geofld_v:nn {#1} { #2 - 1 } ) / 2
+      }
+    \use:x
+      {
+        \exp_not:N \draw
+          [ draw=semio-chrome-foreground, line~width=\semio@stroke@hairline ]
+          ( \fp_eval:n { #1 * \l_semio_viz_geofld_cell_fp } ,
+            \fp_eval:n { #2 * \l_semio_viz_geofld_cell_fp } ) --
+          ( \fp_eval:n
+              {
+                #1 * \l_semio_viz_geofld_cell_fp
+                + \l_semio_viz_geofld_barbscale_fp * \l_tmpa_fp
+              } ,
+            \fp_eval:n
+              {
+                #2 * \l_semio_viz_geofld_cell_fp
+                + \l_semio_viz_geofld_barbscale_fp * \l_tmpb_fp
+              } ) ;
+      }
+  }
+
+% 🌡️ Frontal boundary: the middle isoline stroked heavy, the classic synoptic front line.
+\cs_new_protected:Npn \semio_viz_geofld_front:
+  {
+    \fp_set:Nn \l_semio_viz_geofld_t_fp { 0.5 }
+    \use:x
+      {
+        \exp_not:N \semio_viz_spatial_contour:nn
+          { \exp_not:V \l_semio_viz_geofld_grid_tl }
+          {
+            \fp_eval:n
+              {
+                ( \l_semio_viz_geo_vmin_fp + \l_semio_viz_geo_vmax_fp ) / 2
+              }
+          }
+      }
+    \bool_set_false:N \l_semio_viz_geofld_filled_bool
+    \bool_set_false:N \l_semio_viz_geofld_labels_bool
+    \semio_viz_geofld_rings:
+  }
+
+% 🏔️ Scalar-field family: isolines, level sets, heatmaps and axonometric surface renderings of one grid.
+\SemioVizFamily { spatial-scalar-field }
+  {
+    \semio_viz_geofld_reset:
+    \keys_set:nn { semio / viz / geo / base } {#1}
+    \keys_set:nn { semio / viz / family / geo-field } {#1}
+    \keys_set:nn { semio / viz / family / geo-terrain } {#1}
+    \keys_set:nn { semio / viz / family / spatial-scalar-field } {#1}
+    \semio_viz_geofld_load:
+    \str_case:VnF \l_semio_viz_geofld_surface_tl
+      {
+        { heatmap } { \semio_viz_geofld_raster: }
+        { filled }
+          {
+            \bool_set_true:N \l_semio_viz_geofld_filled_bool
+            \semio_viz_geofld_isolines:
+          }
+        { levelset }
+          {
+            \int_set:Nn \l_semio_viz_geofld_levels_int { 1 }
+            \semio_viz_geofld_isolines:
+          }
+        { slice } { \semio_viz_geofld_profile:n { 1 } }
+        { waterfall } { \semio_viz_geofld_waterfall:n { 0 } }
+        { curtain } { \semio_viz_geofld_waterfall:n { 1 } }
+        { wireframe } { \semio_viz_geofld_surface:n { 0 } }
+        { mesh } { \semio_viz_geofld_surface:n { 1 } }
+        { shaded } { \semio_viz_geofld_surface:n { 2 } }
+        { heightmap } { \semio_viz_geofld_surface:n { 2 } }
+      }
+      { \semio_viz_geofld_isolines: }
+  }
+
+% 📐 Axonometric projection of a grid node: turn about the vertical, tilt towards the viewer, value as height.
+\cs_new:Npn \semio_viz_geofld_ax:nn #1#2
+  {
+    \fp_eval:n
+      {
+        ( (#1) * cosd ( \l_semio_viz_geofld_turn_fp )
+          - (#2) * sind ( \l_semio_viz_geofld_turn_fp ) )
+        * \l_semio_viz_geofld_cell_fp
+      }
+  }
+
+% 📐 Ordinate of the same projection: the tilted ground position lifted by the node's own value.
+\cs_new:Npn \semio_viz_geofld_ay:nn #1#2
+  {
+    \fp_eval:n
+      {
+        ( (#1) * sind ( \l_semio_viz_geofld_turn_fp )
+          + (#2) * cosd ( \l_semio_viz_geofld_turn_fp ) )
+        * \l_semio_viz_geofld_cell_fp
+        * sind ( \l_semio_viz_geofld_tilt_fp )
+        + \semio_viz_geofld_v:nn {#1} {#2} * \l_semio_viz_geofld_zscale_fp
+      }
+  }
+
+% 🕸️ Surface rendering: #1 = 0 wireframe rows and columns, 1 adds the mesh quads, 2 shades each quad by its mean value.
+\cs_new_protected:Npn \semio_viz_geofld_surface:n #1
+  {
+    \int_step_inline:nnn { 0 } { \l_semio_viz_geofld_h_int - 2 }
+      {
+        \int_step_inline:nnn { 0 } { \l_semio_viz_geofld_w_int - 2 }
+          { \semio_viz_geofld_quad:nnn { ####1 } { ##1 } {#1} }
+      }
+  }
+
+% ▱ One surface quad of the axonometric mesh at (#1,#2); #3 selects wireframe, flat or ramp fill.
+\cs_new_protected:Npn \semio_viz_geofld_quad:nnn #1#2#3
+  {
+    \use:x
+      {
+        \exp_not:N \path
+          [
+            draw=semio-chrome-border-emphasized,
+            line~width=\semio@stroke@hairline,
+            \int_compare:nNnT {#3} > { 0 }
+              {
+                fill=
+                  \int_compare:nNnTF {#3} = { 2 }
+                    {
+                      \semio_viz_geo_ramp:n
+                        {
+                          \semio_viz_geo_norm:n
+                            {
+                              \fp_eval:n
+                                {
+                                  ( \semio_viz_geofld_v:nn {#1} {#2}
+                                    + \semio_viz_geofld_v:nn { #1 + 1 } {#2}
+                                    + \semio_viz_geofld_v:nn { #1 + 1 } { #2 + 1 }
+                                    + \semio_viz_geofld_v:nn {#1} { #2 + 1 } ) / 4
+                                }
+                            }
+                        }
+                    }
+                    { semio-chrome-panel } ,
+                fill~opacity=0.9 ,
+              }
+          ]
+          ( \semio_viz_geofld_ax:nn {#1} {#2} ,
+            \semio_viz_geofld_ay:nn {#1} {#2} ) --
+          ( \semio_viz_geofld_ax:nn { #1 + 1 } {#2} ,
+            \semio_viz_geofld_ay:nn { #1 + 1 } {#2} ) --
+          ( \semio_viz_geofld_ax:nn { #1 + 1 } { #2 + 1 } ,
+            \semio_viz_geofld_ay:nn { #1 + 1 } { #2 + 1 } ) --
+          ( \semio_viz_geofld_ax:nn {#1} { #2 + 1 } ,
+            \semio_viz_geofld_ay:nn {#1} { #2 + 1 } ) -- cycle ;
+      }
+  }
+
+% 🪜 Waterfall and curtain: one filled profile per grid row, offset in depth; #1 = 1 drops each profile to a baseline curtain.
+\cs_new_protected:Npn \semio_viz_geofld_waterfall:n #1
+  {
+    \int_step_inline:nnn { 0 } { \l_semio_viz_geofld_h_int - 1 }
+      {
+        \seq_clear:N \l_tmpa_seq
+        \int_step_inline:nnn { 0 } { \l_semio_viz_geofld_w_int - 1 }
+          {
+            \seq_put_right:Nx \l_tmpa_seq
+              {
+                (
+                  \semio_viz_geofld_ax:nn { ####1 } { ##1 } ,
+                  \semio_viz_geofld_ay:nn { ####1 } { ##1 }
+                )
+              }
+          }
+        \use:x
+          {
+            \exp_not:N \filldraw
+              [
+                draw=semio-chrome-foreground, line~width=\semio@stroke@hairline,
+                fill= \semio_viz_geo_ramp:n
+                        {
+                          ##1 / max ( 1 , \l_semio_viz_geofld_h_int - 1 )
+                        } ,
+                fill~opacity= \int_compare:nNnTF {#1} = { 1 } { 0.85 } { 0.55 }
+              ]
+              \seq_use:Nn \l_tmpa_seq { -- } --
+              ( \semio_viz_geofld_ax:nn
+                  { \l_semio_viz_geofld_w_int - 1 } { ##1 } ,
+                \fp_eval:n
+                  {
+                    \semio_viz_geofld_ay:nn
+                      { \l_semio_viz_geofld_w_int - 1 } { ##1 }
+                    - \semio_viz_geofld_v:nn
+                        { \l_semio_viz_geofld_w_int - 1 } { ##1 }
+                      * \l_semio_viz_geofld_zscale_fp
+                  } ) --
+              ( \semio_viz_geofld_ax:nn { 0 } { ##1 } ,
+                \fp_eval:n
+                  {
+                    \semio_viz_geofld_ay:nn { 0 } { ##1 }
+                    - \semio_viz_geofld_v:nn { 0 } { ##1 }
+                      * \l_semio_viz_geofld_zscale_fp
+                  } ) -- cycle ;
+          }
+      }
+  }
+%endregion 🔖️Families
+
+\ExplSyntaxOff

@@ -8,256 +8,1356 @@
       "id": "design",
       "label": "Design",
       "panes": [
-        { "variant": "cad", "label": "CAD", "tagline": "Model shapes and buildings", "description": "Model solids, spaces and building elements side by side in coordinated CAD windows.", "icon": "cad-shape", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "generation3d", "label": "Procedural 3D", "tagline": "Generate 3D geometry", "description": "Build parametric 3D geometry from flows of operations and preview every step live.", "icon": "shapes", "example": "hexagonal-mushroom-column", "exampleLabel": "Hexagonal Mushroom Column" },
-        { "variant": "generation2d", "label": "Procedural 2D", "tagline": "Generate 2D geometry", "description": "Compose parametric 2D profiles from flows of operations and inspect the result.", "icon": "procedural2d", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "flow", "label": "Flow", "tagline": "Visual dataflow programming", "description": "Wire nodes into dataflow graphs that compute values, geometry and building data.", "icon": "flow" },
-        { "variant": "lowpoly", "label": "Low Poly", "tagline": "Model low-poly meshes", "description": "Shape faceted meshes vertex by vertex and review them in a live 3D view.", "icon": "lowpoly-model", "example": "hexagonal-cut-concrete-forest-left", "exampleLabel": "Hexagonal Cut Concrete Forest Left" },
-        { "variant": "remodel", "label": "Remodel", "tagline": "Reconstruct from captures", "description": "Reconstruct surfaces from camera captures and compare the model against the scan.", "icon": "remodel-app", "example": "synthetic-orbit", "exampleLabel": "Synthetic Orbit" },
-        { "variant": "draw", "label": "Draw", "tagline": "Vector drawing", "description": "Sketch vector drawings with pens, shapes and layers and export them as documents.", "icon": "draw", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "raster", "label": "Raster", "tagline": "Paint pixels", "description": "Paint and edit raster images with brushes, fills and layers.", "icon": "raster", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "layout", "label": "Layout", "tagline": "Arrange pages", "description": "Arrange text, images and frames into page layouts.", "icon": "layout", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "shooting", "label": "Shooting", "tagline": "Stage cameras and shots", "description": "Place cameras and lights in a scene and frame the shots you want to render.", "icon": "shooting-scene", "example": "hexagonal-cut-concrete-forest-left", "exampleLabel": "Hexagonal Cut Concrete Forest Left" }
+        {
+          "variant": "cad",
+          "label": "CAD",
+          "tagline": "Model shapes and buildings",
+          "description": "Model solids, spaces and building elements side by side in coordinated CAD windows.",
+          "icon": "cad-shape",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "generation3d",
+          "label": "Procedural 3D",
+          "tagline": "Generate 3D geometry",
+          "description": "Build parametric 3D geometry from flows of operations and preview every step live.",
+          "icon": "shapes",
+          "example": "hexagonal-mushroom-column",
+          "exampleLabel": "Hexagonal Mushroom Column",
+          "shortLabel": "Proc 3D"
+        },
+        {
+          "variant": "generation2d",
+          "label": "Procedural 2D",
+          "tagline": "Generate 2D geometry",
+          "description": "Compose parametric 2D profiles from flows of operations and inspect the result.",
+          "icon": "procedural2d",
+          "example": "demo",
+          "exampleLabel": "Demo",
+          "shortLabel": "Proc 2D"
+        },
+        {
+          "variant": "flow",
+          "label": "Flow",
+          "tagline": "Visual dataflow programming",
+          "description": "Wire nodes into dataflow graphs that compute values, geometry and building data.",
+          "icon": "flow"
+        },
+        {
+          "variant": "lowpoly",
+          "label": "Low Poly",
+          "tagline": "Model low-poly meshes",
+          "description": "Shape faceted meshes vertex by vertex and review them in a live 3D view.",
+          "icon": "lowpoly-model",
+          "example": "hexagonal-cut-concrete-forest-left",
+          "exampleLabel": "Hexagonal Cut Concrete Forest Left"
+        },
+        {
+          "variant": "remodel",
+          "label": "Remodel",
+          "tagline": "Reconstruct from captures",
+          "description": "Reconstruct surfaces from camera captures and compare the model against the scan.",
+          "icon": "remodel-app",
+          "example": "synthetic-orbit",
+          "exampleLabel": "Synthetic Orbit"
+        },
+        {
+          "variant": "draw",
+          "label": "Draw",
+          "tagline": "Vector drawing",
+          "description": "Sketch vector drawings with pens, shapes and layers and export them as documents.",
+          "icon": "draw",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "raster",
+          "label": "Raster",
+          "tagline": "Paint pixels",
+          "description": "Paint and edit raster images with brushes, fills and layers.",
+          "icon": "raster",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "layout",
+          "label": "Layout",
+          "tagline": "Arrange pages",
+          "description": "Arrange text, images and frames into page layouts.",
+          "icon": "layout",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "shooting",
+          "label": "Shooting",
+          "tagline": "Stage cameras and shots",
+          "description": "Place cameras and lights in a scene and frame the shots you want to render.",
+          "icon": "shooting-scene",
+          "example": "hexagonal-cut-concrete-forest-left",
+          "exampleLabel": "Hexagonal Cut Concrete Forest Left"
+        }
       ]
     },
     {
       "id": "assembly",
       "label": "Assembly",
       "panes": [
-        { "variant": "puzzle2d", "label": "Puzzle 2D", "tagline": "Assemble on a plan", "description": "Assemble designs from components connected by ports on a 2D board.", "icon": "puzzle", "example": "nakagin-capsule-tower", "exampleLabel": "Nakagin Capsule Tower" },
-        { "variant": "puzzle3d", "label": "Puzzle 3D", "tagline": "Assemble in space", "description": "Assemble designs from components in 3D, suggest matching parts and fill structures automatically.", "icon": "puzzle", "example": "concrete-forest", "exampleLabel": "Concrete Forest" },
-        { "variant": "puzzle5d", "label": "Puzzle 5D", "tagline": "Assemble across time and variants", "description": "Explore assemblies across time and design alternatives in one spatial view.", "icon": "puzzle5d-3d", "example": "capsule-dream", "exampleLabel": "Capsule Dream" },
-        { "variant": "block2d", "label": "Block 2D", "tagline": "Stack blocks on a plan", "description": "Lay out block-based designs on a 2D grid.", "icon": "square", "example": "hexagonal-cut-concrete-forest-left", "exampleLabel": "Hexagonal Cut Concrete Forest Left" },
-        { "variant": "block3d", "label": "Block 3D", "tagline": "Stack blocks in space", "description": "Stack blocks into volumetric designs and inspect them in 3D.", "icon": "box", "example": "hexagonal-cut-concrete-forest-left", "exampleLabel": "Hexagonal Cut Concrete Forest Left" },
-        { "variant": "block5d", "label": "Block 5D", "tagline": "Blocks across time and variants", "description": "Follow block designs through time and alternatives.", "icon": "layers", "example": "nakagin-capsule", "exampleLabel": "Nakagin Capsule" }
+        {
+          "variant": "puzzle2d",
+          "label": "Puzzle 2D",
+          "tagline": "Assemble on a plan",
+          "description": "Assemble designs from components connected by ports on a 2D board.",
+          "icon": "puzzle",
+          "example": "nakagin-capsule-tower",
+          "exampleLabel": "Nakagin Capsule Tower"
+        },
+        {
+          "variant": "puzzle3d",
+          "label": "Puzzle 3D",
+          "tagline": "Assemble in space",
+          "description": "Assemble designs from components in 3D, suggest matching parts and fill structures automatically.",
+          "icon": "puzzle",
+          "example": "concrete-forest",
+          "exampleLabel": "Concrete Forest"
+        },
+        {
+          "variant": "puzzle5d",
+          "label": "Puzzle 5D",
+          "tagline": "Assemble across time and variants",
+          "description": "Explore assemblies across time and design alternatives in one spatial view.",
+          "icon": "puzzle5d-3d",
+          "example": "capsule-dream",
+          "exampleLabel": "Capsule Dream"
+        },
+        {
+          "variant": "block2d",
+          "label": "Block 2D",
+          "tagline": "Stack blocks on a plan",
+          "description": "Lay out block-based designs on a 2D grid.",
+          "icon": "square",
+          "example": "hexagonal-cut-concrete-forest-left",
+          "exampleLabel": "Hexagonal Cut Concrete Forest Left"
+        },
+        {
+          "variant": "block3d",
+          "label": "Block 3D",
+          "tagline": "Stack blocks in space",
+          "description": "Stack blocks into volumetric designs and inspect them in 3D.",
+          "icon": "box",
+          "example": "hexagonal-cut-concrete-forest-left",
+          "exampleLabel": "Hexagonal Cut Concrete Forest Left"
+        },
+        {
+          "variant": "block5d",
+          "label": "Block 5D",
+          "tagline": "Blocks across time and variants",
+          "description": "Follow block designs through time and alternatives.",
+          "icon": "layers",
+          "example": "nakagin-capsule",
+          "exampleLabel": "Nakagin Capsule"
+        }
       ]
     },
     {
       "id": "generative",
       "label": "Generative",
       "panes": [
-        { "variant": "wfc2d", "label": "WFC 2D", "tagline": "Wave function collapse in 2D", "description": "Generate 2D patterns from tile rules with wave function collapse.", "icon": "grid-3x3", "example": "terrain-ring", "exampleLabel": "Terrain Ring" },
-        { "variant": "wfc3d", "label": "WFC 3D", "tagline": "Wave function collapse in 3D", "description": "Generate 3D structures from module rules with wave function collapse.", "icon": "scene-3d", "example": "tower-stack", "exampleLabel": "Tower With A Cantilever" },
-        { "variant": "grid2d", "label": "Grid 2D", "tagline": "Author 2D tile grids", "description": "Paint and constrain 2D tile grids that feed the generators.", "icon": "layout-grid", "example": "pipes", "exampleLabel": "Pipes" },
-        { "variant": "grid3d", "label": "Grid 3D", "tagline": "Author 3D module grids", "description": "Place and constrain modules in 3D grids that feed the generators.", "icon": "hexagon", "example": "pipes-3d", "exampleLabel": "3D Pipes" },
-        { "variant": "bitmap", "label": "Bitmap", "tagline": "Learn from sample images", "description": "Generate new images that follow the local patterns of a sample bitmap.", "icon": "image", "example": "flowers-24", "exampleLabel": "Flowers 24" }
+        {
+          "variant": "wfc2d",
+          "label": "WFC 2D",
+          "tagline": "Wave function collapse in 2D",
+          "description": "Generate 2D patterns from tile rules with wave function collapse.",
+          "icon": "grid-3x3",
+          "example": "terrain-ring",
+          "exampleLabel": "Terrain Ring"
+        },
+        {
+          "variant": "wfc3d",
+          "label": "WFC 3D",
+          "tagline": "Wave function collapse in 3D",
+          "description": "Generate 3D structures from module rules with wave function collapse.",
+          "icon": "scene-3d",
+          "example": "tower-stack",
+          "exampleLabel": "Tower With A Cantilever"
+        },
+        {
+          "variant": "grid2d",
+          "label": "Grid 2D",
+          "tagline": "Author 2D tile grids",
+          "description": "Paint and constrain 2D tile grids that feed the generators.",
+          "icon": "layout-grid",
+          "example": "pipes",
+          "exampleLabel": "Pipes"
+        },
+        {
+          "variant": "grid3d",
+          "label": "Grid 3D",
+          "tagline": "Author 3D module grids",
+          "description": "Place and constrain modules in 3D grids that feed the generators.",
+          "icon": "hexagon",
+          "example": "pipes-3d",
+          "exampleLabel": "3D Pipes"
+        },
+        {
+          "variant": "bitmap",
+          "label": "Bitmap",
+          "tagline": "Learn from sample images",
+          "description": "Generate new images that follow the local patterns of a sample bitmap.",
+          "icon": "image",
+          "example": "flowers-24",
+          "exampleLabel": "Flowers 24"
+        }
       ]
     },
     {
       "id": "engineering",
       "label": "Engineering",
       "panes": [
-        { "variant": "fem2d", "label": "FEM 2D", "tagline": "Analyse plane frames", "description": "Model plane frames with nodes, supports and loads and read the structural response.", "icon": "fem-app", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "fem3d", "label": "FEM 3D", "tagline": "Analyse spatial frames", "description": "Model spatial frames, solve them and inspect deformations and internal forces.", "icon": "fem-model", "example": "concrete-forest", "exampleLabel": "Concrete Forest" },
-        { "variant": "energy", "label": "Energy", "tagline": "Simulate building energy", "description": "Model zones, envelopes and boundary conditions and simulate the thermal behaviour of a building.", "icon": "sun", "example": "bestest-600", "exampleLabel": "BESTEST 600" },
-        { "variant": "process3d", "label": "Process 3D", "tagline": "Plan fabrication steps", "description": "Plan the machining and fabrication steps for a workpiece and preview them in 3D.", "icon": "process-workpiece", "example": "concrete-forest", "exampleLabel": "Concrete Forest" },
-        { "variant": "sourcing", "label": "Sourcing", "tagline": "Curate components", "description": "Browse a pool of available components, filter it and curate a selection for a project.", "icon": "library", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "gis2d", "label": "Map", "tagline": "Explore places on a map", "description": "Explore locations and their relations on an interactive 2D map.", "icon": "gis2d", "example": "demo", "exampleLabel": "Reuse Map" },
-        { "variant": "gis3d", "label": "Terrain", "tagline": "Explore terrain in 3D", "description": "Fly over elevation data and inspect sites on a 3D terrain.", "icon": "gis3d", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "architect", "label": "Architect", "tagline": "Program buildings", "description": "Define architectural programs with stakeholders, requirements and adjacencies.", "icon": "architect", "example": "demo", "exampleLabel": "Demo" }
+        {
+          "variant": "fem2d",
+          "label": "FEM 2D",
+          "tagline": "Analyse plane frames",
+          "description": "Model plane frames with nodes, supports and loads and read the structural response.",
+          "icon": "fem-app",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "fem3d",
+          "label": "FEM 3D",
+          "tagline": "Analyse spatial frames",
+          "description": "Model spatial frames, solve them and inspect deformations and internal forces.",
+          "icon": "fem-model",
+          "example": "concrete-forest",
+          "exampleLabel": "Concrete Forest"
+        },
+        {
+          "variant": "energy",
+          "label": "Energy",
+          "tagline": "Simulate building energy",
+          "description": "Model zones, envelopes and boundary conditions and simulate the thermal behaviour of a building.",
+          "icon": "sun",
+          "example": "bestest-600",
+          "exampleLabel": "BESTEST 600"
+        },
+        {
+          "variant": "process3d",
+          "label": "Process 3D",
+          "tagline": "Plan fabrication steps",
+          "description": "Plan the machining and fabrication steps for a workpiece and preview them in 3D.",
+          "icon": "process-workpiece",
+          "example": "concrete-forest",
+          "exampleLabel": "Concrete Forest"
+        },
+        {
+          "variant": "sourcing",
+          "label": "Sourcing",
+          "tagline": "Curate components",
+          "description": "Browse a pool of available components, filter it and curate a selection for a project.",
+          "icon": "library",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "gis2d",
+          "label": "Map",
+          "tagline": "Explore places on a map",
+          "description": "Explore locations and their relations on an interactive 2D map.",
+          "icon": "gis2d",
+          "example": "demo",
+          "exampleLabel": "Reuse Map"
+        },
+        {
+          "variant": "gis3d",
+          "label": "Terrain",
+          "tagline": "Explore terrain in 3D",
+          "description": "Fly over elevation data and inspect sites on a 3D terrain.",
+          "icon": "gis3d",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "architect",
+          "label": "Architect",
+          "tagline": "Program buildings",
+          "description": "Define architectural programs with stakeholders, requirements and adjacencies.",
+          "icon": "architect",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        }
       ]
     },
     {
       "id": "standards",
       "label": "Standards",
       "panes": [
-        { "variant": "din4108", "label": "DIN 4108", "tagline": "Thermal protection", "description": "Check thermal insulation and moisture protection of building components.", "icon": "award" },
-        { "variant": "din16798", "label": "DIN EN 16798", "tagline": "Indoor environment", "description": "Evaluate indoor environmental input parameters and ventilation of buildings.", "icon": "award" },
-        { "variant": "din18599", "label": "DIN V 18599", "tagline": "Energy efficiency", "description": "Assess the overall energy efficiency of buildings.", "icon": "award" },
-        { "variant": "en1990", "label": "Eurocode 0", "tagline": "Basis of structural design", "description": "Combine actions and verify limit states with the basis of structural design.", "icon": "landmark" },
-        { "variant": "en1991", "label": "Eurocode 1", "tagline": "Actions on structures", "description": "Determine dead, imposed, snow, wind and thermal actions on structures.", "icon": "landmark" },
-        { "variant": "en1992", "label": "Eurocode 2", "tagline": "Concrete structures", "description": "Design reinforced and prestressed concrete members.", "icon": "landmark" },
-        { "variant": "en1993", "label": "Eurocode 3", "tagline": "Steel structures", "description": "Design steel members and connections.", "icon": "landmark" },
-        { "variant": "en1994", "label": "Eurocode 4", "tagline": "Composite structures", "description": "Design composite steel and concrete members.", "icon": "landmark" },
-        { "variant": "en1995", "label": "Eurocode 5", "tagline": "Timber structures", "description": "Design timber members and connections.", "icon": "landmark" },
-        { "variant": "en1996", "label": "Eurocode 6", "tagline": "Masonry structures", "description": "Design masonry walls and members.", "icon": "landmark" },
-        { "variant": "en1997", "label": "Eurocode 7", "tagline": "Geotechnical design", "description": "Verify foundations, retaining structures and ground.", "icon": "landmark" },
-        { "variant": "en1998", "label": "Eurocode 8", "tagline": "Earthquake resistance", "description": "Design structures for earthquake resistance.", "icon": "landmark" },
-        { "variant": "en1999", "label": "Eurocode 9", "tagline": "Aluminium structures", "description": "Design aluminium members and connections.", "icon": "landmark" },
-        { "variant": "iso16757", "label": "ISO 16757", "tagline": "Building services product data", "description": "Describe building services products with standardised data structures.", "icon": "clipboard-list" },
-        { "variant": "vdi3805", "label": "VDI 3805", "tagline": "Product data exchange", "description": "Exchange building services product data between manufacturers and planners.", "icon": "clipboard-list" }
+        {
+          "variant": "din4108",
+          "label": "DIN 4108",
+          "tagline": "Thermal protection",
+          "description": "Check thermal insulation and moisture protection of building components.",
+          "icon": "award"
+        },
+        {
+          "variant": "din16798",
+          "label": "DIN EN 16798",
+          "tagline": "Indoor environment",
+          "description": "Evaluate indoor environmental input parameters and ventilation of buildings.",
+          "icon": "award"
+        },
+        {
+          "variant": "din18599",
+          "label": "DIN V 18599",
+          "tagline": "Energy efficiency",
+          "description": "Assess the overall energy efficiency of buildings.",
+          "icon": "award"
+        },
+        {
+          "variant": "en1990",
+          "label": "Eurocode 0",
+          "tagline": "Basis of structural design",
+          "description": "Combine actions and verify limit states with the basis of structural design.",
+          "icon": "landmark"
+        },
+        {
+          "variant": "en1991",
+          "label": "Eurocode 1",
+          "tagline": "Actions on structures",
+          "description": "Determine dead, imposed, snow, wind and thermal actions on structures.",
+          "icon": "landmark"
+        },
+        {
+          "variant": "en1992",
+          "label": "Eurocode 2",
+          "tagline": "Concrete structures",
+          "description": "Design reinforced and prestressed concrete members.",
+          "icon": "landmark"
+        },
+        {
+          "variant": "en1993",
+          "label": "Eurocode 3",
+          "tagline": "Steel structures",
+          "description": "Design steel members and connections.",
+          "icon": "landmark"
+        },
+        {
+          "variant": "en1994",
+          "label": "Eurocode 4",
+          "tagline": "Composite structures",
+          "description": "Design composite steel and concrete members.",
+          "icon": "landmark"
+        },
+        {
+          "variant": "en1995",
+          "label": "Eurocode 5",
+          "tagline": "Timber structures",
+          "description": "Design timber members and connections.",
+          "icon": "landmark"
+        },
+        {
+          "variant": "en1996",
+          "label": "Eurocode 6",
+          "tagline": "Masonry structures",
+          "description": "Design masonry walls and members.",
+          "icon": "landmark"
+        },
+        {
+          "variant": "en1997",
+          "label": "Eurocode 7",
+          "tagline": "Geotechnical design",
+          "description": "Verify foundations, retaining structures and ground.",
+          "icon": "landmark"
+        },
+        {
+          "variant": "en1998",
+          "label": "Eurocode 8",
+          "tagline": "Earthquake resistance",
+          "description": "Design structures for earthquake resistance.",
+          "icon": "landmark"
+        },
+        {
+          "variant": "en1999",
+          "label": "Eurocode 9",
+          "tagline": "Aluminium structures",
+          "description": "Design aluminium members and connections.",
+          "icon": "landmark"
+        },
+        {
+          "variant": "iso16757",
+          "label": "ISO 16757",
+          "tagline": "Building services product data",
+          "description": "Describe building services products with standardised data structures.",
+          "icon": "clipboard-list"
+        },
+        {
+          "variant": "vdi3805",
+          "label": "VDI 3805",
+          "tagline": "Product data exchange",
+          "description": "Exchange building services product data between manufacturers and planners.",
+          "icon": "clipboard-list"
+        }
       ]
     },
     {
       "id": "knowledge",
       "label": "Knowledge",
       "panes": [
-        { "variant": "note", "label": "Note", "tagline": "Take notes", "description": "Write notes with text, ink and math on an infinite page.", "icon": "note", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "writer", "label": "Writer", "tagline": "Write documents", "description": "Write structured documents with headings, lists and references.", "icon": "writer", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "forms", "label": "Forms", "tagline": "Build forms", "description": "Design forms with fields and validation and fill them in.", "icon": "forms", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "mathematical", "label": "Math", "tagline": "Write equations", "description": "Write and evaluate mathematical equations.", "icon": "math-app", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "reasoning-wires", "label": "Wires", "tagline": "Map ideas", "description": "Connect ideas into mind maps and follow the wires between them.", "icon": "reasoning-wires", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "dag", "label": "DAG", "tagline": "Directed graphs", "description": "Build directed acyclic graphs with typed ports.", "icon": "dag", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "imperative", "label": "Procedure", "tagline": "Write procedures", "description": "Write step-by-step procedures that run against documents.", "icon": "imperative", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "playbook", "label": "Playbook", "tagline": "Guided plays", "description": "Author playbooks that guide through a sequence of plays.", "icon": "book-open", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "trinity-jack", "label": "Jack", "tagline": "Compose trinity documents", "description": "Compose left-hand and right-hand sides of trinity documents.", "icon": "trinity", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "trinity-rewriting", "label": "Rewriting", "tagline": "Rewrite with rules", "description": "Apply rewriting rules to trinity documents and inspect each step.", "icon": "trinity-rewriting", "example": "demo", "exampleLabel": "Demo" }
+        {
+          "variant": "note",
+          "label": "Note",
+          "tagline": "Take notes",
+          "description": "Write notes with text, ink and math on an infinite page.",
+          "icon": "note",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "writer",
+          "label": "Writer",
+          "tagline": "Write documents",
+          "description": "Write structured documents with headings, lists and references.",
+          "icon": "writer",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "forms",
+          "label": "Forms",
+          "tagline": "Build forms",
+          "description": "Design forms with fields and validation and fill them in.",
+          "icon": "forms",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "mathematical",
+          "label": "Math",
+          "tagline": "Write equations",
+          "description": "Write and evaluate mathematical equations.",
+          "icon": "math-app",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "reasoning-wires",
+          "label": "Wires",
+          "tagline": "Map ideas",
+          "description": "Connect ideas into mind maps and follow the wires between them.",
+          "icon": "reasoning-wires",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "dag",
+          "label": "DAG",
+          "tagline": "Directed graphs",
+          "description": "Build directed acyclic graphs with typed ports.",
+          "icon": "dag",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "imperative",
+          "label": "Procedure",
+          "tagline": "Write procedures",
+          "description": "Write step-by-step procedures that run against documents.",
+          "icon": "imperative",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "playbook",
+          "label": "Playbook",
+          "tagline": "Guided plays",
+          "description": "Author playbooks that guide through a sequence of plays.",
+          "icon": "book-open",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "trinity-jack",
+          "label": "Jack",
+          "tagline": "Compose trinity documents",
+          "description": "Compose left-hand and right-hand sides of trinity documents.",
+          "icon": "trinity",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "trinity-rewriting",
+          "label": "Rewriting",
+          "tagline": "Rewrite with rules",
+          "description": "Apply rewriting rules to trinity documents and inspect each step.",
+          "icon": "trinity-rewriting",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        }
       ]
     },
     {
       "id": "documents",
       "label": "Documents",
       "panes": [
-        { "variant": "stdio", "label": "Markdown", "tagline": "Write Markdown", "description": "Write CommonMark documents with headings, lists, links and code blocks.", "icon": "file-text", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "stdio-txt", "label": "Plain Text", "tagline": "Edit plain text", "description": "Read and edit UTF-8 plain text line by line.", "icon": "align-left", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "stdio-csv", "label": "CSV", "tagline": "Edit comma-separated tables", "description": "Open RFC 4180 comma-separated tables and edit them record by record.", "icon": "file-spreadsheet", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "stdio-tsv", "label": "TSV", "tagline": "Edit tab-separated tables", "description": "Open tab-separated tables and edit them record by record.", "icon": "table-2", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "stdio-json", "label": "JSON", "tagline": "Edit JSON documents", "description": "Browse and edit RFC 8259 JSON documents as a typed value tree.", "icon": "file-json", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "stdio-json-i", "label": "I-JSON", "tagline": "Edit interoperable JSON", "description": "Edit JSON under the stricter I-JSON profile meant for safe interchange.", "icon": "list-checks", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "stdio-xml", "label": "XML", "tagline": "Edit XML documents", "description": "Edit XML element by element together with its attributes.", "icon": "file-code", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "stdio-xml-valid", "label": "Valid XML", "tagline": "Edit validated XML", "description": "Edit XML that has to stay valid against the document type it declares.", "icon": "check-circle-2", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "stdio-html", "label": "HTML", "tagline": "Edit web pages", "description": "Edit HTML 5 documents and inspect the structure of their elements.", "icon": "globe", "example": "demo", "exampleLabel": "Demo" }
+        {
+          "variant": "stdio",
+          "label": "Markdown",
+          "tagline": "Write Markdown",
+          "description": "Write CommonMark documents with headings, lists, links and code blocks.",
+          "icon": "file-text",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "stdio-txt",
+          "label": "Plain Text",
+          "tagline": "Edit plain text",
+          "description": "Read and edit UTF-8 plain text line by line.",
+          "icon": "align-left",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "stdio-csv",
+          "label": "CSV",
+          "tagline": "Edit comma-separated tables",
+          "description": "Open RFC 4180 comma-separated tables and edit them record by record.",
+          "icon": "file-spreadsheet",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "stdio-tsv",
+          "label": "TSV",
+          "tagline": "Edit tab-separated tables",
+          "description": "Open tab-separated tables and edit them record by record.",
+          "icon": "table-2",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "stdio-json",
+          "label": "JSON",
+          "tagline": "Edit JSON documents",
+          "description": "Browse and edit RFC 8259 JSON documents as a typed value tree.",
+          "icon": "file-json",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "stdio-json-i",
+          "label": "I-JSON",
+          "tagline": "Edit interoperable JSON",
+          "description": "Edit JSON under the stricter I-JSON profile meant for safe interchange.",
+          "icon": "list-checks",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "stdio-xml",
+          "label": "XML",
+          "tagline": "Edit XML documents",
+          "description": "Edit XML element by element together with its attributes.",
+          "icon": "file-code",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "stdio-xml-valid",
+          "label": "Valid XML",
+          "tagline": "Edit validated XML",
+          "description": "Edit XML that has to stay valid against the document type it declares.",
+          "icon": "check-circle-2",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "stdio-html",
+          "label": "HTML",
+          "tagline": "Edit web pages",
+          "description": "Edit HTML 5 documents and inspect the structure of their elements.",
+          "icon": "globe",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        }
       ]
     },
     {
       "id": "images",
       "label": "Images",
       "panes": [
-        { "variant": "stdio-png", "label": "PNG", "tagline": "Edit PNG images", "description": "Open PNG 1.2 images and edit every decoded chunk and pixel field.", "icon": "image", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "stdio-jpg", "label": "JPEG", "tagline": "Edit JPEG photos", "description": "Open JFIF 1.01 JPEG photos and edit their decoded segments field by field.", "icon": "camera", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "stdio-jpg-baseline", "label": "Baseline JPEG", "tagline": "Edit baseline JPEG photos", "description": "Edit JPEG photos restricted to the baseline sequential process.", "icon": "camera", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "stdio-bmp", "label": "BMP", "tagline": "Edit bitmap images", "description": "Open Windows BMP v3 bitmaps and edit their header and pixel data.", "icon": "file-image", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "stdio-tiff", "label": "TIFF", "tagline": "Edit TIFF images", "description": "Open TIFF 6.0 images and edit their image file directories and tags.", "icon": "file-image", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "stdio-tiff-baseline", "label": "Baseline TIFF", "tagline": "Edit baseline TIFF images", "description": "Edit TIFF images restricted to the baseline tag set.", "icon": "file-image", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "stdio-gif-87a", "label": "GIF 87a", "tagline": "Edit GIF 87a images", "description": "Open GIF 87a images and edit their frames and color tables.", "icon": "image", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "stdio-gif-89a", "label": "GIF 89a", "tagline": "Edit GIF 89a images", "description": "Open GIF 89a images and edit frames, color tables and extensions.", "icon": "image", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "stdio-svg", "label": "SVG", "tagline": "Edit vector graphics", "description": "Open SVG 1.1 vector graphics and edit their elements and attributes.", "icon": "pen-tool", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "stdio-svg-basic", "label": "SVG Basic", "tagline": "Edit SVG Basic graphics", "description": "Edit SVG 1.1 graphics restricted to the SVG Basic profile.", "icon": "pen-tool", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "stdio-svg-tiny", "label": "SVG Tiny", "tagline": "Edit SVG Tiny graphics", "description": "Edit SVG 1.1 graphics restricted to the SVG Tiny profile.", "icon": "pen-tool", "example": "demo", "exampleLabel": "Demo" }
+        {
+          "variant": "stdio-png",
+          "label": "PNG",
+          "tagline": "Edit PNG images",
+          "description": "Open PNG 1.2 images and edit every decoded chunk and pixel field.",
+          "icon": "image",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "stdio-jpg",
+          "label": "JPEG",
+          "tagline": "Edit JPEG photos",
+          "description": "Open JFIF 1.01 JPEG photos and edit their decoded segments field by field.",
+          "icon": "camera",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "stdio-jpg-baseline",
+          "label": "Baseline JPEG",
+          "tagline": "Edit baseline JPEG photos",
+          "description": "Edit JPEG photos restricted to the baseline sequential process.",
+          "icon": "camera",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "stdio-bmp",
+          "label": "BMP",
+          "tagline": "Edit bitmap images",
+          "description": "Open Windows BMP v3 bitmaps and edit their header and pixel data.",
+          "icon": "file-image",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "stdio-tiff",
+          "label": "TIFF",
+          "tagline": "Edit TIFF images",
+          "description": "Open TIFF 6.0 images and edit their image file directories and tags.",
+          "icon": "file-image",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "stdio-tiff-baseline",
+          "label": "Baseline TIFF",
+          "tagline": "Edit baseline TIFF images",
+          "description": "Edit TIFF images restricted to the baseline tag set.",
+          "icon": "file-image",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "stdio-gif-87a",
+          "label": "GIF 87a",
+          "tagline": "Edit GIF 87a images",
+          "description": "Open GIF 87a images and edit their frames and color tables.",
+          "icon": "image",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "stdio-gif-89a",
+          "label": "GIF 89a",
+          "tagline": "Edit GIF 89a images",
+          "description": "Open GIF 89a images and edit frames, color tables and extensions.",
+          "icon": "image",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "stdio-svg",
+          "label": "SVG",
+          "tagline": "Edit vector graphics",
+          "description": "Open SVG 1.1 vector graphics and edit their elements and attributes.",
+          "icon": "pen-tool",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "stdio-svg-basic",
+          "label": "SVG Basic",
+          "tagline": "Edit SVG Basic graphics",
+          "description": "Edit SVG 1.1 graphics restricted to the SVG Basic profile.",
+          "icon": "pen-tool",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "stdio-svg-tiny",
+          "label": "SVG Tiny",
+          "tagline": "Edit SVG Tiny graphics",
+          "description": "Edit SVG 1.1 graphics restricted to the SVG Tiny profile.",
+          "icon": "pen-tool",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        }
       ]
     },
     {
       "id": "audio-video",
       "label": "Audio & Video",
       "panes": [
-        { "variant": "stdio-mp4", "label": "MP4", "tagline": "Edit MP4 videos", "description": "Open ISO base media MP4 files and edit their boxes and tracks.", "icon": "file-video", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "stdio-mp3", "label": "MP3", "tagline": "Edit MP3 audio", "description": "Open MPEG-1 Layer III audio and edit its frames and tags.", "icon": "play", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "stdio-wav", "label": "WAV", "tagline": "Edit WAV audio", "description": "Open RIFF PCM wave audio and edit its format and sample chunks.", "icon": "play", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "stdio-avi", "label": "AVI", "tagline": "Edit AVI videos", "description": "Open AVI 1.0 videos and edit their RIFF chunks and stream headers.", "icon": "file-video", "example": "demo", "exampleLabel": "Demo" }
+        {
+          "variant": "stdio-mp4",
+          "label": "MP4",
+          "tagline": "Edit MP4 videos",
+          "description": "Open ISO base media MP4 files and edit their boxes and tracks.",
+          "icon": "file-video",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "stdio-mp3",
+          "label": "MP3",
+          "tagline": "Edit MP3 audio",
+          "description": "Open MPEG-1 Layer III audio and edit its frames and tags.",
+          "icon": "play",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "stdio-wav",
+          "label": "WAV",
+          "tagline": "Edit WAV audio",
+          "description": "Open RIFF PCM wave audio and edit its format and sample chunks.",
+          "icon": "play",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "stdio-avi",
+          "label": "AVI",
+          "tagline": "Edit AVI videos",
+          "description": "Open AVI 1.0 videos and edit their RIFF chunks and stream headers.",
+          "icon": "file-video",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        }
       ]
     },
     {
       "id": "cad-exchange",
       "label": "CAD Exchange",
       "panes": [
-        { "variant": "stdio-step", "label": "STEP", "tagline": "Edit STEP models", "description": "Open ISO 10303 AP214 STEP exchange files and edit their entities.", "icon": "cad-shape", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "stdio-step-cc1", "label": "STEP CC1", "tagline": "Edit STEP CC1 models", "description": "Edit STEP AP214 files restricted to conformance class 1.", "icon": "cad-shape", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "stdio-step-cc2", "label": "STEP CC2", "tagline": "Edit STEP CC2 models", "description": "Edit STEP AP214 files restricted to conformance class 2.", "icon": "cad-shape", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "stdio-step-cc3", "label": "STEP CC3", "tagline": "Edit STEP CC3 models", "description": "Edit STEP AP214 files restricted to conformance class 3.", "icon": "cad-shape", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "stdio-step-cc4", "label": "STEP CC4", "tagline": "Edit STEP CC4 models", "description": "Edit STEP AP214 files restricted to conformance class 4.", "icon": "cad-shape", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "stdio-step-cc5", "label": "STEP CC5", "tagline": "Edit STEP CC5 models", "description": "Edit STEP AP214 files restricted to conformance class 5.", "icon": "cad-shape", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "stdio-step-cc6", "label": "STEP CC6", "tagline": "Edit STEP CC6 models", "description": "Edit STEP AP214 files restricted to conformance class 6.", "icon": "cad-shape", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "stdio-dxf", "label": "DXF", "tagline": "Edit DXF drawings", "description": "Open R12 DXF drawings and edit their sections, tables and entities.", "icon": "draw", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "stdio-dwg-ac1018", "label": "DWG AC1018", "tagline": "Edit DWG AC1018 drawings", "description": "Open DWG drawings of format version AC1018 and edit their objects.", "icon": "draw", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "stdio-dwg-ac1024", "label": "DWG AC1024", "tagline": "Edit DWG AC1024 drawings", "description": "Open DWG drawings of format version AC1024 and edit their objects.", "icon": "draw", "example": "demo", "exampleLabel": "Demo" }
+        {
+          "variant": "stdio-step",
+          "label": "STEP",
+          "tagline": "Edit STEP models",
+          "description": "Open ISO 10303 AP214 STEP exchange files and edit their entities.",
+          "icon": "cad-shape",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "stdio-step-cc1",
+          "label": "STEP CC1",
+          "tagline": "Edit STEP CC1 models",
+          "description": "Edit STEP AP214 files restricted to conformance class 1.",
+          "icon": "cad-shape",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "stdio-step-cc2",
+          "label": "STEP CC2",
+          "tagline": "Edit STEP CC2 models",
+          "description": "Edit STEP AP214 files restricted to conformance class 2.",
+          "icon": "cad-shape",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "stdio-step-cc3",
+          "label": "STEP CC3",
+          "tagline": "Edit STEP CC3 models",
+          "description": "Edit STEP AP214 files restricted to conformance class 3.",
+          "icon": "cad-shape",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "stdio-step-cc4",
+          "label": "STEP CC4",
+          "tagline": "Edit STEP CC4 models",
+          "description": "Edit STEP AP214 files restricted to conformance class 4.",
+          "icon": "cad-shape",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "stdio-step-cc5",
+          "label": "STEP CC5",
+          "tagline": "Edit STEP CC5 models",
+          "description": "Edit STEP AP214 files restricted to conformance class 5.",
+          "icon": "cad-shape",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "stdio-step-cc6",
+          "label": "STEP CC6",
+          "tagline": "Edit STEP CC6 models",
+          "description": "Edit STEP AP214 files restricted to conformance class 6.",
+          "icon": "cad-shape",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "stdio-dxf",
+          "label": "DXF",
+          "tagline": "Edit DXF drawings",
+          "description": "Open R12 DXF drawings and edit their sections, tables and entities.",
+          "icon": "draw",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "stdio-dwg-ac1018",
+          "label": "DWG AC1018",
+          "tagline": "Edit DWG AC1018 drawings",
+          "description": "Open DWG drawings of format version AC1018 and edit their objects.",
+          "icon": "draw",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "stdio-dwg-ac1024",
+          "label": "DWG AC1024",
+          "tagline": "Edit DWG AC1024 drawings",
+          "description": "Open DWG drawings of format version AC1024 and edit their objects.",
+          "icon": "draw",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        }
       ]
     },
     {
       "id": "bim",
       "label": "BIM",
       "panes": [
-        { "variant": "stdio-ifc-2x3", "label": "IFC 2x3", "tagline": "Edit IFC 2x3 models", "description": "Open IFC 2x3 building models and edit their entities.", "icon": "building", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "stdio-ifc-2x3-cobie", "label": "IFC COBie", "tagline": "Edit COBie handover models", "description": "Edit IFC 2x3 models restricted to the COBie handover view.", "icon": "building", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "stdio-ifc-2x3-cv20", "label": "IFC Coordination View", "tagline": "Edit coordination models", "description": "Edit IFC 2x3 models restricted to Coordination View 2.0.", "icon": "building", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "stdio-ifc-2x3-sav", "label": "IFC Structural Analysis View", "tagline": "Edit structural analysis models", "description": "Edit IFC 2x3 models restricted to the Structural Analysis View.", "icon": "building", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "stdio-ifc-4", "label": "IFC 4", "tagline": "Edit IFC 4 models", "description": "Open IFC 4 building models and edit their entities.", "icon": "building", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "stdio-bcf", "label": "BCF", "tagline": "Edit BIM issues", "description": "Open BIM Collaboration Format 2.1 archives and edit topics, comments and viewpoints.", "icon": "message-square", "example": "demo", "exampleLabel": "Demo" }
+        {
+          "variant": "stdio-ifc-2x3",
+          "label": "IFC 2x3",
+          "tagline": "Edit IFC 2x3 models",
+          "description": "Open IFC 2x3 building models and edit their entities.",
+          "icon": "building",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "stdio-ifc-2x3-cobie",
+          "label": "IFC COBie",
+          "tagline": "Edit COBie handover models",
+          "description": "Edit IFC 2x3 models restricted to the COBie handover view.",
+          "icon": "building",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "stdio-ifc-2x3-cv20",
+          "label": "IFC Coordination View",
+          "tagline": "Edit coordination models",
+          "description": "Edit IFC 2x3 models restricted to Coordination View 2.0.",
+          "icon": "building",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "stdio-ifc-2x3-sav",
+          "label": "IFC Structural Analysis View",
+          "tagline": "Edit structural analysis models",
+          "description": "Edit IFC 2x3 models restricted to the Structural Analysis View.",
+          "icon": "building",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "stdio-ifc-4",
+          "label": "IFC 4",
+          "tagline": "Edit IFC 4 models",
+          "description": "Open IFC 4 building models and edit their entities.",
+          "icon": "building",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "stdio-bcf",
+          "label": "BCF",
+          "tagline": "Edit BIM issues",
+          "description": "Open BIM Collaboration Format 2.1 archives and edit topics, comments and viewpoints.",
+          "icon": "message-square",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        }
       ]
     },
     {
       "id": "meshes",
       "label": "Meshes & Point Clouds",
       "panes": [
-        { "variant": "stdio-gltf", "label": "glTF", "tagline": "Edit glTF scenes", "description": "Open glTF 2.0 scenes and edit nodes, meshes, materials and animations.", "icon": "scene-3d", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "stdio-obj", "label": "OBJ", "tagline": "Edit OBJ meshes", "description": "Open Wavefront OBJ meshes and edit their vertices, faces and groups.", "icon": "box", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "stdio-stl", "label": "STL", "tagline": "Edit STL meshes", "description": "Open ASCII STL meshes and edit their facets.", "icon": "triangle", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "stdio-ply", "label": "PLY", "tagline": "Edit PLY meshes", "description": "Open PLY 1.0 polygon files and edit their elements and properties.", "icon": "hexagon", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "stdio-las", "label": "LAS", "tagline": "Edit point clouds", "description": "Open LAS 1.0 point clouds and edit their header, records and points.", "icon": "terrain-3d", "example": "demo", "exampleLabel": "Demo" }
+        {
+          "variant": "stdio-gltf",
+          "label": "glTF",
+          "tagline": "Edit glTF scenes",
+          "description": "Open glTF 2.0 scenes and edit nodes, meshes, materials and animations.",
+          "icon": "scene-3d",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "stdio-obj",
+          "label": "OBJ",
+          "tagline": "Edit OBJ meshes",
+          "description": "Open Wavefront OBJ meshes and edit their vertices, faces and groups.",
+          "icon": "box",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "stdio-stl",
+          "label": "STL",
+          "tagline": "Edit STL meshes",
+          "description": "Open ASCII STL meshes and edit their facets.",
+          "icon": "triangle",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "stdio-ply",
+          "label": "PLY",
+          "tagline": "Edit PLY meshes",
+          "description": "Open PLY 1.0 polygon files and edit their elements and properties.",
+          "icon": "hexagon",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "stdio-las",
+          "label": "LAS",
+          "tagline": "Edit point clouds",
+          "description": "Open LAS 1.0 point clouds and edit their header, records and points.",
+          "icon": "terrain-3d",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        }
       ]
     },
     {
       "id": "pdf",
       "label": "PDF",
       "panes": [
-        { "variant": "stdio-pdf-1-4-a", "label": "PDF/A (1.4)", "tagline": "Edit archival PDFs", "description": "Edit PDF 1.4 documents restricted to the PDF/A archival profile.", "icon": "document-report" },
-        { "variant": "stdio-pdf-1-4", "label": "PDF 1.4", "tagline": "Edit PDF 1.4 documents", "description": "Open PDF 1.4 documents and edit their objects and pages.", "icon": "document-report" },
-        { "variant": "stdio-pdf-1-4-x", "label": "PDF/X (1.4)", "tagline": "Edit print-exchange PDFs", "description": "Edit PDF 1.4 documents restricted to the PDF/X print exchange profile.", "icon": "document-report" },
-        { "variant": "stdio-pdf-1-7-a", "label": "PDF/A (1.7)", "tagline": "Edit archival PDFs", "description": "Edit PDF 1.7 documents restricted to the PDF/A archival profile.", "icon": "document-report" },
-        { "variant": "stdio-pdf-1-7", "label": "PDF 1.7", "tagline": "Edit PDF 1.7 documents", "description": "Open PDF 1.7 documents and edit their objects and pages.", "icon": "document-report" },
-        { "variant": "stdio-pdf-1-7-e", "label": "PDF/E", "tagline": "Edit engineering PDFs", "description": "Edit PDF 1.7 documents restricted to the PDF/E engineering profile.", "icon": "document-report" },
-        { "variant": "stdio-pdf-1-7-h", "label": "PDF/H", "tagline": "Edit healthcare PDFs", "description": "Edit PDF 1.7 documents restricted to the PDF/H healthcare profile.", "icon": "document-report" },
-        { "variant": "stdio-pdf-1-7-ua", "label": "PDF/UA", "tagline": "Edit accessible PDFs", "description": "Edit PDF 1.7 documents restricted to the PDF/UA accessibility profile.", "icon": "document-report" },
-        { "variant": "stdio-pdf-1-7-vt", "label": "PDF/VT", "tagline": "Edit variable-print PDFs", "description": "Edit PDF 1.7 documents restricted to the PDF/VT variable printing profile.", "icon": "document-report" },
-        { "variant": "stdio-pdf-1-7-x", "label": "PDF/X (1.7)", "tagline": "Edit print-exchange PDFs", "description": "Edit PDF 1.7 documents restricted to the PDF/X print exchange profile.", "icon": "document-report" }
+        {
+          "variant": "stdio-pdf-1-4-a",
+          "label": "PDF/A (1.4)",
+          "tagline": "Edit archival PDFs",
+          "description": "Edit PDF 1.4 documents restricted to the PDF/A archival profile.",
+          "icon": "document-report"
+        },
+        {
+          "variant": "stdio-pdf-1-4",
+          "label": "PDF 1.4",
+          "tagline": "Edit PDF 1.4 documents",
+          "description": "Open PDF 1.4 documents and edit their objects and pages.",
+          "icon": "document-report"
+        },
+        {
+          "variant": "stdio-pdf-1-4-x",
+          "label": "PDF/X (1.4)",
+          "tagline": "Edit print-exchange PDFs",
+          "description": "Edit PDF 1.4 documents restricted to the PDF/X print exchange profile.",
+          "icon": "document-report"
+        },
+        {
+          "variant": "stdio-pdf-1-7-a",
+          "label": "PDF/A (1.7)",
+          "tagline": "Edit archival PDFs",
+          "description": "Edit PDF 1.7 documents restricted to the PDF/A archival profile.",
+          "icon": "document-report"
+        },
+        {
+          "variant": "stdio-pdf-1-7",
+          "label": "PDF 1.7",
+          "tagline": "Edit PDF 1.7 documents",
+          "description": "Open PDF 1.7 documents and edit their objects and pages.",
+          "icon": "document-report"
+        },
+        {
+          "variant": "stdio-pdf-1-7-e",
+          "label": "PDF/E",
+          "tagline": "Edit engineering PDFs",
+          "description": "Edit PDF 1.7 documents restricted to the PDF/E engineering profile.",
+          "icon": "document-report"
+        },
+        {
+          "variant": "stdio-pdf-1-7-h",
+          "label": "PDF/H",
+          "tagline": "Edit healthcare PDFs",
+          "description": "Edit PDF 1.7 documents restricted to the PDF/H healthcare profile.",
+          "icon": "document-report"
+        },
+        {
+          "variant": "stdio-pdf-1-7-ua",
+          "label": "PDF/UA",
+          "tagline": "Edit accessible PDFs",
+          "description": "Edit PDF 1.7 documents restricted to the PDF/UA accessibility profile.",
+          "icon": "document-report"
+        },
+        {
+          "variant": "stdio-pdf-1-7-vt",
+          "label": "PDF/VT",
+          "tagline": "Edit variable-print PDFs",
+          "description": "Edit PDF 1.7 documents restricted to the PDF/VT variable printing profile.",
+          "icon": "document-report"
+        },
+        {
+          "variant": "stdio-pdf-1-7-x",
+          "label": "PDF/X (1.7)",
+          "tagline": "Edit print-exchange PDFs",
+          "description": "Edit PDF 1.7 documents restricted to the PDF/X print exchange profile.",
+          "icon": "document-report"
+        }
       ]
     },
     {
       "id": "office",
       "label": "Office",
       "panes": [
-        { "variant": "stdio-docx", "label": "Word Document", "tagline": "Edit word-processing documents", "description": "Open ECMA-376 docx documents and edit their parts and paragraphs.", "icon": "file-text" },
-        { "variant": "stdio-docx-strict", "label": "Word Document (Strict)", "tagline": "Edit strict docx documents", "description": "Edit docx documents restricted to the ECMA-376 strict conformance class.", "icon": "file-text" },
-        { "variant": "stdio-docx-transitional", "label": "Word Document (Transitional)", "tagline": "Edit transitional docx documents", "description": "Edit docx documents under the ECMA-376 transitional conformance class.", "icon": "file-text" },
-        { "variant": "stdio-pptx", "label": "Presentation", "tagline": "Edit presentations", "description": "Open ECMA-376 pptx presentations and edit their parts and slides.", "icon": "monitor" },
-        { "variant": "stdio-pptx-strict", "label": "Presentation (Strict)", "tagline": "Edit strict pptx presentations", "description": "Edit pptx presentations restricted to the ECMA-376 strict conformance class.", "icon": "monitor" },
-        { "variant": "stdio-pptx-transitional", "label": "Presentation (Transitional)", "tagline": "Edit transitional pptx presentations", "description": "Edit pptx presentations under the ECMA-376 transitional conformance class.", "icon": "monitor" },
-        { "variant": "stdio-xlsx", "label": "Spreadsheet", "tagline": "Edit spreadsheets", "description": "Open ECMA-376 xlsx workbooks and edit their parts and cells.", "icon": "file-spreadsheet" },
-        { "variant": "stdio-xlsx-strict", "label": "Spreadsheet (Strict)", "tagline": "Edit strict xlsx workbooks", "description": "Edit xlsx workbooks restricted to the ECMA-376 strict conformance class.", "icon": "file-spreadsheet" },
-        { "variant": "stdio-xlsx-transitional", "label": "Spreadsheet (Transitional)", "tagline": "Edit transitional xlsx workbooks", "description": "Edit xlsx workbooks under the ECMA-376 transitional conformance class.", "icon": "file-spreadsheet" }
+        {
+          "variant": "stdio-docx",
+          "label": "Word Document",
+          "tagline": "Edit word-processing documents",
+          "description": "Open ECMA-376 docx documents and edit their parts and paragraphs.",
+          "icon": "file-text"
+        },
+        {
+          "variant": "stdio-docx-strict",
+          "label": "Word Document (Strict)",
+          "tagline": "Edit strict docx documents",
+          "description": "Edit docx documents restricted to the ECMA-376 strict conformance class.",
+          "icon": "file-text"
+        },
+        {
+          "variant": "stdio-docx-transitional",
+          "label": "Word Document (Transitional)",
+          "tagline": "Edit transitional docx documents",
+          "description": "Edit docx documents under the ECMA-376 transitional conformance class.",
+          "icon": "file-text"
+        },
+        {
+          "variant": "stdio-pptx",
+          "label": "Presentation",
+          "tagline": "Edit presentations",
+          "description": "Open ECMA-376 pptx presentations and edit their parts and slides.",
+          "icon": "monitor"
+        },
+        {
+          "variant": "stdio-pptx-strict",
+          "label": "Presentation (Strict)",
+          "tagline": "Edit strict pptx presentations",
+          "description": "Edit pptx presentations restricted to the ECMA-376 strict conformance class.",
+          "icon": "monitor"
+        },
+        {
+          "variant": "stdio-pptx-transitional",
+          "label": "Presentation (Transitional)",
+          "tagline": "Edit transitional pptx presentations",
+          "description": "Edit pptx presentations under the ECMA-376 transitional conformance class.",
+          "icon": "monitor"
+        },
+        {
+          "variant": "stdio-xlsx",
+          "label": "Spreadsheet",
+          "tagline": "Edit spreadsheets",
+          "description": "Open ECMA-376 xlsx workbooks and edit their parts and cells.",
+          "icon": "file-spreadsheet"
+        },
+        {
+          "variant": "stdio-xlsx-strict",
+          "label": "Spreadsheet (Strict)",
+          "tagline": "Edit strict xlsx workbooks",
+          "description": "Edit xlsx workbooks restricted to the ECMA-376 strict conformance class.",
+          "icon": "file-spreadsheet"
+        },
+        {
+          "variant": "stdio-xlsx-transitional",
+          "label": "Spreadsheet (Transitional)",
+          "tagline": "Edit transitional xlsx workbooks",
+          "description": "Edit xlsx workbooks under the ECMA-376 transitional conformance class.",
+          "icon": "file-spreadsheet"
+        }
       ]
     },
     {
       "id": "semio-files",
       "label": "Semio Files",
       "panes": [
-        { "variant": "stdio-semio-brep", "label": "Semio B-Rep", "tagline": "Edit semio solids", "description": "Edit semio v1 files that carry a boundary-representation solid.", "icon": "cad-shape" },
-        { "variant": "stdio-semio-drawing", "label": "Semio Drawing", "tagline": "Edit semio drawings", "description": "Edit semio v1 files that carry a drawing.", "icon": "draw", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "stdio-semio-graph", "label": "Semio Graph", "tagline": "Edit semio graphs", "description": "Edit semio v1 files that carry a graph.", "icon": "network", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "stdio-semio-kit", "label": "Semio Kit", "tagline": "Edit semio kits", "description": "Edit semio v1 files that carry a kit of types and designs.", "icon": "component", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "stdio-semio-mesh", "label": "Semio Mesh", "tagline": "Edit semio meshes", "description": "Edit semio v1 files that carry a mesh.", "icon": "triangle" },
-        { "variant": "stdio-semio-object", "label": "Semio Object", "tagline": "Edit semio objects", "description": "Edit semio v1 files that carry an object.", "icon": "box", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "stdio-semio-table", "label": "Semio Table", "tagline": "Edit semio tables", "description": "Edit semio v1 files that carry a table.", "icon": "table-2", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "stdio-semio-text", "label": "Semio Text", "tagline": "Edit semio text", "description": "Edit semio v1 files that carry plain text.", "icon": "type", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "stdio-semio-animation", "label": "Semio Animation", "tagline": "Edit semio animations", "description": "Edit semio v1 files that carry an animation document.", "icon": "animate", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "stdio-semio", "label": "Semio File", "tagline": "Edit semio files", "description": "Open semio v1 files of any content and edit their documents.", "icon": "box", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "stdio-semio-audio", "label": "Semio Audio", "tagline": "Edit semio audio", "description": "Edit semio v1 files that carry an audio document.", "icon": "play", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "stdio-semio-cad", "label": "Semio CAD", "tagline": "Edit semio CAD models", "description": "Edit semio v1 files that carry a CAD model.", "icon": "cad-shape", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "stdio-semio-document", "label": "Semio Document", "tagline": "Edit semio documents", "description": "Edit semio v1 files that carry a text document.", "icon": "file-text", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "stdio-semio-flow", "label": "Semio Flow", "tagline": "Edit semio flows", "description": "Edit semio v1 files that carry a flow graph.", "icon": "flow", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "stdio-semio-image", "label": "Semio Image", "tagline": "Edit semio images", "description": "Edit semio v1 files that carry an image.", "icon": "image", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "stdio-semio-model", "label": "Semio Model", "tagline": "Edit semio models", "description": "Edit semio v1 files that carry a model.", "icon": "building", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "stdio-semio-presentation", "label": "Semio Presentation", "tagline": "Edit semio presentations", "description": "Edit semio v1 files that carry a presentation.", "icon": "monitor", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "stdio-semio-value", "label": "Semio Value", "tagline": "Edit semio values", "description": "Edit semio v1 files that carry a structured value.", "icon": "hash", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "stdio-semio-video", "label": "Semio Video", "tagline": "Edit semio videos", "description": "Edit semio v1 files that carry a video.", "icon": "file-video", "example": "demo", "exampleLabel": "Demo" }
+        {
+          "variant": "stdio-semio-brep",
+          "label": "Semio B-Rep",
+          "tagline": "Edit semio solids",
+          "description": "Edit semio v1 files that carry a boundary-representation solid.",
+          "icon": "cad-shape"
+        },
+        {
+          "variant": "stdio-semio-drawing",
+          "label": "Semio Drawing",
+          "tagline": "Edit semio drawings",
+          "description": "Edit semio v1 files that carry a drawing.",
+          "icon": "draw",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "stdio-semio-graph",
+          "label": "Semio Graph",
+          "tagline": "Edit semio graphs",
+          "description": "Edit semio v1 files that carry a graph.",
+          "icon": "network",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "stdio-semio-kit",
+          "label": "Semio Kit",
+          "tagline": "Edit semio kits",
+          "description": "Edit semio v1 files that carry a kit of types and designs.",
+          "icon": "component",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "stdio-semio-mesh",
+          "label": "Semio Mesh",
+          "tagline": "Edit semio meshes",
+          "description": "Edit semio v1 files that carry a mesh.",
+          "icon": "triangle"
+        },
+        {
+          "variant": "stdio-semio-object",
+          "label": "Semio Object",
+          "tagline": "Edit semio objects",
+          "description": "Edit semio v1 files that carry an object.",
+          "icon": "box",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "stdio-semio-table",
+          "label": "Semio Table",
+          "tagline": "Edit semio tables",
+          "description": "Edit semio v1 files that carry a table.",
+          "icon": "table-2",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "stdio-semio-text",
+          "label": "Semio Text",
+          "tagline": "Edit semio text",
+          "description": "Edit semio v1 files that carry plain text.",
+          "icon": "type",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "stdio-semio-animation",
+          "label": "Semio Animation",
+          "tagline": "Edit semio animations",
+          "description": "Edit semio v1 files that carry an animation document.",
+          "icon": "animate",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "stdio-semio",
+          "label": "Semio File",
+          "tagline": "Edit semio files",
+          "description": "Open semio v1 files of any content and edit their documents.",
+          "icon": "box",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "stdio-semio-audio",
+          "label": "Semio Audio",
+          "tagline": "Edit semio audio",
+          "description": "Edit semio v1 files that carry an audio document.",
+          "icon": "play",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "stdio-semio-cad",
+          "label": "Semio CAD",
+          "tagline": "Edit semio CAD models",
+          "description": "Edit semio v1 files that carry a CAD model.",
+          "icon": "cad-shape",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "stdio-semio-document",
+          "label": "Semio Document",
+          "tagline": "Edit semio documents",
+          "description": "Edit semio v1 files that carry a text document.",
+          "icon": "file-text",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "stdio-semio-flow",
+          "label": "Semio Flow",
+          "tagline": "Edit semio flows",
+          "description": "Edit semio v1 files that carry a flow graph.",
+          "icon": "flow",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "stdio-semio-image",
+          "label": "Semio Image",
+          "tagline": "Edit semio images",
+          "description": "Edit semio v1 files that carry an image.",
+          "icon": "image",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "stdio-semio-model",
+          "label": "Semio Model",
+          "tagline": "Edit semio models",
+          "description": "Edit semio v1 files that carry a model.",
+          "icon": "building",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "stdio-semio-presentation",
+          "label": "Semio Presentation",
+          "tagline": "Edit semio presentations",
+          "description": "Edit semio v1 files that carry a presentation.",
+          "icon": "monitor",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "stdio-semio-value",
+          "label": "Semio Value",
+          "tagline": "Edit semio values",
+          "description": "Edit semio v1 files that carry a structured value.",
+          "icon": "hash",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "stdio-semio-video",
+          "label": "Semio Video",
+          "tagline": "Edit semio videos",
+          "description": "Edit semio v1 files that carry a video.",
+          "icon": "file-video",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        }
       ]
     },
     {
       "id": "binary",
       "label": "Binary & Archives",
       "panes": [
-        { "variant": "stdio-binary", "label": "Binary", "tagline": "Edit raw bytes", "description": "Open any file as raw bytes and edit them.", "icon": "hard-drive" },
-        { "variant": "stdio-deflate", "label": "zlib", "tagline": "Edit zlib streams", "description": "Open RFC 1950 zlib streams and edit their decompressed payload.", "icon": "file-archive" },
-        { "variant": "stdio-zip", "label": "ZIP", "tagline": "Edit ZIP archives", "description": "Open ZIP 2.0 archives and edit their entries.", "icon": "file-archive" },
-        { "variant": "stdio-zip-iso21320", "label": "ZIP (ISO/IEC 21320-1)", "tagline": "Edit document container archives", "description": "Edit ZIP archives restricted to the ISO/IEC 21320-1 document container profile.", "icon": "file-archive" },
-        { "variant": "stdio-epw", "label": "EPW Weather", "tagline": "Edit weather files", "description": "Open EnergyPlus EPW weather files and edit their header and hourly records.", "icon": "sun" }
+        {
+          "variant": "stdio-binary",
+          "label": "Binary",
+          "tagline": "Edit raw bytes",
+          "description": "Open any file as raw bytes and edit them.",
+          "icon": "hard-drive"
+        },
+        {
+          "variant": "stdio-deflate",
+          "label": "zlib",
+          "tagline": "Edit zlib streams",
+          "description": "Open RFC 1950 zlib streams and edit their decompressed payload.",
+          "icon": "file-archive"
+        },
+        {
+          "variant": "stdio-zip",
+          "label": "ZIP",
+          "tagline": "Edit ZIP archives",
+          "description": "Open ZIP 2.0 archives and edit their entries.",
+          "icon": "file-archive"
+        },
+        {
+          "variant": "stdio-zip-iso21320",
+          "label": "ZIP (ISO/IEC 21320-1)",
+          "tagline": "Edit document container archives",
+          "description": "Edit ZIP archives restricted to the ISO/IEC 21320-1 document container profile.",
+          "icon": "file-archive"
+        },
+        {
+          "variant": "stdio-epw",
+          "label": "EPW Weather",
+          "tagline": "Edit weather files",
+          "description": "Open EnergyPlus EPW weather files and edit their header and hourly records.",
+          "icon": "sun"
+        }
       ]
     },
     {
       "id": "media",
       "label": "Media",
       "panes": [
-        { "variant": "animate", "label": "Animate", "tagline": "Animate presentations", "description": "Compose animated scenes on a timeline and present them.", "icon": "animate", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "sequence", "label": "Sequence", "tagline": "Sequence clips", "description": "Arrange clips and events into sequences.", "icon": "sequence", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "vcs", "label": "Versions", "tagline": "Track changes", "description": "Browse the history of a document, its checkpoints and alternatives.", "icon": "git-branch", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "demonstrator", "label": "Demonstrator", "tagline": "Composed playground", "description": "Explore one document composed from several apps working together.", "icon": "play" }
+        {
+          "variant": "animate",
+          "label": "Animate",
+          "tagline": "Animate presentations",
+          "description": "Compose animated scenes on a timeline and present them.",
+          "icon": "animate",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "sequence",
+          "label": "Sequence",
+          "tagline": "Sequence clips",
+          "description": "Arrange clips and events into sequences.",
+          "icon": "sequence",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "vcs",
+          "label": "Versions",
+          "tagline": "Track changes",
+          "description": "Browse the history of a document, its checkpoints and alternatives.",
+          "icon": "git-branch",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "demonstrator",
+          "label": "Demonstrator",
+          "tagline": "Composed playground",
+          "description": "Explore one document composed from several apps working together.",
+          "icon": "play"
+        }
       ]
     },
     {
       "id": "workspace",
       "label": "Workspace",
       "panes": [
-        { "variant": "home", "label": "Home", "tagline": "Browse your spaces", "description": "Browse every space you can reach, local and shared, and open or create one.", "icon": "home", "example": "demo", "exampleLabel": "Demo" },
-        { "variant": "space", "label": "Space", "tagline": "Arrange apps in a workspace", "description": "Lay out app instances on a shared canvas and wire the documents they pass to each other.", "icon": "workflow", "example": "demo", "exampleLabel": "Demo" }
+        {
+          "variant": "home",
+          "label": "Home",
+          "tagline": "Browse your spaces",
+          "description": "Browse every space you can reach, local and shared, and open or create one.",
+          "icon": "home",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
+          "variant": "space",
+          "label": "Space",
+          "tagline": "Arrange apps in a workspace",
+          "description": "Lay out app instances on a shared canvas and wire the documents they pass to each other.",
+          "icon": "workflow",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        }
       ]
     }
   ]

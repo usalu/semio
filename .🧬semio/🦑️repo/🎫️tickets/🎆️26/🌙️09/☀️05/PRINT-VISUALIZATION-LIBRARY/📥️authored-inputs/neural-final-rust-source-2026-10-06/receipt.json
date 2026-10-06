@@ -1,0 +1,180 @@
+{
+  "rustReceipt": {
+    "completedUtc": "2026-10-06T00:29:51.0735570Z",
+    "scope": "root-neural-rust-final-recipes-2026-10-06",
+    "exitCode": 0
+  },
+  "session": 28177,
+  "tests": 26,
+  "emissions": [
+    {
+      "name": "attention-block-de.tex",
+      "sha256": "3eeb3464affc8e08ec46fdae661a8d1008fa91e52e7d65b44026bdbe6b7b070f"
+    },
+    {
+      "name": "attention-block-en.tex",
+      "sha256": "85859ff79bb3004e9dda5976467d369b2989d325bc2dafc5c388694399cd296d"
+    },
+    {
+      "name": "autoencoder-de.tex",
+      "sha256": "ee6b9af4ab02f8b16b7181fc2ca334e9fcfc4ded43e8f67d8fe53c2d24d30cc4"
+    },
+    {
+      "name": "autoencoder-en.tex",
+      "sha256": "309f6e7b8898f45e78f3d0e88ce898388cf5df1dd5b26eb68594f64f7ada0888"
+    },
+    {
+      "name": "cnn-architecture-de.tex",
+      "sha256": "ce50b8c33a4cb27e44f202bf03e5eee653874a2af880db4e3e412f9d81d08954"
+    },
+    {
+      "name": "cnn-architecture-en.tex",
+      "sha256": "e50a60c2735b518726eb5dff3b60e3ebd5896f21b0b39e01274a703679a9305a"
+    },
+    {
+      "name": "computational-graph-de.tex",
+      "sha256": "38c3f8bada6b8a162c98276b4a2e7964cc015b137a6a8a776f288d708a18d549"
+    },
+    {
+      "name": "computational-graph-en.tex",
+      "sha256": "670832e251158913753392fe3efa0d1e87eda42d72bbaace6569bb5fa6b60307"
+    },
+    {
+      "name": "custom-de.tex",
+      "sha256": "f976e6a51fb039e7698e0d13d74e59abce20b750db1af79e74c32bd1b7b78fbd"
+    },
+    {
+      "name": "custom-en.tex",
+      "sha256": "5bcfa82553a6d4bbee233d9ec62b622c427c787f16cc3d094b14a8861cd94e19"
+    },
+    {
+      "name": "diffusion-process-diagram-de.tex",
+      "sha256": "80f8d0be8fdce010aa02b0f4714a81447cde5ea6e74b7f6938d1820a17fbd595"
+    },
+    {
+      "name": "diffusion-process-diagram-en.tex",
+      "sha256": "d9d098e2f551a42fc99e6ec250a45d24ca52dbbafac07103c28f942f1f48a5a9"
+    },
+    {
+      "name": "empty-de.tex",
+      "sha256": "2baa3b94d0cc9a9a3376dd8323aeff724b8e5fd0a008f0105e5ff184b574f831"
+    },
+    {
+      "name": "empty-en.tex",
+      "sha256": "b35aba1d7cb5fbae9dd90c59e98492e365307bc272c7007b34e0057b47a2c661"
+    },
+    {
+      "name": "encoder-decoder-diagram-de.tex",
+      "sha256": "8c58c573b6051163628bb6bb197fa09239779013c0f48f5368f6671bd6d4e1d0"
+    },
+    {
+      "name": "encoder-decoder-diagram-en.tex",
+      "sha256": "afd014285cbcf004b33597e69c2e02a592e816a81a775aecb2dfc83a5dce312b"
+    },
+    {
+      "name": "feed-forward-neural-network-de.tex",
+      "sha256": "17294cc7f69d6a2b8174c2c136b6fd10eecc62df568c22d4e1f04cc994a8c6c6"
+    },
+    {
+      "name": "feed-forward-neural-network-en.tex",
+      "sha256": "25d0251360c1598a9c79fc0fefa3add11f0b8823827de36c4b7115d5a15a8007"
+    },
+    {
+      "name": "gan-architecture-de.tex",
+      "sha256": "dcc8ee04194348a626f612b4efe14ae2c67378d4598fe1832e3a8f0a4646c449"
+    },
+    {
+      "name": "gan-architecture-en.tex",
+      "sha256": "0c732e3f210cd8e3b2ff07d51e673496f4239a199b66041e325c97277ac3d20f"
+    },
+    {
+      "name": "graph-neural-network-de.tex",
+      "sha256": "8e47963d0ca24234db04276cad657a0bcd7795eb5f71561202a28fc088676791"
+    },
+    {
+      "name": "graph-neural-network-en.tex",
+      "sha256": "e2596f14d6c1d0538cfc3a2a2c1be8e2944336dde9e71c0596965fdb57a01e9b"
+    },
+    {
+      "name": "implicit-adjacent-de.tex",
+      "sha256": "698c4f2e66bc2766fac3be258f861626d62e385102ab5eb079c53040011aec07"
+    },
+    {
+      "name": "implicit-adjacent-en.tex",
+      "sha256": "32e51708fa1ad5da6c99cc3d7a81842beff7e53e945851ae0c6145da909bd479"
+    },
+    {
+      "name": "implicit-full-de.tex",
+      "sha256": "0f62c591f76be65794ecfdd790c59428a14c9f7470f6e6ac8f84ca9544e32aee"
+    },
+    {
+      "name": "implicit-full-en.tex",
+      "sha256": "93a08c114b0cb6e1ad14ec13e59022d38d760ba9f5a75103f99b171d36088faa"
+    },
+    {
+      "name": "implicit-none-de.tex",
+      "sha256": "9ab5a78d8f0fb537a918b3d0d97662aff70032fc8cafa7596b123a7314bcef67"
+    },
+    {
+      "name": "implicit-none-en.tex",
+      "sha256": "43dd1bf0bb5b5b63a9fd633838cac85f0ef9ff7185435b022fb0c90cf4101150"
+    },
+    {
+      "name": "lstm-architecture-de.tex",
+      "sha256": "c4ab15f884d089d6de370b48479e69d9131684d24034929e60ee89f0684173ba"
+    },
+    {
+      "name": "lstm-architecture-en.tex",
+      "sha256": "8f4ed135380b4f49915575b2dad7454473ff2bc2cbdb6dd13b33f11932ce589e"
+    },
+    {
+      "name": "model-pipeline-de.tex",
+      "sha256": "667e2f521395c3d03c359233d744c27f0aaa266133f35d87f9f90732779c21f8"
+    },
+    {
+      "name": "model-pipeline-en.tex",
+      "sha256": "381901f95d96e000530ba5317622fc8997e605f90bca045cd450ac4732a4b753"
+    },
+    {
+      "name": "residual-network-de.tex",
+      "sha256": "7da9b59cd9aa000daea0cdbacdd576479faeebddbb33ab0d8f9560aad5037467"
+    },
+    {
+      "name": "residual-network-en.tex",
+      "sha256": "a9e36d5c0082418c62a60962b9b29e3cd38f6dc9e7c3bd735a7fbbec09ddf27e"
+    },
+    {
+      "name": "rnn-architecture-de.tex",
+      "sha256": "32f02076442e92d9c9ee6ace99949b3bbd1aff37727d52a0e61f40a283558a5e"
+    },
+    {
+      "name": "rnn-architecture-en.tex",
+      "sha256": "aad379e44aabdf70f3c34e3a945cb0146484ddfe3add52ae566afb6d02215e8d"
+    },
+    {
+      "name": "tensor-shape-diagram-de.tex",
+      "sha256": "1bb37613f00a59f32b8b2a118d199b58771fb6a6dea778e0afbb3416a556d7d5"
+    },
+    {
+      "name": "tensor-shape-diagram-en.tex",
+      "sha256": "7db8cd75e538deb2ca54f1ea6afe0be54ef9e84164bb6dd3fc543022bf905cd8"
+    },
+    {
+      "name": "training-loop-de.tex",
+      "sha256": "a904002b49ec62b353c9f1c9360460d516789fe964d4498e047a8bca3b72a4f0"
+    },
+    {
+      "name": "training-loop-en.tex",
+      "sha256": "df1795e2fc3cc3ff10860441ac10777303883678fbe60e1ab61396771a4bf6c4"
+    },
+    {
+      "name": "transformer-architecture-de.tex",
+      "sha256": "6beb8735ac7ca4968ecc5fbc6dfda84898a1fcbf91bf595162e925da7fe8a4a4"
+    },
+    {
+      "name": "transformer-architecture-en.tex",
+      "sha256": "39cf1aaa5007a8cc4698a2c278b0982e6a91eb68b9828d4c2c88a59cba40c508"
+    }
+  ],
+  "note": "Stock32+custom/empty4+implicit6, protected-string2 explicitly TS. Final native implicit/head/caption observer still running."
+}

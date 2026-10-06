@@ -1,0 +1,44 @@
+{
+  "actualTerminalSession": 24574,
+  "status": {
+    "phase": "scientific-construction-window",
+    "startedUtc": "2026-10-06T01:04:47.7074332Z",
+    "replay": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/construction-window-canonical-red-2026-10-06/scientific-construction-window",
+    "endedUtc": "2026-10-06T01:06:10.1328389Z",
+    "exitCode": 1
+  },
+  "failures": 14,
+  "observerSha256": "0986488bdb352b2a4c33c8f149b1786329a44bd7ce29ca765350eeccee19b025",
+  "staged": [
+    {
+      "theme": "light",
+      "file": "semio-viz-scientific-geometry.sty",
+      "sha256": "67dcce96106106ed197e872d48ae37aa59b4d35972e07f006656bfc8a47896c9"
+    },
+    {
+      "theme": "light",
+      "file": "semio-viz-scientific-field.sty",
+      "sha256": "745cf1244ecde64a3da82d5d653a4a1d042029a817b7e785b1258b69e0a07ee8"
+    },
+    {
+      "theme": "dark",
+      "file": "semio-viz-scientific-geometry.sty",
+      "sha256": "67dcce96106106ed197e872d48ae37aa59b4d35972e07f006656bfc8a47896c9"
+    },
+    {
+      "theme": "dark",
+      "file": "semio-viz-scientific-field.sty",
+      "sha256": "745cf1244ecde64a3da82d5d653a4a1d042029a817b7e785b1258b69e0a07ee8"
+    }
+  ],
+  "pdfDigests": [
+    {
+      "theme": "light",
+      "sha256": "5a476a5589969862ea9597d57bcc75526f8bde8831a1dd4eb3b670a6bd787ee3"
+    },
+    {
+      "theme": "dark",
+      "sha256": "b960438ce4807d6694655c532a5d36e231420a57f9889eab0584a01a74f9358e"
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "polygonSamples": 1024,
+  "distanceIterations": 34,
+  "geometryTolerance": 0.02,
+  "overlapTolerance": 0.025,
+  "strokeWidthPt": 0.75,
+  "policy": {"fit": true, "padding": 0.4},
+  "cases": [
+    {"id":"set-stock","sizes":[38,26],"overlap":12,"radius":11,"canvas":[60,40],"fit":true,"padding":0.4,"options":""},
+    {"id":"set-equal","sizes":[20,20],"overlap":7,"radius":11,"canvas":[60,40],"fit":true,"padding":0.4,"options":"sets={A/20,B/20},intersections={AB/7}"},
+    {"id":"set-zero","sizes":[38,26],"overlap":0,"radius":11,"canvas":[60,40],"fit":true,"padding":0.4,"options":"sets={A/38,B/26},intersections={AB/0}"},
+    {"id":"set-inner","sizes":[38,26],"overlap":26,"radius":11,"canvas":[60,40],"fit":true,"padding":0.4,"options":"sets={A/38,B/26},intersections={AB/26}"},
+    {"id":"set-same","sizes":[20,20],"overlap":20,"radius":11,"canvas":[60,40],"fit":true,"padding":0.4,"options":"sets={A/20,B/20},intersections={AB/20}"},
+    {"id":"set-swap","sizes":[26,38],"overlap":12,"radius":11,"canvas":[60,40],"fit":true,"padding":0.4,"options":"sets={A/26,B/38},intersections={AB/12}"},
+    {"id":"set-unit","sizes":[4,9],"overlap":2,"radius":6.5,"canvas":[72,28],"fit":true,"padding":0.4,"options":"width=72,height=28,radius=6.5,sets={A/4,B/9},intersections={AB/2}"},
+    {"id":"set-max","sizes":[9,4],"overlap":1,"radius":35,"canvas":[32,16],"fit":true,"padding":0,"options":"width=32,height=16,radius=35,padding=0,sets={A/9,B/4},intersections={AB/1}"},
+    {"id":"set-wide","sizes":[20,20],"overlap":0,"radius":22,"canvas":[30,60],"fit":true,"padding":0.4,"options":"width=30,height=60,radius=22,sets={A/20,B/20},intersections={AB/0}"},
+    {"id":"set-margin","sizes":[38,26],"overlap":12,"radius":18,"canvas":[60,24],"fit":true,"padding":2,"options":"width=60,height=24,radius=18,padding=2,fit=true,sets={A/38,B/26},intersections={AB/12}"},
+    {"id":"set-exact","sizes":[9,4],"overlap":1,"radius":35,"canvas":[32,16],"fit":false,"padding":0.4,"options":"width=32,height=16,radius=35,fit=false,sets={A/9,B/4},intersections={AB/1}"}
+  ]
+}

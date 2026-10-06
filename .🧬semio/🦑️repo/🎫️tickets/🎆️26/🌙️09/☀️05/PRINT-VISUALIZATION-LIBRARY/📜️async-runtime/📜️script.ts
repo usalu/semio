@@ -3,18 +3,21 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve, join, dirname } from "node:path";
 import { pathToFileURL } from "node:url";
 import { createHash } from "node:crypto";
-import { chromium } from "playwright";
 import Ajv2020 from "ajv/dist/2020.js";
+import ts from "typescript";
 
 const print=resolve(process.cwd(),"🧰️framework/🛍️products/📓️print"),out=resolve(import.meta.dir,"../🗑️generated/async-runtime-final");
 mkdirSync(out,{recursive:true});
 const entry=join(print,"🧬️schema/💡️inferences/🟦️.ts"),worker=join(print,"🧬️schema/💡️inferences/🧵️worker/🟦️.ts"),validation=join(print,"🧬️schema/💡️inferences/✅️validation/🟦️.ts"),schema=JSON.parse(readFileSync(join(print,"🧬️schema/💡️inferences/🔣️.json"),"utf8"));
 /** 🔐️ Fingerprints the complete first-party runtime import closure, including the separate worker. */
 function sourceClosure():{path:string;sha256:string}[]{
-  const seen=new Set<string>(),pending=[entry,worker,validation,join(print,"🧬️schema/💡️inferences/🔣️.json")],scan=new Bun.Transpiler({loader:"ts"});
+  const seen=new Set<string>(),pending=[entry,worker,validation,join(print,"🧬️schema/💡️inferences/🔣️.json")];
   while(pending.length){
     const path=pending.pop()!;if(seen.has(path))continue;seen.add(path);
-    if(path.endsWith(".ts"))for(const dependency of scan.scanImports(readFileSync(path,"utf8")))if(dependency.path.startsWith("."))pending.push(resolve(dirname(path),dependency.path));
+    if(path.endsWith(".ts")){
+      const source=ts.createSourceFile(path,readFileSync(path,"utf8"),ts.ScriptTarget.Latest,true);
+      for(const node of source.statements)if((ts.isImportDeclaration(node)&&!node.importClause?.isTypeOnly||ts.isExportDeclaration(node)&&!node.isTypeOnly)&&node.moduleSpecifier&&ts.isStringLiteral(node.moduleSpecifier)&&node.moduleSpecifier.text.startsWith("."))pending.push(resolve(dirname(path),node.moduleSpecifier.text));
+    }
   }
   return [...seen].sort().map(path=>({path,sha256:createHash("sha256").update(readFileSync(path)).digest("hex")}));
 }
@@ -61,8 +64,13 @@ for(const target of ["browser","node"] as const){
 }
 const main=readFileSync(join(out,"browser/main.mjs")),workerBundle=readFileSync(join(out,"browser/🧵️worker/🟦️.ts"));
 const server=Bun.serve({hostname:"127.0.0.1",port:0,fetch:request=>new Response(new URL(request.url).pathname==="/main.mjs"?main:new URL(request.url).pathname.endsWith(".ts")?workerBundle:"",{headers:{"Content-Type":"text/javascript"}})});
-const browser=await chromium.launch({headless:true});
-try{const page=await browser.newPage();await page.goto(server.url.href);const result=await page.evaluate(async ({url,source,snapshot})=>{const {inferVizChart}=await import(url),replay=(0,eval)("("+source+")");return await replay(inferVizChart,snapshot);},{url:new URL("main.mjs",server.url).href,source:replay.toString(),snapshot});record("Chromium",browser.version(),result);}finally{await browser.close();await server.stop(true);}
+const browserSource=`(async()=>{const {chromium}=await import("playwright"),browser=await chromium.launch({headless:true,timeout:30000});try{const page=await browser.newPage();await page.goto(${JSON.stringify(server.url.href)});const result=await page.evaluate(async ({url,source,snapshot})=>{const {inferVizChart}=await import(url),replay=(0,eval)("("+source+")");return await replay(inferVizChart,snapshot);},${JSON.stringify({url:new URL("main.mjs",server.url).href,source:replay.toString(),snapshot})});console.log(JSON.stringify({version:browser.version(),result}));}finally{await browser.close();}})().catch(error=>{console.error(error);process.exitCode=1;});`;
+try{
+  const controller=Bun.spawn(["node","-e",browserSource],{stdout:"pipe",stderr:"pipe"});
+  const [stdout,stderr,status]=await Promise.all([new Response(controller.stdout).text(),new Response(controller.stderr).text(),controller.exited]);
+  writeFileSync(join(out,"browser-controller-terminal.log"),stdout+stderr);if(status!==0)throw Error("Browser controller exit "+status+": "+stderr);
+  const result=JSON.parse(stdout.trim());record("Chromium",result.version,result.result);
+}finally{await server.stop(true);}
 
 const nodeSource=`const {inferVizChart}=await import(${JSON.stringify(pathToFileURL(join(out,"node/main.mjs")).href)});const replay=${replay.toString()};const result=await replay(inferVizChart,${JSON.stringify(snapshot)});console.log(JSON.stringify({version:process.version,result}));`;
 const node=Bun.spawn(["node","-e","(async()=>{"+nodeSource+"})().catch(error=>{console.error(error);process.exitCode=1;});"],{stdout:"pipe",stderr:"pipe"});

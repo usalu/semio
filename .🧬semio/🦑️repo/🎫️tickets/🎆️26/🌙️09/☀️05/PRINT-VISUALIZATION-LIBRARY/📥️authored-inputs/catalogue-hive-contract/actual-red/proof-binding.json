@@ -1,0 +1,56 @@
+{
+  "session": 71148,
+  "exitCode": 1,
+  "actualFailures": 16,
+  "passingIndexCases": 8,
+  "themes": {
+    "light": {
+      "pdf": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\hv2\\hive-controls\\light\\🧪️probe-out\\light.pdf",
+      "sha256": "b011af8dd259954cf4c25006d9eb8b54ada49bbcd88e99142ab7ba39d54dfd6f",
+      "firstCactualPdfCentre": [
+        41.105355962117514,
+        25.000187248653834
+      ],
+      "D3expectedCentre": [
+        56.57572622843416,
+        25
+      ],
+      "actualNodeBounds": [
+        39.80534918043348,
+        23.700176429748534,
+        42.40536274380154,
+        26.300198067559133
+      ]
+    },
+    "dark": {
+      "pdf": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\hv2\\hive-controls\\dark\\🧪️probe-out\\dark.pdf",
+      "sha256": "2c6534015092b881b60a1afa0d9c9fc6e8ea7211867a2821a1db0bdda63793ff",
+      "firstCactualPdfCentre": [
+        41.105355962117514,
+        25.000187248653834
+      ],
+      "D3expectedCentre": [
+        56.57572622843416,
+        25
+      ],
+      "actualNodeBounds": [
+        39.80534918043348,
+        23.700176429748534,
+        42.40536274380154,
+        26.300198067559133
+      ]
+    }
+  },
+  "source": {
+    "light.tex": "63ca2e90d544c3c074b70d2ac328ee846880261881b8d9df920a1449b8013e1c",
+    "light-semio-viz-network-arc.sty": "67e16ad2f93f6b009b114c7c61c1445caf5a22487e2eea81306ada688ccb348e",
+    "dark.tex": "5818f3a8d26cc56d15cc86deb99ff29ea7e2111f72b0f4e64dd681ba1b2b72d1",
+    "dark-semio-viz-network-arc.sty": "67e16ad2f93f6b009b114c7c61c1445caf5a22487e2eea81306ada688ccb348e",
+    "neutral.json": "3a3fc2951678a4c1d7f6d7f969f92e80c013fe400d1f0f35a4177f53815f621b",
+    "helper.txt": "5b8c9498895a32388dfeeae8c4b6e3d39dcd8dae1442b6c23cebead89bcb23a3"
+  },
+  "log": {
+    "path": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\catalogue-hive-native-red2.log",
+    "sha256": "5ecf2c06142cfcfd33bad2650197d293c445d1bff60755157c6a06ecca58fd5a"
+  }
+}

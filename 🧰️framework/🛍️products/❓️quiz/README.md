@@ -93,10 +93,13 @@ of its kind in its card's title chip and stands before its title in the run's ta
 category's stand before their labels wherever they show — the draggable chips and bins of a classification,
 the rows of a sorting and a matching, the result tables and the crowd figures; a dimension's stands before its
 heading and on each of its draggable value cards. An icon must never give the answer away: it pictures the
-thing, not its value or category. The glyph is hidden from assistive technology; neighbours in a list start
-their loops apart so they never move in step. Whether the icons play is the learner's choice ("Animate icons"
-in the preferences, kept on the device and marked as chosen); until they choose, the device decides — still on
-one that asks for reduced motion, where the preferences say so, moving on every other.
+thing, not its value or category. The glyph is hidden from assistive technology. Icons stand still until
+someone reaches for what they stand in — their host (the chip, row, value card, bin heading or task button,
+marked `data-icon-host`, or the card's title chip; hosts never nest): hovering a host on a device that can
+hover, or a keyboard focus on or inside it, loops its icons; a touch or pen tap on it (tablet, phone) plays
+them once. Whether they may play at all is the learner's choice ("Animate icons" in the preferences, kept on
+the device and marked as chosen); until they choose, the device decides — never on one that asks for reduced
+motion, where the preferences say so, on every other.
 
 ### Sheet
 
@@ -594,8 +597,12 @@ Home is the layered overview of semio-tech play and the mit-bestand demonstrator
 - **Whatever the device says about motion**: the pan and the glide are how the overview is read, and every browser in
   a Remote Desktop session reports reduced motion without its learner having asked for it, so they run there too, as
   they do on play and the demonstrator. Touch has no pointer to follow.
-- **Narrow or short viewports** list the pages one below the other, each under its own glass and card, as play and the
-  demonstrator do on phones. A card of the list is as wide as the screen leaves it, up to a width that reads.
+- **Narrow or short viewports** show the same grid one page at a time — three columns on a phone — with each card on
+  its own page, as play and the demonstrator do on phones. A swipe along either axis (or the wheel) carries the strip
+  to the neighbouring page and settles there, across the edges too: the grid wraps like an endless canvas (past the
+  last column the first one comes in from the side, above the top row the bottom row from above), and a card taller
+  than its page scrolls first. At each edge a hint names the page behind it with an arrow; tapping it goes there, and
+  while the strip moves the hints fade out. A card is as wide as the screen leaves it, up to a width that reads.
 
 ### Adaptive layout
 

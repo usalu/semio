@@ -1,0 +1,164 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-viz-geo-map}[2026/09/05 v0.3.0 semio viz namespace geo-map families: base maps and specialised thematic maps]
+
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+\RequirePackage{semio-tokens}
+\RequirePackage{semio-viz-geo}
+\RequirePackage{semio-viz-family}
+
+\ExplSyntaxOn
+
+%region 🔖️Keys
+% 🔑 semio / viz / family / geo-basemap — inherits every key of semio / viz / geo / base, plus
+% 🔑 relief    (bool)   draw the hypsometric fill under the outlines; default false.
+% 🔑 hydrology (bool)   draw the route geometry as water lines; default false.
+% 🔑 grid      (bool)   draw a light graticule under the map; default false.
+% 🔑 labels    (bool)   place the part ids at the part centroids; default false.
+% 🔑 water     (name)   geometry used for the hydrology layer; default demo-geo-routes.
+% 🔑 places    (name)   geometry used for the settlement layer; default demo-geo-cities.
+% 🔑 settlements (bool) draw the settlement layer; default false.
+\bool_new:N \l_semio_viz_geomap_relief_bool
+\bool_new:N \l_semio_viz_geomap_hydrology_bool
+\bool_new:N \l_semio_viz_geomap_grid_bool
+\bool_new:N \l_semio_viz_geomap_labels_bool
+\bool_new:N \l_semio_viz_geomap_settlements_bool
+\tl_new:N \l_semio_viz_geomap_water_tl
+\tl_new:N \l_semio_viz_geomap_places_tl
+
+\keys_define:nn { semio / viz / family / geo-basemap }
+  {
+    relief .bool_set:N = \l_semio_viz_geomap_relief_bool ,
+    hydrology .bool_set:N = \l_semio_viz_geomap_hydrology_bool ,
+    grid .bool_set:N = \l_semio_viz_geomap_grid_bool ,
+    labels .bool_set:N = \l_semio_viz_geomap_labels_bool ,
+    settlements .bool_set:N = \l_semio_viz_geomap_settlements_bool ,
+    water .tl_set:N = \l_semio_viz_geomap_water_tl ,
+    places .tl_set:N = \l_semio_viz_geomap_places_tl ,
+    unknown .code:n = { } ,
+  }
+%endregion 🔖️Keys
+
+%region 🔖️Families
+% ♻️ Puts every base-map key back to its documented default before an option list is read.
+\cs_new_protected:Npn \semio_viz_geomap_reset:
+  {
+    \semio_viz_geo_base_reset:
+    \bool_set_false:N \l_semio_viz_geomap_relief_bool
+    \bool_set_false:N \l_semio_viz_geomap_hydrology_bool
+    \bool_set_false:N \l_semio_viz_geomap_grid_bool
+    \bool_set_false:N \l_semio_viz_geomap_labels_bool
+    \bool_set_false:N \l_semio_viz_geomap_settlements_bool
+    \tl_set:Nn \l_semio_viz_geomap_water_tl { demo-geo-routes }
+    \tl_set:Nn \l_semio_viz_geomap_places_tl { demo-geo-cities }
+  }
+
+% ⚙️ Reads the option list #1 into the geo base and base-map keys, then fits the projection frame
+% and the value extent to the geometry the entry named.
+\cs_new_protected:Npn \semio_viz_geomap_setup:n #1
+  {
+    \semio_viz_geomap_reset:
+    \keys_set:nn { semio / viz / geo / base } {#1}
+    \keys_set:nn { semio / viz / family / geo-basemap } {#1}
+    \bool_if:NT \l_semio_viz_geomap_grid_bool
+      { \keys_set:nn { semio / viz / geo / base } { fit = world, #1 } }
+    \exp_args:NV \semio_viz_geo_base_frame:n \l_semio_viz_geo_f_geometry_tl
+    \exp_args:NV \semio_viz_geo_value_extent:n \l_semio_viz_geo_f_geometry_tl
+  }
+
+% 🗺️ Layered base map: an optional graticule, hypsometric or flat land fill, outlines, water lines, settlements and labels.
+\SemioVizFamily { geo-basemap }
+  {
+    \semio_viz_geomap_setup:n {#1}
+    \bool_if:NT \l_semio_viz_geomap_grid_bool
+      {
+        \SemioVizGraticule { semio-family } [ stepMinor = { 10, 10 } ]
+          [ draw=semio-chrome-border-normal, line~width=\semio@stroke@hairline,
+            draw~opacity=0.35 ]
+      }
+    \semio_viz_geo_draw_geometry:nnn { semio-family }
+      { \l_semio_viz_geo_f_geometry_tl }
+      { \semio_viz_geomap_landstyle: }
+    \bool_if:NT \l_semio_viz_geomap_hydrology_bool
+      {
+        \semio_viz_geo_draw_geometry:nnn { semio-family }
+          { \l_semio_viz_geomap_water_tl }
+          { draw=\semio_viz_theme_semantic:n { informational }, line~width=\semio@stroke@default }
+      }
+    \bool_if:NT \l_semio_viz_geomap_settlements_bool
+      {
+        \semio_viz_geo_map_anchors:nnn { semio-family }
+          { \l_semio_viz_geomap_places_tl } { \semio_viz_geomap_place:nnnn }
+      }
+    \bool_if:NT \l_semio_viz_geomap_labels_bool
+      {
+        \semio_viz_geo_map_anchors:nnn { semio-family }
+          { \l_semio_viz_geo_f_geometry_tl } { \semio_viz_geomap_label:nnnn }
+      }
+    \semio_viz_geomap_probe:
+  }
+
+% 🧭 The land layer as numbers: which of the five optional layers are on, and the fill each part
+% received. Without it a base map's probe output is the outline every geo family draws.
+\cs_new_protected:Npn \semio_viz_geomap_probe:
+  {
+    \bool_if:NT \g_semio_viz_probe_geometry_bool
+      {
+        \semio_viz_probe_geometry:nx { geo/basemap/layers }
+          {
+            \bool_if:NTF \l_semio_viz_geomap_relief_bool { 1 } { 0 } ,
+            \bool_if:NTF \l_semio_viz_geomap_hydrology_bool { 1 } { 0 } ,
+            \bool_if:NTF \l_semio_viz_geomap_grid_bool { 1 } { 0 } ,
+            \bool_if:NTF \l_semio_viz_geomap_labels_bool { 1 } { 0 } ,
+            \bool_if:NTF \l_semio_viz_geomap_settlements_bool { 1 } { 0 } ,
+            \fp_to_decimal:N \l_semio_viz_geo_f_opacity_fp
+          }
+        \semio_viz_geo_map_anchors:nnn { semio-family }
+          { \l_semio_viz_geo_f_geometry_tl } { \semio_viz_geomap_land:nnnn }
+      }
+  }
+
+% 🟫 One land part as numbers: its centroid, its value and the ramp position the relief fill used.
+\cs_new_protected:Npn \semio_viz_geomap_land:nnnn #1#2#3#4
+  {
+    \semio_viz_probe_geometry:nx { geo/basemap/land }
+      {
+        \fp_to_decimal:n {#1} , \fp_to_decimal:n {#2} , \fp_to_decimal:n {#4} ,
+        \bool_if:NTF \l_semio_viz_geomap_relief_bool
+          { \fp_to_decimal:n { \semio_viz_geo_norm:n {#4} } } { -1 }
+      }
+  }
+
+% 🟫 TikZ keys of the land layer: a hypsometric ramp fill under `relief`, the panel colour without it.
+\cs_new:Npn \semio_viz_geomap_landstyle:
+  {
+    draw= \l_semio_viz_geo_f_stroke_tl ,
+    line~width= \l_semio_viz_geo_f_linewidth_tl ,
+    fill=
+      \bool_if:NTF \l_semio_viz_geomap_relief_bool
+        { \semio_viz_geo_ramp:n { \semio_viz_geo_norm:n { \l_semio_viz_geo_partvalue_tl } } }
+        { semio-chrome-panel } ,
+    fill~opacity= \fp_use:N \l_semio_viz_geo_f_opacity_fp
+  }
+
+% 📍 One settlement dot with its name to the right, and the settlement's own probe record.
+\cs_new_protected:Npn \semio_viz_geomap_place:nnnn #1#2#3#4
+  {
+    \semio_viz_probe_geometry:nx { geo/basemap/place }
+      { \fp_to_decimal:n {#1} , \fp_to_decimal:n {#2} , \fp_to_decimal:n {#4} }
+    \fill [ semio-chrome-foreground ] (#1,#2) circle [ radius=0.7 ] ;
+    \node [ anchor=west, font=\c_semio_viz_theme_font_label_tl,
+            text=semio-chrome-text-normal ] at ( \fp_eval:n { #1 + 1.2 } , #2 ) {#3} ;
+  }
+
+% 🏷️ The part id at the part centroid, and the label's own probe record.
+\cs_new_protected:Npn \semio_viz_geomap_label:nnnn #1#2#3#4
+  {
+    \semio_viz_probe_geometry:nx { geo/basemap/label }
+      { \fp_to_decimal:n {#1} , \fp_to_decimal:n {#2} , \fp_to_decimal:n {#4} }
+    \node [ anchor=center, font=\c_semio_viz_theme_font_label_tl,
+            text=semio-chrome-foreground ] at (#1,#2) {#3} ;
+  }
+%endregion 🔖️Families
+
+\ExplSyntaxOff

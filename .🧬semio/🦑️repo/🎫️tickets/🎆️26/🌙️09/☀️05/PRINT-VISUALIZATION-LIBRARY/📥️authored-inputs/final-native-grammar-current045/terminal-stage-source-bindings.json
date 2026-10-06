@@ -1,0 +1,726 @@
+{
+  "capturedAt": "2026-10-05T07:24:41.9977977Z",
+  "purpose": "Final terminal94896 source-stage verification and durable source-agreement checker metadata",
+  "actualTerminal": 0,
+  "session": 94896,
+  "duration": "77m36s",
+  "prospectiveSourceSha256": "50512F739E39A0CD25629C8B6D0329E333694709AE79019AE4539D33F8F946AD",
+  "logSha256": "6386A062235A52D97D513FAC8C0030E31F811C63E4381BF6869CEC036A7EB8C3",
+  "logBytes": 2460008,
+  "stageCount": 71,
+  "unexplainedDifferences": 0.0,
+  "registeredGraphShimNormalization": "Single authored emoji input filename to modules/graph/_.tex reference rewrite, actual exact transformed shim SHA256F33D5F16; graph implementation remains byte-identical",
+  "stages": [
+    {
+      "path": "transforms/compiled/🧪️probe-source/.semio-library/semio-latex",
+      "sourceFiles": 172,
+      "excludedGeneratedFiles": [
+        "texput.log"
+      ],
+      "sourceDigest": "1EF655D9757E7090B03BCDE9D603494C2FC2938C6ED2547B965E0F608CA8B745",
+      "graphImplementationSha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88",
+      "unexplainedDifferences": []
+    },
+    {
+      "path": "network-family/🧪️probe-source/.semio-library/semio-latex",
+      "sourceFiles": 172,
+      "excludedGeneratedFiles": [
+        "texput.log"
+      ],
+      "sourceDigest": "1EF655D9757E7090B03BCDE9D603494C2FC2938C6ED2547B965E0F608CA8B745",
+      "graphImplementationSha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88",
+      "unexplainedDifferences": []
+    },
+    {
+      "path": "native-emission/🧪️probe-source/.semio-library/semio-latex",
+      "sourceFiles": 172,
+      "excludedGeneratedFiles": [
+        "texput.log"
+      ],
+      "sourceDigest": "1EF655D9757E7090B03BCDE9D603494C2FC2938C6ED2547B965E0F608CA8B745",
+      "graphImplementationSha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88",
+      "unexplainedDifferences": []
+    },
+    {
+      "path": "theme-controls/🧪️probe-source/.semio-library/semio-latex",
+      "sourceFiles": 172,
+      "excludedGeneratedFiles": [
+        "texput.log"
+      ],
+      "sourceDigest": "1EF655D9757E7090B03BCDE9D603494C2FC2938C6ED2547B965E0F608CA8B745",
+      "graphImplementationSha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88",
+      "unexplainedDifferences": []
+    },
+    {
+      "path": "missing-values/🧪️probe-source/.semio-library/semio-latex",
+      "sourceFiles": 172,
+      "excludedGeneratedFiles": [
+        "texput.log"
+      ],
+      "sourceDigest": "1EF655D9757E7090B03BCDE9D603494C2FC2938C6ED2547B965E0F608CA8B745",
+      "graphImplementationSha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88",
+      "unexplainedDifferences": []
+    },
+    {
+      "path": "spatial-data-rust/zero-light/🧪️probe-source/.semio-library/semio-latex",
+      "sourceFiles": 172,
+      "excludedGeneratedFiles": [
+        "texput.log"
+      ],
+      "sourceDigest": "1EF655D9757E7090B03BCDE9D603494C2FC2938C6ED2547B965E0F608CA8B745",
+      "graphImplementationSha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88",
+      "unexplainedDifferences": []
+    },
+    {
+      "path": "font-metrics/🧪️probe-source/.semio-library/semio-latex",
+      "sourceFiles": 172,
+      "excludedGeneratedFiles": [
+        "texput.log"
+      ],
+      "sourceDigest": "1EF655D9757E7090B03BCDE9D603494C2FC2938C6ED2547B965E0F608CA8B745",
+      "graphImplementationSha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88",
+      "unexplainedDifferences": []
+    },
+    {
+      "path": "marks/🧪️probe-source/.semio-library/semio-latex",
+      "sourceFiles": 172,
+      "excludedGeneratedFiles": [
+        "texput.log"
+      ],
+      "sourceDigest": "1EF655D9757E7090B03BCDE9D603494C2FC2938C6ED2547B965E0F608CA8B745",
+      "graphImplementationSha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88",
+      "unexplainedDifferences": []
+    },
+    {
+      "path": "spatial-data-rust/zero-dark/🧪️probe-source/.semio-library/semio-latex",
+      "sourceFiles": 172,
+      "excludedGeneratedFiles": [
+        "texput.log"
+      ],
+      "sourceDigest": "1EF655D9757E7090B03BCDE9D603494C2FC2938C6ED2547B965E0F608CA8B745",
+      "graphImplementationSha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88",
+      "unexplainedDifferences": []
+    },
+    {
+      "path": "legends/🧪️probe-source/.semio-library/semio-latex",
+      "sourceFiles": 172,
+      "excludedGeneratedFiles": [
+        "texput.log"
+      ],
+      "sourceDigest": "1EF655D9757E7090B03BCDE9D603494C2FC2938C6ED2547B965E0F608CA8B745",
+      "graphImplementationSha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88",
+      "unexplainedDifferences": []
+    },
+    {
+      "path": "spatial-data-rust/light/🧪️probe-source/.semio-library/semio-latex",
+      "sourceFiles": 172,
+      "excludedGeneratedFiles": [
+        "texput.log"
+      ],
+      "sourceDigest": "1EF655D9757E7090B03BCDE9D603494C2FC2938C6ED2547B965E0F608CA8B745",
+      "graphImplementationSha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88",
+      "unexplainedDifferences": []
+    },
+    {
+      "path": "financial-stock/light/🧪️probe-source/.semio-library/semio-latex",
+      "sourceFiles": 172,
+      "excludedGeneratedFiles": [
+        "texput.log"
+      ],
+      "sourceDigest": "1EF655D9757E7090B03BCDE9D603494C2FC2938C6ED2547B965E0F608CA8B745",
+      "graphImplementationSha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88",
+      "unexplainedDifferences": []
+    },
+    {
+      "path": "layouts/compiled/🧪️probe-source/.semio-library/semio-latex",
+      "sourceFiles": 172,
+      "excludedGeneratedFiles": [
+        "texput.log"
+      ],
+      "sourceDigest": "1EF655D9757E7090B03BCDE9D603494C2FC2938C6ED2547B965E0F608CA8B745",
+      "graphImplementationSha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88",
+      "unexplainedDifferences": []
+    },
+    {
+      "path": "spatial-data-rust/dark/🧪️probe-source/.semio-library/semio-latex",
+      "sourceFiles": 172,
+      "excludedGeneratedFiles": [
+        "texput.log"
+      ],
+      "sourceDigest": "1EF655D9757E7090B03BCDE9D603494C2FC2938C6ED2547B965E0F608CA8B745",
+      "graphImplementationSha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88",
+      "unexplainedDifferences": []
+    },
+    {
+      "path": "scale-unknown/🧪️probe-source/.semio-library/semio-latex",
+      "sourceFiles": 172,
+      "excludedGeneratedFiles": [
+        "texput.log"
+      ],
+      "sourceDigest": "1EF655D9757E7090B03BCDE9D603494C2FC2938C6ED2547B965E0F608CA8B745",
+      "graphImplementationSha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88",
+      "unexplainedDifferences": []
+    },
+    {
+      "path": "financial-stock/dark/🧪️probe-source/.semio-library/semio-latex",
+      "sourceFiles": 172,
+      "excludedGeneratedFiles": [
+        "texput.log"
+      ],
+      "sourceDigest": "1EF655D9757E7090B03BCDE9D603494C2FC2938C6ED2547B965E0F608CA8B745",
+      "graphImplementationSha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88",
+      "unexplainedDifferences": []
+    },
+    {
+      "path": "guide-minor/🧪️probe-source/.semio-library/semio-latex",
+      "sourceFiles": 172,
+      "excludedGeneratedFiles": [
+        "texput.log"
+      ],
+      "sourceDigest": "1EF655D9757E7090B03BCDE9D603494C2FC2938C6ED2547B965E0F608CA8B745",
+      "graphImplementationSha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88",
+      "unexplainedDifferences": []
+    },
+    {
+      "path": "spatial-data/zero-light/🧪️probe-source/.semio-library/semio-latex",
+      "sourceFiles": 172,
+      "excludedGeneratedFiles": [
+        "texput.log"
+      ],
+      "sourceDigest": "1EF655D9757E7090B03BCDE9D603494C2FC2938C6ED2547B965E0F608CA8B745",
+      "graphImplementationSha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88",
+      "unexplainedDifferences": []
+    },
+    {
+      "path": "scale-options/🧪️probe-source/.semio-library/semio-latex",
+      "sourceFiles": 172,
+      "excludedGeneratedFiles": [
+        "texput.log"
+      ],
+      "sourceDigest": "1EF655D9757E7090B03BCDE9D603494C2FC2938C6ED2547B965E0F608CA8B745",
+      "graphImplementationSha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88",
+      "unexplainedDifferences": []
+    },
+    {
+      "path": "groups/🧪️probe-source/.semio-library/semio-latex",
+      "sourceFiles": 172,
+      "excludedGeneratedFiles": [
+        "texput.log"
+      ],
+      "sourceDigest": "1EF655D9757E7090B03BCDE9D603494C2FC2938C6ED2547B965E0F608CA8B745",
+      "graphImplementationSha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88",
+      "unexplainedDifferences": []
+    },
+    {
+      "path": "spatial-data/zero-dark/🧪️probe-source/.semio-library/semio-latex",
+      "sourceFiles": 172,
+      "excludedGeneratedFiles": [
+        "texput.log"
+      ],
+      "sourceDigest": "1EF655D9757E7090B03BCDE9D603494C2FC2938C6ED2547B965E0F608CA8B745",
+      "graphImplementationSha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88",
+      "unexplainedDifferences": []
+    },
+    {
+      "path": "scale-controls/🧪️probe-source/.semio-library/semio-latex",
+      "sourceFiles": 172,
+      "excludedGeneratedFiles": [
+        "texput.log"
+      ],
+      "sourceDigest": "1EF655D9757E7090B03BCDE9D603494C2FC2938C6ED2547B965E0F608CA8B745",
+      "graphImplementationSha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88",
+      "unexplainedDifferences": []
+    },
+    {
+      "path": "financial/light/🧪️probe-source/.semio-library/semio-latex",
+      "sourceFiles": 172,
+      "excludedGeneratedFiles": [
+        "texput.log"
+      ],
+      "sourceDigest": "1EF655D9757E7090B03BCDE9D603494C2FC2938C6ED2547B965E0F608CA8B745",
+      "graphImplementationSha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88",
+      "unexplainedDifferences": []
+    },
+    {
+      "path": "spatial-data/light/🧪️probe-source/.semio-library/semio-latex",
+      "sourceFiles": 172,
+      "excludedGeneratedFiles": [
+        "texput.log"
+      ],
+      "sourceDigest": "1EF655D9757E7090B03BCDE9D603494C2FC2938C6ED2547B965E0F608CA8B745",
+      "graphImplementationSha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88",
+      "unexplainedDifferences": []
+    },
+    {
+      "path": "geo-palette/🧪️probe-source/.semio-library/semio-latex",
+      "sourceFiles": 172,
+      "excludedGeneratedFiles": [
+        "texput.log"
+      ],
+      "sourceDigest": "1EF655D9757E7090B03BCDE9D603494C2FC2938C6ED2547B965E0F608CA8B745",
+      "graphImplementationSha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88",
+      "unexplainedDifferences": []
+    },
+    {
+      "path": "financial/dark/🧪️probe-source/.semio-library/semio-latex",
+      "sourceFiles": 172,
+      "excludedGeneratedFiles": [
+        "texput.log"
+      ],
+      "sourceDigest": "1EF655D9757E7090B03BCDE9D603494C2FC2938C6ED2547B965E0F608CA8B745",
+      "graphImplementationSha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88",
+      "unexplainedDifferences": []
+    },
+    {
+      "path": "family-customization/light/🧪️probe-source/.semio-library/semio-latex",
+      "sourceFiles": 172,
+      "excludedGeneratedFiles": [
+        "texput.log"
+      ],
+      "sourceDigest": "1EF655D9757E7090B03BCDE9D603494C2FC2938C6ED2547B965E0F608CA8B745",
+      "graphImplementationSha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88",
+      "unexplainedDifferences": []
+    },
+    {
+      "path": "geo-palette/legend/🧪️probe-source/.semio-library/semio-latex",
+      "sourceFiles": 172,
+      "excludedGeneratedFiles": [
+        "texput.log"
+      ],
+      "sourceDigest": "1EF655D9757E7090B03BCDE9D603494C2FC2938C6ED2547B965E0F608CA8B745",
+      "graphImplementationSha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88",
+      "unexplainedDifferences": []
+    },
+    {
+      "path": "shared-unknown/🧪️probe-source/.semio-library/semio-latex",
+      "sourceFiles": 172,
+      "excludedGeneratedFiles": [
+        "texput.log"
+      ],
+      "sourceDigest": "1EF655D9757E7090B03BCDE9D603494C2FC2938C6ED2547B965E0F608CA8B745",
+      "graphImplementationSha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88",
+      "unexplainedDifferences": []
+    },
+    {
+      "path": "shared-missing/🧪️probe-source/.semio-library/semio-latex",
+      "sourceFiles": 172,
+      "excludedGeneratedFiles": [
+        "texput.log"
+      ],
+      "sourceDigest": "1EF655D9757E7090B03BCDE9D603494C2FC2938C6ED2547B965E0F608CA8B745",
+      "graphImplementationSha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88",
+      "unexplainedDifferences": []
+    },
+    {
+      "path": "family-containment/tree/light/🧪️probe-source/.semio-library/semio-latex",
+      "sourceFiles": 172,
+      "excludedGeneratedFiles": [
+        "texput.log"
+      ],
+      "sourceDigest": "1EF655D9757E7090B03BCDE9D603494C2FC2938C6ED2547B965E0F608CA8B745",
+      "graphImplementationSha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88",
+      "unexplainedDifferences": []
+    },
+    {
+      "path": "family-containment/encoding/light/🧪️probe-source/.semio-library/semio-latex",
+      "sourceFiles": 172,
+      "excludedGeneratedFiles": [
+        "texput.log"
+      ],
+      "sourceDigest": "1EF655D9757E7090B03BCDE9D603494C2FC2938C6ED2547B965E0F608CA8B745",
+      "graphImplementationSha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88",
+      "unexplainedDifferences": []
+    },
+    {
+      "path": "family-containment/encoding/dark/🧪️probe-source/.semio-library/semio-latex",
+      "sourceFiles": 172,
+      "excludedGeneratedFiles": [
+        "texput.log"
+      ],
+      "sourceDigest": "1EF655D9757E7090B03BCDE9D603494C2FC2938C6ED2547B965E0F608CA8B745",
+      "graphImplementationSha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88",
+      "unexplainedDifferences": []
+    },
+    {
+      "path": "family-containment/tree/dark/🧪️probe-source/.semio-library/semio-latex",
+      "sourceFiles": 172,
+      "excludedGeneratedFiles": [
+        "texput.log"
+      ],
+      "sourceDigest": "1EF655D9757E7090B03BCDE9D603494C2FC2938C6ED2547B965E0F608CA8B745",
+      "graphImplementationSha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88",
+      "unexplainedDifferences": []
+    },
+    {
+      "path": "spatial-data/dark/🧪️probe-source/.semio-library/semio-latex",
+      "sourceFiles": 172,
+      "excludedGeneratedFiles": [
+        "texput.log"
+      ],
+      "sourceDigest": "1EF655D9757E7090B03BCDE9D603494C2FC2938C6ED2547B965E0F608CA8B745",
+      "graphImplementationSha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88",
+      "unexplainedDifferences": []
+    },
+    {
+      "path": "family-containment/sunpath/light/🧪️probe-source/.semio-library/semio-latex",
+      "sourceFiles": 172,
+      "excludedGeneratedFiles": [
+        "texput.log"
+      ],
+      "sourceDigest": "1EF655D9757E7090B03BCDE9D603494C2FC2938C6ED2547B965E0F608CA8B745",
+      "graphImplementationSha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88",
+      "unexplainedDifferences": []
+    },
+    {
+      "path": "family-containment/dark/🧪️probe-source/.semio-library/semio-latex",
+      "sourceFiles": 172,
+      "excludedGeneratedFiles": [
+        "texput.log"
+      ],
+      "sourceDigest": "1EF655D9757E7090B03BCDE9D603494C2FC2938C6ED2547B965E0F608CA8B745",
+      "graphImplementationSha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88",
+      "unexplainedDifferences": []
+    },
+    {
+      "path": "family-customization/dark/🧪️probe-source/.semio-library/semio-latex",
+      "sourceFiles": 172,
+      "excludedGeneratedFiles": [
+        "texput.log"
+      ],
+      "sourceDigest": "1EF655D9757E7090B03BCDE9D603494C2FC2938C6ED2547B965E0F608CA8B745",
+      "graphImplementationSha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88",
+      "unexplainedDifferences": []
+    },
+    {
+      "path": "family-containment/sunpath/dark/🧪️probe-source/.semio-library/semio-latex",
+      "sourceFiles": 172,
+      "excludedGeneratedFiles": [
+        "texput.log"
+      ],
+      "sourceDigest": "1EF655D9757E7090B03BCDE9D603494C2FC2938C6ED2547B965E0F608CA8B745",
+      "graphImplementationSha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88",
+      "unexplainedDifferences": []
+    },
+    {
+      "path": "family-containment/complex/light/🧪️probe-source/.semio-library/semio-latex",
+      "sourceFiles": 172,
+      "excludedGeneratedFiles": [
+        "texput.log"
+      ],
+      "sourceDigest": "1EF655D9757E7090B03BCDE9D603494C2FC2938C6ED2547B965E0F608CA8B745",
+      "graphImplementationSha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88",
+      "unexplainedDifferences": []
+    },
+    {
+      "path": "family-containment/sets/light/🧪️probe-source/.semio-library/semio-latex",
+      "sourceFiles": 172,
+      "excludedGeneratedFiles": [
+        "texput.log"
+      ],
+      "sourceDigest": "1EF655D9757E7090B03BCDE9D603494C2FC2938C6ED2547B965E0F608CA8B745",
+      "graphImplementationSha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88",
+      "unexplainedDifferences": []
+    },
+    {
+      "path": "family-containment/canonical-options/typescript/light/canonical-layer-paint-precedence/🧪️probe-source/.semio-library/semio-latex",
+      "sourceFiles": 172,
+      "excludedGeneratedFiles": [
+        "texput.log"
+      ],
+      "sourceDigest": "1EF655D9757E7090B03BCDE9D603494C2FC2938C6ED2547B965E0F608CA8B745",
+      "graphImplementationSha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88",
+      "unexplainedDifferences": []
+    },
+    {
+      "path": "family-containment/complex/dark/🧪️probe-source/.semio-library/semio-latex",
+      "sourceFiles": 172,
+      "excludedGeneratedFiles": [
+        "texput.log"
+      ],
+      "sourceDigest": "1EF655D9757E7090B03BCDE9D603494C2FC2938C6ED2547B965E0F608CA8B745",
+      "graphImplementationSha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88",
+      "unexplainedDifferences": []
+    },
+    {
+      "path": "family-containment/sets/dark/🧪️probe-source/.semio-library/semio-latex",
+      "sourceFiles": 172,
+      "excludedGeneratedFiles": [
+        "texput.log"
+      ],
+      "sourceDigest": "1EF655D9757E7090B03BCDE9D603494C2FC2938C6ED2547B965E0F608CA8B745",
+      "graphImplementationSha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88",
+      "unexplainedDifferences": []
+    },
+    {
+      "path": "family-containment/canonical-options/typescript/light/canonical-layer-paint-implicit-column/🧪️probe-source/.semio-library/semio-latex",
+      "sourceFiles": 172,
+      "excludedGeneratedFiles": [
+        "texput.log"
+      ],
+      "sourceDigest": "1EF655D9757E7090B03BCDE9D603494C2FC2938C6ED2547B965E0F608CA8B745",
+      "graphImplementationSha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88",
+      "unexplainedDifferences": []
+    },
+    {
+      "path": "family-containment/chemistry/light/🧪️probe-source/.semio-library/semio-latex",
+      "sourceFiles": 172,
+      "excludedGeneratedFiles": [
+        "texput.log"
+      ],
+      "sourceDigest": "1EF655D9757E7090B03BCDE9D603494C2FC2938C6ED2547B965E0F608CA8B745",
+      "graphImplementationSha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88",
+      "unexplainedDifferences": []
+    },
+    {
+      "path": "family-containment/canonical-options/typescript/light/🧪️probe-source/.semio-library/semio-latex",
+      "sourceFiles": 172,
+      "excludedGeneratedFiles": [
+        "texput.log"
+      ],
+      "sourceDigest": "1EF655D9757E7090B03BCDE9D603494C2FC2938C6ED2547B965E0F608CA8B745",
+      "graphImplementationSha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88",
+      "unexplainedDifferences": []
+    },
+    {
+      "path": "family-containment/chemistry/dark/🧪️probe-source/.semio-library/semio-latex",
+      "sourceFiles": 172,
+      "excludedGeneratedFiles": [
+        "texput.log"
+      ],
+      "sourceDigest": "1EF655D9757E7090B03BCDE9D603494C2FC2938C6ED2547B965E0F608CA8B745",
+      "graphImplementationSha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88",
+      "unexplainedDifferences": []
+    },
+    {
+      "path": "family-containment/math-records/dark/🧪️probe-source/.semio-library/semio-latex",
+      "sourceFiles": 172,
+      "excludedGeneratedFiles": [
+        "texput.log"
+      ],
+      "sourceDigest": "1EF655D9757E7090B03BCDE9D603494C2FC2938C6ED2547B965E0F608CA8B745",
+      "graphImplementationSha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88",
+      "unexplainedDifferences": []
+    },
+    {
+      "path": "family-containment/light/🧪️probe-source/.semio-library/semio-latex",
+      "sourceFiles": 172,
+      "excludedGeneratedFiles": [
+        "texput.log"
+      ],
+      "sourceDigest": "1EF655D9757E7090B03BCDE9D603494C2FC2938C6ED2547B965E0F608CA8B745",
+      "graphImplementationSha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88",
+      "unexplainedDifferences": []
+    },
+    {
+      "path": "family-containment/math-records/light/🧪️probe-source/.semio-library/semio-latex",
+      "sourceFiles": 172,
+      "excludedGeneratedFiles": [
+        "texput.log"
+      ],
+      "sourceDigest": "1EF655D9757E7090B03BCDE9D603494C2FC2938C6ED2547B965E0F608CA8B745",
+      "graphImplementationSha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88",
+      "unexplainedDifferences": []
+    },
+    {
+      "path": "family-containment/queueing/light/🧪️probe-source/.semio-library/semio-latex",
+      "sourceFiles": 172,
+      "excludedGeneratedFiles": [
+        "texput.log"
+      ],
+      "sourceDigest": "1EF655D9757E7090B03BCDE9D603494C2FC2938C6ED2547B965E0F608CA8B745",
+      "graphImplementationSha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88",
+      "unexplainedDifferences": []
+    },
+    {
+      "path": "family-containment/canonical-options/typescript/light/canonical-layer-paint-binding/🧪️probe-source/.semio-library/semio-latex",
+      "sourceFiles": 172,
+      "excludedGeneratedFiles": [
+        "texput.log"
+      ],
+      "sourceDigest": "1EF655D9757E7090B03BCDE9D603494C2FC2938C6ED2547B965E0F608CA8B745",
+      "graphImplementationSha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88",
+      "unexplainedDifferences": []
+    },
+    {
+      "path": "family-containment/grid/light/🧪️probe-source/.semio-library/semio-latex",
+      "sourceFiles": 172,
+      "excludedGeneratedFiles": [
+        "texput.log"
+      ],
+      "sourceDigest": "1EF655D9757E7090B03BCDE9D603494C2FC2938C6ED2547B965E0F608CA8B745",
+      "graphImplementationSha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88",
+      "unexplainedDifferences": []
+    },
+    {
+      "path": "family-containment/physics/light/🧪️probe-source/.semio-library/semio-latex",
+      "sourceFiles": 172,
+      "excludedGeneratedFiles": [
+        "texput.log"
+      ],
+      "sourceDigest": "1EF655D9757E7090B03BCDE9D603494C2FC2938C6ED2547B965E0F608CA8B745",
+      "graphImplementationSha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88",
+      "unexplainedDifferences": []
+    },
+    {
+      "path": "family-containment/board-outside/🧪️probe-source/.semio-library/semio-latex",
+      "sourceFiles": 172,
+      "excludedGeneratedFiles": [
+        "texput.log"
+      ],
+      "sourceDigest": "1EF655D9757E7090B03BCDE9D603494C2FC2938C6ED2547B965E0F608CA8B745",
+      "graphImplementationSha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88",
+      "unexplainedDifferences": []
+    },
+    {
+      "path": "family-containment/grid/dark/🧪️probe-source/.semio-library/semio-latex",
+      "sourceFiles": 172,
+      "excludedGeneratedFiles": [
+        "texput.log"
+      ],
+      "sourceDigest": "1EF655D9757E7090B03BCDE9D603494C2FC2938C6ED2547B965E0F608CA8B745",
+      "graphImplementationSha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88",
+      "unexplainedDifferences": []
+    },
+    {
+      "path": "family-containment/physics/dark/🧪️probe-source/.semio-library/semio-latex",
+      "sourceFiles": 172,
+      "excludedGeneratedFiles": [
+        "texput.log"
+      ],
+      "sourceDigest": "1EF655D9757E7090B03BCDE9D603494C2FC2938C6ED2547B965E0F608CA8B745",
+      "graphImplementationSha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88",
+      "unexplainedDifferences": []
+    },
+    {
+      "path": "family-containment/queueing/dark/🧪️probe-source/.semio-library/semio-latex",
+      "sourceFiles": 172,
+      "excludedGeneratedFiles": [
+        "texput.log"
+      ],
+      "sourceDigest": "1EF655D9757E7090B03BCDE9D603494C2FC2938C6ED2547B965E0F608CA8B745",
+      "graphImplementationSha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88",
+      "unexplainedDifferences": []
+    },
+    {
+      "path": "family-containment/evaluation/light/🧪️probe-source/.semio-library/semio-latex",
+      "sourceFiles": 172,
+      "excludedGeneratedFiles": [
+        "texput.log"
+      ],
+      "sourceDigest": "1EF655D9757E7090B03BCDE9D603494C2FC2938C6ED2547B965E0F608CA8B745",
+      "graphImplementationSha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88",
+      "unexplainedDifferences": []
+    },
+    {
+      "path": "directed-graph/🧪️probe-source/.semio-library/semio-latex",
+      "sourceFiles": 172,
+      "excludedGeneratedFiles": [
+        "texput.log"
+      ],
+      "sourceDigest": "1EF655D9757E7090B03BCDE9D603494C2FC2938C6ED2547B965E0F608CA8B745",
+      "graphImplementationSha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88",
+      "unexplainedDifferences": []
+    },
+    {
+      "path": "family-containment/bifurcation/light/🧪️probe-source/.semio-library/semio-latex",
+      "sourceFiles": 172,
+      "excludedGeneratedFiles": [
+        "texput.log"
+      ],
+      "sourceDigest": "1EF655D9757E7090B03BCDE9D603494C2FC2938C6ED2547B965E0F608CA8B745",
+      "graphImplementationSha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88",
+      "unexplainedDifferences": []
+    },
+    {
+      "path": "coordinates/🧪️probe-source/.semio-library/semio-latex",
+      "sourceFiles": 172,
+      "excludedGeneratedFiles": [
+        "texput.log"
+      ],
+      "sourceDigest": "1EF655D9757E7090B03BCDE9D603494C2FC2938C6ED2547B965E0F608CA8B745",
+      "graphImplementationSha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88",
+      "unexplainedDifferences": []
+    },
+    {
+      "path": "family-containment/evaluation/dark/🧪️probe-source/.semio-library/semio-latex",
+      "sourceFiles": 172,
+      "excludedGeneratedFiles": [
+        "texput.log"
+      ],
+      "sourceDigest": "1EF655D9757E7090B03BCDE9D603494C2FC2938C6ED2547B965E0F608CA8B745",
+      "graphImplementationSha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88",
+      "unexplainedDifferences": []
+    },
+    {
+      "path": "family-containment/bifurcation/dark/🧪️probe-source/.semio-library/semio-latex",
+      "sourceFiles": 172,
+      "excludedGeneratedFiles": [
+        "texput.log"
+      ],
+      "sourceDigest": "1EF655D9757E7090B03BCDE9D603494C2FC2938C6ED2547B965E0F608CA8B745",
+      "graphImplementationSha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88",
+      "unexplainedDifferences": []
+    },
+    {
+      "path": "family-containment/canonical-options/typescript/dark/🧪️probe-source/.semio-library/semio-latex",
+      "sourceFiles": 172,
+      "excludedGeneratedFiles": [
+        "texput.log"
+      ],
+      "sourceDigest": "1EF655D9757E7090B03BCDE9D603494C2FC2938C6ED2547B965E0F608CA8B745",
+      "graphImplementationSha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88",
+      "unexplainedDifferences": []
+    },
+    {
+      "path": "family-containment/canonical-options/typescript/dark/canonical-layer-paint-implicit-column/🧪️probe-source/.semio-library/semio-latex",
+      "sourceFiles": 172,
+      "excludedGeneratedFiles": [
+        "texput.log"
+      ],
+      "sourceDigest": "1EF655D9757E7090B03BCDE9D603494C2FC2938C6ED2547B965E0F608CA8B745",
+      "graphImplementationSha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88",
+      "unexplainedDifferences": []
+    },
+    {
+      "path": "family-containment/canonical-admission/typescript/light/🧪️probe-source/.semio-library/semio-latex",
+      "sourceFiles": 172,
+      "excludedGeneratedFiles": [
+        "texput.log"
+      ],
+      "sourceDigest": "1EF655D9757E7090B03BCDE9D603494C2FC2938C6ED2547B965E0F608CA8B745",
+      "graphImplementationSha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88",
+      "unexplainedDifferences": []
+    },
+    {
+      "path": "family-containment/canonical-options/typescript/dark/canonical-layer-paint-precedence/🧪️probe-source/.semio-library/semio-latex",
+      "sourceFiles": 172,
+      "excludedGeneratedFiles": [
+        "texput.log"
+      ],
+      "sourceDigest": "1EF655D9757E7090B03BCDE9D603494C2FC2938C6ED2547B965E0F608CA8B745",
+      "graphImplementationSha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88",
+      "unexplainedDifferences": []
+    },
+    {
+      "path": "family-containment/canonical-options/typescript/dark/canonical-layer-paint-binding/🧪️probe-source/.semio-library/semio-latex",
+      "sourceFiles": 172,
+      "excludedGeneratedFiles": [
+        "texput.log"
+      ],
+      "sourceDigest": "1EF655D9757E7090B03BCDE9D603494C2FC2938C6ED2547B965E0F608CA8B745",
+      "graphImplementationSha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88",
+      "unexplainedDifferences": []
+    },
+    {
+      "path": "family-containment/canonical-admission/typescript/dark/🧪️probe-source/.semio-library/semio-latex",
+      "sourceFiles": 172,
+      "excludedGeneratedFiles": [
+        "texput.log"
+      ],
+      "sourceDigest": "1EF655D9757E7090B03BCDE9D603494C2FC2938C6ED2547B965E0F608CA8B745",
+      "graphImplementationSha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88",
+      "unexplainedDifferences": []
+    }
+  ],
+  "scopeLimit": "This stage/source binder makes no blanket current API document/publication claim and does not replace supplementary Rust option/admission native consumers."
+}

@@ -1301,9 +1301,9 @@ export async function transpilePluginComponentAsync(artifact: string, outDir: st
     // see that function's own doc for why no `--async-mode` flag is needed and why `host-async` maps
     // to the same shim file `pure` already does.
     await spawnNodeBinAsync(["@bytecodealliance/jco", "transpile", artifact, "-o", outDir, "--name", componentBase, "--map", "semio:framework/pure=./🟨️.js", "--map", "semio:framework/host-async=./🟨️.js"], ctx.repoRoot, ctx.signal);
-  } catch {
+  } catch (cause) {
     ctx.signal?.throwIfAborted();
-    throw new Error(`jco transpile failed for ${artifact}`);
+    throw new Error(`jco transpile failed for ${artifact}`, { cause });
   }
   rewriteJcoAsyncResultLiftingAt(join(outDir, `${componentBase}.js`));
   rewriteJcoComponentAssetUrlsAt(join(outDir, `${componentBase}.js`));

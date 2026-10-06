@@ -964,9 +964,11 @@ mod native {
             let plugin_modules_root = self.plugin_modules_root.clone();
             #[cfg(not(target_arch = "wasm32"))]
             let services=self.services.clone();
+            let gpu = crate::GpuContext::from_window(window.clone()).expect("native GPU surface capture");
             crate::spawn_app_task(async move {
                 let result = crate::boot_runtime(
                     window,
+                    gpu,
                     plugin_filter,
                     #[cfg(target_arch = "wasm32")]
                     plugins,
@@ -991,6 +993,7 @@ mod native {
         fn user_event(&mut self, event_loop: &ActiveEventLoop, event: HostUserEvent) {
             match event {
                 HostUserEvent::RuntimeReady { runtime, presenter } => {
+                    crate::log_debug_diagnostic("[TRACE] native renderer boot ready");
                     let mut host = OsHost::new(runtime, presenter);
                     let proxy = self.proxy.clone();
                     #[cfg(not(target_arch = "wasm32"))]

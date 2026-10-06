@@ -1,24 +1,40 @@
 // #region 🔌️Adapters
-
-import { easeCubicInOut } from "d3-ease";
+import { easeCubicInOut, easeCubicOut } from "d3-ease";
 import * as clippingModule from "polygon-clipping";
 import { MathUtils } from "three";
 import { describe, expect, it } from "vitest";
 import fixture from "../../../../🧫️fixtures/🥞️layered-overview/🔣️.json" with { type: "json" };
 import {
+  LAYERED_DECELERATION,
   LAYERED_FOLLOW_FRAME_MS,
   LAYERED_FOLLOW_LERP,
+  LAYERED_SETTLE_MS,
   followFactor,
   centeredLastRowCells,
   centeredRowSpan,
   clampOffset,
+  type LayeredAxis,
   type LayeredVeil,
   easeInOutCubic,
+  easeOutCubic,
+  flingStep,
   followStep,
   glideOffset,
   inWindow,
   nearSquareGrid,
+  nearestCell,
+  neighbourWarmBoot,
   nextWarmBoot,
+  restingCell,
+  rubberBand,
+  settleOffset,
+  swipeAxis,
+  swipeDragOffset,
+  swipeNeighbours,
+  swipeWrapTarget,
+  stripGrid,
+  swipeStep,
+  swipeTarget,
   occupiedColumns,
   panesOverBudget,
   panesToRelease,
@@ -90,8 +106,9 @@ function expectVeil(veil: LayeredVeil, scenario: VeilScenario): void {
 const never = (value: number | null): number => value ?? Number.POSITIVE_INFINITY;
 const lifecycleOf = (given: Partial<Record<keyof LayeredLifecycle, number>>): LayeredLifecycle => resolveLifecycle(given);
 
-/** 🥞️ The layered overview's pure geometry and lifecycle policy, read from `🧫️fixtures/🥞️layered-overview/🔣️.json` and judged against
- * `polygon-clipping` (veil area), `d3-ease` (easing) and three.js (the follow's damping). */
+/** 🥞️ The layered overview's pure geometry and lifecycle policy, read from `🧫️fixtures/🥞️layered-overview/🔣️.json` (whose swipe vectors the
+ * ticket's independent Python twin computed) and judged against `polygon-clipping` (veil area), `d3-ease` (glide and settle easing) and three.js
+ * (the follow's damping and the fling's travel). */
 describe("🥞️ layered overview geometry", () => {
   
 
@@ -214,6 +231,134 @@ describe("🥞️ layered overview geometry", () => {
       expect(panesToRelease(scenario.live, new Set(scenario.keep), scenario.now, { opened: scenario.opened, hidden: scenario.hidden }, lifecycleOf(scenario.lifecycle))).toEqual(scenario.released);
     });
   }
+
+  const cellsOf = (count: number) => centeredLastRowCells(count);
+  const close = (actual: { readonly x: number; readonly y: number }, expected: { readonly x: number; readonly y: number }) => {
+    expect(actual.x).toBeCloseTo(expected.x, 9);
+    expect(actual.y).toBeCloseTo(expected.y, 9);
+  };
+
+  for (const scenario of fixture.nearestCells) it(`nearest cell: ${scenario.name}`, () => expect(nearestCell(scenario.offset, cellsOf(scenario.count))).toEqual(scenario.cell));
+  for (const scenario of fixture.restingCells) it(`resting cell: ${scenario.name}`, () => expect(restingCell(scenario.offset)).toEqual(scenario.cell));
+  for (const scenario of fixture.swipeAxes) it(`swipe axis: ${scenario.name}`, () => expect(swipeAxis(scenario.dx, scenario.dy)).toBe(scenario.axis));
+  for (const scenario of fixture.swipeSteps) it(`swipe step: ${scenario.name}`, () => expect(swipeStep(scenario.movedPx, scenario.velocityPxPerMs, scenario.viewPx)).toBe(scenario.step));
+  for (const scenario of fixture.swipeTargets) it(`swipe target: ${scenario.name}`, () => expect(swipeTarget(scenario.from, scenario.axis as LayeredAxis, scenario.step, cellsOf(scenario.count))).toEqual(scenario.target));
+  for (const scenario of fixture.swipeNeighbours) it(`swipe neighbours: ${scenario.name}`, () => expect(swipeNeighbours(scenario.from, cellsOf(scenario.count))).toEqual(scenario.neighbours));
+
+  for (const scenario of fixture.swipeWrapTargets) it(`swipe wrap target: ${scenario.name}`, () => expect(swipeWrapTarget(scenario.from, scenario.axis as LayeredAxis, scenario.step, cellsOf(scenario.count))).toEqual(scenario.landing));
+
+  it("names as a neighbour exactly the landing of a swipe that way, for every cell of every grid", () => {
+    for (let count = 1; count <= 60; count += 1) {
+      const cells = cellsOf(count);
+      for (const from of cells) {
+        const named = new Map(swipeNeighbours(from, cells).map(({ direction, cell, slot }) => [direction, { cell, slot }]));
+        for (const [direction, axis, step] of [["up", "y", -1], ["left", "x", -1], ["right", "x", 1], ["down", "y", 1]] as const) {
+          const landing = swipeWrapTarget(from, axis, step, cells);
+          expect(named.get(direction) ?? null).toEqual(landing);
+          if (landing !== null) expect(swipeDragOffset(from, axis, step, cells)).toEqual(landing.slot);
+        }
+      }
+    }
+  });
+
+  it("wraps like an endless canvas: every page comes in right beside the view, nothing ends but a row or column of one page, and a swipe back along the rows returns", () => {
+    for (let count = 2; count <= 60; count += 1) {
+      const cells = cellsOf(count);
+      const { rows } = stripGrid(cells);
+      const occupied = new Set(cells.map((cell) => `${cell.column}:${cell.row}`));
+      for (const from of cells) {
+        for (const axis of ["x", "y"] as const) {
+          for (const step of [-1, 1]) {
+            const landing = swipeWrapTarget(from, axis, step, cells);
+            const alone = axis === "x" ? cells.filter((cell) => cell.row === from.row).length === 1 : rows === 1;
+            expect(landing === null, `${count} panes, ${from.column}:${from.row} ${axis}${step}`).toBe(alone);
+            if (landing === null) continue;
+            expect(occupied.has(`${landing.cell.column}:${landing.cell.row}`)).toBe(true);
+            expect(axis === "x" ? landing.slot.x - from.column : landing.slot.y - from.row).toBe(step);
+            if (axis === "x") expect(landing.slot.y).toBe(from.row);
+            if (axis === "x") expect(swipeWrapTarget(landing.cell, axis, -step, cells)?.cell).toEqual(from);
+          }
+        }
+      }
+    }
+  });
+
+  for (const scenario of fixture.rubberBands) it(`rubber band: ${scenario.overshoot} cells past the end`, () => expect(rubberBand(scenario.overshoot)).toBeCloseTo(scenario.pull, 12));
+  for (const scenario of fixture.swipeDrags) it(`swipe drag: ${scenario.name}`, () => close(swipeDragOffset(scenario.from, scenario.axis as LayeredAxis, scenario.shift, cellsOf(scenario.count)), scenario.offset));
+
+  for (const scenario of fixture.settles) {
+    it(`settle: ${scenario.name}`, () => {
+      for (const sample of scenario.samples) {
+        const { offset, done } = settleOffset(scenario.from, scenario.to, sample.elapsedMs, scenario.durationMs);
+        close(offset, sample.offset);
+        expect(done).toBe(sample.done);
+        if (done) expect(offset).toBe(scenario.to);
+      }
+    });
+  }
+
+  for (const scenario of fixture.flings) {
+    it(`fling: ${scenario.name}`, () => {
+      const step = flingStep(scenario.velocityPxPerMs, scenario.elapsedMs);
+      expect(step.distance).toBeCloseTo(scenario.distance, 6);
+      expect(step.velocity).toBeCloseTo(scenario.velocity, 9);
+      expect(step.done).toBe(scenario.done);
+    });
+  }
+
+  for (const scenario of fixture.neighbourWarmBoots) {
+    it(`neighbour warm boot: ${scenario.name}`, () => {
+      const ids = Array.from({ length: scenario.count }, (_, index) => `p${index}`);
+      expect(neighbourWarmBoot(ids, cellsOf(scenario.count), scenario.at, new Set(scenario.live), scenario.openedId, scenario.budget)).toEqual(scenario.step);
+    });
+  }
+
+  it("settles exactly like d3-ease's easeCubicOut, in the settle's own time", () => {
+    for (let step = 0; step <= 256; step += 1) expect(easeOutCubic(step / 256)).toBeCloseTo(easeCubicOut(step / 256), 12);
+    expect(settleOffset({ x: 0, y: 0 }, { x: 1, y: 2 }, LAYERED_SETTLE_MS / 2).offset.y).toBeCloseTo(2 * easeCubicOut(0.5), 12);
+  });
+
+  it("flings a scroll as far as three.js's MathUtils.damp carries it toward its resting point, and at any frame rate the same", () => {
+    const lambda = -Math.log(LAYERED_DECELERATION);
+    for (let elapsed = 0; elapsed <= 3000; elapsed += 12.5) expect(flingStep(1.7, elapsed).distance).toBeCloseTo(MathUtils.damp(0, 1.7 / lambda, lambda, elapsed), 9);
+    for (const frames of [[1000], [16, 16, 968], Array.from({ length: 60 }, () => 1000 / 60)]) {
+      const travelled = frames.reduce(({ distance, velocity }, elapsed) => {
+        const step = flingStep(velocity, elapsed);
+        return { distance: distance + step.distance, velocity: step.velocity };
+      }, { distance: 0, velocity: 1.7 });
+      expect(travelled.distance).toBeCloseTo(flingStep(1.7, 1000).distance, 9);
+    }
+  });
+
+  it("lands every swipe of every grid on an occupied cell, and a swipe back on the cell it left along the rows", () => {
+    for (let count = 1; count <= 60; count += 1) {
+      const cells = cellsOf(count);
+      const occupied = new Set(cells.map((cell) => `${cell.column}:${cell.row}`));
+      for (const from of cells) {
+        for (const axis of ["x", "y"] as const) {
+          for (const step of [-1, 1]) {
+            const target = swipeTarget(from, axis, step, cells);
+            if (target === null) continue;
+            expect(occupied.has(`${target.column}:${target.row}`)).toBe(true);
+            if (axis === "x") expect(swipeTarget(target, axis, -step, cells)).toEqual(from);
+          }
+        }
+      }
+    }
+  });
+
+  it("never pulls a rubber band a whole cell, and pulls it ever less per cell", () => {
+    let previous = 0;
+    let gained = Number.POSITIVE_INFINITY;
+    for (let overshoot = 0.25; overshoot <= 40; overshoot += 0.25) {
+      const pull = rubberBand(overshoot);
+      expect(pull).toBeGreaterThan(previous);
+      expect(pull).toBeLessThan(1);
+      expect(pull - previous).toBeLessThan(gained);
+      gained = pull - previous;
+      previous = pull;
+    }
+  });
 
   it("never enters the idle queue before the minimum delay, and cancels both stages", () => {
     const delayed: (() => void)[] = [];

@@ -1,0 +1,95 @@
+{
+  "refusals": 6,
+  "outerExitCode": 0,
+  "observedAt": "2026-10-06T03:40:16.4775426+02:00",
+  "cases": 12,
+  "accepts": 6,
+  "mismatches": 0,
+  "outerTerminalSession": 34947,
+  "comparison": [
+    {
+      "expectedAccept": true,
+      "id": "string-null-root",
+      "nativeExitCode": 0,
+      "sourceMatchesBaseline": true,
+      "actualAccept": true
+    },
+    {
+      "expectedAccept": true,
+      "id": "string-undefined-root",
+      "nativeExitCode": 0,
+      "sourceMatchesBaseline": true,
+      "actualAccept": true
+    },
+    {
+      "expectedAccept": true,
+      "id": "string-true-root",
+      "nativeExitCode": 0,
+      "sourceMatchesBaseline": true,
+      "actualAccept": true
+    },
+    {
+      "expectedAccept": false,
+      "id": "actual-null-id",
+      "nativeExitCode": 1,
+      "sourceMatchesBaseline": true,
+      "actualAccept": false
+    },
+    {
+      "expectedAccept": false,
+      "id": "boolean-id",
+      "nativeExitCode": 1,
+      "sourceMatchesBaseline": true,
+      "actualAccept": false
+    },
+    {
+      "expectedAccept": false,
+      "id": "missing-id",
+      "nativeExitCode": 1,
+      "sourceMatchesBaseline": true,
+      "actualAccept": false
+    },
+    {
+      "expectedAccept": false,
+      "id": "null-parent",
+      "nativeExitCode": 1,
+      "sourceMatchesBaseline": true,
+      "actualAccept": false
+    },
+    {
+      "expectedAccept": false,
+      "id": "missing-parent",
+      "nativeExitCode": 1,
+      "sourceMatchesBaseline": true,
+      "actualAccept": false
+    },
+    {
+      "expectedAccept": true,
+      "id": "literal-null-parent",
+      "nativeExitCode": 0,
+      "sourceMatchesBaseline": true,
+      "actualAccept": true
+    },
+    {
+      "expectedAccept": true,
+      "id": "string-seven",
+      "nativeExitCode": 0,
+      "sourceMatchesBaseline": true,
+      "actualAccept": true
+    },
+    {
+      "expectedAccept": false,
+      "id": "number-seven",
+      "nativeExitCode": 1,
+      "sourceMatchesBaseline": true,
+      "actualAccept": false
+    },
+    {
+      "expectedAccept": true,
+      "id": "carrier-command-strings",
+      "nativeExitCode": 0,
+      "sourceMatchesBaseline": true,
+      "actualAccept": true
+    }
+  ]
+}

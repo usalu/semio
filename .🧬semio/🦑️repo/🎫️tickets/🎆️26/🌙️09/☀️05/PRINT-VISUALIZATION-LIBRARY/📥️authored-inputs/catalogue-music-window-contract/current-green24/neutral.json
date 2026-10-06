@@ -1,0 +1,212 @@
+{
+  "schema": {
+    "type": "object",
+    "required": [
+      "canvas",
+      "domain",
+      "lowPitch",
+      "highPitch",
+      "notes",
+      "curve",
+      "curvePadding",
+      "modes",
+      "windows",
+      "pitchRange",
+      "rhythmRange",
+      "toleranceMm"
+    ],
+    "additionalProperties": false,
+    "properties": {
+      "canvas": {
+        "type": "array",
+        "items": {
+          "type": "number"
+        },
+        "minItems": 2,
+        "maxItems": 2
+      },
+      "domain": {
+        "type": "array",
+        "items": {
+          "type": "number"
+        },
+        "minItems": 2,
+        "maxItems": 2
+      },
+      "lowPitch": {
+        "type": "integer"
+      },
+      "highPitch": {
+        "type": "integer"
+      },
+      "notes": {
+        "type": "array",
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 4,
+          "maxItems": 4
+        }
+      },
+      "curve": {
+        "type": "array",
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "minItems": 2
+      },
+      "curvePadding": {
+        "type": "number",
+        "minimum": 0
+      },
+      "modes": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": [
+            "kind",
+            "mode"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "type": "string"
+            },
+            "mode": {
+              "enum": [
+                "piano-roll",
+                "midi",
+                "rhythm",
+                "tempo",
+                "dynamics",
+                "pitch-contour"
+              ]
+            }
+          }
+        }
+      },
+      "windows": {
+        "type": "array",
+        "items": {
+          "enum": [
+            "omitted",
+            "authored"
+          ]
+        }
+      },
+      "pitchRange": {
+        "type": "array",
+        "items": {
+          "type": "number"
+        },
+        "minItems": 2,
+        "maxItems": 2
+      },
+      "rhythmRange": {
+        "type": "array",
+        "items": {
+          "type": "number"
+        },
+        "minItems": 2,
+        "maxItems": 2
+      },
+      "toleranceMm": {
+        "type": "number",
+        "exclusiveMinimum": 0
+      }
+    }
+  },
+  "vectors": {
+    "canvas": [
+      80,
+      40
+    ],
+    "domain": [
+      0,
+      7
+    ],
+    "lowPitch": 48,
+    "highPitch": 84,
+    "notes": [
+      [
+        0,
+        1,
+        60,
+        80
+      ],
+      [
+        2,
+        0.5,
+        67,
+        100
+      ],
+      [
+        4,
+        2,
+        64,
+        75
+      ]
+    ],
+    "curve": [
+      [
+        0,
+        60
+      ],
+      [
+        2,
+        67
+      ],
+      [
+        4,
+        64
+      ]
+    ],
+    "curvePadding": 0.08,
+    "modes": [
+      {
+        "kind": "piano-roll",
+        "mode": "piano-roll"
+      },
+      {
+        "kind": "midi-event-plot",
+        "mode": "midi"
+      },
+      {
+        "kind": "rhythm-timeline",
+        "mode": "rhythm"
+      },
+      {
+        "kind": "tempo-map",
+        "mode": "tempo"
+      },
+      {
+        "kind": "dynamic-profile",
+        "mode": "dynamics"
+      },
+      {
+        "kind": "pitch-contour",
+        "mode": "pitch-contour"
+      }
+    ],
+    "windows": [
+      "omitted",
+      "authored"
+    ],
+    "pitchRange": [
+      36,
+      108
+    ],
+    "rhythmRange": [
+      0,
+      2
+    ],
+    "toleranceMm": 0.035
+  }
+}

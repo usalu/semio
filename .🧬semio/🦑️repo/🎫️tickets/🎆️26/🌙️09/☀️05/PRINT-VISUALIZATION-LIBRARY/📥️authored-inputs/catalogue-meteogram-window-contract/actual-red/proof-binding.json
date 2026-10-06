@@ -1,0 +1,86 @@
+{
+  "session": 6352,
+  "exitCode": 1,
+  "actualFailures": 18,
+  "passingCases": 2,
+  "themes": {
+    "light": {
+      "pdf": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\mt1\\meteogram-window-controls\\light\\🧪️probe-out\\light.pdf",
+      "sha256": "3cc35f62f8f027e038cc897fcc5c45dd79e22da9f982ef74d73b76d1a6d7eb3f",
+      "actualTemperatureVertices": [
+        [
+          5.517278703053791,
+          1.2758702543046738
+        ],
+        [
+          40.00030390421549,
+          17.224266264173718
+        ],
+        [
+          74.48331968519422,
+          9.250065904193454
+        ]
+      ],
+      "expectedTemperatureVertices": [
+        [
+          0,
+          9.625
+        ],
+        [
+          20,
+          19.25
+        ],
+        [
+          40,
+          14.4375
+        ]
+      ]
+    },
+    "dark": {
+      "pdf": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\mt1\\meteogram-window-controls\\dark\\🧪️probe-out\\dark.pdf",
+      "sha256": "80f0371ef3e79ac71e12c5db2cbad403738cd884fd4489c91673e49a3ef1c2b1",
+      "actualTemperatureVertices": [
+        [
+          5.517278703053791,
+          1.2758702543046738
+        ],
+        [
+          40.00030390421549,
+          17.224266264173718
+        ],
+        [
+          74.48331968519422,
+          9.250065904193454
+        ]
+      ],
+      "expectedTemperatureVertices": [
+        [
+          0,
+          9.625
+        ],
+        [
+          20,
+          19.25
+        ],
+        [
+          40,
+          14.4375
+        ]
+      ]
+    }
+  },
+  "sources": {
+    "light.tex": "57a73128338c0f0400d24547844f90b53e6b463ea02c4bce14be766c7c3225e8",
+    "light-semio-viz-scientific-surface.sty": "a04790a75b05f2fc945ca7a783a336adc5ea29f7097a3205b0b90bec819d3018",
+    "light-semio-viz-scientific-field.sty": "745cf1244ecde64a3da82d5d653a4a1d042029a817b7e785b1258b69e0a07ee8",
+    "dark.tex": "386ca3275c572c0c65c24fca6b74eb5f8645f72e7a32bb59d55b3b5ef9dcc2db",
+    "dark-semio-viz-scientific-surface.sty": "a04790a75b05f2fc945ca7a783a336adc5ea29f7097a3205b0b90bec819d3018",
+    "dark-semio-viz-scientific-field.sty": "745cf1244ecde64a3da82d5d653a4a1d042029a817b7e785b1258b69e0a07ee8",
+    "neutral.json": "e4eed364d12144830df38b9e43438a2c972277fe2592140c1ec5398fc2aab27f",
+    "helper.txt": "dcc3ab00839f470f774ca828c3a323c03d24b489df53f1d050ab37b8c7340ff8"
+  },
+  "log": {
+    "path": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\catalogue-meteogram-window-native-red.log",
+    "sha256": "9f50fbc91100bdd3437dd85320ac82b3ba8172244581c209029e1c4fd1dbec43"
+  }
+}

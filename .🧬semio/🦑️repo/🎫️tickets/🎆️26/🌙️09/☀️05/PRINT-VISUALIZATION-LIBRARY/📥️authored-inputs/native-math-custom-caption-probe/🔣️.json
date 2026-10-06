@@ -1,0 +1,8 @@
+{
+  "id": "math-protected-stations",
+  "theme": "light",
+  "options": "unit=10,stations={a/1/1/A \\(\\alpha\\),b/2.5/1/B \\(\\pi\\),c/4/1/out}",
+  "mathGlyphs": ["α", "π"],
+  "positions": [1, 2.5, 4],
+  "unit": 10
+}

@@ -1,11 +1,13 @@
 #!/usr/bin/env bun
+import { readGeneratedCatalogProjection } from "../../../../../🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts";
 import { createAssetHttpServerV1 } from "../../../../../../../../🔨️modules/🖼️assets/🔍️resolver/🧭️dispatch/🟦️.ts";
 import { PLAYGROUND_ASSET_PROVIDERS_V1 } from "../../../../../🔌️plugin/📇️registry/🎮️playground/🖼️assets/🧩️composition/🟦️.ts";
 import {playgroundNativeHostArtifactV1} from "../../../../../../../🦑️repo/🔨️modules/📚️library/🎮️playground/🖥️native-host/🟦️.ts";
+import { pinExecutableArtifact } from "../../../../../../../../🔨️modules/🏃️process/📦️artifacts/📤️publication/🟦️.ts";
 import { once } from "node:events";
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import type { Server } from "node:http";
-import { dirname, join, resolve } from "node:path";
+import { basename, dirname, isAbsolute, join, resolve } from "node:path";
 import { BundleScript, ScriptRouter } from "../../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runTool } from "../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/📜️script.ts";
 import { getWorkspaceRoot } from "../../../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
@@ -24,9 +26,17 @@ export function nativeRunnerEnvironment(source: NodeJS.ProcessEnv): NodeJS.Proce
   }).concat([["SEMIO_DIRECT_CHILD_BENIGN", "preserved"]]));
 }
 
+/** 🧊️ Acquires the selected native host without locking its mutable producer output. */
+async function nativeExecutable(executable: string, cwd: string, signal: AbortSignal): Promise<string> {
+  if(!isAbsolute(executable))return executable;
+  const workspace=resolve(cwd),cache=join(workspace,".🧬semio/🦑️repo/⚡️cache");
+  return pinExecutableArtifact(resolve(executable),join(cache,"tools/native-executables",basename(executable)),"native-execution",{signal,leaseDirectory:join(cache,"agents/resource-leases"),onWait:({elapsedMs})=>console.log(`[native] Waiting for executable publication (${elapsedMs}ms); Ctrl+C cancels`)});
+}
+
 /** 🏃️ Keeps the owning JavaScript event loop responsive while the native child runs. */
 export async function runNativeBinary(executable: string, args: readonly string[], environment: NodeJS.ProcessEnv, cwd = getWorkspaceRoot(), signal: AbortSignal = new AbortController().signal): Promise<void> {
-  await runTool(executable, [...args], cwd, signal, false, nativeRunnerEnvironment(environment));
+  const binary=await nativeExecutable(executable,cwd,signal);
+  await runTool(binary, [...args], cwd, signal, false, nativeRunnerEnvironment(environment));
 }
 
 /** 🌐️ Starts one ready asset listener, runs the native consumer and closes all owned connections. */
@@ -74,7 +84,7 @@ class RunScript extends BundleScript {
     const { variant, profile, axes } = selection(args, true), repo = this.repoRoot, runtime = nativeRuntimeDirectory(join(repo, ownerPath), variant, profile);
     const manifest = JSON.parse(readFileSync(join(runtime, "🔣️runtime.json"), "utf8"));
     if (manifest.version !== 1 || manifest.variant !== variant || manifest.profile !== profile || !existsSync(join(runtime, ".nx-artifact.json"))) throw new Error("Missing or mismatched Nx native runtime artifact");
-    const catalog = JSON.parse(readFileSync(join(repo, registryPath, "🤖️generated/🎠️playgrounds.json"), "utf8"));
+    const catalog = readGeneratedCatalogProjection(join(repo,registryPath,"dist/sessions",variant)).playgrounds;
     const row = catalog.find((entry: { variant: string }) => entry.variant === variant);
     if (!row) throw new Error(`Unknown native playground: ${variant}`);
     const controller = new AbortController(), cancel = () => controller.abort();
@@ -101,7 +111,7 @@ class McpScript extends BundleScript {
     if(!binary || !existsSync(binary))throw new Error("Missing Nx MCP owner artifact");
     const controller=new AbortController(),cancel=()=>controller.abort();
     process.once("SIGINT",cancel);process.once("SIGTERM",cancel);
-    try {await runTool(binary,[transport,...args],this.repoRoot,controller.signal,false,process.env);}
+    try {await runTool(await nativeExecutable(binary,this.repoRoot,controller.signal),[transport,...args],this.repoRoot,controller.signal,false,process.env);}
     finally {process.removeListener("SIGINT",cancel);process.removeListener("SIGTERM",cancel);}
   }
 }

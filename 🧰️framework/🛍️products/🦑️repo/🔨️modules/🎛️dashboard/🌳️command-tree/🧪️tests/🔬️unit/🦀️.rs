@@ -3,7 +3,7 @@ use std::fs;
 
 fn temp_root(name: &str) -> PathBuf {
     let nanos = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
-    let dir = std::env::temp_dir().join(format!("semio-command-tree-{name}-{nanos}"));
+    let dir = std::env::var_os("SEMIO_TEST_ARTIFACT_DIR").map_or_else(std::env::temp_dir, PathBuf::from).join(format!("semio-command-tree-{name}-{nanos}"));
     fs::create_dir_all(&dir).expect("create temp root");
     dir
 }
@@ -12,6 +12,64 @@ fn temp_root(name: &str) -> PathBuf {
 fn segment_key_strips_emoji_prefix() {
     assert_eq!(segment_key("🌊️flow"), "flow");
     assert_eq!(segment_key("📦️packages"), "packages");
+}
+
+#[test]
+fn playground_renderers_and_examples_select_actual_nx_targets() {
+    let root = temp_root("playgrounds");
+    fs::create_dir_all(crate::catalog::generated_dir(&root)).unwrap();
+    fs::write(crate::catalog::generated_dir(&root).join("🎠️playgrounds.json"), "[]\n").unwrap();
+    fs::write(crate::catalog::generated_dir(&root).join("🚀️playgrounds.json"), r#"[{"variant":"demo","pluginId":"plugin","cratePath":"plugin/rs","aliases":[],"ports":{"react":3100,"wgpu":3200},"examples":["🎬️first","🎬️second"]}]"#).unwrap();
+    let tree = discover(&root);
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🗣️launch-axes/🔣️.json")).unwrap();
+    for renderer in fixture["renderers"].as_array().unwrap() {
+        for example in ["all", fixture["example"].as_str().unwrap()] {
+            let mut selection = &tree;
+            for key in ["dev", "plugin", "demo", renderer["id"].as_str().unwrap()] { selection = selection.children.iter().find(|child| child.key == key).unwrap(); }
+            if example != "all" { selection = selection.children.iter().find(|child| child.key == "examples").unwrap(); }
+            selection = selection.children.iter().find(|child| child.key == example).unwrap();
+            assert!(selection.children.is_empty(), "presentation must not add command questions");
+            assert!(selection.leaf.is_some());
+            for locale in fixture["locales"].as_array().unwrap() {
+                for terminology in fixture["terminologies"].as_array().unwrap() {
+                    let Some(CommandLeaf::Process(mut spec)) = selection.leaf.clone() else { panic!("missing process") };
+                    let preferences = crate::preferences::Preferences { language: locale.as_str().unwrap().into(), terminology: terminology.as_str().unwrap().into(), ..Default::default() };
+                    preferences.bind(&mut spec);
+                    let mut args = vec!["nx".to_string(), "run".into(), format!("@semio-tech/framework-os-dev:{}", renderer["target"].as_str().unwrap())];
+                    if renderer["id"] == "wgpu-native" && example != "all" { args.extend(["--".into(), "--example".into(), example.into()]); }
+                    assert_eq!(spec.args, args);
+                    assert!(spec.env.contains(&("SEMIO_LOCKED_LOCALE".into(), locale.as_str().unwrap().into())));
+                    assert!(spec.env.contains(&("SEMIO_LOCKED_TERMINOLOGY".into(), terminology.as_str().unwrap().into())));
+                    assert!(spec.env.contains(&("S_OS_PORT".into(), renderer["port"].as_str().unwrap().into())));
+                    assert_eq!(spec.env.iter().find(|(key,_)| key=="PLAYGROUND_LOCKED_EXAMPLE_ID").map(|(_,value)|value.as_str()), (example!="all").then_some(example));
+                }
+            }
+        }
+    }
+    fs::remove_dir_all(root).unwrap();
+}
+
+#[test]
+fn workspace_targets_and_parameterized_scripts_are_all_reachable() {
+    let root = temp_root("workspace");
+    fs::write(root.join("📋️project.json"), r#"{"name":"workspace","targets":{"build":{},"test":{}}}"#).unwrap();
+    fs::write(root.join("package.json"), r#"{"scripts":{"nx":"bun bootstrap nx","test":"bun nx run workspace:test","test:quiz":"bun nx run quiz:test","test:quiz:e2e":"bun nx run quiz:test-e2e","dashboard":"bun nx run repo:run"}}"#).unwrap();
+    let tree = discover(&root);
+    fn visit(node: &CommandNode, commands: &mut Vec<Vec<String>>) {
+        if let Some(CommandLeaf::Process(spec)) = &node.leaf {
+            assert!(node.children.is_empty(), "a runnable command must remain selectable");
+            assert!(spec.env.contains(&("NX_NATIVE_COMMAND_RUNNER".into(), "false".into())));
+            assert!(spec.env.contains(&("NX_TUI".into(), "false".into())));
+            commands.push(spec.args.clone());
+        }
+        for child in &node.children { visit(child, commands); }
+    }
+    let mut commands = Vec::new();
+    visit(&tree, &mut commands);
+    assert!(commands.contains(&vec!["nx".into(), "run".into(), "workspace:build".into()]));
+    for name in ["test", "test:quiz", "test:quiz:e2e"] { assert!(commands.contains(&vec!["run".into(), name.into()])); }
+    assert!(!commands.contains(&vec!["run".into(), "dashboard".into()]));
+    fs::remove_dir_all(root).unwrap();
 }
 
 #[test]
@@ -98,4 +156,41 @@ fn tree_json_states_every_leaf_kind() {
     assert_eq!(json["children"][0]["leaf"]["kind"], "process");
     assert_eq!(json["children"][1]["leaf"]["kind"], "repo");
     assert_eq!(json["children"][1]["leaf"]["action"], "statutes.catalog");
+}
+
+#[test]
+fn nx_inferred_targets_are_selectable_without_authored_project_rows() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🌳️inferred-targets/🔣️.json")).unwrap();
+    let root = temp_root("inferred");
+    fs::create_dir_all(root.join("owner/📦️packages/🦀️rust")).unwrap();
+    fs::create_dir_all(root.join(".nx/workspace-data")).unwrap();
+    fs::write(root.join(".nx/workspace-data/project-graph.json"), fixture["graph"].to_string()).unwrap();
+    let tree = discover(&root);
+    fn commands(node: &CommandNode, targets: &mut Vec<String>) {
+        if let Some(CommandLeaf::Process(spec)) = &node.leaf { if spec.args.starts_with(&["nx".into(), "run".into()]) { targets.push(spec.args[2].clone()); } }
+        for child in &node.children { commands(child, targets); }
+    }
+    let mut targets = Vec::new(); commands(&tree, &mut targets); targets.sort();
+    assert_eq!(targets, fixture["expected"].as_array().unwrap().iter().map(|v| v.as_str().unwrap()).collect::<Vec<_>>());
+    fs::remove_dir_all(root).unwrap();
+}
+
+
+#[test]
+fn nx_inferred_targets_survive_an_in_progress_graph_publication() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🌳️inferred-targets/🔣️.json")).unwrap();
+    let root = temp_root("inferred-publication");
+    fs::create_dir_all(root.join("owner/📦️packages/🦀️rust")).unwrap();
+    fs::create_dir_all(root.join(".nx/workspace-data")).unwrap();
+    let path = root.join(".nx/workspace-data/project-graph.json");
+    fs::write(&path, "{").unwrap();
+    let writer = std::thread::spawn(move || {
+        std::thread::sleep(std::time::Duration::from_millis(75));
+        fs::write(path, fixture["graph"].to_string()).unwrap();
+    });
+    let mut trie = TrieNode::default(); collect_inferred_targets(&root, &mut trie, &std::sync::atomic::AtomicBool::new(false));
+    writer.join().unwrap();
+    let node = trie.into_command_node("root", "semio");
+    assert_eq!(node.children.iter().map(|child| child.key.as_str()).collect::<Vec<_>>(), ["build", "component-dev", "materialize-dev"]);
+    fs::remove_dir_all(root).unwrap();
 }

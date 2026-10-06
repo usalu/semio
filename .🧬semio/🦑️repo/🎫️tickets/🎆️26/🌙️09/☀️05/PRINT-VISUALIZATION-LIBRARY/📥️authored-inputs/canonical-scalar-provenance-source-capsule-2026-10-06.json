@@ -1,0 +1,25 @@
+{
+  "owners": [
+    {
+      "path": "C:/git/semio/🧰️framework/🛍️products/📓️print/🧬️schema/🔣️.json",
+      "sha256": "B978E84576409F7421FAAD606ACA7224B313125507F20F856029EBB40CCDFFA1"
+    },
+    {
+      "path": "C:/git/semio/🧰️framework/🛍️products/📓️print/🧬️schema/💡️inferences/📚️catalogue/🟦️.ts",
+      "sha256": "540B2E4D61FCA421A878B1212ED1C554B3BDC2A29713A1065AA5D60B63FF799C"
+    },
+    {
+      "path": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-data.sty",
+      "sha256": "6551EAE29D19C287A975073A638D8C0047C3DFF97F831B8B03FA3BA066FBBA3A"
+    },
+    {
+      "path": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-domain.sty",
+      "sha256": "0C926F2E248DE44EA1AC0290A86AAF794F6E2194164FAF91193E1E671726C8A1"
+    },
+    {
+      "path": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-network.sty",
+      "sha256": "E809E5A965FD9746BC383414861A27DFBCC73F477422AB2E8EE6322D76F9FC14"
+    }
+  ],
+  "capturedAt": "2026-10-06T02:53:36.7420298+02:00"
+}

@@ -1,0 +1,36 @@
+/** \u{1f3a8}\uFE0F Checks independent palette and integration mutations through actual native paths and D3 ramps. */
+export async function compileNativeGeoPaletteGrammar(workDir:string):Promise<void>{
+  const control=fixture.nativeGeoPalette,body:{raw:string}[]=[];
+  const before=JSON.stringify(control.snapshot);
+  for(const entry of control.cases){
+    let snapshot=control.snapshot as VizChartSnapshot;
+    const mutations:{path:string[];value:number|string}[]=[{path:["presets","0","options","seeds"],value:1}];
+    if(entry.paletteSteps!==undefined)mutations.push({path:["presets","0","options","paletteSteps"],value:entry.paletteSteps});
+    if(entry.steps!==undefined)mutations.push({path:["presets","0","options","steps"],value:entry.steps});
+    if(entry.language!==snapshot.chart.language)mutations.push({path:["language"],value:entry.language});
+    for(const mutation of mutations){
+      const outcome=changeVizChartValue(snapshot,mutation);
+      if(outcome.messages.length||outcome.diff.edits.length!==1)throw Error(entry.id+" palette mutation rejected: "+JSON.stringify(outcome.messages));
+      const replay=applyVizChartDiff(snapshot,outcome.diff);
+      if(replay.messages.length)throw Error(entry.id+" palette replay rejected");
+      snapshot=replay.snapshot;
+    }
+    const result=await inferVizChart(snapshot);
+    if(!result.complete)throw Error(entry.id+" palette inference failed: "+JSON.stringify(result.diagnostics));
+    body.push({raw:"\\SemioVizProbeBegin{geo-palette}{"+entry.id+"}\n"+result.tikz});
+  }
+  if(JSON.stringify(control.snapshot)!==before)throw Error("Palette mutation changed authored base");
+  const rampProbes=control.inputs.map((value,index)=>"\\semio_viz_probe_values:nx{geo/palette/"+index+"}{\\semio_viz_geo_ramp_pct:n{"+value+"}}").join("");
+  const hook="\\ExplSyntaxOn\\cs_new_eq:NN\\semio_viz_control_palette_streamline:nn\\semio_viz_georte_streamline:nn\\cs_set_protected:Npn\\semio_viz_georte_streamline:nn#1#2{\\semio_viz_control_palette_streamline:nn{#1}{#2}\\semio_viz_probe_values:nx{geo/palette/points}{\\seq_count:N\\l_tmpa_seq}"+rampProbes+"}\\ExplSyntaxOff";
+  const records=await compileVizProbeDocument({case:"geo-palette",scenario:"controls",documentClass:"semio",documentClassOptions:"type=paper,language=en",packages:["semio-viz"],preamble:["\\title{Geographic Palette Controls}","\\author{Semio}","\\date{}",hook],body},{workDir,scenario:undefined,keepWorkDir:true});
+  for(const entry of control.cases){
+    const count=entry.expectedPaletteSteps,ramp=scaleLinear([0,count-1],[18,100]);
+    const reference=scaleThreshold<number,number>().domain(Array.from({length:count-1},(_,index)=>(index+.5)/(count-1))).range(Array.from({length:count},(_,index)=>Math.round(ramp(index))));
+    const own=records.filter(record=>record.scenario===entry.id&&record.key.startsWith("geo/palette/"));
+    if(own.length!==control.inputs.length+1)throw Error(entry.id+" palette probe inventory");
+    equal(own.find(record=>record.key==="geo/palette/points")!.values.map(Number),[entry.expectedSteps],entry.id+" integrated native path points");
+    for(const [index,value]of control.inputs.entries())equal(own.find(record=>record.key==="geo/palette/"+index)!.values.map(Number),[reference(value)],entry.id+" independent D3 palette ramp");
+  }
+  console.log("[geo-palette] "+control.cases.length+" mutation/inference controls, "+control.cases.length*control.inputs.length+" independent D3 ramp checks and "+control.cases.length+" native path lengths");
+}
+

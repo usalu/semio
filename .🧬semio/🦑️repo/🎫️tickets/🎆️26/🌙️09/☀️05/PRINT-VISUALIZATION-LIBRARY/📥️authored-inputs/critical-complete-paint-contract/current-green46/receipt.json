@@ -1,0 +1,53 @@
+{
+  "actualTerminalSession": 34906,
+  "scope": "critical-complete-directed-final-2026-10-06",
+  "exitCode": 0,
+  "completedUtc": "2026-10-06T00:52:48.1821232Z",
+  "nodes": 46,
+  "directedShaftHeadPairs": 24,
+  "expectedHardRejections": 16,
+  "observerSha256": "9c652a22306ed4ad26c07c8c1dbde69be05bdaca9db0a14c02066b5d743cc384",
+  "neutralSha256": "d17bb1b67bfefe2444a5c510521160e0a4307defbe9fa3aaa437a9ca4f5c88bc",
+  "stages": [
+    {
+      "theme": "light",
+      "file": "semio-fonts.sty",
+      "sha256": "652634d20651133e775c0c7d5504fd4aef80c0afc8cbae4f98ac54649a6eac8b"
+    },
+    {
+      "theme": "light",
+      "file": "semio-viz-domain.sty",
+      "sha256": "0c926f2e248de44ea1ac0290a86aaf794f6e2194164faf91193e1e671726c8a1"
+    },
+    {
+      "theme": "light",
+      "file": "semio-viz-data.sty",
+      "sha256": "6551eae29d19c287a975073a638d8c0047c3dff97f831b8b03fa3ba066fbba3a"
+    },
+    {
+      "theme": "dark",
+      "file": "semio-fonts.sty",
+      "sha256": "652634d20651133e775c0c7d5504fd4aef80c0afc8cbae4f98ac54649a6eac8b"
+    },
+    {
+      "theme": "dark",
+      "file": "semio-viz-domain.sty",
+      "sha256": "0c926f2e248de44ea1ac0290a86aaf794f6e2194164faf91193e1e671726c8a1"
+    },
+    {
+      "theme": "dark",
+      "file": "semio-viz-data.sty",
+      "sha256": "6551eae29d19c287a975073a638d8c0047c3dff97f831b8b03fa3ba066fbba3a"
+    }
+  ],
+  "pdfs": [
+    {
+      "theme": "light",
+      "sha256": "7cbe90749e18dcf71f9f3093bb88079f89effd0fcde975892fb882c3dcca182d"
+    },
+    {
+      "theme": "dark",
+      "sha256": "70faca3641fe06b12f3faaecf338a9fb2330ff969b8381bbec503a5e6d343f3d"
+    }
+  ]
+}

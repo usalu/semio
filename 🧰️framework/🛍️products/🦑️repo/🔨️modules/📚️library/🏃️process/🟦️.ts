@@ -9,7 +9,7 @@ import { terminateOwnedProcessTree } from "../../../../../🔨️modules/🏃️
  * walk into its module graph. */
 import { spawn, spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { dirname, join, relative, resolve, isAbsolute } from "node:path";
 import { fileURLToPath } from "node:url";
 import { prepareCargoWorkspaceInvocation } from "../🗂️workspaces/🦀️cargo/🟦️.ts";
 import { getWorkspaceRoot } from "../🗂️workspaces/🟦️.ts";
@@ -157,13 +157,20 @@ export function tryRun(cmd: string, args: string[], opts: RunCmdOpts = {}): void
   }
 }
 
-/** 🔍️ Resolves a CLI executable in `cwd` or workspace root's `node_modules/.bin` to avoid `bun x` cwd resolution bugs on emoji/ZWJ paths. */
+/** 🔍️ Resolves a Node tool from installation launchers or its package bin declaration in the caller and workspace scopes. */
 export function resolveWorkspaceBin(binName: string, cwd: string = process.cwd()): string | null {
   const shortName = binName.includes("/") ? binName.split("/").pop()! : binName;
-  const localBin = join(cwd, "node_modules", ".bin", shortName);
-  if (existsSync(localBin)) return localBin;
-  const rootBin = join(getWorkspaceRoot(), "node_modules", ".bin", shortName);
-  if (existsSync(rootBin)) return rootBin;
+  for (const root of new Set([cwd, getWorkspaceRoot()])) {
+    const launcher = join(root, "node_modules", ".bin", shortName);
+    if (existsSync(launcher)) return launcher;
+    const owner = join(root, "node_modules", binName), manifest = join(owner, "package.json");
+    if (!existsSync(manifest)) continue;
+    const { bin } = JSON.parse(readFileSync(manifest, "utf8")) as { bin?: string | Record<string, string> };
+    const entry = typeof bin === "string" ? bin : bin?.[shortName];
+    if (typeof entry !== "string") continue;
+    const executable = resolve(owner, entry), path = relative(owner, executable).replaceAll("\\", "/");
+    if (!isAbsolute(path) && path !== ".." && !path.startsWith("../") && existsSync(executable)) return executable;
+  }
   return null;
 }
 

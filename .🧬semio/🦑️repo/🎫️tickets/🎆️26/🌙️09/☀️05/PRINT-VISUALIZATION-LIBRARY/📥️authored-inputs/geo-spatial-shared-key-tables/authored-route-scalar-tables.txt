@@ -1,0 +1,21 @@
+
+\subsection{\Key{api-path-family-geo-route}}
+\ApiScopeSource{api-path-family-geo-route}{semio / viz / family / geo-route}
+\SemioTableLong[text-size=8pt]{\Key{api-path-family-geo-route} \ApiText{Shared geographic route controls}{Gemeinsame geografische Routensteuerung}}{0.19,0.12,0.16,0.53}{\ApiKey & \ApiType & \ApiDefault & \ApiMeaning}{%
+  \SemioTableRow{\Key{basemap} & \Key{boolean} & \Key{true} & \ApiText{Draw the geographic reference geometry beneath routes and flow bands.}{Geografische Referenzgeometrie unter Routen und Flussbändern zeichnen.}}
+  \SemioTableRow{\Key{mode} & \Key{string} & \Key{direct} & \ApiText{Route geometry: direct, great-circle or octilinear.}{Routengeometrie: direct, great-circle oder octilinear.}}
+  \SemioTableRow{\Key{routeWidth} & \Key{number} & \Key{1.4} & \ApiText{Maximum route stroke or flow-band width in millimetres.}{Maximale Strichbreite der Route oder Bandbreite des Flusses in Millimetern.}}
+  \SemioTableRow{\Key{routes} & \Key{string} & \Key{demo-geo-routes} & \ApiText{Named line geometry collection supplying the routes and their values.}{Benannte Liniengeometriesammlung für die Routen und ihre Werte.}}
+  \SemioTableRow{\Key{samples} & \Key{integer} & \Key{20} & \ApiText{Number of great-circle segments sampled for each route.}{Anzahl der abgetasteten Großkreissegmente je Route.}}
+  \SemioTableRow{\Key{stations} & \Key{boolean} & \Key{false} & \ApiText{Draw station markers at route endpoints.}{Stationsmarkierungen an den Routenenden zeichnen.}}
+}
+
+\subsection{\Key{api-path-family-spatial-scalar-field}}
+\ApiScopeSource{api-path-family-spatial-scalar-field}{semio / viz / family / spatial-scalar-field}
+\SemioTableLong[text-size=8pt]{\Key{api-path-family-spatial-scalar-field} \ApiText{Shared scalar surface controls}{Gemeinsame skalare Oberflächensteuerung}}{0.19,0.12,0.16,0.53}{\ApiKey & \ApiType & \ApiDefault & \ApiMeaning}{%
+  \SemioTableRow{\Key{surface} & \Key{string} & \Key{contour} & \ApiText{Scalar rendering: contour, filled, levelset, heatmap, wireframe, mesh, shaded, heightmap, waterfall, curtain or slice.}{Skalare Darstellung: contour, filled, levelset, heatmap, wireframe, mesh, shaded, heightmap, waterfall, curtain oder slice.}}
+  \SemioTableRow{\Key{tilt} & \Key{number} & \Key{30} & \ApiText{Axonometric tilt of the sampled grid surface in degrees.}{Axonometrische Neigung der abgetasteten Gitteroberfläche in Grad.}}
+  \SemioTableRow{\Key{turn} & \Key{number} & \Key{30} & \ApiText{Axonometric rotation of the sampled grid surface in degrees.}{Axonometrische Drehung der abgetasteten Gitteroberfläche in Grad.}}
+  \SemioTableRow{\Key{zScale} & \Key{number} & \Key{1.6} & \ApiText{Millimetres per scalar grid value for surfaces and profiles.}{Millimeter je skalarem Gitterwert für Oberflächen und Profile.}}
+}
+

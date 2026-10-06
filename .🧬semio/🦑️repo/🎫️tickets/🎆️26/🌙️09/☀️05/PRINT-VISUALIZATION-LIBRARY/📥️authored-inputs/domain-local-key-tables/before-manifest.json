@@ -1,0 +1,81 @@
+{
+  "source": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-api/🔓️viz-api.tex",
+  "beforeSha256": "937D8DAE93BCF1655BBC8D3BE5E97328B78EC418CA52022FCA163D11E2028E30",
+  "sections": [
+    {
+      "family": "biology",
+      "marker": "\\subsection{\\Key{biology}}",
+      "body": "\\ApiText{This family takes no options beyond \\Key{variant} and \\Key{data}.}{Diese Familie nimmt außer \\Key{variant} und \\Key{data} keine Optionen.}"
+    },
+    {
+      "family": "election",
+      "marker": "\\subsection{\\Key{election}}",
+      "body": "\\ApiText{This family takes no options beyond \\Key{variant} and \\Key{data}.}{Diese Familie nimmt außer \\Key{variant} und \\Key{data} keine Optionen.}"
+    },
+    {
+      "family": "engineering-diagram",
+      "marker": "\\subsection{\\Key{engineering-diagram}}",
+      "body": "\\ApiText{This family takes no options beyond \\Key{variant} and \\Key{data}.}{Diese Familie nimmt außer \\Key{variant} und \\Key{data} keine Optionen.}"
+    },
+    {
+      "family": "logistics",
+      "marker": "\\subsection{\\Key{logistics}}",
+      "body": "\\ApiText{This family takes no options beyond \\Key{variant} and \\Key{data}.}{Diese Familie nimmt außer \\Key{variant} und \\Key{data} keine Optionen.}"
+    },
+    {
+      "family": "monitoring",
+      "marker": "\\subsection{\\Key{monitoring}}",
+      "body": "\\ApiText{This family takes no options beyond \\Key{variant} and \\Key{data}.}{Diese Familie nimmt außer \\Key{variant} und \\Key{data} keine Optionen.}"
+    },
+    {
+      "family": "neural",
+      "marker": "\\subsection{\\Key{neural}}",
+      "body": "\\ApiText{This family takes no options beyond \\Key{variant} and \\Key{data}.}{Diese Familie nimmt außer \\Key{variant} und \\Key{data} keine Optionen.}"
+    },
+    {
+      "family": "niche",
+      "marker": "\\subsection{\\Key{niche}}",
+      "body": "\\ApiText{This family takes no options beyond \\Key{variant} and \\Key{data}.}{Diese Familie nimmt außer \\Key{variant} und \\Key{data} keine Optionen.}"
+    },
+    {
+      "family": "notation",
+      "marker": "\\subsection{\\Key{notation}}",
+      "body": "\\ApiText{This family takes no options beyond \\Key{variant} and \\Key{data}.}{Diese Familie nimmt außer \\Key{variant} und \\Key{data} keine Optionen.}"
+    },
+    {
+      "family": "optimization",
+      "marker": "\\subsection{\\Key{optimization}}",
+      "body": "\\ApiText{This family takes no options beyond \\Key{variant} and \\Key{data}.}{Diese Familie nimmt außer \\Key{variant} und \\Key{data} keine Optionen.}"
+    },
+    {
+      "family": "performance",
+      "marker": "\\subsection{\\Key{performance}}",
+      "body": "\\ApiText{This family takes no options beyond \\Key{variant} and \\Key{data}.}{Diese Familie nimmt außer \\Key{variant} und \\Key{data} keine Optionen.}"
+    },
+    {
+      "family": "schedule",
+      "marker": "\\subsection{\\Key{schedule}}",
+      "body": "\\ApiText{This family takes no options beyond \\Key{variant} and \\Key{data}.}{Diese Familie nimmt außer \\Key{variant} und \\Key{data} keine Optionen.}"
+    },
+    {
+      "family": "spatial-layout",
+      "marker": "\\subsection{\\Key{spatial-layout}}",
+      "body": "\\ApiText{This family takes no options beyond \\Key{variant} and \\Key{data}.}{Diese Familie nimmt außer \\Key{variant} und \\Key{data} keine Optionen.}"
+    },
+    {
+      "family": "survey",
+      "marker": "\\subsection{\\Key{survey}}",
+      "body": "\\ApiText{This family takes no options beyond \\Key{variant} and \\Key{data}.}{Diese Familie nimmt außer \\Key{variant} und \\Key{data} keine Optionen.}"
+    },
+    {
+      "family": "text-viz",
+      "marker": "\\subsection{\\Key{text-viz}}",
+      "body": "\\ApiText{This family takes no options beyond \\Key{variant} and \\Key{data}.}{Diese Familie nimmt außer \\Key{variant} und \\Key{data} keine Optionen.}"
+    },
+    {
+      "family": "version-control",
+      "marker": "\\subsection{\\Key{version-control}}",
+      "body": "\\ApiText{This family takes no options beyond \\Key{variant} and \\Key{data}.}{Diese Familie nimmt außer \\Key{variant} und \\Key{data} keine Optionen.}"
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+[
+  {
+    "path": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-scientific-mathematics.sty",
+    "wholeSha256": "49CEABE6A73657547227241C9B5F2D5A2DB8FAB7F4A108162365F245D8C7C1CD",
+    "ownedSpanSha256": "46519C83779AEDA44D364D1B125B76E6C1A3F7D9DA8A3F481CB7CD580115FCA8",
+    "ownedSpanUtf8Bytes": 3201,
+    "startDefinition": "semio_viz_math_diagram_edges:",
+    "endMarker": "% 🔷 §38"
+  },
+  {
+    "path": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-empty-all-labels-green-2026-10-06\\scientific-styles\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-scientific-mathematics.sty",
+    "wholeSha256": "49CEABE6A73657547227241C9B5F2D5A2DB8FAB7F4A108162365F245D8C7C1CD",
+    "ownedSpanSha256": "46519C83779AEDA44D364D1B125B76E6C1A3F7D9DA8A3F481CB7CD580115FCA8",
+    "ownedSpanUtf8Bytes": 3201,
+    "startDefinition": "semio_viz_math_diagram_edges:",
+    "endMarker": "% 🔷 §38"
+  },
+  {
+    "path": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-empty-all-labels-green-2026-10-06\\scientific-styles\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-scientific-mathematics.sty",
+    "wholeSha256": "49CEABE6A73657547227241C9B5F2D5A2DB8FAB7F4A108162365F245D8C7C1CD",
+    "ownedSpanSha256": "46519C83779AEDA44D364D1B125B76E6C1A3F7D9DA8A3F481CB7CD580115FCA8",
+    "ownedSpanUtf8Bytes": 3201,
+    "startDefinition": "semio_viz_math_diagram_edges:",
+    "endMarker": "% 🔷 §38"
+  }
+]

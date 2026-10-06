@@ -1,0 +1,17 @@
+[
+  {
+    "function": "compileNativeDomainReferenceControls",
+    "utf8Bytes": 9842,
+    "sha256": "B111B0E29D1ABD1E0735A7C02186168EF41C2EB93C8692DD1DAB01C1587E6848"
+  },
+  {
+    "function": "compileNativeCriticalPathControls",
+    "utf8Bytes": 10759,
+    "sha256": "AC781575E9115287BA167A5B5EA4A33235A5659176FDAB1134AACAEE907B3AE1"
+  },
+  {
+    "function": "compileNativeScientificRelationStyles",
+    "utf8Bytes": 6279,
+    "sha256": "0834129D3EC04B9660BECA8855DAF5BCDF69C9500AD83801F9D204073C456D1E"
+  }
+]

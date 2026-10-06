@@ -1,0 +1,760 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-viz-charts-line}[2026/09/05 v0.3.0 semio viz namespace charts-line families]
+
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+\RequirePackage{semio-viz-charts-bar}
+
+\ExplSyntaxOn
+
+%region 🔖️SeriesGeometry
+% 📈 The row scan every line-shaped family shares: one series' points in row order, mapped through
+% `cart-x` and `cart-y`, with the index/normalize transform applied before mapping.
+\fp_new:N \l_semio_viz_line_first_fp
+\fp_new:N \l_semio_viz_line_base_fp
+\bool_new:N \l_semio_viz_line_first_seen_bool
+\tl_new:N \l_semio_viz_line_xcell_tl
+\tl_new:N \l_semio_viz_line_ycell_tl
+\tl_new:N \l_semio_viz_line_gcell_tl
+\tl_new:N \l_semio_viz_line_mode_tl
+\tl_new:N \l_semio_viz_line_highlight_tl
+\tl_new:N \l_semio_viz_line_lo_tl
+\tl_new:N \l_semio_viz_line_hi_tl
+\bool_new:N \l_semio_viz_line_markers_bool
+\bool_new:N \l_semio_viz_line_conf_bool
+\bool_new:N \l_semio_viz_line_area_bool
+
+% 🔁 Fills the point sequence of the current series; `#1` selects the value column to read.
+\cs_new_protected:Npn \semio_viz_line_scan:n #1 {
+  \seq_clear:N \l_semio_viz_cart_pts_seq
+  \bool_set_false:N \l_semio_viz_line_first_seen_bool
+  \semio_viz_table_nrows:VN \l_semio_viz_cart_data_tl \l_semio_viz_cart_nrows_int
+  \tl_set:Nn \l_semio_viz_cart_arg_col_tl {#1}
+  \semio_viz_line_scan_run:
+}
+
+% 🔎 The scan itself: every data row, skipping the rows that belong to another series.
+\cs_new_protected:Npn \semio_viz_line_scan_run: {
+  \int_step_inline:nn { \l_semio_viz_cart_nrows_int } {
+    \bool_set_true:N \l_semio_viz_line_row_bool
+    \tl_if_empty:NF \l_semio_viz_cart_group_tl {
+      \semio_viz_table_cell:nnVN { \l_semio_viz_cart_data_tl } {##1} \l_semio_viz_cart_group_tl
+        \l_semio_viz_line_gcell_tl
+      \tl_if_eq:NNF \l_semio_viz_line_gcell_tl \l_semio_viz_bar_grp_tl
+        { \bool_set_false:N \l_semio_viz_line_row_bool }
+    }
+    \bool_if:NT \l_semio_viz_line_row_bool { \semio_viz_line_row_take:n {##1} }
+  }
+}
+\bool_new:N \l_semio_viz_line_row_bool
+
+% 📈 Takes data row #1 into the point sequence, after the transformation the `mode` asks for —
+% raw value, index against the first, cumulative sum, or difference from the previous row.
+\cs_new_protected:Npn \semio_viz_line_row_take:n #1 {
+  \semio_viz_table_cell:nnVN { \l_semio_viz_cart_data_tl } {#1} \l_semio_viz_cart_x_tl
+    \l_semio_viz_line_xcell_tl
+  \semio_viz_table_cell:nnVN { \l_semio_viz_cart_data_tl } {#1} \l_semio_viz_cart_arg_col_tl
+    \l_semio_viz_line_ycell_tl
+  \fp_set:Nn \l_semio_viz_cart_v_fp { \l_semio_viz_line_ycell_tl }
+  \bool_if:NF \l_semio_viz_line_first_seen_bool {
+    \fp_set_eq:NN \l_semio_viz_line_first_fp \l_semio_viz_cart_v_fp
+    \bool_set_true:N \l_semio_viz_line_first_seen_bool
+  }
+  \str_case:VnT \l_semio_viz_line_mode_tl {
+    { indexed } { \fp_set:Nn \l_semio_viz_cart_v_fp
+      { 100 * \l_semio_viz_cart_v_fp / \l_semio_viz_line_first_fp } }
+    { normalized } { \fp_set:Nn \l_semio_viz_cart_v_fp
+      { \l_semio_viz_cart_v_fp / \l_semio_viz_line_first_fp } }
+  } { }
+  \semio_viz_cart_xmap:VN \l_semio_viz_line_xcell_tl \l_semio_viz_cart_c_fp
+  \semio_viz_cart_ymap:VN \l_semio_viz_cart_v_fp \l_semio_viz_cart_d_fp
+  \seq_put_right:Nx \l_semio_viz_cart_pts_seq
+    { \fp_eval:n { \l_semio_viz_cart_c_fp } , \fp_eval:n { \l_semio_viz_cart_d_fp } }
+}
+
+% 🧵 Series list of a line-shaped family; an empty group column means one unnamed series.
+\cs_new_protected:Npn \semio_viz_line_groups: {
+  \tl_if_empty:NTF \l_semio_viz_cart_group_tl
+    {
+      \seq_clear:N \l_semio_viz_cart_groups_seq
+      \seq_put_right:Nn \l_semio_viz_cart_groups_seq { }
+    }
+    { \semio_viz_cart_cats:VVN \l_semio_viz_cart_data_tl \l_semio_viz_cart_group_tl
+        \l_semio_viz_cart_groups_seq }
+}
+
+% 📐 Value domain of a line family, taking the index/normalize transform into account.
+\cs_new_protected:Npn \semio_viz_line_domain: {
+  \str_case:VnTF \l_semio_viz_line_mode_tl {
+    { indexed } {
+      \bool_if:NF \l_semio_viz_cart_ymin_user_bool { \fp_set:Nn \l_semio_viz_cart_ymin_fp { 0 } }
+      \bool_if:NF \l_semio_viz_cart_ymax_user_bool { \fp_set:Nn \l_semio_viz_cart_ymax_fp { 260 } }
+    }
+    { normalized } {
+      \bool_if:NF \l_semio_viz_cart_ymin_user_bool { \fp_set:Nn \l_semio_viz_cart_ymin_fp { 0 } }
+      \bool_if:NF \l_semio_viz_cart_ymax_user_bool { \fp_set:Nn \l_semio_viz_cart_ymax_fp { 3 } }
+    }
+  } { } { \semio_viz_cart_domain_plain: }
+}
+
+% 🧭 The independent axis of a line family: a linear scale over the x column's extent.
+\cs_new_protected:Npn \semio_viz_line_axis_x: {
+  \semio_viz_cart_extent:VVNN \l_semio_viz_cart_data_tl \l_semio_viz_cart_x_tl
+    \l_semio_viz_cart_xmin_fp \l_semio_viz_cart_xmax_fp
+  \semio_viz_cart_scale_x:n { linear }
+}
+
+% 🎨 Series colour, honouring the highlight option.
+\cs_new_protected:Npn \semio_viz_line_series_color: {
+  \tl_if_empty:NTF \l_semio_viz_line_highlight_tl
+    { \semio_viz_cart_color:VN \l_semio_viz_bar_gi_int \l_semio_viz_cart_stroke_tl }
+    {
+      \tl_if_eq:NNTF \l_semio_viz_bar_grp_tl \l_semio_viz_line_highlight_tl
+        { \tl_set:Nn \l_semio_viz_cart_stroke_tl { \semio_viz_theme_color:n { 0 } } }
+        { \tl_set:Nn \l_semio_viz_cart_stroke_tl { semio-chrome-border-normal } }
+    }
+  \tl_set_eq:NN \l_semio_viz_cart_fill_tl \l_semio_viz_cart_stroke_tl
+}
+%endregion 🔖️SeriesGeometry
+
+%region 🔖️Keys
+% 🔑 semio / viz / family / line — taxonomy §2 line charts.
+%   mode       (plain|indexed|normalized|connected, default plain)  value transform before mapping
+%   curve      (linear|step|step-before|step-after|basis|cardinal|catmull-rom|monotone-x|natural|
+%               bezier, default linear)                             interpolation between points
+%   markers    (boolean, default false)                             dots on every data point
+%   highlight  (series value, default empty)                        one series in the accent colour
+%   confidence (boolean, default false)                             draw the lo/hi band behind
+%   lo / hi    (columns, default lo / hi)                           the confidence band columns
+\keys_define:nn { semio / viz / family / line } { }
+\semio_viz_cart_family_keys:n { semio / viz / family / line }
+% 🔑 The line chart's own keys, on top of the cartesian family keys inherited above.
+\keys_define:nn { semio / viz / family / line } {
+  mode       .tl_set:N = \l_semio_viz_line_mode_tl,
+  markers    .bool_set:N = \l_semio_viz_line_markers_bool,
+  highlight  .tl_set:N = \l_semio_viz_line_highlight_tl,
+  confidence .bool_set:N = \l_semio_viz_line_conf_bool,
+  lo         .tl_set:N = \l_semio_viz_line_lo_tl,
+  hi         .tl_set:N = \l_semio_viz_line_hi_tl,
+}
+
+% 🔑 semio / viz / family / spark — the word-sized charts of taxonomy §2.
+%   mode (line|area|bar, default line)   the spark form
+%   band (boolean, default false)        min/max reference band behind the spark
+\tl_new:N \l_semio_viz_spark_mode_tl
+\bool_new:N \l_semio_viz_spark_band_bool
+\semio_viz_cart_family_keys:n { semio / viz / family / spark }
+% 🔑 The sparkline's own keys, on top of the cartesian family keys inherited above.
+\keys_define:nn { semio / viz / family / spark } {
+  mode .tl_set:N = \l_semio_viz_spark_mode_tl,
+  band .bool_set:N = \l_semio_viz_spark_band_bool,
+}
+
+% 🔑 semio / viz / family / slope — the before/after comparisons of taxonomy §2.
+%   mode    (slope|before-after|change|delta, default slope)
+%   markers (boolean, default true)   dots at both ends
+%   labels  (none|value|category, inherited)
+\tl_new:N \l_semio_viz_slope_mode_tl
+\bool_new:N \l_semio_viz_slope_markers_bool
+\semio_viz_cart_family_keys:n { semio / viz / family / slope }
+% 🔑 The slope chart's own keys, on top of the cartesian family keys inherited above.
+\keys_define:nn { semio / viz / family / slope } {
+  mode    .tl_set:N = \l_semio_viz_slope_mode_tl,
+  markers .bool_set:N = \l_semio_viz_slope_markers_bool,
+}
+
+% 🔑 semio / viz / family / annotated — the annotation-driven types of taxonomy §50.
+%   mode  (callout|highlight|threshold|reference-line|reference-band|event-marker|label-rich|
+%          direct-label|story|explainer, default callout)
+%   at    (number, default 3)     the x position the annotation attaches to
+%   value (number, default 6)     the threshold / reference value
+%   note  (text, default empty)   the annotation text; empty picks the localized default
+\tl_new:N \l_semio_viz_anno_mode_tl
+\tl_new:N \l_semio_viz_anno_note_tl
+\fp_new:N \l_semio_viz_anno_at_fp
+\fp_new:N \l_semio_viz_anno_value_fp
+\semio_viz_cart_family_keys:n { semio / viz / family / annotated }
+% 🔑 The annotated chart's own keys, on top of the cartesian family keys inherited above.
+\keys_define:nn { semio / viz / family / annotated } {
+  mode  .tl_set:N = \l_semio_viz_anno_mode_tl,
+  at    .fp_set:N = \l_semio_viz_anno_at_fp,
+  value .fp_set:N = \l_semio_viz_anno_value_fp,
+  note  .tl_set:N = \l_semio_viz_anno_note_tl,
+}
+
+% 🔑 semio / viz / family / axisplot — the axis-specialised plots of taxonomy §51.
+%   scale     (linear|log|symlog|pow|sqrt|reciprocal|probability|time|categorical, default linear)
+%   mode      (single|broken|discontinuous|mirrored|dual|multiple, default single)
+%   breakAt   (number, default 5)   where a broken/discontinuous axis is interrupted
+\tl_new:N \l_semio_viz_axisplot_scale_tl
+\tl_new:N \l_semio_viz_axisplot_mode_tl
+\fp_new:N \l_semio_viz_axisplot_break_fp
+\tl_new:N \l_semio_viz_axisplot_kind_tl
+\semio_viz_cart_family_keys:n { semio / viz / family / axisplot }
+% 🔑 The axis plot's own keys, on top of the cartesian family keys inherited above.
+\keys_define:nn { semio / viz / family / axisplot } {
+  scale   .tl_set:N = \l_semio_viz_axisplot_scale_tl,
+  mode    .tl_set:N = \l_semio_viz_axisplot_mode_tl,
+  breakAt .fp_set:N = \l_semio_viz_axisplot_break_fp,
+}
+%endregion 🔖️Keys
+
+%region 🔖️Families
+% 📈 line — every line chart of taxonomy §2, plus the multi-series forms of §62 and §65.
+\cs_new_protected:Npn \semio_viz_line_keys_reset: {
+  \semio_viz_cart_keys_reset:
+  \tl_set:Nn \l_semio_viz_cart_data_tl { demo-multiseries }
+  \tl_set:Nn \l_semio_viz_cart_x_tl { t }
+  \tl_set:Nn \l_semio_viz_cart_y_tl { val }
+  \tl_set:Nn \l_semio_viz_cart_group_tl { series }
+  \tl_set:Nn \l_semio_viz_line_mode_tl { plain }
+  \tl_clear:N \l_semio_viz_line_highlight_tl
+  \tl_set:Nn \l_semio_viz_line_lo_tl { lo }
+  \tl_set:Nn \l_semio_viz_line_hi_tl { hi }
+  \bool_set_false:N \l_semio_viz_line_markers_bool
+  \bool_set_false:N \l_semio_viz_line_conf_bool
+  \fp_zero:N \l_semio_viz_bar_baseline_fp
+}
+
+% ⚫ The series' data-point dots, drawn only when `markers` asks for them.
+\cs_new_protected:Npn \semio_viz_line_markers_draw: {
+  \bool_if:NT \l_semio_viz_line_markers_bool {
+    \seq_set_eq:NN \l_semio_viz_cart_map_b_seq \l_semio_viz_cart_pts_seq
+    \semio_viz_line_markers_run:
+  }
+}
+
+% 🔁 One dot per point of the sequence being marked.
+\cs_new_protected:Npn \semio_viz_line_markers_run: {
+  \seq_map_inline:Nn \l_semio_viz_cart_map_b_seq {
+    \semio_viz_cart_draw_dot:nnn { \clist_item:nn {##1} { 1 } } { \clist_item:nn {##1} { 2 } } { 1 }
+  }
+}
+
+% 📈 One series: its confidence band first, so the line and its markers sit on top of it.
+\cs_new_protected:Npn \semio_viz_line_series_draw: {
+  \bool_if:NT \l_semio_viz_line_conf_bool {
+    \tl_set_eq:NN \l_semio_viz_cart_arg_colb_tl \l_semio_viz_cart_y_tl
+    \exp_args:NV \semio_viz_line_scan:n \l_semio_viz_line_hi_tl
+    \seq_set_eq:NN \l_semio_viz_cart_pts_b_seq \l_semio_viz_cart_pts_seq
+    \exp_args:NV \semio_viz_line_scan:n \l_semio_viz_line_lo_tl
+    \semio_viz_cart_draw_band:NN \l_semio_viz_cart_pts_b_seq \l_semio_viz_cart_pts_seq
+  }
+  \exp_args:NV \semio_viz_line_scan:n \l_semio_viz_cart_y_tl
+  \semio_viz_cart_draw_path:N \l_semio_viz_cart_pts_seq
+  \semio_viz_line_markers_draw:
+}
+
+% ▶️ The whole family run: defaults, the option list #1, the frame, scales and grid, one pass per
+% series, then the axes and the legend.
+\cs_new_protected:Npn \semio_viz_line_render:n #1 {
+  \semio_viz_frame_require:n { SemioVizRunFamily }
+  \semio_viz_line_keys_reset:
+  \keys_set:nn { semio / viz / family / line } {#1}
+  \semio_viz_cart_rect_compute:
+  \semio_viz_line_groups:
+  \semio_viz_line_domain:
+  \semio_viz_line_axis_x:
+  \semio_viz_cart_scale_value:nn { linear } { v }
+  \semio_viz_cart_grid_y:
+  \semio_viz_cart_grid_x:
+  \semio_viz_cart_axis_frame:
+  \seq_map_indexed_inline:Nn \l_semio_viz_cart_groups_seq {
+    \int_set:Nn \l_semio_viz_bar_gi_int {##1}
+    \tl_set:Nn \l_semio_viz_bar_grp_tl {##2}
+    \semio_viz_line_series_color:
+    \semio_viz_line_series_draw:
+  }
+  \semio_viz_cart_axis_ticks:n { v }
+  \semio_viz_cart_legend:N \l_semio_viz_cart_groups_seq
+}
+
+% 📈 §2, §62 and §65: every line chart, from a single series to indexed and cumulative multi-series.
+\SemioVizFamily { line } { \semio_viz_line_render:n {#1} }
+
+% ✨ spark — sparkline, spark area and spark bar of taxonomy §2, drawn without chrome.
+\cs_new_protected:Npn \semio_viz_spark_keys_reset: {
+  \semio_viz_line_keys_reset:
+  \tl_clear:N \l_semio_viz_cart_group_tl
+  \tl_set:Nn \l_semio_viz_cart_data_tl { demo }
+  \tl_set:Nn \l_semio_viz_cart_x_tl { t }
+  \tl_set:Nn \l_semio_viz_cart_y_tl { val }
+  \tl_set:Nn \l_semio_viz_spark_mode_tl { line }
+  \bool_set_false:N \l_semio_viz_spark_band_bool
+  \bool_set_false:N \l_semio_viz_cart_axes_bool
+  \fp_set:Nn \l_semio_viz_cart_pad_l_fp { 1 }
+  \fp_set:Nn \l_semio_viz_cart_pad_r_fp { 1 }
+  \fp_set:Nn \l_semio_viz_cart_pad_t_fp { 1 }
+  \fp_set:Nn \l_semio_viz_cart_pad_b_fp { 1 }
+}
+
+% 📊 The spark bar form: one bar per point, sized so the whole series fits the word-sized frame.
+\cs_new_protected:Npn \semio_viz_spark_bars: {
+  \int_set:Nn \l_semio_viz_cart_n_int { \seq_count:N \l_semio_viz_cart_pts_seq }
+  \fp_set:Nn \l_semio_viz_cart_a_fp
+    { ( \l_semio_viz_cart_xhi_fp - \l_semio_viz_cart_xlo_fp ) / \l_semio_viz_cart_n_int * 0.7 }
+  \seq_set_eq:NN \l_semio_viz_cart_map_b_seq \l_semio_viz_cart_pts_seq
+  \semio_viz_spark_bars_run:
+}
+
+% 🔁 One bar per point, from the plot floor up to the point.
+\cs_new_protected:Npn \semio_viz_spark_bars_run: {
+  \seq_map_inline:Nn \l_semio_viz_cart_map_b_seq {
+    \semio_viz_cart_draw_rect:nnnn
+      { \clist_item:nn {##1} { 1 } - \l_semio_viz_cart_a_fp / 2 }
+      { \fp_eval:n { \l_semio_viz_cart_ylo_fp } }
+      { \fp_eval:n { \l_semio_viz_cart_a_fp } }
+      { \clist_item:nn {##1} { 2 } - \l_semio_viz_cart_ylo_fp }
+  }
+}
+
+% ▶️ The whole family run: defaults, the option list #1, the bare frame — no axes, no legend, no
+% grid, because a spark has to sit inside a line of text — then the form the `mode` names.
+\cs_new_protected:Npn \semio_viz_spark_render:n #1 {
+  \semio_viz_frame_require:n { SemioVizRunFamily }
+  \semio_viz_spark_keys_reset:
+  \keys_set:nn { semio / viz / family / spark } {#1}
+  \semio_viz_cart_rect_compute:
+  \semio_viz_line_domain:
+  \semio_viz_line_axis_x:
+  \semio_viz_cart_scale_value:nn { linear } { v }
+  \bool_if:NT \l_semio_viz_spark_band_bool {
+    \fill [ semio-chrome-panel , fill~opacity=0.5 ]
+      ( \fp_eval:n { \l_semio_viz_cart_xlo_fp } , \fp_eval:n { \l_semio_viz_cart_ylo_fp } )
+      rectangle ( \fp_eval:n { \l_semio_viz_cart_xhi_fp } , \fp_eval:n { \l_semio_viz_cart_yhi_fp } ) ;
+  }
+  \tl_clear:N \l_semio_viz_bar_grp_tl
+  \semio_viz_cart_color:nN { 1 } \l_semio_viz_cart_stroke_tl
+  \tl_set_eq:NN \l_semio_viz_cart_fill_tl \l_semio_viz_cart_stroke_tl
+  \exp_args:NV \semio_viz_line_scan:n \l_semio_viz_cart_y_tl
+  \str_case:VnF \l_semio_viz_spark_mode_tl {
+    { bar } { \semio_viz_spark_bars: }
+    { area } {
+      \seq_set_eq:NN \l_semio_viz_cart_pts_b_seq \l_semio_viz_cart_pts_seq
+      \semio_viz_spark_floor:
+      \semio_viz_cart_draw_band:NN \l_semio_viz_cart_pts_b_seq \l_semio_viz_cart_pts_seq
+      \seq_set_eq:NN \l_semio_viz_cart_pts_seq \l_semio_viz_cart_pts_b_seq
+      \semio_viz_cart_draw_path:N \l_semio_viz_cart_pts_seq
+    }
+  } { \semio_viz_cart_draw_path:N \l_semio_viz_cart_pts_seq }
+}
+
+% ⬇️ Replaces the point sequence by its own projection onto the plot floor.
+\cs_new_protected:Npn \semio_viz_spark_floor: {
+  \seq_set_eq:NN \l_semio_viz_cart_map_b_seq \l_semio_viz_cart_pts_seq
+  \seq_clear:N \l_semio_viz_cart_pts_seq
+  \semio_viz_spark_floor_run:
+}
+
+% 🔁 The projection itself: every point's abscissa taken down to the plot floor.
+\cs_new_protected:Npn \semio_viz_spark_floor_run: {
+  \seq_map_inline:Nn \l_semio_viz_cart_map_b_seq {
+    \seq_put_right:Nx \l_semio_viz_cart_pts_seq
+      { \clist_item:nn {##1} { 1 } , \fp_eval:n { \l_semio_viz_cart_ylo_fp } }
+  }
+}
+
+% ✨ §2: the word-sized charts — sparkline, spark area and spark bar.
+\SemioVizFamily { spark } { \semio_viz_spark_render:n {#1} }
+
+% ↗️ slope — slope charts, slopegraphs and change/delta comparisons of taxonomy §2.
+\cs_new_protected:Npn \semio_viz_slope_keys_reset: {
+  \semio_viz_line_keys_reset:
+  \tl_set:Nn \l_semio_viz_slope_mode_tl { slope }
+  \bool_set_true:N \l_semio_viz_slope_markers_bool
+}
+
+\clist_new:N \l_semio_viz_slope_first_clist
+\clist_new:N \l_semio_viz_slope_last_clist
+
+% ↗️ One series reduced to its two ends, then drawn in the form the `mode` names.
+\cs_new_protected:Npn \semio_viz_slope_series: {
+  \exp_args:NV \semio_viz_line_scan:n \l_semio_viz_cart_y_tl
+  \int_set:Nn \l_semio_viz_cart_n_int { \seq_count:N \l_semio_viz_cart_pts_seq }
+  \int_compare:nNnT { \l_semio_viz_cart_n_int } > { 1 } {
+    \clist_set:Nx \l_semio_viz_slope_first_clist { \seq_item:Nn \l_semio_viz_cart_pts_seq { 1 } }
+    \clist_set:Nx \l_semio_viz_slope_last_clist
+      { \seq_item:Nn \l_semio_viz_cart_pts_seq { \l_semio_viz_cart_n_int } }
+    \fp_set:Nn \l_semio_viz_cart_a_fp { \clist_item:Nn \l_semio_viz_slope_first_clist { 2 } }
+    \fp_set:Nn \l_semio_viz_cart_b_fp { \clist_item:Nn \l_semio_viz_slope_last_clist { 2 } }
+    \str_case:VnF \l_semio_viz_slope_mode_tl {
+      { change } { \fp_set:Nn \l_semio_viz_slope_width_fp { 4 } \semio_viz_slope_change: }
+      { delta } { \fp_set:Nn \l_semio_viz_slope_width_fp { 2 } \semio_viz_slope_change: }
+      { before-after } { \semio_viz_slope_before_after: }
+    } { \semio_viz_slope_line: }
+  }
+}
+
+% ➗ The slope itself: one segment between the two ends, with a dot at each under `markers`.
+\cs_new_protected:Npn \semio_viz_slope_line: {
+  \semio_viz_cart_draw_seg:nnnn
+    { \fp_eval:n { \l_semio_viz_cart_xlo_fp + 4 } } { \fp_eval:n { \l_semio_viz_cart_a_fp } }
+    { \fp_eval:n { \l_semio_viz_cart_xhi_fp - 4 } } { \fp_eval:n { \l_semio_viz_cart_b_fp } }
+  \bool_if:NT \l_semio_viz_slope_markers_bool {
+    \semio_viz_cart_draw_dot:nnn { \fp_eval:n { \l_semio_viz_cart_xlo_fp + 4 } }
+      { \fp_eval:n { \l_semio_viz_cart_a_fp } } { 1.2 }
+    \semio_viz_cart_draw_dot:nnn { \fp_eval:n { \l_semio_viz_cart_xhi_fp - 4 } }
+      { \fp_eval:n { \l_semio_viz_cart_b_fp } } { 1.2 }
+  }
+}
+
+\fp_new:N \l_semio_viz_slope_width_fp
+
+% ↔️ before/after keeps the two ends as separate marks joined by a hairline, not a bold slope.
+\cs_new_protected:Npn \semio_viz_slope_before_after: {
+  \semio_viz_cart_draw_hair:nnnn
+    { \fp_eval:n { \l_semio_viz_cart_xlo_fp + 4 } } { \fp_eval:n { \l_semio_viz_cart_a_fp } }
+    { \fp_eval:n { \l_semio_viz_cart_xhi_fp - 4 } } { \fp_eval:n { \l_semio_viz_cart_b_fp } }
+  \semio_viz_cart_draw_dot:nnn { \fp_eval:n { \l_semio_viz_cart_xlo_fp + 4 } }
+    { \fp_eval:n { \l_semio_viz_cart_a_fp } } { 1.8 }
+  \semio_viz_cart_draw_dot:nnn { \fp_eval:n { \l_semio_viz_cart_xhi_fp - 4 } }
+    { \fp_eval:n { \l_semio_viz_cart_b_fp } } { 1.8 }
+}
+
+% 🔺 The change and delta forms: one bar per series spanning from its first value to its last,
+% in the semantic colour of the direction it moved.
+\cs_new_protected:Npn \semio_viz_slope_change: {
+  \fp_set:Nn \l_semio_viz_cart_c_fp
+    { \l_semio_viz_cart_xlo_fp
+      + ( \l_semio_viz_bar_gi_int - 0.5 )
+        * ( \l_semio_viz_cart_xhi_fp - \l_semio_viz_cart_xlo_fp )
+        / \seq_count:N \l_semio_viz_cart_groups_seq }
+  \fp_compare:nNnTF { \l_semio_viz_cart_b_fp } < { \l_semio_viz_cart_a_fp }
+    { \tl_set:Nn \l_semio_viz_cart_fill_tl { \semio_viz_theme_semantic:n { negative } } }
+    { \tl_set:Nn \l_semio_viz_cart_fill_tl { \semio_viz_theme_semantic:n { positive } } }
+  \semio_viz_cart_draw_rect:nnnn
+    { \fp_eval:n { \l_semio_viz_cart_c_fp - \l_semio_viz_slope_width_fp / 2 } }
+    { \fp_eval:n { \l_semio_viz_cart_a_fp } }
+    { \fp_eval:n { \l_semio_viz_slope_width_fp } }
+    { \fp_eval:n { \l_semio_viz_cart_b_fp - \l_semio_viz_cart_a_fp } }
+}
+
+% ▶️ The whole family run: defaults, the option list #1, the frame and scales, one pass per series.
+\cs_new_protected:Npn \semio_viz_slope_render:n #1 {
+  \semio_viz_frame_require:n { SemioVizRunFamily }
+  \semio_viz_slope_keys_reset:
+  \keys_set:nn { semio / viz / family / slope } {#1}
+  \semio_viz_cart_rect_compute:
+  \semio_viz_line_groups:
+  \semio_viz_line_domain:
+  \semio_viz_line_axis_x:
+  \semio_viz_cart_scale_value:nn { linear } { v }
+  \semio_viz_cart_axis_frame:
+  \seq_map_indexed_inline:Nn \l_semio_viz_cart_groups_seq {
+    \int_set:Nn \l_semio_viz_bar_gi_int {##1}
+    \tl_set:Nn \l_semio_viz_bar_grp_tl {##2}
+    \semio_viz_line_series_color:
+    \semio_viz_slope_series:
+  }
+  \semio_viz_cart_axis_ticks:n { v }
+  \semio_viz_cart_legend:N \l_semio_viz_cart_groups_seq
+}
+
+% ↗️ §2: slope charts, slopegraphs and the change and delta comparisons that read the same data.
+\SemioVizFamily { slope } { \semio_viz_slope_render:n {#1} }
+
+% 🗯️ annotated — the annotation-driven visualization types of taxonomy §50.
+\cs_new_protected:Npn \semio_viz_anno_keys_reset: {
+  \semio_viz_line_keys_reset:
+  \tl_set:Nn \l_semio_viz_anno_mode_tl { callout }
+  \tl_clear:N \l_semio_viz_anno_note_tl
+  \fp_set:Nn \l_semio_viz_anno_at_fp { 3 }
+  \fp_set:Nn \l_semio_viz_anno_value_fp { 6 }
+}
+
+% 🌐 The default annotation caption in the document language; never a hard-coded single language.
+\cs_new_protected:Npn \semio_viz_anno_default_note: {
+  \tl_if_empty:NT \l_semio_viz_anno_note_tl {
+    \cs_if_exist:NTF \l_semio_language_tl
+      {
+        \str_if_eq:VnTF \l_semio_language_tl { de }
+          { \tl_set:Nn \l_semio_viz_anno_note_tl { Hinweis } }
+          { \tl_set:Nn \l_semio_viz_anno_note_tl { Note } }
+      }
+      { \tl_set:Nn \l_semio_viz_anno_note_tl { Note } }
+  }
+}
+
+% ✏️ The annotation the `mode` names, drawn at the `at` position and the `value` it refers to.
+\cs_new_protected:Npn \semio_viz_anno_mark: {
+  \semio_viz_cart_xmap:VN \l_semio_viz_anno_at_fp \l_semio_viz_cart_c_fp
+  \semio_viz_cart_ymap:VN \l_semio_viz_anno_value_fp \l_semio_viz_cart_d_fp
+  \tl_set:Nn \l_semio_viz_cart_stroke_tl { \semio_viz_theme_color:n { 0 } }
+  \tl_set:Nn \l_semio_viz_cart_fill_tl { \semio_viz_theme_color:n { 0 } }
+  \str_case:VnF \l_semio_viz_anno_mode_tl {
+    { threshold } {
+      \fill [ \semio_viz_theme_color:n { 0 } , fill~opacity=0.1 ]
+        ( \fp_eval:n { \l_semio_viz_cart_xlo_fp } , \fp_eval:n { \l_semio_viz_cart_d_fp } )
+        rectangle ( \fp_eval:n { \l_semio_viz_cart_xhi_fp } , \fp_eval:n { \l_semio_viz_cart_yhi_fp } ) ;
+      \semio_viz_probe_geometry:nx { region }
+        { \fp_eval:n { round( \l_semio_viz_cart_d_fp , 4 ) } ,
+          \fp_eval:n { round( \l_semio_viz_cart_yhi_fp , 4 ) } }
+      \semio_viz_anno_rule:
+    }
+    { reference-line } { \semio_viz_anno_rule: }
+    { reference-band } {
+      \fill [ \semio_viz_theme_color:n { 0 } , fill~opacity=0.16 ]
+        ( \fp_eval:n { \l_semio_viz_cart_xlo_fp } , \fp_eval:n { \l_semio_viz_cart_d_fp - 3 } )
+        rectangle ( \fp_eval:n { \l_semio_viz_cart_xhi_fp } ,
+                    \fp_eval:n { \l_semio_viz_cart_d_fp + 3 } ) ;
+      \semio_viz_probe_geometry:nx { band }
+        { \fp_eval:n { round( \l_semio_viz_cart_d_fp - 3 , 4 ) } ,
+          \fp_eval:n { round( \l_semio_viz_cart_d_fp + 3 , 4 ) } }
+    }
+    { highlight } {
+      \fill [ \semio_viz_theme_semantic:n { caution } , fill~opacity=0.2 ]
+        ( \fp_eval:n { \l_semio_viz_cart_c_fp - 5 } , \fp_eval:n { \l_semio_viz_cart_ylo_fp } )
+        rectangle ( \fp_eval:n { \l_semio_viz_cart_c_fp + 5 } ,
+                    \fp_eval:n { \l_semio_viz_cart_yhi_fp } ) ;
+      \semio_viz_probe_geometry:nx { region }
+        { \fp_eval:n { round( \l_semio_viz_cart_c_fp - 5 , 4 ) } ,
+          \fp_eval:n { round( \l_semio_viz_cart_c_fp + 5 , 4 ) } }
+    }
+    { label-rich } { \semio_viz_anno_labels_all: }
+    { direct-label } { \semio_viz_anno_label_end: }
+    { event-marker } {
+      \semio_viz_cart_draw_hair:nnnn { \fp_eval:n { \l_semio_viz_cart_c_fp } }
+        { \fp_eval:n { \l_semio_viz_cart_ylo_fp } } { \fp_eval:n { \l_semio_viz_cart_c_fp } }
+        { \fp_eval:n { \l_semio_viz_cart_yhi_fp } }
+      \semio_viz_cart_draw_dot:nnn { \fp_eval:n { \l_semio_viz_cart_c_fp } }
+        { \fp_eval:n { \l_semio_viz_cart_yhi_fp } } { 1.2 }
+    }
+  } { \semio_viz_anno_callout: }
+}
+
+% 🔠 label-rich marks every sampled position of the reference series with its value.
+\cs_new_protected:Npn \semio_viz_anno_labels_all: {
+  \seq_map_inline:Nn \l_semio_viz_cart_pts_seq {
+    \semio_viz_cart_draw_dot:nnn { \clist_item:nn {##1} { 1 } } { \clist_item:nn {##1} { 2 } } { 0.9 }
+    \semio_viz_cart_draw_hair:nnnn { \clist_item:nn {##1} { 1 } }
+      { \fp_eval:n { \l_semio_viz_cart_ylo_fp } } { \clist_item:nn {##1} { 1 } }
+      { \clist_item:nn {##1} { 2 } }
+  }
+}
+
+% 🏷️ direct-label writes the series name at the last point instead of into a legend.
+\clist_new:N \l_semio_viz_anno_point_clist
+
+\cs_new_protected:Npn \semio_viz_anno_label_end: {
+  \int_set:Nn \l_semio_viz_cart_n_int { \seq_count:N \l_semio_viz_cart_pts_seq }
+  \int_compare:nNnT { \l_semio_viz_cart_n_int } > { 0 } {
+    \clist_set:Nx \l_semio_viz_anno_point_clist
+      { \seq_item:Nn \l_semio_viz_cart_pts_seq { \l_semio_viz_cart_n_int } }
+    \semio_viz_cart_draw_dot:nnn { \clist_item:Nn \l_semio_viz_anno_point_clist { 1 } }
+      { \clist_item:Nn \l_semio_viz_anno_point_clist { 2 } } { 1.3 }
+    \semio_viz_cart_text:nnnn
+      { \fp_eval:n { \clist_item:Nn \l_semio_viz_anno_point_clist { 1 } + 1.4 } }
+      { \clist_item:Nn \l_semio_viz_anno_point_clist { 2 } } { west } { \l_semio_viz_bar_grp_tl }
+  }
+}
+
+% ➖ A reference rule across the frame at the annotation's value, captioned at its right end.
+\cs_new_protected:Npn \semio_viz_anno_rule: {
+  \semio_viz_cart_draw_hair:nnnn { \fp_eval:n { \l_semio_viz_cart_xlo_fp } }
+    { \fp_eval:n { \l_semio_viz_cart_d_fp } } { \fp_eval:n { \l_semio_viz_cart_xhi_fp } }
+    { \fp_eval:n { \l_semio_viz_cart_d_fp } }
+  \semio_viz_cart_text:nnnn { \fp_eval:n { \l_semio_viz_cart_xhi_fp } }
+    { \fp_eval:n { \l_semio_viz_cart_d_fp + 1 } } { south~east } { \l_semio_viz_anno_note_tl }
+}
+
+% 💬 A dot on the point being called out, with the note set beside it.
+\cs_new_protected:Npn \semio_viz_anno_callout: {
+  \semio_viz_cart_draw_dot:nnn { \fp_eval:n { \l_semio_viz_cart_c_fp } }
+    { \fp_eval:n { \l_semio_viz_cart_d_fp } } { 1.4 }
+  \semio_viz_cart_draw_hair:nnnn { \fp_eval:n { \l_semio_viz_cart_c_fp } }
+    { \fp_eval:n { \l_semio_viz_cart_d_fp } } { \fp_eval:n { \l_semio_viz_cart_c_fp + 8 } }
+    { \fp_eval:n { \l_semio_viz_cart_d_fp + 6 } }
+  \semio_viz_cart_text:nnnn { \fp_eval:n { \l_semio_viz_cart_c_fp + 8.6 } }
+    { \fp_eval:n { \l_semio_viz_cart_d_fp + 6 } } { west } { \l_semio_viz_anno_note_tl }
+}
+
+% ▶️ The whole family run: defaults, the option list #1, the localized note, the series, then the
+% annotation the `mode` names.
+\cs_new_protected:Npn \semio_viz_anno_render:n #1 {
+  \semio_viz_frame_require:n { SemioVizRunFamily }
+  \semio_viz_anno_keys_reset:
+  \keys_set:nn { semio / viz / family / annotated } {#1}
+  \semio_viz_anno_default_note:
+  \semio_viz_cart_rect_compute:
+  \semio_viz_line_groups:
+  \semio_viz_line_domain:
+  \semio_viz_line_axis_x:
+  \semio_viz_cart_scale_value:nn { linear } { v }
+  \semio_viz_cart_axis_frame:
+  \seq_map_indexed_inline:Nn \l_semio_viz_cart_groups_seq {
+    \int_set:Nn \l_semio_viz_bar_gi_int {##1}
+    \tl_set:Nn \l_semio_viz_bar_grp_tl {##2}
+    \tl_set:Nn \l_semio_viz_cart_stroke_tl { semio-chrome-border-normal }
+    \tl_set_eq:NN \l_semio_viz_cart_fill_tl \l_semio_viz_cart_stroke_tl
+    \exp_args:NV \semio_viz_line_scan:n \l_semio_viz_cart_y_tl
+    \semio_viz_cart_draw_path:N \l_semio_viz_cart_pts_seq
+  }
+  \semio_viz_anno_mark:
+  \semio_viz_cart_axis_ticks:n { v }
+}
+
+% ✏️ §50: the annotation-driven chart types, one annotation per kind on a shared series.
+\SemioVizFamily { annotated } { \semio_viz_anno_render:n {#1} }
+
+% 📏 axisplot — the axis-specialised plots of taxonomy §51 and their scale kinds.
+\cs_new_protected:Npn \semio_viz_axisplot_keys_reset: {
+  \semio_viz_cart_keys_reset:
+  \tl_set:Nn \l_semio_viz_cart_data_tl { demo-scatter }
+  \tl_set:Nn \l_semio_viz_cart_x_tl { x }
+  \tl_set:Nn \l_semio_viz_cart_y_tl { y }
+  \tl_clear:N \l_semio_viz_cart_group_tl
+  \tl_set:Nn \l_semio_viz_axisplot_scale_tl { linear }
+  \tl_set:Nn \l_semio_viz_axisplot_mode_tl { single }
+  \fp_set:Nn \l_semio_viz_axisplot_break_fp { 5 }
+  \tl_set:Nn \l_semio_viz_cart_grid_tl { both }
+}
+
+% 🧮 The scale kind the value axis is registered with; the derived kinds pre-transform instead.
+\cs_new_protected:Npn \semio_viz_axisplot_kind:N #1 {
+  \str_case:VnF \l_semio_viz_axisplot_scale_tl {
+    { log } { \tl_set:Nn #1 { log } }
+    { symlog } { \tl_set:Nn #1 { symlog } }
+    { pow } { \tl_set:Nn #1 { pow } }
+    { sqrt } { \tl_set:Nn #1 { sqrt } }
+    { categorical } { \tl_set:Nn #1 { linear } }
+  } { \tl_set:Nn #1 { linear } }
+}
+
+% ➗ reciprocal and probability have no kernel scale yet; they are value pre-transforms here.
+\cs_new_protected:Npn \semio_viz_axisplot_pretransform:N #1 {
+  \str_case:VnT \l_semio_viz_axisplot_scale_tl {
+    { reciprocal } { \fp_set:Nn #1 { 1 / max( abs(#1) , 0.05 ) } }
+    { probability } { \fp_set:Nn #1 { ln( max( #1 , 0.01 ) / max( 1 - (#1) / 12 , 0.01 ) ) } }
+  } { }
+}
+
+% 📐 The extra axis furniture the `mode` asks for: the second axis of a dual plot, the further
+% axes of a multiple one, the mirror line, and the break marks of a broken one.
+\cs_new_protected:Npn \semio_viz_axisplot_chrome: {
+  \str_case:VnF \l_semio_viz_axisplot_mode_tl {
+    { broken } { \semio_viz_axisplot_break: }
+    { discontinuous } {
+      \semio_viz_axisplot_break:
+      \semio_viz_cart_ymap:VN \l_semio_viz_axisplot_break_fp \l_semio_viz_cart_d_fp
+      \fill [ semio-chrome-canvas ]
+        ( \fp_eval:n { \l_semio_viz_cart_xlo_fp } , \fp_eval:n { \l_semio_viz_cart_d_fp - 2.4 } )
+        rectangle ( \fp_eval:n { \l_semio_viz_cart_xhi_fp } ,
+                    \fp_eval:n { \l_semio_viz_cart_d_fp + 2.4 } ) ;
+      \semio_viz_probe_geometry:nx { region }
+        { \fp_eval:n { round( \l_semio_viz_cart_d_fp - 2.4 , 4 ) } ,
+          \fp_eval:n { round( \l_semio_viz_cart_d_fp + 2.4 , 4 ) } }
+    }
+    { mirrored } {
+      \semio_viz_cart_draw_hair:nnnn { \fp_eval:n { \l_semio_viz_cart_xlo_fp } }
+        { \fp_eval:n { ( \l_semio_viz_cart_ylo_fp + \l_semio_viz_cart_yhi_fp ) / 2 } }
+        { \fp_eval:n { \l_semio_viz_cart_xhi_fp } }
+        { \fp_eval:n { ( \l_semio_viz_cart_ylo_fp + \l_semio_viz_cart_yhi_fp ) / 2 } }
+    }
+    { dual } {
+      \semio_viz_cart_draw_hair:nnnn { \fp_eval:n { \l_semio_viz_cart_xhi_fp } }
+        { \fp_eval:n { \l_semio_viz_cart_ylo_fp } } { \fp_eval:n { \l_semio_viz_cart_xhi_fp } }
+        { \fp_eval:n { \l_semio_viz_cart_yhi_fp } }
+    }
+    { multiple } {
+      \semio_viz_cart_draw_hair:nnnn { \fp_eval:n { \l_semio_viz_cart_xhi_fp } }
+        { \fp_eval:n { \l_semio_viz_cart_ylo_fp } } { \fp_eval:n { \l_semio_viz_cart_xhi_fp } }
+        { \fp_eval:n { \l_semio_viz_cart_yhi_fp } }
+      \semio_viz_cart_draw_hair:nnnn { \fp_eval:n { \l_semio_viz_cart_xhi_fp - 5 } }
+        { \fp_eval:n { \l_semio_viz_cart_ylo_fp } } { \fp_eval:n { \l_semio_viz_cart_xhi_fp - 5 } }
+        { \fp_eval:n { \l_semio_viz_cart_yhi_fp } }
+    }
+  } { }
+}
+
+% ✂️ The break at `breakAt`: the axis blanked out and two slashes drawn across it.
+\cs_new_protected:Npn \semio_viz_axisplot_break: {
+  \semio_viz_cart_ymap:VN \l_semio_viz_axisplot_break_fp \l_semio_viz_cart_d_fp
+  \fill [ semio-chrome-canvas ]
+    ( \fp_eval:n { \l_semio_viz_cart_xlo_fp - 1.2 } , \fp_eval:n { \l_semio_viz_cart_d_fp - 0.8 } )
+    rectangle ( \fp_eval:n { \l_semio_viz_cart_xhi_fp } ,
+                \fp_eval:n { \l_semio_viz_cart_d_fp + 0.8 } ) ;
+  \semio_viz_cart_draw_hair:nnnn { \fp_eval:n { \l_semio_viz_cart_xlo_fp - 1.6 } }
+    { \fp_eval:n { \l_semio_viz_cart_d_fp - 1.2 } } { \fp_eval:n { \l_semio_viz_cart_xlo_fp + 1.2 } }
+    { \fp_eval:n { \l_semio_viz_cart_d_fp - 0.2 } }
+  \semio_viz_cart_draw_hair:nnnn { \fp_eval:n { \l_semio_viz_cart_xlo_fp - 1.6 } }
+    { \fp_eval:n { \l_semio_viz_cart_d_fp + 0.2 } } { \fp_eval:n { \l_semio_viz_cart_xlo_fp + 1.2 } }
+    { \fp_eval:n { \l_semio_viz_cart_d_fp + 1.2 } }
+}
+
+% 📈 The plotted series, through whichever value pre-transform the `scale` needs.
+\cs_new_protected:Npn \semio_viz_axisplot_points: {
+  \seq_clear:N \l_semio_viz_cart_pts_seq
+  \semio_viz_table_nrows:VN \l_semio_viz_cart_data_tl \l_semio_viz_cart_nrows_int
+  \semio_viz_axisplot_points_run:
+}
+
+% 🔁 The walk itself: every data row pre-transformed, then mapped through the two scales.
+\cs_new_protected:Npn \semio_viz_axisplot_points_run: {
+  \int_step_inline:nn { \l_semio_viz_cart_nrows_int } {
+    \semio_viz_table_cell:nnVN { \l_semio_viz_cart_data_tl } {##1} \l_semio_viz_cart_x_tl
+      \l_semio_viz_line_xcell_tl
+    \semio_viz_table_cell:nnVN { \l_semio_viz_cart_data_tl } {##1} \l_semio_viz_cart_y_tl
+      \l_semio_viz_line_ycell_tl
+    \fp_set:Nn \l_semio_viz_cart_v_fp { \l_semio_viz_line_ycell_tl }
+    \semio_viz_axisplot_pretransform:N \l_semio_viz_cart_v_fp
+    \semio_viz_cart_xmap:VN \l_semio_viz_line_xcell_tl \l_semio_viz_cart_c_fp
+    \semio_viz_cart_ymap:VN \l_semio_viz_cart_v_fp \l_semio_viz_cart_d_fp
+    \seq_put_right:Nx \l_semio_viz_cart_pts_seq
+      { \fp_eval:n { \l_semio_viz_cart_c_fp } , \fp_eval:n { \l_semio_viz_cart_d_fp } }
+  }
+}
+
+% ▶️ The whole family run: defaults, the option list #1, the value axis under the named scale,
+% the series, then the axis furniture the `mode` asks for.
+\cs_new_protected:Npn \semio_viz_axisplot_render:n #1 {
+  \semio_viz_frame_require:n { SemioVizRunFamily }
+  \semio_viz_axisplot_keys_reset:
+  \keys_set:nn { semio / viz / family / axisplot } {#1}
+  \semio_viz_cart_rect_compute:
+  \semio_viz_cart_extent:VVNN \l_semio_viz_cart_data_tl \l_semio_viz_cart_x_tl
+    \l_semio_viz_cart_xmin_fp \l_semio_viz_cart_xmax_fp
+  \semio_viz_cart_scale_x:n { linear }
+  \semio_viz_cart_domain_plain:
+  \semio_viz_axisplot_pretransform:N \l_semio_viz_cart_ymin_fp
+  \semio_viz_axisplot_pretransform:N \l_semio_viz_cart_ymax_fp
+  \fp_compare:nNnT { \l_semio_viz_cart_ymin_fp } > { \l_semio_viz_cart_ymax_fp } {
+    \fp_set_eq:NN \l_semio_viz_cart_e_fp \l_semio_viz_cart_ymin_fp
+    \fp_set_eq:NN \l_semio_viz_cart_ymin_fp \l_semio_viz_cart_ymax_fp
+    \fp_set_eq:NN \l_semio_viz_cart_ymax_fp \l_semio_viz_cart_e_fp
+  }
+  \str_if_eq:VnT \l_semio_viz_axisplot_scale_tl { categorical } {
+    \semio_viz_cart_cats:VVN \l_semio_viz_cart_data_tl \l_semio_viz_cart_x_tl
+      \l_semio_viz_cart_cats_seq
+    \semio_viz_cart_scale_band:Nn \l_semio_viz_cart_cats_seq { cart-x }
+  }
+  \str_if_eq:VnT \l_semio_viz_axisplot_scale_tl { log }
+    { \fp_set:Nn \l_semio_viz_cart_ymin_fp
+        { max( \l_semio_viz_cart_ymin_fp , \l_semio_viz_cart_ymax_fp / 100 ) } }
+  \str_if_eq:VnT \l_semio_viz_axisplot_scale_tl { pow }
+    { \tl_set:Nn \l_semio_viz_cart_scale_opts_tl { exponent=2 } }
+  \semio_viz_axisplot_kind:N \l_semio_viz_axisplot_kind_tl
+  \semio_viz_cart_scale_value:Vn \l_semio_viz_axisplot_kind_tl { v }
+  \semio_viz_cart_grid_y:
+  \semio_viz_cart_grid_x:
+  \semio_viz_cart_axis_frame:
+  \semio_viz_cart_color:nN { 1 } \l_semio_viz_cart_stroke_tl
+  \tl_set_eq:NN \l_semio_viz_cart_fill_tl \l_semio_viz_cart_stroke_tl
+  \semio_viz_axisplot_points:
+  \semio_viz_cart_draw_path:N \l_semio_viz_cart_pts_seq
+  \seq_set_eq:NN \l_semio_viz_cart_map_b_seq \l_semio_viz_cart_pts_seq
+  \semio_viz_line_markers_run:
+  \semio_viz_axisplot_chrome:
+  \str_if_eq:VnT \l_semio_viz_axisplot_scale_tl { time } {
+    \semio_viz_cart_cats:VVN \l_semio_viz_cart_data_tl \l_semio_viz_cart_x_tl
+      \l_semio_viz_cart_cats_seq
+    \semio_viz_cart_scale_band:Nn \l_semio_viz_cart_cats_seq { cart-band }
+    \semio_viz_cart_axis_labels_band:Nn \l_semio_viz_cart_cats_seq { cart-band }
+  }
+  \semio_viz_cart_axis_ticks:n { v }
+}
+
+% 📐 §51: the axis-specialised plots — log, symlog, power, probability, broken, dual and mirrored.
+\SemioVizFamily { axisplot } { \semio_viz_axisplot_render:n {#1} }
+%endregion 🔖️Families
+
+\ExplSyntaxOff

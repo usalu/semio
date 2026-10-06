@@ -1,0 +1,8 @@
+\ApiScopeSource{api-path-grid}{semio / viz / grid}
+\SemioTableLong[text-size=8pt]{\Key{api-path-grid} \ApiText{Standalone grid options}{Optionen des eigenständigen Gitters}}{0.20,0.14,0.16,0.50}{\ApiKey & \ApiType & \ApiDefault & \ApiMeaning}{%
+  \SemioTableRow{\Key{x} & \Key{name} & --- & \ApiText{Named horizontal scale; empty omits its grid lines.}{Benannte horizontale Skala; leer unterdrückt ihre Gitterlinien.}}
+  \SemioTableRow{\Key{y} & \Key{name} & --- & \ApiText{Named vertical scale; empty omits its grid lines.}{Benannte vertikale Skala; leer unterdrückt ihre Gitterlinien.}}
+  \SemioTableRow{\Key{minor} & \Key{boolean} & \Key{false} & \ApiText{Forwards minor grid lines to each selected scale axis.}{Gibt Nebengitterlinien an die Achse jeder gewählten Skala weiter.}}
+  \SemioTableRow{\Key{ticks} & \Key{integer} & \Key{5} & \ApiText{Target major tick count forwarded to each selected scale axis.}{Angestrebte Hauptteilstrichzahl, die an die Achse jeder gewählten Skala weitergegeben wird.}}
+}
+

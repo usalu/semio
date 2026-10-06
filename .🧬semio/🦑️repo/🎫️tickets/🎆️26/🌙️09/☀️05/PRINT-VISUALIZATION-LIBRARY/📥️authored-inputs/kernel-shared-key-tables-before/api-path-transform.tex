@@ -1,0 +1,25 @@
+\SemioTableLong[text-size=8pt]{\ApiText{Transform operations}{Transformationsoperationen}}{0.17,0.19,0.16,0.48}{\ApiKey & \ApiType & \ApiDefault & \ApiMeaning}{%
+  \SemioTableRow{\Key{filter} & \Key{fp predicate} & --- & \ApiText{Keeps the rows for which the predicate over bare column names holds, e.g. \Key{val > 4 \&\& val2 < 6}.}{Behält die Zeilen, für die das Prädikat über blanken Spaltennamen gilt, z.\,B. \Key{val > 4 \&\& val2 < 6}.}}
+  \SemioTableRow{\Key{sort} & \Key{column} & --- & \ApiText{Sorts by that column.}{Sortiert nach dieser Spalte.}}
+  \SemioTableRow{\Key{descending} & \Key{boolean} & \Key{false} & \ApiText{Reverses the sort order.}{Kehrt die Sortierreihenfolge um.}}
+  \SemioTableRow{\Key{group} & \Key{column} & --- & \ApiText{The column whose distinct values become the groups.}{Die Spalte, deren verschiedene Werte die Gruppen bilden.}}
+  \SemioTableRow{\Key{rollup} & \Key{agg:column} & --- & \ApiText{Aggregates each group; \Key{agg} is \Key{sum}, \Key{mean}, \Key{min}, \Key{max}, \Key{count} or \Key{median}.}{Aggregiert jede Gruppe; \Key{agg} ist \Key{sum}, \Key{mean}, \Key{min}, \Key{max}, \Key{count} oder \Key{median}.}}
+  \SemioTableRow{\Key{pivot} & \Key{key:value} & --- & \ApiText{Turns the distinct key values into columns; the group column stays as the row key.}{Macht die verschiedenen Schlüsselwerte zu Spalten; die Gruppenspalte bleibt der Zeilenschlüssel.}}
+  \SemioTableRow{\Key{fold} & \Key{id:c1;c2;…} & --- & \ApiText{Long form: the named columns become the columns \Key{key} and \Key{value}.}{Langform: Die genannten Spalten werden zu den Spalten \Key{key} und \Key{value}.}}
+  \SemioTableRow{\Key{join} & \Key{table:left:right} & --- & \ApiText{Inner join on equal keys.}{Innerer Verbund über gleiche Schlüssel.}}
+  \SemioTableRow{\Key{window} & \Key{kind:column:size} & --- & \ApiText{\Key{movingAverage}, \Key{cumulativeSum}, \Key{rank} or \Key{lag} over a sliding window.}{\Key{movingAverage}, \Key{cumulativeSum}, \Key{rank} oder \Key{lag} über ein gleitendes Fenster.}}
+  \SemioTableRow{\Key{bin} & \Key{column} & --- & \ApiText{Bins the column into the columns \Key{x0}, \Key{x1}, \Key{count}.}{Klassiert die Spalte in die Spalten \Key{x0}, \Key{x1}, \Key{count}.}}
+  \SemioTableRow{\Key{thresholds} & \Key{rule} & \Key{sturges} & \ApiText{\Key{sturges}, \Key{count:n}, \Key{width:w} or an explicit \Key{a;b;c} list.}{\Key{sturges}, \Key{count:n}, \Key{width:w} oder eine explizite Liste \Key{a;b;c}.}}
+  \SemioTableRow{\Key{stack} & \Key{x:series:value} & --- & \ApiText{Stacks into the columns \Key{x}, \Key{series}, \Key{y0}, \Key{y1}.}{Stapelt in die Spalten \Key{x}, \Key{series}, \Key{y0}, \Key{y1}.}}
+  \SemioTableRow{\Key{order} & \Key{name} & \Key{none} & \ApiText{Stack order: \Key{none}, \Key{ascending}, \Key{descending}, \Key{inside-out}, \Key{reverse}, \Key{appearance}.}{Stapelreihenfolge: \Key{none}, \Key{ascending}, \Key{descending}, \Key{inside-out}, \Key{reverse}, \Key{appearance}.}}
+  \SemioTableRow{\Key{offset} & \Key{name} & \Key{none} & \ApiText{Stack offset: \Key{none}, \Key{expand}, \Key{diverging}, \Key{silhouette}, \Key{wiggle}.}{Stapelversatz: \Key{none}, \Key{expand}, \Key{diverging}, \Key{silhouette}, \Key{wiggle}.}}
+  \SemioTableRow{\Key{normalize} & \Key{column} & --- & \ApiText{Divides the column by the sum of its values.}{Teilt die Spalte durch die Summe ihrer Werte.}}
+  \SemioTableRow{\Key{quantile} & \Key{column} & --- & \ApiText{Reduces the column to the columns \Key{p} and \Key{value} (R-7 quantiles).}{Reduziert die Spalte auf die Spalten \Key{p} und \Key{value} (R-7-Quantile).}}
+  \SemioTableRow{\Key{probabilities} & \Key{clist} & \Key{0,0.25,0.5,0.75,1} & \ApiText{The probabilities the quantile operation evaluates.}{Die Wahrscheinlichkeiten, die die Quantiloperation auswertet.}}
+  \SemioTableRow{\Key{kde} & \Key{column} & --- & \ApiText{Kernel density estimate into the columns \Key{x} and \Key{density}.}{Kerndichteschätzung in die Spalten \Key{x} und \Key{density}.}}
+  \SemioTableRow{\Key{bandwidth} & \Key{number} & \Key{0} & \ApiText{Kernel bandwidth; \Key{0} selects Silverman's rule of thumb.}{Kernbandbreite; \Key{0} wählt Silvermans Faustregel.}}
+  \SemioTableRow{\Key{kernel} & \Key{name} & \Key{gaussian} & \ApiText{\Key{gaussian} or \Key{epanechnikov}.}{\Key{gaussian} oder \Key{epanechnikov}.}}
+  \SemioTableRow{\Key{samples} & \Key{integer} & \Key{50} & \ApiText{Sample count of the kde and function grids.}{Stützstellenzahl der Dichte- und Funktionsgitter.}}
+  \SemioTableRow{\Key{regression} & \Key{kind:x:y} & --- & \ApiText{Fits \Key{linear}, \Key{poly}, \Key{exp}, \Key{log} or \Key{pow}.}{Passt \Key{linear}, \Key{poly}, \Key{exp}, \Key{log} oder \Key{pow} an.}}
+  \SemioTableRow{\Key{degree} & \Key{integer} & \Key{2} & \ApiText{Polynomial degree of \Key{regression=poly}.}{Polynomgrad von \Key{regression=poly}.}}
+}

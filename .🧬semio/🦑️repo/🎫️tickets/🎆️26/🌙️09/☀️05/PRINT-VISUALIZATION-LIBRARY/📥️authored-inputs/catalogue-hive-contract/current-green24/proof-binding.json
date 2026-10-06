@@ -1,0 +1,37 @@
+{
+  "session": 23659,
+  "exitCode": 0,
+  "actualCases": 24,
+  "actualNodeBodies": 216,
+  "assertions": [
+    "AJV neutral schema",
+    "canonical mutation/replay/inverse/purity/inference",
+    "independent D3 stable sort",
+    "D3 radial and uniform frame-fit scales",
+    "actual native node probes",
+    "actual PDF square centres"
+  ],
+  "sources": {
+    "light.tex": "63ca2e90d544c3c074b70d2ac328ee846880261881b8d9df920a1449b8013e1c",
+    "light-semio-viz-network-arc.sty": "37af71e7cdde409a536750281e8f077fcdbcfc867b0a4a2ea6522c8ecd0d1f95",
+    "dark.tex": "5818f3a8d26cc56d15cc86deb99ff29ea7e2111f72b0f4e64dd681ba1b2b72d1",
+    "dark-semio-viz-network-arc.sty": "37af71e7cdde409a536750281e8f077fcdbcfc867b0a4a2ea6522c8ecd0d1f95",
+    "neutral.json": "3a3fc2951678a4c1d7f6d7f969f92e80c013fe400d1f0f35a4177f53815f621b",
+    "helper.txt": "5b8c9498895a32388dfeeae8c4b6e3d39dcd8dae1442b6c23cebead89bcb23a3",
+    "metadata-after.json": "2e0f6e188e85b9abb08fec3e5c310082f2dbb4a4ebe0c2a0f4744dde5636f31a"
+  },
+  "themes": {
+    "light": {
+      "pdf": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\hv3\\hive-controls\\light\\🧪️probe-out\\light.pdf",
+      "sha256": "49774891b65c88ea6f1961c725ee1e1fe84f32551e001ad8311c0f83dc7b3ef4"
+    },
+    "dark": {
+      "pdf": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\hv3\\hive-controls\\dark\\🧪️probe-out\\dark.pdf",
+      "sha256": "474b4c03c1ad98bc5cfd48248bbe18fbe68c4b21eb08e37bec98c7fb3f102eb0"
+    }
+  },
+  "log": {
+    "path": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\catalogue-hive-native-green.log",
+    "sha256": "3750b4edc80ad8b9f10bc580e8f1a6fa3a18d559d553b75478a67ed43128fa05"
+  }
+}

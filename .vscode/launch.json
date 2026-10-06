@@ -16205,11 +16205,58 @@
       "name": "🛠️dev🎛️dashboard🌳️command-tree",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust/📜️script.ts run command-tree --dump-tree",
+      "command": "bun nx run @semio-tech/repo-cli-rs:run -- command-tree --dump-tree",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
         "order": 1.4
+      }
+    },
+    {
+      "name": "🛠️dev🎛️dashboard📦️install",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-cli-rs:install --outputStyle=stream",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 1.5
+      }
+    },
+    {
+      "name": "🛠️dev🎛️dashboard⚙️preferences",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-cli-rs:preferences --outputStyle=stream -- show",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 1.6
+      }
+    },
+    {
+      "name": "⚖️test🎛️dashboard🧊️execution",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-cli-rs:test -- execution",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_test",
+        "order": 1.4
+      }
+    },
+    {
+      "name": "⚖️test🕸️graph🧩️native-prerequisites",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-graph:test-manifest-contract -- native-prerequisites",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "9_gates",
+        "order": 900.05713
+      },
+      "env": {
+        "SEMIO_TEST_ARTIFACTS_DIR": "${workspaceFolder}/${input:graphContractArtifacts}"
       }
     },
     {
@@ -21080,6 +21127,17 @@
       "presentation": {
         "group": "4_build",
         "order": 206.1775
+      }
+    },
+    {
+      "name": "📦️test🦀️cargo📚️library-search-path",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-cargo-library-search-path",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.1779
       }
     },
     {
@@ -27205,6 +27263,34 @@
       }
     },
     {
+      "name": "⚖️test📓️print🧱️command-boundaries",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test --args=command-boundaries",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.0371103
+      }
+    },
+    {
+      "name": "⚖️test📓️print📖️api-publication",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test --args=api-publication",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.0371104
+      }
+    },
+    {
       "name": "⚖️test📓️print🦀️chart-inference",
       "type": "node-terminal",
       "request": "launch",
@@ -27230,6 +27316,1004 @@
       "presentation": {
         "group": "4_gate",
         "order": 900.03712
+      }
+    },
+    {
+      "name": "⚖️test📓️print🎛️family-customization",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "family-customization"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.037125
+      }
+    },
+    {
+      "name": "⚖️test📓️print✨️scale-options",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "scale-options"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.037126
+      }
+    },
+    {
+      "name": "⚖️test📓️print🎨️geo-palette",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "geo-palette"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.037127
+      }
+    },
+    {
+      "name": "⚖️test📓️print🎏️vector-paint-controls",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "geo-palette",
+        "PRINT_NATIVE_GEO_PALETTE_PHASE": "vector-paint"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.0371271
+      }
+    },
+    {
+      "name": "⚖️test📓️print🧭️vector-base-admission",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "geo-palette",
+        "PRINT_NATIVE_GEO_PALETTE_PHASE": "vector-admission"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.0371272
+      }
+    },
+    {
+      "name": "⚖️test📓️print🌊️geo-flow-admission",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "geo-palette",
+        "PRINT_NATIVE_GEO_PALETTE_PHASE": "flow-admission"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.0371273
+      }
+    },
+    {
+      "name": "⚖️test📓️print🗺️spatial-data",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "spatial-data"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.037128
+      }
+    },
+    {
+      "name": "⚖️test📓️print🐝️geo-planar",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "geo-planar"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.037129
+      }
+    },
+    {
+      "name": "⚖️test📓️print🐝️geo-planar-admission",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "geo-planar",
+        "PRINT_NATIVE_GEO_PLANAR_PHASE": "admission"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.0371291
+      }
+    },
+    {
+      "name": "⚖️test📓️print🐝️geo-planar-guard",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "geo-planar",
+        "PRINT_NATIVE_GEO_PLANAR_PHASE": "guard"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.0371292
+      }
+    },
+    {
+      "name": "⚖️test📓️print🐝️geo-planar-rust",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "geo-planar",
+        "PRINT_NATIVE_GEO_PLANAR_SOURCE": "rust"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.0371293
+      }
+    },
+    {
+      "name": "⚖️test📓️print🐝️geo-planar-rust-producer",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print-rs:test --args=\"long --lib tests::canonical_planar_frame_mutation_vectors\" --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.0371294
+      }
+    },
+    {
+      "name": "⚖️test📓️print🧩️meaningful-controls",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "meaningful-controls"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.0371295
+      }
+    },
+    {
+      "name": "⚖️test📓️print🧩️process-controls",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "process-controls"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.037129501
+      }
+    },
+    {
+      "name": "⚖️test📓️print🧩️diagram-controls",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "diagram-controls"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.0371296
+      }
+    },
+    {
+      "name": "⚖️test📓️print🧩️concept-controls",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "diagram-controls",
+        "PRINT_NATIVE_DIAGRAM_FAMILY": "concept-shape"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.0371297
+      }
+    },
+    {
+      "name": "⚖️test📓️print🧩️logic-controls",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "diagram-controls",
+        "PRINT_NATIVE_DIAGRAM_FAMILY": "logic-tree"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.0371298
+      }
+    },
+    {
+      "name": "⚖️test📓️print🧩️neural-controls",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "diagram-controls",
+        "PRINT_NATIVE_DIAGRAM_FAMILY": "neural-network"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.0371299
+      }
+    },
+    {
+      "name": "⚖️test📓️print🧊️geo-contour-boundary",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "geo-contour-boundary"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.03712995
+      }
+    },
+    {
+      "name": "⚖️test📓️print🌫️density-controls",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "density-controls"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.03712996
+      }
+    },
+    {
+      "name": "⚖️test📓️print🌡️thermodynamic-controls",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "thermodynamic-controls"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.03712997
+      }
+    },
+    {
+      "name": "⚖️test📓️print🧫️scientific-controls",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "scientific-controls"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.037129971
+      }
+    },
+    {
+      "name": "⚖️test📓️print🧾️scientific-defaults",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "scientific-defaults"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.037129972
+      }
+    },
+    {
+      "name": "⚖️test📓️print🪟️scientific-canvas",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "scientific-canvas"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.037129973
+      }
+    },
+    {
+      "name": "⚖️test📓️print🎨️spatial-controls",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "spatial-controls"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.037129974
+      }
+    },
+    {
+      "name": "⚖️test📓️print🗓️timeline-controls",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "timeline-controls"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.037129975
+      }
+    },
+    {
+      "name": "⚖️test📓️print🛤️planning-controls",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "planning-controls"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.037129976
+      }
+    },
+    {
+      "name": "⚖️test📓️print🪢️hull-controls",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "hull-controls"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.037129977
+      }
+    },
+    {
+      "name": "⚖️test📓️print📋️list-seating-controls",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "list-seating-controls"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.037129978
+      }
+    },
+    {
+      "name": "⚖️test📓️print🪟️scientific-mixed-controls",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "scientific-mixed-controls"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.037129979
+      }
+    },
+    {
+      "name": "⚖️test📓️print🔤️logo-controls",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "logo-controls"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.03712998
+      }
+    },
+    {
+      "name": "⚖️test📓️print🕸️radar-controls",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "radar-controls"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.037129981
+      }
+    },
+    {
+      "name": "⚖️test📓️print🏷️inherited-caption-controls",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "inherited-caption-controls"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.037129982
+      }
+    },
+    {
+      "name": "⚖️test📓️print🧾️scientific-admission",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "scientific-admission"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.037129982
+      }
+    },
+    {
+      "name": "⚖️test📓️print🧬️scientific-modes",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "scientific-modes"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.037129983
+      }
+    },
+    {
+      "name": "⚖️test📓️print🧬️scientific-stock-semantics",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "scientific-stocks"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.037129986
+      }
+    },
+    {
+      "name": "⚖️test📓️print🛡️scientific-record-domain",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "scientific-record-domain"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.037129987
+      }
+    },
+    {
+      "name": "⚖️test📓️print📐️scientific-construction-window",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "scientific-construction-window"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.0371299832
+      }
+    },
+    {
+      "name": "⚖️test📓️print🪟️scientific-decision-window",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "scientific-decision-window"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.0371299831
+      }
+    },
+    {
+      "name": "⚖️test📓️print🧶️biofabric-matrix-controls",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "biofabric-matrix-controls"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.037129984
+      }
+    },
+    {
+      "name": "⚖️test📓️print🧭️specialized-placement-controls",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "specialized-placement-controls"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.037129988
+      }
+    },
+    {
+      "name": "⚖️test📓️print🌦️meteogram-window-controls",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "meteogram-window-controls"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.0371299891
+      }
+    },
+    {
+      "name": "⚖️test📓️print🎹️music-window-controls",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "music-window-controls"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.0371299892
+      }
+    },
+    {
+      "name": "⚖️test📓️print🧬️genome-window-controls",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "genome-window-controls"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.0371299893
+      }
+    },
+    {
+      "name": "⚖️test📓️print🌧️surface-window-controls",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "surface-window-controls"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.03712998935
+      }
+    },
+    {
+      "name": "⚖️test📓️print🌊️surface-range-controls",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "surface-range-controls"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.03712998936
+      }
+    },
+    {
+      "name": "⚖️test📓️print🚀️physics-window-controls",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "physics-window-controls"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.03712998937
+      }
+    },
+    {
+      "name": "⚖️test📓️print🐝️hive-controls",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "hive-controls"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.0371299894
+      }
+    },
+    {
+      "name": "⚖️test📓️print🎯️directed-graph-controls",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "directed-graph-controls"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.0371299895
+      }
+    },
+    {
+      "name": "⚖️test📓️print🖼️actual-mark-controls",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "actual-mark-controls"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.03712999
+      }
+    },
+    {
+      "name": "⚖️test📓️print🕸️upset-controls",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "upset-controls"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.037129985
+      }
+    },
+    {
+      "name": "⚖️test📓️print🪝️scientific-styles",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "scientific-styles"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.037129989
+      }
+    },
+    {
+      "name": "⚖️test📓️print🛡️scientific-scalar-admission",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "scientific-scalar-admission"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.03712999
+      }
+    },
+    {
+      "name": "⚖️test📓️print🛡️scientific-mode-domain",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "scientific-mode-domain"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.037129991
+      }
+    },
+    {
+      "name": "⚖️test📓️print⚙️engineering-exploded",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "engineering-exploded"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.037129992
+      }
+    },
+    {
+      "name": "⚖️test📓️print🌲️domain-scalar-controls",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "domain-scalar-controls"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.0371299939
+      }
+    },
+    {
+      "name": "⚖️test📓️print🌲️domain-reference-controls",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "domain-reference-controls"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.037129994
+      }
+    },
+    {
+      "name": "⚖️test📓️print🪶️token-publication",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "token-publication"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.037129999
+      }
+    },
+    {
+      "name": "⚖️test📓️print🧠️neural-architecture",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "neural-architecture"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.037129993
+      }
+    },
+    {
+      "name": "⚖️test📓️print🧠️neural-topology",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "neural-topology"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.037129995
+      }
+    },
+    {
+      "name": "⚖️test📓️print🛡️neural-reference",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "neural-reference"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.0371299951
+      }
+    },
+    {
+      "name": "⚖️test📓️print🎯️neural-visible-tips",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "neural-tip"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.0371299952
+      }
+    },
+    {
+      "name": "⚖️test📓️print🎯️neural-self-loops",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "neural-self"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.0371299953
+      }
+    },
+    {
+      "name": "⚖️test📓️print🕸️graph-reference",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "graph-reference"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.037129996
+      }
+    },
+    {
+      "name": "⚖️test📓️print🛡️neural-admission",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "neural-admission"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.037129997
+      }
+    },
+    {
+      "name": "⚖️test📓️print🕓️critical-path-controls",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "critical-path-controls"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.037129998
       }
     },
     {
@@ -30547,6 +31631,426 @@
       "presentation": {
         "group": "4_gate",
         "order": 900.10005
+      }
+    },
+    {
+      "name": "🧱️ Clean Architecture · Product Frozen Import 6 Laws",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/product-wgpu-native-frozen-import-inputs-6/📜️script.ts\" \"laws\"",
+      "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.101
+      }
+    },
+    {
+      "name": "🧱️ Clean Architecture · Product Frozen Import 6 Prepare",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/product-wgpu-native-frozen-import-inputs-6/📜️script.ts\" \"prepare\" \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/product-wgpu-native-whole/epoch-8/independent-frozen-import-helper-admission-6.json\"",
+      "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.10101
+      }
+    },
+    {
+      "name": "🧱️ Clean Architecture · Embedded Import 5 Laws",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/embedded-plugin-selection-owning-import-inputs-5/📜️script.ts\" \"laws\"",
+      "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.10102
+      }
+    },
+    {
+      "name": "🧱️ Clean Architecture · Embedded Import 5 Prepare",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/embedded-plugin-selection-owning-import-inputs-5/📜️script.ts\" \"prepare\" \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/embedded-plugin-selection-owner/owning-1/independent-import-helper-admission-5.json\"",
+      "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.10103
+      }
+    },
+    {
+      "name": "🧱️ Clean Architecture · Product Frozen Whole 2 Dispatch 4",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/product-wgpu-native-frozen-dispatch-inputs-4/📜️script.ts\" \"run\" \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/product-wgpu-native-whole/epoch-8/independent-frozen-dispatch-admission-4.json\"",
+      "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.103
+      }
+    },
+    {
+      "name": "🧱️ Clean Architecture · Embedded Whole 2 Dispatch 4",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/embedded-plugin-selection-owning-dispatch-inputs-4/📜️script.ts\" \"run\" \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/embedded-plugin-selection-owner/owning-1/independent-dispatch-admission-4.json\"",
+      "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.1030099999999
+      }
+    },
+    {
+      "name": "🧱️ Clean Architecture · Graph Credit 7 Controls",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/unified-identity-credit-native-successor-inputs-7/📜️script.ts\" \"validate\"",
+      "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.1030199999999
+      }
+    },
+    {
+      "name": "🧱️ Clean Architecture · Graph Credit 7 Prepare",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/unified-identity-credit-native-successor-inputs-7/📜️script.ts\" \"prepare\" \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/unified-general-native-owner/epoch-1/independent-identity-credit-helper-prepare-admission-7.json\"",
+      "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.10303
+      }
+    },
+    {
+      "name": "🧱️ Clean Architecture · Graph Credit 7 Metadata",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/unified-identity-credit-native-successor-inputs-7/📜️script.ts\" \"metadata\" \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/unified-general-native-owner/epoch-1/independent-identity-credit-helper-prepare-admission-7.json\"",
+      "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.10304
+      }
+    },
+    {
+      "name": "🧱️ Clean Architecture · Graph Credit Whole 6",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/unified-identity-credit-native-dispatch-inputs-6/📜️script.ts\" \"run\" \"graph\" \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/unified-general-native-owner/epoch-1/independent-dispatch-admission-graph-6.json\"",
+      "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.1030499999999
+      }
+    },
+    {
+      "name": "🧱️ Clean Architecture · Board Caller 4 Controls",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/unified-board-caller-native-successor-inputs-4/📜️script.ts\" \"validate\"",
+      "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.1030599999999
+      }
+    },
+    {
+      "name": "🧱️ Clean Architecture · Board Caller 4 Prepare",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/unified-board-caller-native-successor-inputs-4/📜️script.ts\" \"prepare\" \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/unified-general-native-owner/epoch-1/independent-board-caller-helper-prepare-admission-4.json\"",
+      "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.10307
+      }
+    },
+    {
+      "name": "🧱️ Clean Architecture · Board Caller 4 Metadata",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/unified-board-caller-native-successor-inputs-4/📜️script.ts\" \"metadata\" \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/unified-general-native-owner/epoch-1/independent-board-caller-helper-prepare-admission-4.json\"",
+      "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.10308
+      }
+    },
+    {
+      "name": "🧱️ Clean Architecture · UI Board Whole 7",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/unified-board-caller-native-dispatch-inputs-7/📜️script.ts\" \"run\" \"ui-board\" \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/unified-general-native-owner/epoch-1/independent-dispatch-admission-ui-board-7.json\"",
+      "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.10309
+      }
+    },
+    {
+      "name": "🧱️ Clean Architecture · Embedded Publication 2 Controls",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/embedded-plugin-selection-publication-inputs-2/📜️script.ts\" \"validate\"",
+      "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.1030999999999
+      }
+    },
+    {
+      "name": "🧱️ Clean Architecture · Embedded Publication 2 Prepare",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/embedded-plugin-selection-publication-inputs-2/📜️script.ts\" \"prepare\"",
+      "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.1031099999999
+      }
+    },
+    {
+      "name": "🧱️ Clean Architecture · Embedded Publication 2 Publish",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/embedded-plugin-selection-publication-inputs-2/📜️script.ts\" \"publish\"",
+      "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.10312
+      }
+    },
+    {
+      "name": "🧱️ Clean Architecture · Product Frozen Bootstrap 7 Laws",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/product-wgpu-native-frozen-bootstrap-inputs-7/📜️script.ts\" \"laws\"",
+      "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.104
+      }
+    },
+    {
+      "name": "🧱️ Clean Architecture · Product Frozen Bootstrap 7 Prepare",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/product-wgpu-native-frozen-bootstrap-inputs-7/📜️script.ts\" \"prepare\" \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/product-wgpu-native-whole/epoch-8/independent-frozen-bootstrap-helper-admission-7.json\"",
+      "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.10401
+      }
+    },
+    {
+      "name": "🧱️ Clean Architecture · Graph Credit Whole 6 Dispatch 7",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/unified-identity-credit-native-dispatch-inputs-7/📜️script.ts\" \"run\" \"graph\" \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/unified-general-native-owner/epoch-1/independent-dispatch-admission-graph-7.json\"",
+      "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.10402
+      }
+    },
+    {
+      "name": "🧱️ Clean Architecture · Embedded Publication 3 Validate",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/embedded-plugin-selection-publication-inputs-3/📜️script.ts\" \"validate\"",
+      "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.1040300000001
+      }
+    },
+    {
+      "name": "🧱️ Clean Architecture · Embedded Publication 3 Prepare",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/embedded-plugin-selection-publication-inputs-3/📜️script.ts\" \"prepare\"",
+      "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.10404
+      }
+    },
+    {
+      "name": "🧱️ Clean Architecture · Embedded Publication 3 Publish",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/embedded-plugin-selection-publication-inputs-3/📜️script.ts\" \"publish\"",
+      "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.10405
+      }
+    },
+    {
+      "name": "🧱️ Clean Architecture · UI Board Whole 7 Dispatch 8",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/unified-board-caller-native-dispatch-inputs-8/📜️script.ts\" \"run\" \"ui-board\" \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/unified-general-native-owner/epoch-1/independent-dispatch-admission-ui-board-8.json\"",
+      "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.105
+      }
+    },
+    {
+      "name": "🧱️ Clean Architecture · Product Frozen Whole 3 Dispatch 5",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/product-wgpu-native-frozen-dispatch-inputs-5/📜️script.ts\" \"run\" \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/product-wgpu-native-whole/epoch-8/independent-frozen-dispatch-admission-5.json\"",
+      "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.10501
+      }
+    },
+    {
+      "name": "🧱️ Clean Architecture · Embedded Continuation 5 Validate",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/embedded-plugin-selection-publication-inputs-5/📜️script.ts\" \"validate\"",
+      "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.106
+      }
+    },
+    {
+      "name": "🧱️ Clean Architecture · Embedded Continuation 5 Prepare",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/embedded-plugin-selection-publication-inputs-5/📜️script.ts\" \"prepare\"",
+      "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.10601
+      }
+    },
+    {
+      "name": "🧱️ Clean Architecture · Embedded Continuation 5 Publish",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/embedded-plugin-selection-publication-inputs-5/📜️script.ts\" \"publish\"",
+      "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.10602
       }
     },
     {
@@ -40283,6 +41787,17 @@
       }
     },
     {
+      "name": "⚖️conformance-command🏭️inventory🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-test-mutation-inventory:conformance-command",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.0295
+      }
+    },
+    {
       "name": "⚖️conformance-process🏭️inventory🦀️",
       "type": "node-terminal",
       "request": "launch",
@@ -40290,7 +41805,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0295
+        "order": 900.0296
       }
     },
     {
@@ -40301,7 +41816,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0296
+        "order": 900.0297
       }
     },
     {
@@ -40334,7 +41849,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0297
+        "order": 900.0298
       }
     },
     {
@@ -40378,7 +41893,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0298
+        "order": 900.0299
       }
     },
     {
@@ -40389,7 +41904,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0299
+        "order": 900.03
       }
     },
     {
@@ -40400,7 +41915,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.03
+        "order": 900.0301
       }
     },
     {
@@ -40411,7 +41926,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0301
+        "order": 900.0302
       }
     },
     {
@@ -40422,7 +41937,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0302
+        "order": 900.0303
       }
     },
     {
@@ -40433,7 +41948,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0303
+        "order": 900.0304
       }
     },
     {
@@ -40455,7 +41970,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0304
+        "order": 900.0305
       }
     },
     {
@@ -40466,7 +41981,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0305
+        "order": 900.0306
       }
     },
     {
@@ -40488,7 +42003,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0306
+        "order": 900.0307
       }
     },
     {
@@ -40521,7 +42036,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0307
+        "order": 900.0308
       }
     },
     {
@@ -40532,7 +42047,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0308
+        "order": 900.0309
       }
     },
     {
@@ -40543,7 +42058,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0309
+        "order": 900.031
       }
     },
     {
@@ -40554,7 +42069,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.031
+        "order": 900.0311
       }
     },
     {
@@ -40565,7 +42080,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0311
+        "order": 900.0312
       }
     },
     {
@@ -40576,7 +42091,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0312
+        "order": 900.0313
       }
     },
     {
@@ -40587,7 +42102,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0313
+        "order": 900.0314
       }
     },
     {
@@ -40598,7 +42113,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0314
+        "order": 900.0315
       }
     },
     {
@@ -40609,7 +42124,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0315
+        "order": 900.0316
       }
     },
     {
@@ -40631,7 +42146,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0316
+        "order": 900.0317
       }
     },
     {
@@ -40642,7 +42157,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0317
+        "order": 900.0318
       }
     },
     {
@@ -40653,7 +42168,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0318
+        "order": 900.0319
       }
     },
     {
@@ -40664,7 +42179,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0319
+        "order": 900.032
       }
     },
     {
@@ -40675,7 +42190,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.032
+        "order": 900.0321
       }
     },
     {
@@ -40686,7 +42201,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0321
+        "order": 900.0322
       }
     },
     {
@@ -40697,7 +42212,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0322
+        "order": 900.0323
       }
     },
     {
@@ -40708,7 +42223,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0323
+        "order": 900.0324
       }
     },
     {
@@ -40719,7 +42234,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0324
+        "order": 900.0325
       }
     },
     {
@@ -40730,7 +42245,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0325
+        "order": 900.0326
       }
     },
     {
@@ -40741,7 +42256,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0326
+        "order": 900.0327
       }
     },
     {
@@ -40752,7 +42267,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0327
+        "order": 900.0328
       }
     },
     {
@@ -40763,7 +42278,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0328
+        "order": 900.0329
       }
     },
     {
@@ -40785,7 +42300,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0329
+        "order": 900.033
       }
     },
     {
@@ -40796,7 +42311,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.033
+        "order": 900.0331
       }
     },
     {
@@ -40807,7 +42322,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0331
+        "order": 900.0332
       }
     },
     {
@@ -40818,7 +42333,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0332
+        "order": 900.0333
       }
     },
     {
@@ -40829,7 +42344,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0333
+        "order": 900.0334
       }
     },
     {
@@ -40840,7 +42355,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0334
+        "order": 900.0335
       }
     },
     {
@@ -40851,7 +42366,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0335
+        "order": 900.0336
       }
     },
     {
@@ -40862,7 +42377,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0336
+        "order": 900.0337
       }
     },
     {
@@ -40873,7 +42388,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0337
+        "order": 900.0338
       }
     },
     {
@@ -40884,7 +42399,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0338
+        "order": 900.0339
       }
     },
     {
@@ -40895,7 +42410,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0339
+        "order": 900.034
       }
     },
     {
@@ -40906,7 +42421,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.034
+        "order": 900.0341
       }
     },
     {
@@ -40917,7 +42432,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0341
+        "order": 900.0342
       }
     },
     {
@@ -40928,7 +42443,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0342
+        "order": 900.0343
       }
     },
     {
@@ -40939,7 +42454,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0343
+        "order": 900.0344
       }
     },
     {
@@ -40950,7 +42465,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0344
+        "order": 900.0345
       }
     },
     {
@@ -40961,7 +42476,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0345
+        "order": 900.0346
       }
     },
     {
@@ -40972,7 +42487,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0346
+        "order": 900.0347
       }
     },
     {
@@ -40983,7 +42498,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0347
+        "order": 900.0348
       }
     },
     {
@@ -40994,7 +42509,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0348
+        "order": 900.0349
       }
     },
     {
@@ -41005,7 +42520,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0349
+        "order": 900.035
       }
     },
     {
@@ -41016,7 +42531,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.035
+        "order": 900.0351
       }
     },
     {
@@ -41027,7 +42542,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0351
+        "order": 900.0352
       }
     },
     {
@@ -41038,7 +42553,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0352
+        "order": 900.0353
       }
     },
     {
@@ -41049,7 +42564,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0353
+        "order": 900.0354
       }
     },
     {
@@ -41060,7 +42575,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0354
+        "order": 900.0355
       }
     },
     {
@@ -41082,7 +42597,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0355
+        "order": 900.0356
       }
     },
     {
@@ -41093,7 +42608,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0356
+        "order": 900.0357
       }
     },
     {
@@ -41115,7 +42630,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0357
+        "order": 900.0358
       }
     },
     {
@@ -41126,7 +42641,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0358
+        "order": 900.0359
       }
     },
     {
@@ -41148,7 +42663,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0359
+        "order": 900.036
       }
     },
     {
@@ -41170,7 +42685,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.036
+        "order": 900.0361
       }
     },
     {
@@ -41181,7 +42696,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0361
+        "order": 900.0362
       }
     },
     {
@@ -41192,7 +42707,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0362
+        "order": 900.0363
       }
     },
     {
@@ -41203,7 +42718,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0363
+        "order": 900.0364
       }
     },
     {
@@ -41214,7 +42729,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0364
+        "order": 900.0365
       }
     },
     {
@@ -41269,7 +42784,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0365
+        "order": 900.0366
       }
     },
     {
@@ -41335,7 +42850,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0366
+        "order": 900.0367
       }
     },
     {
@@ -41346,7 +42861,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0367
+        "order": 900.0368
       }
     },
     {
@@ -41357,7 +42872,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0368
+        "order": 900.0369
       }
     },
     {
@@ -41368,7 +42883,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0369
+        "order": 900.037
       }
     },
     {
@@ -41379,7 +42894,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.037
+        "order": 900.0371
       }
     },
     {
@@ -41390,7 +42905,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0371
+        "order": 900.0372
       }
     },
     {
@@ -41401,7 +42916,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0372
+        "order": 900.0373
       }
     },
     {
@@ -41412,7 +42927,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0373
+        "order": 900.0374
       }
     },
     {
@@ -41423,7 +42938,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0374
+        "order": 900.0375
       }
     },
     {
@@ -41456,7 +42971,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0375
+        "order": 900.0376
       }
     },
     {
@@ -41478,7 +42993,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0376
+        "order": 900.0377
       }
     },
     {
@@ -41489,7 +43004,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0377
+        "order": 900.0378
       }
     },
     {
@@ -41500,7 +43015,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0378
+        "order": 900.0379
       }
     },
     {
@@ -41511,7 +43026,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0379
+        "order": 900.038
       }
     },
     {
@@ -41522,7 +43037,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.038
+        "order": 900.0381
       }
     },
     {
@@ -41533,7 +43048,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0381
+        "order": 900.0382
       }
     },
     {
@@ -41544,7 +43059,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0382
+        "order": 900.0383
       }
     },
     {
@@ -41555,7 +43070,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0383
+        "order": 900.0384
       }
     },
     {
@@ -41566,7 +43081,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0384
+        "order": 900.0385
       }
     },
     {
@@ -41577,7 +43092,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0385
+        "order": 900.0386
       }
     },
     {
@@ -41588,7 +43103,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0386
+        "order": 900.0387
       }
     },
     {
@@ -41599,7 +43114,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0387
+        "order": 900.0388
       }
     },
     {
@@ -41610,7 +43125,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0388
+        "order": 900.0389
       }
     },
     {
@@ -41621,7 +43136,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0389
+        "order": 900.039
       }
     },
     {
@@ -41632,7 +43147,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.039
+        "order": 900.0391
       }
     },
     {
@@ -41643,7 +43158,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0391
+        "order": 900.0392
       }
     },
     {
@@ -41654,7 +43169,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0392
+        "order": 900.0393
       }
     },
     {
@@ -41665,7 +43180,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0393
+        "order": 900.0394
       }
     },
     {
@@ -41676,7 +43191,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0394
+        "order": 900.0395
       }
     },
     {
@@ -41687,7 +43202,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0395
+        "order": 900.0396
       }
     },
     {
@@ -41698,7 +43213,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0396
+        "order": 900.0397
       }
     },
     {
@@ -41709,7 +43224,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0397
+        "order": 900.0398
       }
     },
     {
@@ -41720,7 +43235,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0398
+        "order": 900.0399
       }
     },
     {
@@ -41731,7 +43246,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0399
+        "order": 900.04
       }
     },
     {
@@ -41742,7 +43257,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.04
+        "order": 900.0401
       }
     },
     {
@@ -41753,7 +43268,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0401
+        "order": 900.0402
       }
     },
     {
@@ -41764,7 +43279,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0402
+        "order": 900.0403
       }
     },
     {
@@ -41775,7 +43290,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0403
+        "order": 900.0404
       }
     },
     {
@@ -41786,7 +43301,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0404
+        "order": 900.0405
       }
     },
     {
@@ -41797,7 +43312,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0405
+        "order": 900.0406
       }
     },
     {
@@ -41808,7 +43323,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0406
+        "order": 900.0407
       }
     },
     {
@@ -41819,7 +43334,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0407
+        "order": 900.0408
       }
     },
     {
@@ -41830,7 +43345,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0408
+        "order": 900.0409
       }
     },
     {
@@ -41841,7 +43356,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0409
+        "order": 900.041
       }
     },
     {
@@ -41852,7 +43367,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.041
+        "order": 900.0411
       }
     },
     {
@@ -41863,7 +43378,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0411
+        "order": 900.0412
       }
     },
     {
@@ -41874,7 +43389,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0412
+        "order": 900.0413
       }
     },
     {
@@ -41885,7 +43400,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0413
+        "order": 900.0414
       }
     },
     {
@@ -41896,7 +43411,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0414
+        "order": 900.0415
       }
     },
     {
@@ -41907,7 +43422,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0415
+        "order": 900.0416
       }
     },
     {
@@ -41918,7 +43433,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0416
+        "order": 900.0417
       }
     },
     {
@@ -41929,7 +43444,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0417
+        "order": 900.0418
       }
     },
     {
@@ -41940,7 +43455,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0418
+        "order": 900.0419
       }
     },
     {
@@ -41951,7 +43466,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0419
+        "order": 900.042
       }
     },
     {
@@ -41962,7 +43477,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.042
+        "order": 900.0421
       }
     },
     {
@@ -41973,7 +43488,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0421
+        "order": 900.0422
       }
     },
     {
@@ -41984,7 +43499,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0422
+        "order": 900.0423
       }
     },
     {
@@ -41995,7 +43510,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0423
+        "order": 900.0424
       }
     },
     {
@@ -42006,7 +43521,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0424
+        "order": 900.0425
       }
     },
     {
@@ -42017,7 +43532,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0425
+        "order": 900.0426
       }
     },
     {
@@ -42028,7 +43543,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0426
+        "order": 900.0427
       }
     },
     {
@@ -42050,7 +43565,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0427
+        "order": 900.0428
       }
     },
     {
@@ -42061,7 +43576,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0428
+        "order": 900.0429
       }
     },
     {
@@ -42072,7 +43587,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0429
+        "order": 900.043
       }
     },
     {
@@ -42083,7 +43598,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.043
+        "order": 900.0431
       }
     },
     {
@@ -42094,7 +43609,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0431
+        "order": 900.0432
       }
     },
     {
@@ -42105,7 +43620,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0432
+        "order": 900.0433
       }
     },
     {
@@ -42127,7 +43642,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0433
+        "order": 900.0434
       }
     },
     {
@@ -42138,7 +43653,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0434
+        "order": 900.0435
       }
     },
     {
@@ -42149,7 +43664,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0435
+        "order": 900.0436
       }
     },
     {
@@ -42160,7 +43675,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0436
+        "order": 900.0437
       }
     },
     {
@@ -42171,7 +43686,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0437
+        "order": 900.0438
       }
     },
     {
@@ -42182,7 +43697,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0438
+        "order": 900.0439
       }
     },
     {
@@ -42193,7 +43708,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0439
+        "order": 900.044
       }
     },
     {
@@ -42204,7 +43719,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.044
+        "order": 900.0441
       }
     },
     {
@@ -42215,7 +43730,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0441
+        "order": 900.0442
       }
     },
     {
@@ -42226,7 +43741,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0442
+        "order": 900.0443
       }
     },
     {
@@ -42237,7 +43752,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0443
+        "order": 900.0444
       }
     },
     {
@@ -42248,7 +43763,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0444
+        "order": 900.0445
       }
     },
     {
@@ -42259,7 +43774,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0445
+        "order": 900.0446
       }
     },
     {
@@ -42270,7 +43785,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0446
+        "order": 900.0447
       }
     },
     {
@@ -42281,7 +43796,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0447
+        "order": 900.0448
       }
     },
     {
@@ -42292,7 +43807,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0448
+        "order": 900.0449
       }
     },
     {
@@ -42303,7 +43818,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0449
+        "order": 900.045
       }
     },
     {
@@ -42314,7 +43829,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.045
+        "order": 900.0451
       }
     },
     {
@@ -42325,7 +43840,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0451
+        "order": 900.0452
       }
     },
     {
@@ -42336,7 +43851,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0452
+        "order": 900.0453
       }
     },
     {
@@ -42369,7 +43884,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0453
+        "order": 900.0454
       }
     },
     {
@@ -42380,7 +43895,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0454
+        "order": 900.0455
       }
     },
     {
@@ -42501,7 +44016,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0455
+        "order": 900.0456
       }
     },
     {
@@ -42512,7 +44027,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0456
+        "order": 900.0457
       }
     },
     {
@@ -42523,7 +44038,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0457
+        "order": 900.0458
       }
     },
     {
@@ -42534,7 +44049,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0458
+        "order": 900.0459
       }
     },
     {
@@ -42545,7 +44060,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0459
+        "order": 900.046
       }
     },
     {
@@ -42556,7 +44071,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.046
+        "order": 900.0461
       }
     },
     {
@@ -42567,7 +44082,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0461
+        "order": 900.0462
       }
     },
     {
@@ -42578,7 +44093,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0462
+        "order": 900.0463
       }
     },
     {
@@ -42589,7 +44104,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0463
+        "order": 900.0464
       }
     },
     {
@@ -42600,7 +44115,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0464
+        "order": 900.0465
       }
     },
     {
@@ -42633,7 +44148,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0465
+        "order": 900.0466
       }
     },
     {
@@ -42655,7 +44170,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0466
+        "order": 900.0467
       }
     },
     {
@@ -42666,7 +44181,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0467
+        "order": 900.0468
       }
     },
     {
@@ -42677,7 +44192,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0468
+        "order": 900.0469
       }
     },
     {
@@ -42688,7 +44203,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0469
+        "order": 900.047
       }
     },
     {
@@ -42710,7 +44225,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.047
+        "order": 900.0471
       }
     },
     {
@@ -42721,7 +44236,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0471
+        "order": 900.0472
       }
     },
     {
@@ -42732,7 +44247,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0472
+        "order": 900.0473
       }
     },
     {
@@ -42743,7 +44258,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0473
+        "order": 900.0474
       }
     },
     {
@@ -42754,7 +44269,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0474
+        "order": 900.0475
       }
     },
     {
@@ -42776,7 +44291,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0475
+        "order": 900.0476
       }
     },
     {
@@ -42787,7 +44302,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0476
+        "order": 900.0477
       }
     },
     {
@@ -42798,7 +44313,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0477
+        "order": 900.0478
       }
     },
     {
@@ -42809,7 +44324,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0478
+        "order": 900.0479
       }
     },
     {
@@ -42820,7 +44335,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0479
+        "order": 900.048
       }
     },
     {
@@ -42831,7 +44346,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.048
+        "order": 900.0481
       }
     },
     {
@@ -42842,7 +44357,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0481
+        "order": 900.0482
       }
     },
     {
@@ -42853,7 +44368,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0482
+        "order": 900.0483
       }
     },
     {
@@ -42864,7 +44379,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0483
+        "order": 900.0484
       }
     },
     {
@@ -42875,7 +44390,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0484
+        "order": 900.0485
       }
     },
     {
@@ -42886,7 +44401,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0485
+        "order": 900.0486
       }
     },
     {
@@ -42897,7 +44412,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0486
+        "order": 900.0487
       }
     },
     {
@@ -42908,7 +44423,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0487
+        "order": 900.0488
       }
     },
     {
@@ -42919,7 +44434,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0488
+        "order": 900.0489
       }
     },
     {
@@ -42930,7 +44445,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0489
+        "order": 900.049
       }
     },
     {
@@ -42941,7 +44456,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.049
+        "order": 900.0491
       }
     },
     {
@@ -42952,7 +44467,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0491
+        "order": 900.0492
       }
     },
     {
@@ -42963,7 +44478,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0492
+        "order": 900.0493
       }
     },
     {
@@ -42974,7 +44489,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0493
+        "order": 900.0494
       }
     },
     {
@@ -42985,7 +44500,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0494
+        "order": 900.0495
       }
     },
     {
@@ -42996,7 +44511,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0495
+        "order": 900.0496
       }
     },
     {
@@ -43007,7 +44522,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0496
+        "order": 900.0497
       }
     },
     {
@@ -43018,7 +44533,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0497
+        "order": 900.0498
       }
     },
     {
@@ -43029,7 +44544,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0498
+        "order": 900.0499
       }
     },
     {
@@ -43040,7 +44555,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0499
+        "order": 900.05
       }
     },
     {
@@ -43051,7 +44566,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.05
+        "order": 900.0501
       }
     },
     {
@@ -43062,7 +44577,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0501
+        "order": 900.0502
       }
     },
     {
@@ -43073,7 +44588,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0502
+        "order": 900.0503
       }
     },
     {
@@ -43084,7 +44599,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0503
+        "order": 900.0504
       }
     },
     {
@@ -43095,7 +44610,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0504
+        "order": 900.0505
       }
     },
     {
@@ -43106,7 +44621,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0505
+        "order": 900.0506
       }
     },
     {
@@ -43117,7 +44632,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0506
+        "order": 900.0507
       }
     },
     {
@@ -43128,7 +44643,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0507
+        "order": 900.0508
       }
     },
     {
@@ -43139,7 +44654,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0508
+        "order": 900.0509
       }
     },
     {
@@ -43150,7 +44665,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0509
+        "order": 900.051
       }
     },
     {
@@ -43161,7 +44676,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.051
+        "order": 900.0511
       }
     },
     {
@@ -43172,7 +44687,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0511
+        "order": 900.0512
       }
     },
     {
@@ -43183,7 +44698,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0512
+        "order": 900.0513
       }
     },
     {
@@ -43194,7 +44709,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0513
+        "order": 900.0514
       }
     },
     {
@@ -43205,7 +44720,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0514
+        "order": 900.0515
       }
     },
     {
@@ -43271,7 +44786,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0515
+        "order": 900.0516
       }
     },
     {
@@ -43282,7 +44797,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0516
+        "order": 900.0517
       }
     },
     {
@@ -43293,7 +44808,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0517
+        "order": 900.0518
       }
     },
     {
@@ -43304,7 +44819,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0518
+        "order": 900.0519
       }
     },
     {
@@ -43315,7 +44830,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0519
+        "order": 900.052
       }
     },
     {
@@ -43326,7 +44841,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.052
+        "order": 900.0521
       }
     },
     {
@@ -43337,7 +44852,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0521
+        "order": 900.0522
       }
     },
     {
@@ -43348,7 +44863,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0522
+        "order": 900.0523
       }
     },
     {
@@ -43359,7 +44874,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0523
+        "order": 900.0524
       }
     },
     {
@@ -43370,7 +44885,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0524
+        "order": 900.0525
       }
     },
     {
@@ -43381,7 +44896,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0525
+        "order": 900.0526
       }
     },
     {
@@ -43392,7 +44907,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0526
+        "order": 900.0527
       }
     },
     {
@@ -43403,7 +44918,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0527
+        "order": 900.0528
       }
     },
     {
@@ -43425,7 +44940,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0528
+        "order": 900.0529
       }
     },
     {
@@ -43436,7 +44951,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0529
+        "order": 900.053
       }
     },
     {
@@ -43447,7 +44962,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.053
+        "order": 900.0531
       }
     },
     {
@@ -43458,7 +44973,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0531
+        "order": 900.0532
       }
     },
     {
@@ -43469,7 +44984,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0532
+        "order": 900.0533
       }
     },
     {
@@ -43480,7 +44995,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0533
+        "order": 900.0534
       }
     },
     {
@@ -43491,7 +45006,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0534
+        "order": 900.0535
       }
     },
     {
@@ -43502,7 +45017,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0535
+        "order": 900.0536
       }
     },
     {
@@ -43513,7 +45028,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0536
+        "order": 900.0537
       }
     },
     {
@@ -43524,7 +45039,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0537
+        "order": 900.0538
       }
     },
     {
@@ -43535,7 +45050,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0538
+        "order": 900.0539
       }
     },
     {
@@ -43546,7 +45061,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0539
+        "order": 900.054
       }
     },
     {
@@ -43557,7 +45072,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.054
+        "order": 900.0541
       }
     },
     {
@@ -43568,7 +45083,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0541
+        "order": 900.0542
       }
     },
     {
@@ -43579,7 +45094,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0542
+        "order": 900.0543
       }
     },
     {
@@ -43590,7 +45105,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0543
+        "order": 900.0544
       }
     },
     {
@@ -43601,7 +45116,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0544
+        "order": 900.0545
       }
     },
     {
@@ -43612,7 +45127,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0545
+        "order": 900.0546
       }
     },
     {
@@ -43623,7 +45138,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0546
+        "order": 900.0547
       }
     },
     {
@@ -43634,7 +45149,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0547
+        "order": 900.0548
       }
     },
     {
@@ -43645,7 +45160,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0548
+        "order": 900.0549
       }
     },
     {
@@ -43656,7 +45171,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0549
+        "order": 900.055
       }
     },
     {
@@ -43678,7 +45193,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.055
+        "order": 900.0551
       }
     },
     {
@@ -43722,7 +45237,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0551
+        "order": 900.0552
       }
     },
     {
@@ -43733,7 +45248,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0552
+        "order": 900.0553
       }
     },
     {
@@ -43744,7 +45259,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0553
+        "order": 900.0554
       }
     },
     {
@@ -43755,7 +45270,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0554
+        "order": 900.0555
       }
     },
     {
@@ -43788,7 +45303,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0555
+        "order": 900.0556
       }
     },
     {
@@ -43799,7 +45314,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0556
+        "order": 900.0557
       }
     },
     {
@@ -43810,7 +45325,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0557
+        "order": 900.0558
       }
     },
     {
@@ -43843,7 +45358,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0558
+        "order": 900.0559
       }
     },
     {
@@ -43887,7 +45402,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0559
+        "order": 900.056
       }
     },
     {
@@ -43898,7 +45413,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.056
+        "order": 900.0561
       }
     },
     {
@@ -43909,7 +45424,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0561
+        "order": 900.0562
       }
     },
     {
@@ -43920,7 +45435,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0562
+        "order": 900.0563
       }
     },
     {
@@ -43931,7 +45446,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0563
+        "order": 900.0564
       }
     },
     {
@@ -43942,7 +45457,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0564
+        "order": 900.0565
       }
     },
     {
@@ -43953,7 +45468,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0565
+        "order": 900.0566
       }
     },
     {
@@ -43964,7 +45479,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0566
+        "order": 900.0567
       }
     },
     {
@@ -43975,7 +45490,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0567
+        "order": 900.0568
       }
     },
     {
@@ -44008,7 +45523,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0568
+        "order": 900.0569
       }
     },
     {
@@ -44019,7 +45534,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0569
+        "order": 900.057
       }
     },
     {
@@ -44030,7 +45545,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.057
+        "order": 900.0571
       }
     },
     {
@@ -44041,7 +45556,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0571
+        "order": 900.0572
       }
     },
     {
@@ -44052,7 +45567,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0572
+        "order": 900.0573
       }
     },
     {
@@ -44074,7 +45589,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0573
+        "order": 900.0574
       }
     },
     {
@@ -44085,7 +45600,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0574
+        "order": 900.0575
       }
     },
     {
@@ -44096,7 +45611,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0575
+        "order": 900.0576
       }
     },
     {
@@ -44107,7 +45622,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0576
+        "order": 900.0577
       }
     },
     {
@@ -44118,7 +45633,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0577
+        "order": 900.0578
       }
     },
     {
@@ -44129,7 +45644,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0578
+        "order": 900.0579
       }
     },
     {
@@ -44140,7 +45655,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0579
+        "order": 900.058
       }
     },
     {
@@ -44151,7 +45666,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.058
+        "order": 900.0581
       }
     },
     {
@@ -44162,7 +45677,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0581
+        "order": 900.0582
       }
     },
     {
@@ -44173,7 +45688,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0582
+        "order": 900.0583
       }
     },
     {
@@ -44184,7 +45699,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0583
+        "order": 900.0584
       }
     },
     {
@@ -44195,7 +45710,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0584
+        "order": 900.0585
       }
     },
     {
@@ -44206,7 +45721,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0585
+        "order": 900.0586
       }
     },
     {
@@ -44217,7 +45732,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0586
+        "order": 900.0587
       }
     },
     {
@@ -44228,7 +45743,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0587
+        "order": 900.0588
       }
     },
     {
@@ -44239,7 +45754,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0588
+        "order": 900.0589
       }
     },
     {
@@ -44250,7 +45765,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0589
+        "order": 900.059
       }
     },
     {
@@ -44261,7 +45776,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.059
+        "order": 900.0591
       }
     },
     {
@@ -44272,7 +45787,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0591
+        "order": 900.0592
       }
     },
     {
@@ -44283,7 +45798,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0592
+        "order": 900.0593
       }
     },
     {
@@ -44294,7 +45809,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0593
+        "order": 900.0594
       }
     },
     {
@@ -44305,7 +45820,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0594
+        "order": 900.0595
       }
     },
     {
@@ -44316,7 +45831,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0595
+        "order": 900.0596
       }
     },
     {
@@ -44327,7 +45842,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0596
+        "order": 900.0597
       }
     },
     {
@@ -44338,7 +45853,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0597
+        "order": 900.0598
       }
     },
     {
@@ -44349,7 +45864,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0598
+        "order": 900.0599
       }
     },
     {
@@ -44360,7 +45875,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0599
+        "order": 900.06
       }
     },
     {
@@ -44371,7 +45886,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.06
+        "order": 900.0601
       }
     },
     {
@@ -44382,7 +45897,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0601
+        "order": 900.0602
       }
     },
     {
@@ -44393,7 +45908,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0602
+        "order": 900.0603
       }
     },
     {
@@ -44404,7 +45919,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0603
+        "order": 900.0604
       }
     },
     {
@@ -44415,7 +45930,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0604
+        "order": 900.0605
       }
     },
     {
@@ -44426,7 +45941,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0605
+        "order": 900.0606
       }
     },
     {
@@ -44448,7 +45963,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0606
+        "order": 900.0607
       }
     },
     {
@@ -44459,7 +45974,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0607
+        "order": 900.0608
       }
     },
     {
@@ -44470,7 +45985,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0608
+        "order": 900.0609
       }
     },
     {
@@ -44481,7 +45996,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0609
+        "order": 900.061
       }
     },
     {
@@ -44492,7 +46007,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.061
+        "order": 900.0611
       }
     },
     {
@@ -44503,7 +46018,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0611
+        "order": 900.0612
       }
     },
     {
@@ -44514,7 +46029,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0612
+        "order": 900.0613
       }
     },
     {
@@ -44525,7 +46040,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0613
+        "order": 900.0614
       }
     },
     {
@@ -44536,7 +46051,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0614
+        "order": 900.0615
       }
     },
     {
@@ -44547,7 +46062,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0615
+        "order": 900.0616
       }
     },
     {
@@ -44558,7 +46073,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0616
+        "order": 900.0617
       }
     },
     {
@@ -44747,427 +46262,7 @@
         "group": "4_build",
         "order": 900.0089
       }
-    },
-{
-  "name": "🧱️ Clean Architecture · Product Frozen Import 6 Laws",
-  "type": "node-terminal",
-  "request": "launch",
-  "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/product-wgpu-native-frozen-import-inputs-6/📜️script.ts\" \"laws\"",
-  "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3",
-  "env": {
-    "NX_DAEMON": "false",
-    "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3"
-  },
-  "presentation": {
-    "group": "4_gate",
-    "order": 900.101
-  }
-},
-{
-  "name": "🧱️ Clean Architecture · Product Frozen Import 6 Prepare",
-  "type": "node-terminal",
-  "request": "launch",
-  "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/product-wgpu-native-frozen-import-inputs-6/📜️script.ts\" \"prepare\" \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/product-wgpu-native-whole/epoch-8/independent-frozen-import-helper-admission-6.json\"",
-  "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3",
-  "env": {
-    "NX_DAEMON": "false",
-    "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3"
-  },
-  "presentation": {
-    "group": "4_gate",
-    "order": 900.10101
-  }
-},
-{
-  "name": "🧱️ Clean Architecture · Embedded Import 5 Laws",
-  "type": "node-terminal",
-  "request": "launch",
-  "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/embedded-plugin-selection-owning-import-inputs-5/📜️script.ts\" \"laws\"",
-  "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3",
-  "env": {
-    "NX_DAEMON": "false",
-    "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3"
-  },
-  "presentation": {
-    "group": "4_gate",
-    "order": 900.10102
-  }
-},
-{
-  "name": "🧱️ Clean Architecture · Embedded Import 5 Prepare",
-  "type": "node-terminal",
-  "request": "launch",
-  "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/embedded-plugin-selection-owning-import-inputs-5/📜️script.ts\" \"prepare\" \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/embedded-plugin-selection-owner/owning-1/independent-import-helper-admission-5.json\"",
-  "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3",
-  "env": {
-    "NX_DAEMON": "false",
-    "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3"
-  },
-  "presentation": {
-    "group": "4_gate",
-    "order": 900.10103
-  }
-},
-{
-  "name": "🧱️ Clean Architecture · Product Frozen Whole 2 Dispatch 4",
-  "type": "node-terminal",
-  "request": "launch",
-  "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/product-wgpu-native-frozen-dispatch-inputs-4/📜️script.ts\" \"run\" \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/product-wgpu-native-whole/epoch-8/independent-frozen-dispatch-admission-4.json\"",
-  "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3",
-  "env": {
-    "NX_DAEMON": "false",
-    "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3"
-  },
-  "presentation": {
-    "group": "4_gate",
-    "order": 900.103
-  }
-},
-{
-  "name": "🧱️ Clean Architecture · Embedded Whole 2 Dispatch 4",
-  "type": "node-terminal",
-  "request": "launch",
-  "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/embedded-plugin-selection-owning-dispatch-inputs-4/📜️script.ts\" \"run\" \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/embedded-plugin-selection-owner/owning-1/independent-dispatch-admission-4.json\"",
-  "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3",
-  "env": {
-    "NX_DAEMON": "false",
-    "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3"
-  },
-  "presentation": {
-    "group": "4_gate",
-    "order": 900.1030099999999
-  }
-},
-{
-  "name": "🧱️ Clean Architecture · Graph Credit 7 Controls",
-  "type": "node-terminal",
-  "request": "launch",
-  "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/unified-identity-credit-native-successor-inputs-7/📜️script.ts\" \"validate\"",
-  "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3",
-  "env": {
-    "NX_DAEMON": "false",
-    "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3"
-  },
-  "presentation": {
-    "group": "4_gate",
-    "order": 900.1030199999999
-  }
-},
-{
-  "name": "🧱️ Clean Architecture · Graph Credit 7 Prepare",
-  "type": "node-terminal",
-  "request": "launch",
-  "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/unified-identity-credit-native-successor-inputs-7/📜️script.ts\" \"prepare\" \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/unified-general-native-owner/epoch-1/independent-identity-credit-helper-prepare-admission-7.json\"",
-  "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3",
-  "env": {
-    "NX_DAEMON": "false",
-    "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3"
-  },
-  "presentation": {
-    "group": "4_gate",
-    "order": 900.10303
-  }
-},
-{
-  "name": "🧱️ Clean Architecture · Graph Credit 7 Metadata",
-  "type": "node-terminal",
-  "request": "launch",
-  "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/unified-identity-credit-native-successor-inputs-7/📜️script.ts\" \"metadata\" \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/unified-general-native-owner/epoch-1/independent-identity-credit-helper-prepare-admission-7.json\"",
-  "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3",
-  "env": {
-    "NX_DAEMON": "false",
-    "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3"
-  },
-  "presentation": {
-    "group": "4_gate",
-    "order": 900.10304
-  }
-},
-{
-  "name": "🧱️ Clean Architecture · Graph Credit Whole 6",
-  "type": "node-terminal",
-  "request": "launch",
-  "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/unified-identity-credit-native-dispatch-inputs-6/📜️script.ts\" \"run\" \"graph\" \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/unified-general-native-owner/epoch-1/independent-dispatch-admission-graph-6.json\"",
-  "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3",
-  "env": {
-    "NX_DAEMON": "false",
-    "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3"
-  },
-  "presentation": {
-    "group": "4_gate",
-    "order": 900.1030499999999
-  }
-},
-{
-  "name": "🧱️ Clean Architecture · Board Caller 4 Controls",
-  "type": "node-terminal",
-  "request": "launch",
-  "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/unified-board-caller-native-successor-inputs-4/📜️script.ts\" \"validate\"",
-  "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3",
-  "env": {
-    "NX_DAEMON": "false",
-    "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3"
-  },
-  "presentation": {
-    "group": "4_gate",
-    "order": 900.1030599999999
-  }
-},
-{
-  "name": "🧱️ Clean Architecture · Board Caller 4 Prepare",
-  "type": "node-terminal",
-  "request": "launch",
-  "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/unified-board-caller-native-successor-inputs-4/📜️script.ts\" \"prepare\" \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/unified-general-native-owner/epoch-1/independent-board-caller-helper-prepare-admission-4.json\"",
-  "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3",
-  "env": {
-    "NX_DAEMON": "false",
-    "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3"
-  },
-  "presentation": {
-    "group": "4_gate",
-    "order": 900.10307
-  }
-},
-{
-  "name": "🧱️ Clean Architecture · Board Caller 4 Metadata",
-  "type": "node-terminal",
-  "request": "launch",
-  "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/unified-board-caller-native-successor-inputs-4/📜️script.ts\" \"metadata\" \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/unified-general-native-owner/epoch-1/independent-board-caller-helper-prepare-admission-4.json\"",
-  "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3",
-  "env": {
-    "NX_DAEMON": "false",
-    "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3"
-  },
-  "presentation": {
-    "group": "4_gate",
-    "order": 900.10308
-  }
-},
-{
-  "name": "🧱️ Clean Architecture · UI Board Whole 7",
-  "type": "node-terminal",
-  "request": "launch",
-  "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/unified-board-caller-native-dispatch-inputs-7/📜️script.ts\" \"run\" \"ui-board\" \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/unified-general-native-owner/epoch-1/independent-dispatch-admission-ui-board-7.json\"",
-  "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3",
-  "env": {
-    "NX_DAEMON": "false",
-    "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3"
-  },
-  "presentation": {
-    "group": "4_gate",
-    "order": 900.10309
-  }
-},
-{
-  "name": "🧱️ Clean Architecture · Embedded Publication 2 Controls",
-  "type": "node-terminal",
-  "request": "launch",
-  "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/embedded-plugin-selection-publication-inputs-2/📜️script.ts\" \"validate\"",
-  "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3",
-  "env": {
-    "NX_DAEMON": "false",
-    "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3"
-  },
-  "presentation": {
-    "group": "4_gate",
-    "order": 900.1030999999999
-  }
-},
-{
-  "name": "🧱️ Clean Architecture · Embedded Publication 2 Prepare",
-  "type": "node-terminal",
-  "request": "launch",
-  "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/embedded-plugin-selection-publication-inputs-2/📜️script.ts\" \"prepare\"",
-  "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3",
-  "env": {
-    "NX_DAEMON": "false",
-    "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3"
-  },
-  "presentation": {
-    "group": "4_gate",
-    "order": 900.1031099999999
-  }
-},
-{
-  "name": "🧱️ Clean Architecture · Embedded Publication 2 Publish",
-  "type": "node-terminal",
-  "request": "launch",
-  "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/embedded-plugin-selection-publication-inputs-2/📜️script.ts\" \"publish\"",
-  "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3",
-  "env": {
-    "NX_DAEMON": "false",
-    "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3"
-  },
-  "presentation": {
-    "group": "4_gate",
-    "order": 900.10312
-  }
-},
-{
-  "name": "🧱️ Clean Architecture · Product Frozen Bootstrap 7 Laws",
-  "type": "node-terminal",
-  "request": "launch",
-  "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/product-wgpu-native-frozen-bootstrap-inputs-7/📜️script.ts\" \"laws\"",
-  "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3",
-  "env": {
-    "NX_DAEMON": "false",
-    "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3"
-  },
-  "presentation": {
-    "group": "4_gate",
-    "order": 900.104
-  }
-},
-{
-  "name": "🧱️ Clean Architecture · Product Frozen Bootstrap 7 Prepare",
-  "type": "node-terminal",
-  "request": "launch",
-  "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/product-wgpu-native-frozen-bootstrap-inputs-7/📜️script.ts\" \"prepare\" \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/product-wgpu-native-whole/epoch-8/independent-frozen-bootstrap-helper-admission-7.json\"",
-  "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3",
-  "env": {
-    "NX_DAEMON": "false",
-    "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3"
-  },
-  "presentation": {
-    "group": "4_gate",
-    "order": 900.10401
-  }
-},
-{
-  "name": "🧱️ Clean Architecture · Graph Credit Whole 6 Dispatch 7",
-  "type": "node-terminal",
-  "request": "launch",
-  "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/unified-identity-credit-native-dispatch-inputs-7/📜️script.ts\" \"run\" \"graph\" \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/unified-general-native-owner/epoch-1/independent-dispatch-admission-graph-7.json\"",
-  "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3",
-  "env": {
-    "NX_DAEMON": "false",
-    "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3"
-  },
-  "presentation": {
-    "group": "4_gate",
-    "order": 900.10402
-  }
-},
-{
-  "name": "🧱️ Clean Architecture · Embedded Publication 3 Validate",
-  "type": "node-terminal",
-  "request": "launch",
-  "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/embedded-plugin-selection-publication-inputs-3/📜️script.ts\" \"validate\"",
-  "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3",
-  "env": {
-    "NX_DAEMON": "false",
-    "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3"
-  },
-  "presentation": {
-    "group": "4_gate",
-    "order": 900.1040300000001
-  }
-},
-{
-  "name": "🧱️ Clean Architecture · Embedded Publication 3 Prepare",
-  "type": "node-terminal",
-  "request": "launch",
-  "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/embedded-plugin-selection-publication-inputs-3/📜️script.ts\" \"prepare\"",
-  "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3",
-  "env": {
-    "NX_DAEMON": "false",
-    "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3"
-  },
-  "presentation": {
-    "group": "4_gate",
-    "order": 900.10404
-  }
-},
-{
-  "name": "🧱️ Clean Architecture · Embedded Publication 3 Publish",
-  "type": "node-terminal",
-  "request": "launch",
-  "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/embedded-plugin-selection-publication-inputs-3/📜️script.ts\" \"publish\"",
-  "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3",
-  "env": {
-    "NX_DAEMON": "false",
-    "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3"
-  },
-  "presentation": {
-    "group": "4_gate",
-    "order": 900.10405
-  }
-},
-{
-  "name": "🧱️ Clean Architecture · UI Board Whole 7 Dispatch 8",
-  "type": "node-terminal",
-  "request": "launch",
-  "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/unified-board-caller-native-dispatch-inputs-8/📜️script.ts\" \"run\" \"ui-board\" \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/unified-general-native-owner/epoch-1/independent-dispatch-admission-ui-board-8.json\"",
-  "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3",
-  "env": {
-    "NX_DAEMON": "false",
-    "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3"
-  },
-  "presentation": {
-    "group": "4_gate",
-    "order": 900.105
-  }
-},
-{
-  "name": "🧱️ Clean Architecture · Product Frozen Whole 3 Dispatch 5",
-  "type": "node-terminal",
-  "request": "launch",
-  "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/product-wgpu-native-frozen-dispatch-inputs-5/📜️script.ts\" \"run\" \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/product-wgpu-native-whole/epoch-8/independent-frozen-dispatch-admission-5.json\"",
-  "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3",
-  "env": {
-    "NX_DAEMON": "false",
-    "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3"
-  },
-  "presentation": {
-    "group": "4_gate",
-    "order": 900.10501
-  }
-},
-{
-  "name": "🧱️ Clean Architecture · Embedded Continuation 5 Validate",
-  "type": "node-terminal",
-  "request": "launch",
-  "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/embedded-plugin-selection-publication-inputs-5/📜️script.ts\" \"validate\"",
-  "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3",
-  "env": {
-    "NX_DAEMON": "false",
-    "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3"
-  },
-  "presentation": {
-    "group": "4_gate",
-    "order": 900.106
-  }
-},
-{
-  "name": "🧱️ Clean Architecture · Embedded Continuation 5 Prepare",
-  "type": "node-terminal",
-  "request": "launch",
-  "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/embedded-plugin-selection-publication-inputs-5/📜️script.ts\" \"prepare\"",
-  "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3",
-  "env": {
-    "NX_DAEMON": "false",
-    "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3"
-  },
-  "presentation": {
-    "group": "4_gate",
-    "order": 900.10601
-  }
-},
-{
-  "name": "🧱️ Clean Architecture · Embedded Continuation 5 Publish",
-  "type": "node-terminal",
-  "request": "launch",
-  "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/embedded-plugin-selection-publication-inputs-5/📜️script.ts\" \"publish\"",
-  "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3",
-  "env": {
-    "NX_DAEMON": "false",
-    "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fixed-slot-fixture-owners/nx-publication-3"
-  },
-  "presentation": {
-    "group": "4_gate",
-    "order": 900.10602
-  }
-}
+    }
   ],
   "compounds": [
     {
@@ -46283,6 +47378,7 @@
       "description": "Project whose preview-generated target runs",
       "options": [
         "@semio-tech/assets",
+        "@semio-tech/draw-drawing-rs",
         "@semio-tech/dsl-derive-rs",
         "@semio-tech/flow-plugin",
         "@semio-tech/framework-actor-rs",
@@ -46298,10 +47394,17 @@
         "@semio-tech/mit-bestand-bericht",
         "@semio-tech/plugin-registry",
         "@semio-tech/print",
+        "@semio-tech/puzzle-2d-rs",
+        "@semio-tech/puzzle-3d-rs",
+        "@semio-tech/puzzle-5d-rs",
+        "@semio-tech/reasoning-wires-rs",
         "@semio-tech/repo-client",
+        "@semio-tech/trinity-jack-rs",
+        "@semio-tech/trinity-rewriting-rs",
         "@semio-tech/ui-contract-rs",
         "@semio-tech/ui-rs",
         "@semio-tech/ui-styling-tokens",
+        "@semio-tech/writer-writer-rs",
         "semio-framework-os-flow-core"
       ]
     },

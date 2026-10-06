@@ -1,0 +1,146 @@
+[
+  {
+    "id": "string-null-root",
+    "expectedAccept": true,
+    "actualAccept": true,
+    "records": [
+      {
+        "case": "canonical-scalar-native",
+        "scenario": "string-null-root",
+        "key": "actual/completed",
+        "values": [
+          1
+        ]
+      }
+    ],
+    "hierarchyDiagnostic": false,
+    "diagnosticTail": "@section@level=\\count1026\n)\nLaTeX Info: Redefining \\ref on input line 7.\nLaTeX Info: Redefining \\pageref on input line 7.\nLaTeX Info: Redefining \\nameref on input line 7.\n (string-null-root.out) (string-null-root.out)\n\\@outlinefile=\\write6\n\\openout6 = `string-null-root.out'.\n\nClass scrartcl Info: loading recommended package `bookmark'.\n(scrartcl)           Using `bookmark' together with `hyperref' is recommended,\n(scrartcl)           because of handling of possible bookmark level gaps.\n(scrartcl)           You can avoid loading `bookmark' with KOMA-Script option\n(scrartcl)           `bookmarkpackage=false' before \\begin{document} and\n(scrartcl)           you can avoid this message adding:\n(scrartcl)             \\usepackage{bookmark}\n(scrartcl)           before \\begin{document} on input line 7.\n\n(bookmark.sty\nPackage: bookmark 2020-11-06 v1.29 PDF bookmarks (HO)\n (bkm-dvipdfm.def\nFile: bkm-dvipdfm.def 2020-11-06 v1.29 bookmark driver for dvipdfm (HO)\n\\BKM@id=\\count1027\n))\n\\g_semio_viz_probe_iow=\\write7\n\\openout7 = `string-null-root.probe.jsonl'.\n\n\\g_semio_window_break_iow=\\write8\n\\openout8 = `string-null-root.window-breaks'.\n\nPackage microtype Info: Loading generic protrusion settings for font family\n(microtype)             `ShareTechMono-Regular.ttf' (encoding: TU).\n(microtype)             For optimal results, create family-specific settings.\n(microtype)             See the microtype manual for details.\n [1\n\n] [2\n\n] [3\n\n] [4\n\n] (string-null-root.aux)\nPackage rerunfilecheck Info: File `string-null-root.out' has not changed.\n(rerunfilecheck)             Checksum: D41D8CD98F00B204E9800998ECF8427E;0.\nPackage logreq Info: Writing requests to 'string-null-root.run.xml'.\n\\openout1 = `string-null-root.run.xml'.\n\n )\nOutput written on string-null-root.xdv (4 pages, 12568 bytes).\n",
+    "source": "\\begingroup\n\\ExplSyntaxOn\\tl_set:Nn\\l_semio_language_tl{en}\\ExplSyntaxOff\n\\begin{VizFigure}[width=80,height=48,title={}]\n\\SemioVizTable{scalar-probe}{id,pred,duration,label}\n\\SemioVizRow{scalar-probe}{{\\SemioVizString{null}},{\\SemioVizString{}},{1},{\\SemioVizString{String null}}}\n\\SemioVizTheme{default}[appearance=light]\n\\SemioVizChart{critical-path-network}[data={scalar-probe},id={id},label={label},mode={critical-path},pred={pred},value={duration}]\n% 80mm × 48mm, light appearance\n\\end{VizFigure}\n\\endgroup\n"
+  },
+  {
+    "id": "string-undefined-root",
+    "expectedAccept": true,
+    "actualAccept": true,
+    "records": [
+      {
+        "case": "canonical-scalar-native",
+        "scenario": "string-undefined-root",
+        "key": "actual/completed",
+        "values": [
+          1
+        ]
+      }
+    ],
+    "hierarchyDiagnostic": false,
+    "diagnosticTail": " \\ref on input line 7.\nLaTeX Info: Redefining \\pageref on input line 7.\nLaTeX Info: Redefining \\nameref on input line 7.\n (string-undefined-root.out)\n(string-undefined-root.out)\n\\@outlinefile=\\write6\n\\openout6 = `string-undefined-root.out'.\n\nClass scrartcl Info: loading recommended package `bookmark'.\n(scrartcl)           Using `bookmark' together with `hyperref' is recommended,\n(scrartcl)           because of handling of possible bookmark level gaps.\n(scrartcl)           You can avoid loading `bookmark' with KOMA-Script option\n(scrartcl)           `bookmarkpackage=false' before \\begin{document} and\n(scrartcl)           you can avoid this message adding:\n(scrartcl)             \\usepackage{bookmark}\n(scrartcl)           before \\begin{document} on input line 7.\n (bookmark.sty\nPackage: bookmark 2020-11-06 v1.29 PDF bookmarks (HO)\n (bkm-dvipdfm.def\nFile: bkm-dvipdfm.def 2020-11-06 v1.29 bookmark driver for dvipdfm (HO)\n\\BKM@id=\\count1027\n))\n\\g_semio_viz_probe_iow=\\write7\n\\openout7 = `string-undefined-root.probe.jsonl'.\n\n\\g_semio_window_break_iow=\\write8\n\\openout8 = `string-undefined-root.window-breaks'.\n\nPackage microtype Info: Loading generic protrusion settings for font family\n(microtype)             `ShareTechMono-Regular.ttf' (encoding: TU).\n(microtype)             For optimal results, create family-specific settings.\n(microtype)             See the microtype manual for details.\n [1\n\n] [2\n\n] [3\n\n]\n[4\n\n] (string-undefined-root.aux)\nPackage rerunfilecheck Info: File `string-undefined-root.out' has not changed.\n(rerunfilecheck)             Checksum: D41D8CD98F00B204E9800998ECF8427E;0.\nPackage logreq Info: Writing requests to 'string-undefined-root.run.xml'.\n\\openout1 = `string-undefined-root.run.xml'.\n\n )\nOutput written on string-undefined-root.xdv (4 pages, 12648 bytes).\n",
+    "source": "\\begingroup\n\\ExplSyntaxOn\\tl_set:Nn\\l_semio_language_tl{en}\\ExplSyntaxOff\n\\begin{VizFigure}[width=80,height=48,title={}]\n\\SemioVizTable{scalar-probe}{id,pred,duration,label}\n\\SemioVizRow{scalar-probe}{{\\SemioVizString{undefined}},{\\SemioVizString{}},{1},{\\SemioVizString{String undefined}}}\n\\SemioVizTheme{default}[appearance=light]\n\\SemioVizChart{critical-path-network}[data={scalar-probe},id={id},label={label},mode={critical-path},pred={pred},value={duration}]\n% 80mm × 48mm, light appearance\n\\end{VizFigure}\n\\endgroup\n"
+  },
+  {
+    "id": "string-true-root",
+    "expectedAccept": true,
+    "actualAccept": true,
+    "records": [
+      {
+        "case": "canonical-scalar-native",
+        "scenario": "string-true-root",
+        "key": "actual/completed",
+        "values": [
+          1
+        ]
+      }
+    ],
+    "hierarchyDiagnostic": false,
+    "diagnosticTail": "@section@level=\\count1026\n)\nLaTeX Info: Redefining \\ref on input line 7.\nLaTeX Info: Redefining \\pageref on input line 7.\nLaTeX Info: Redefining \\nameref on input line 7.\n (string-true-root.out) (string-true-root.out)\n\\@outlinefile=\\write6\n\\openout6 = `string-true-root.out'.\n\nClass scrartcl Info: loading recommended package `bookmark'.\n(scrartcl)           Using `bookmark' together with `hyperref' is recommended,\n(scrartcl)           because of handling of possible bookmark level gaps.\n(scrartcl)           You can avoid loading `bookmark' with KOMA-Script option\n(scrartcl)           `bookmarkpackage=false' before \\begin{document} and\n(scrartcl)           you can avoid this message adding:\n(scrartcl)             \\usepackage{bookmark}\n(scrartcl)           before \\begin{document} on input line 7.\n\n(bookmark.sty\nPackage: bookmark 2020-11-06 v1.29 PDF bookmarks (HO)\n (bkm-dvipdfm.def\nFile: bkm-dvipdfm.def 2020-11-06 v1.29 bookmark driver for dvipdfm (HO)\n\\BKM@id=\\count1027\n))\n\\g_semio_viz_probe_iow=\\write7\n\\openout7 = `string-true-root.probe.jsonl'.\n\n\\g_semio_window_break_iow=\\write8\n\\openout8 = `string-true-root.window-breaks'.\n\nPackage microtype Info: Loading generic protrusion settings for font family\n(microtype)             `ShareTechMono-Regular.ttf' (encoding: TU).\n(microtype)             For optimal results, create family-specific settings.\n(microtype)             See the microtype manual for details.\n [1\n\n] [2\n\n] [3\n\n] [4\n\n] (string-true-root.aux)\nPackage rerunfilecheck Info: File `string-true-root.out' has not changed.\n(rerunfilecheck)             Checksum: D41D8CD98F00B204E9800998ECF8427E;0.\nPackage logreq Info: Writing requests to 'string-true-root.run.xml'.\n\\openout1 = `string-true-root.run.xml'.\n\n )\nOutput written on string-true-root.xdv (4 pages, 12568 bytes).\n",
+    "source": "\\begingroup\n\\ExplSyntaxOn\\tl_set:Nn\\l_semio_language_tl{en}\\ExplSyntaxOff\n\\begin{VizFigure}[width=80,height=48,title={}]\n\\SemioVizTable{scalar-probe}{id,pred,duration,label}\n\\SemioVizRow{scalar-probe}{{\\SemioVizString{true}},{\\SemioVizString{}},{1},{\\SemioVizString{String true}}}\n\\SemioVizTheme{default}[appearance=light]\n\\SemioVizChart{critical-path-network}[data={scalar-probe},id={id},label={label},mode={critical-path},pred={pred},value={duration}]\n% 80mm × 48mm, light appearance\n\\end{VizFigure}\n\\endgroup\n"
+  },
+  {
+    "id": "literal-null-parent",
+    "expectedAccept": true,
+    "actualAccept": true,
+    "records": [
+      {
+        "case": "canonical-scalar-native",
+        "scenario": "literal-null-parent",
+        "key": "actual/completed",
+        "values": [
+          1
+        ]
+      }
+    ],
+    "hierarchyDiagnostic": false,
+    "diagnosticTail": "TeX Info: Redefining \\ref on input line 7.\nLaTeX Info: Redefining \\pageref on input line 7.\nLaTeX Info: Redefining \\nameref on input line 7.\n (literal-null-parent.out) (literal-null-parent.out)\n\\@outlinefile=\\write6\n\\openout6 = `literal-null-parent.out'.\n\nClass scrartcl Info: loading recommended package `bookmark'.\n(scrartcl)           Using `bookmark' together with `hyperref' is recommended,\n(scrartcl)           because of handling of possible bookmark level gaps.\n(scrartcl)           You can avoid loading `bookmark' with KOMA-Script option\n(scrartcl)           `bookmarkpackage=false' before \\begin{document} and\n(scrartcl)           you can avoid this message adding:\n(scrartcl)             \\usepackage{bookmark}\n(scrartcl)           before \\begin{document} on input line 7.\n\n(bookmark.sty\nPackage: bookmark 2020-11-06 v1.29 PDF bookmarks (HO)\n (bkm-dvipdfm.def\nFile: bkm-dvipdfm.def 2020-11-06 v1.29 bookmark driver for dvipdfm (HO)\n\\BKM@id=\\count1027\n))\n\\g_semio_viz_probe_iow=\\write7\n\\openout7 = `literal-null-parent.probe.jsonl'.\n\n\\g_semio_window_break_iow=\\write8\n\\openout8 = `literal-null-parent.window-breaks'.\n\nPackage microtype Info: Loading generic protrusion settings for font family\n(microtype)             `ShareTechMono-Regular.ttf' (encoding: TU).\n(microtype)             For optimal results, create family-specific settings.\n(microtype)             See the microtype manual for details.\n [1\n\n] [2\n\n] [3\n\n] [4\n\n] (literal-null-parent.aux)\nPackage rerunfilecheck Info: File `literal-null-parent.out' has not changed.\n(rerunfilecheck)             Checksum: D41D8CD98F00B204E9800998ECF8427E;0.\nPackage logreq Info: Writing requests to 'literal-null-parent.run.xml'.\n\\openout1 = `literal-null-parent.run.xml'.\n\n )\nOutput written on literal-null-parent.xdv (4 pages, 14128 bytes).\n",
+    "source": "\\begingroup\n\\ExplSyntaxOn\\tl_set:Nn\\l_semio_language_tl{en}\\ExplSyntaxOff\n\\begin{VizFigure}[width=80,height=48,title={}]\n\\SemioVizTable{scalar-probe}{id,pred,duration,label}\n\\SemioVizRow{scalar-probe}{{\\SemioVizString{null}},{\\SemioVizString{}},{1},{\\SemioVizString{Root}}}\n\\SemioVizRow{scalar-probe}{{\\SemioVizString{child}},{\\SemioVizString{null}},{1},{\\SemioVizString{Child}}}\n\\SemioVizTheme{default}[appearance=light]\n\\SemioVizChart{critical-path-network}[data={scalar-probe},id={id},label={label},mode={critical-path},pred={pred},value={duration}]\n% 80mm × 48mm, light appearance\n\\end{VizFigure}\n\\endgroup\n"
+  },
+  {
+    "id": "actual-null-id",
+    "expectedAccept": false,
+    "actualAccept": true,
+    "records": [
+      {
+        "case": "canonical-scalar-native",
+        "scenario": "actual-null-id",
+        "key": "actual/completed",
+        "values": [
+          1
+        ]
+      }
+    ],
+    "hierarchyDiagnostic": false,
+    "diagnosticTail": "references (HO)\n)\n\\c@section@level=\\count1026\n)\nLaTeX Info: Redefining \\ref on input line 7.\nLaTeX Info: Redefining \\pageref on input line 7.\nLaTeX Info: Redefining \\nameref on input line 7.\n (actual-null-id.out) (actual-null-id.out)\n\\@outlinefile=\\write6\n\\openout6 = `actual-null-id.out'.\n\nClass scrartcl Info: loading recommended package `bookmark'.\n(scrartcl)           Using `bookmark' together with `hyperref' is recommended,\n(scrartcl)           because of handling of possible bookmark level gaps.\n(scrartcl)           You can avoid loading `bookmark' with KOMA-Script option\n(scrartcl)           `bookmarkpackage=false' before \\begin{document} and\n(scrartcl)           you can avoid this message adding:\n(scrartcl)             \\usepackage{bookmark}\n(scrartcl)           before \\begin{document} on input line 7.\n (bookmark.sty\nPackage: bookmark 2020-11-06 v1.29 PDF bookmarks (HO)\n (bkm-dvipdfm.def\nFile: bkm-dvipdfm.def 2020-11-06 v1.29 bookmark driver for dvipdfm (HO)\n\\BKM@id=\\count1027\n))\n\\g_semio_viz_probe_iow=\\write7\n\\openout7 = `actual-null-id.probe.jsonl'.\n\n\\g_semio_window_break_iow=\\write8\n\\openout8 = `actual-null-id.window-breaks'.\n\nPackage microtype Info: Loading generic protrusion settings for font family\n(microtype)             `ShareTechMono-Regular.ttf' (encoding: TU).\n(microtype)             For optimal results, create family-specific settings.\n(microtype)             See the microtype manual for details.\n\n[1\n\n] [2\n\n] [3\n\n] [4\n\n] (actual-null-id.aux)\nPackage rerunfilecheck Info: File `actual-null-id.out' has not changed.\n(rerunfilecheck)             Checksum: D41D8CD98F00B204E9800998ECF8427E;0.\nPackage logreq Info: Writing requests to 'actual-null-id.run.xml'.\n\\openout1 = `actual-null-id.run.xml'.\n\n )\nOutput written on actual-null-id.xdv (4 pages, 12548 bytes).\n",
+    "source": "\\begingroup\n\\ExplSyntaxOn\\tl_set:Nn\\l_semio_language_tl{en}\\ExplSyntaxOff\n\\begin{VizFigure}[width=80,height=48,title={}]\n\\SemioVizTable{scalar-probe}{id,pred,duration,label}\n\\SemioVizRow{scalar-probe}{{\\SemioVizNull{}},{\\SemioVizString{}},{1},{\\SemioVizString{Actual null}}}\n\\SemioVizTheme{default}[appearance=light]\n\\SemioVizChart{critical-path-network}[data={scalar-probe},id={id},label={label},mode={critical-path},pred={pred},value={duration}]\n% 80mm × 48mm, light appearance\n\\end{VizFigure}\n\\endgroup\n"
+  },
+  {
+    "id": "missing-id",
+    "expectedAccept": false,
+    "actualAccept": true,
+    "records": [
+      {
+        "case": "canonical-scalar-native",
+        "scenario": "missing-id",
+        "key": "actual/completed",
+        "values": [
+          1
+        ]
+      }
+    ],
+    "hierarchyDiagnostic": false,
+    "diagnosticTail": "tlestring 2019/12/15 v1.6 Cleanup title references (HO)\n)\n\\c@section@level=\\count1026\n)\nLaTeX Info: Redefining \\ref on input line 7.\nLaTeX Info: Redefining \\pageref on input line 7.\nLaTeX Info: Redefining \\nameref on input line 7.\n\n(missing-id.out) (missing-id.out)\n\\@outlinefile=\\write6\n\\openout6 = `missing-id.out'.\n\nClass scrartcl Info: loading recommended package `bookmark'.\n(scrartcl)           Using `bookmark' together with `hyperref' is recommended,\n(scrartcl)           because of handling of possible bookmark level gaps.\n(scrartcl)           You can avoid loading `bookmark' with KOMA-Script option\n(scrartcl)           `bookmarkpackage=false' before \\begin{document} and\n(scrartcl)           you can avoid this message adding:\n(scrartcl)             \\usepackage{bookmark}\n(scrartcl)           before \\begin{document} on input line 7.\n (bookmark.sty\nPackage: bookmark 2020-11-06 v1.29 PDF bookmarks (HO)\n (bkm-dvipdfm.def\nFile: bkm-dvipdfm.def 2020-11-06 v1.29 bookmark driver for dvipdfm (HO)\n\\BKM@id=\\count1027\n))\n\\g_semio_viz_probe_iow=\\write7\n\\openout7 = `missing-id.probe.jsonl'.\n\n\\g_semio_window_break_iow=\\write8\n\\openout8 = `missing-id.window-breaks'.\n\nPackage microtype Info: Loading generic protrusion settings for font family\n(microtype)             `ShareTechMono-Regular.ttf' (encoding: TU).\n(microtype)             For optimal results, create family-specific settings.\n(microtype)             See the microtype manual for details.\n [1\n\n] [2\n\n]\n[3\n\n] [4\n\n] (missing-id.aux)\nPackage rerunfilecheck Info: File `missing-id.out' has not changed.\n(rerunfilecheck)             Checksum: D41D8CD98F00B204E9800998ECF8427E;0.\nPackage logreq Info: Writing requests to 'missing-id.run.xml'.\n\\openout1 = `missing-id.run.xml'.\n\n )\nOutput written on missing-id.xdv (4 pages, 12500 bytes).\n",
+    "source": "\\begingroup\n\\ExplSyntaxOn\\tl_set:Nn\\l_semio_language_tl{en}\\ExplSyntaxOff\n\\begin{VizFigure}[width=80,height=48,title={}]\n\\SemioVizTable{scalar-probe}{id,pred,duration,label}\n\\SemioVizRow{scalar-probe}{{\\SemioVizUndefined{}},{\\SemioVizString{}},{1},{\\SemioVizString{Missing ID}}}\n\\SemioVizTheme{default}[appearance=light]\n\\SemioVizChart{critical-path-network}[data={scalar-probe},id={id},label={label},mode={critical-path},pred={pred},value={duration}]\n% 80mm × 48mm, light appearance\n\\end{VizFigure}\n\\endgroup\n"
+  },
+  {
+    "id": "boolean-id",
+    "expectedAccept": false,
+    "actualAccept": true,
+    "records": [
+      {
+        "case": "canonical-scalar-native",
+        "scenario": "boolean-id",
+        "key": "actual/completed",
+        "values": [
+          1
+        ]
+      }
+    ],
+    "hierarchyDiagnostic": false,
+    "diagnosticTail": "tlestring 2019/12/15 v1.6 Cleanup title references (HO)\n)\n\\c@section@level=\\count1026\n)\nLaTeX Info: Redefining \\ref on input line 7.\nLaTeX Info: Redefining \\pageref on input line 7.\nLaTeX Info: Redefining \\nameref on input line 7.\n\n(boolean-id.out) (boolean-id.out)\n\\@outlinefile=\\write6\n\\openout6 = `boolean-id.out'.\n\nClass scrartcl Info: loading recommended package `bookmark'.\n(scrartcl)           Using `bookmark' together with `hyperref' is recommended,\n(scrartcl)           because of handling of possible bookmark level gaps.\n(scrartcl)           You can avoid loading `bookmark' with KOMA-Script option\n(scrartcl)           `bookmarkpackage=false' before \\begin{document} and\n(scrartcl)           you can avoid this message adding:\n(scrartcl)             \\usepackage{bookmark}\n(scrartcl)           before \\begin{document} on input line 7.\n (bookmark.sty\nPackage: bookmark 2020-11-06 v1.29 PDF bookmarks (HO)\n (bkm-dvipdfm.def\nFile: bkm-dvipdfm.def 2020-11-06 v1.29 bookmark driver for dvipdfm (HO)\n\\BKM@id=\\count1027\n))\n\\g_semio_viz_probe_iow=\\write7\n\\openout7 = `boolean-id.probe.jsonl'.\n\n\\g_semio_window_break_iow=\\write8\n\\openout8 = `boolean-id.window-breaks'.\n\nPackage microtype Info: Loading generic protrusion settings for font family\n(microtype)             `ShareTechMono-Regular.ttf' (encoding: TU).\n(microtype)             For optimal results, create family-specific settings.\n(microtype)             See the microtype manual for details.\n [1\n\n] [2\n\n]\n[3\n\n] [4\n\n] (boolean-id.aux)\nPackage rerunfilecheck Info: File `boolean-id.out' has not changed.\n(rerunfilecheck)             Checksum: D41D8CD98F00B204E9800998ECF8427E;0.\nPackage logreq Info: Writing requests to 'boolean-id.run.xml'.\n\\openout1 = `boolean-id.run.xml'.\n\n )\nOutput written on boolean-id.xdv (4 pages, 12468 bytes).\n",
+    "source": "\\begingroup\n\\ExplSyntaxOn\\tl_set:Nn\\l_semio_language_tl{en}\\ExplSyntaxOff\n\\begin{VizFigure}[width=80,height=48,title={}]\n\\SemioVizTable{scalar-probe}{id,pred,duration,label}\n\\SemioVizRow{scalar-probe}{{\\SemioVizBoolean{true}},{\\SemioVizString{}},{1},{\\SemioVizString{Boolean}}}\n\\SemioVizTheme{default}[appearance=light]\n\\SemioVizChart{critical-path-network}[data={scalar-probe},id={id},label={label},mode={critical-path},pred={pred},value={duration}]\n% 80mm × 48mm, light appearance\n\\end{VizFigure}\n\\endgroup\n"
+  },
+  {
+    "id": "null-parent",
+    "expectedAccept": false,
+    "actualAccept": false,
+    "error": "Error: Tectonic compilation failed: 1",
+    "hierarchyDiagnostic": true,
+    "diagnosticTail": " on input line 7.\nPackage hyperref Info: Link coloring ON on input line 7.\n(nameref.sty\nPackage: nameref 2021-04-02 v2.47 Cross-referencing by name of section\n (refcount.sty\nPackage: refcount 2019/12/15 v3.6 Data extraction from label references (HO)\n) (gettitlestring.sty\nPackage: gettitlestring 2019/12/15 v1.6 Cleanup title references (HO)\n)\n\\c@section@level=\\count1026\n)\nLaTeX Info: Redefining \\ref on input line 7.\nLaTeX Info: Redefining \\pageref on input line 7.\nLaTeX Info: Redefining \\nameref on input line 7.\n\\@outlinefile=\\write6\n\\openout6 = `null-parent.out'.\n\n\n\nPackage hyperref Warning: Rerun to get /PageLabels entry.\n\nClass scrartcl Info: loading recommended package `bookmark'.\n(scrartcl)           Using `bookmark' together with `hyperref' is recommended,\n(scrartcl)           because of handling of possible bookmark level gaps.\n(scrartcl)           You can avoid loading `bookmark' with KOMA-Script option\n(scrartcl)           `bookmarkpackage=false' before \\begin{document} and\n(scrartcl)           you can avoid this message adding:\n(scrartcl)             \\usepackage{bookmark}\n(scrartcl)           before \\begin{document} on input line 7.\n(bookmark.sty\nPackage: bookmark 2020-11-06 v1.29 PDF bookmarks (HO)\n (bkm-dvipdfm.def\nFile: bkm-dvipdfm.def 2020-11-06 v1.29 bookmark driver for dvipdfm (HO)\n\\BKM@id=\\count1027\n))\n\\g_semio_viz_probe_iow=\\write7\n\\openout7 = `null-parent.probe.jsonl'.\n\n\n\n! Package semio-viz-dom Error: Domain hierarchy 'scalar-probe': parent\n(semio-viz-dom)                reference does not name a node.\n\nType <return> to continue.\n ...                                              \n                                                  \nl.16 ...itical-path},pred={pred},value={duration}]\n                                                  \nNo pages of output.\n",
+    "source": "\\begingroup\n\\ExplSyntaxOn\\tl_set:Nn\\l_semio_language_tl{en}\\ExplSyntaxOff\n\\begin{VizFigure}[width=80,height=48,title={}]\n\\SemioVizTable{scalar-probe}{id,pred,duration,label}\n\\SemioVizRow{scalar-probe}{{\\SemioVizString{child}},{\\SemioVizNull{}},{1},{\\SemioVizString{Null parent}}}\n\\SemioVizTheme{default}[appearance=light]\n\\SemioVizChart{critical-path-network}[data={scalar-probe},id={id},label={label},mode={critical-path},pred={pred},value={duration}]\n% 80mm × 48mm, light appearance\n\\end{VizFigure}\n\\endgroup\n"
+  },
+  {
+    "id": "missing-parent",
+    "expectedAccept": false,
+    "actualAccept": false,
+    "error": "Error: Tectonic compilation failed: 1",
+    "hierarchyDiagnostic": true,
+    "diagnosticTail": "put line 7.\nPackage hyperref Info: Link coloring ON on input line 7.\n(nameref.sty\nPackage: nameref 2021-04-02 v2.47 Cross-referencing by name of section\n (refcount.sty\nPackage: refcount 2019/12/15 v3.6 Data extraction from label references (HO)\n) (gettitlestring.sty\nPackage: gettitlestring 2019/12/15 v1.6 Cleanup title references (HO)\n)\n\\c@section@level=\\count1026\n)\nLaTeX Info: Redefining \\ref on input line 7.\nLaTeX Info: Redefining \\pageref on input line 7.\nLaTeX Info: Redefining \\nameref on input line 7.\n\\@outlinefile=\\write6\n\\openout6 = `missing-parent.out'.\n\n\n\nPackage hyperref Warning: Rerun to get /PageLabels entry.\n\nClass scrartcl Info: loading recommended package `bookmark'.\n(scrartcl)           Using `bookmark' together with `hyperref' is recommended,\n(scrartcl)           because of handling of possible bookmark level gaps.\n(scrartcl)           You can avoid loading `bookmark' with KOMA-Script option\n(scrartcl)           `bookmarkpackage=false' before \\begin{document} and\n(scrartcl)           you can avoid this message adding:\n(scrartcl)             \\usepackage{bookmark}\n(scrartcl)           before \\begin{document} on input line 7.\n(bookmark.sty\nPackage: bookmark 2020-11-06 v1.29 PDF bookmarks (HO)\n (bkm-dvipdfm.def\nFile: bkm-dvipdfm.def 2020-11-06 v1.29 bookmark driver for dvipdfm (HO)\n\\BKM@id=\\count1027\n))\n\\g_semio_viz_probe_iow=\\write7\n\\openout7 = `missing-parent.probe.jsonl'.\n\n\n\n! Package semio-viz-dom Error: Domain hierarchy 'scalar-probe': parent\n(semio-viz-dom)                reference does not name a node.\n\nType <return> to continue.\n ...                                              \n                                                  \nl.16 ...itical-path},pred={pred},value={duration}]\n                                                  \nNo pages of output.\n",
+    "source": "\\begingroup\n\\ExplSyntaxOn\\tl_set:Nn\\l_semio_language_tl{en}\\ExplSyntaxOff\n\\begin{VizFigure}[width=80,height=48,title={}]\n\\SemioVizTable{scalar-probe}{id,pred,duration,label}\n\\SemioVizRow{scalar-probe}{{\\SemioVizString{child}},{\\SemioVizUndefined{}},{1},{\\SemioVizString{Missing parent}}}\n\\SemioVizTheme{default}[appearance=light]\n\\SemioVizChart{critical-path-network}[data={scalar-probe},id={id},label={label},mode={critical-path},pred={pred},value={duration}]\n% 80mm × 48mm, light appearance\n\\end{VizFigure}\n\\endgroup\n"
+  }
+]

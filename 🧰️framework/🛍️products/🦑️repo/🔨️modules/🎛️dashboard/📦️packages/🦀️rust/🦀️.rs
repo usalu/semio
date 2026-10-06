@@ -32,6 +32,12 @@ pub mod root_delegation;
 #[path = "../../🌳️command-tree/🦀️.rs"]
 pub mod command_tree;
 
+#[path = "../../⚙️preferences/🦀️.rs"]
+pub mod preferences;
+
+#[path = "../../📚️inventory/🦀️.rs"]
+pub mod inventory;
+
 #[path = "../../🖥️terminal/🦀️.rs"]
 pub mod terminal;
 
@@ -167,12 +173,12 @@ pub mod catalog {
     /// re-serializing the parsed `PlaygroundEntry` (single source of truth for the wire shape stays
     /// with the TS emitter).
     pub fn playgrounds_json_text(root: &Path) -> String {
-        fs::read_to_string(generated_dir(root).join("🔣️playgrounds.json")).unwrap_or_else(|_| "[]\n".to_string())
+        fs::read_to_string(generated_dir(root).join("🚀️playgrounds.json")).unwrap_or_else(|_| "[]\n".to_string())
     }
 
     /// 📖️ Reads the committed catalog (empty if it has never been generated).
     pub fn load_playground_catalog(root: &Path) -> Vec<PlaygroundEntry> {
-        let path = generated_dir(root).join("🔣️playgrounds.json");
+        let path = generated_dir(root).join("🚀️playgrounds.json");
         let Ok(text) = fs::read_to_string(path) else { return Vec::new() };
         let Ok(raw) = serde_json::from_str::<Vec<serde_json::Value>>(&text) else { return Vec::new() };
         raw.into_iter()

@@ -1,0 +1,828 @@
+{
+  "schema": {
+    "type": "object",
+    "required": [
+      "families",
+      "cases",
+      "hardCases"
+    ],
+    "additionalProperties": false,
+    "properties": {
+      "families": {
+        "type": "array",
+        "minItems": 3,
+        "maxItems": 3
+      },
+      "cases": {
+        "type": "array",
+        "minItems": 30,
+        "maxItems": 30
+      },
+      "hardCases": {
+        "type": "array",
+        "minItems": 3,
+        "maxItems": 3
+      }
+    }
+  },
+  "vectors": {
+    "families": [
+      {
+        "name": "sci-pathway",
+        "defaults": "mode=pathway,unit=1,nodeShape=box,nodes={\\q_no_value},edges={\\q_no_value}",
+        "defaultsMacro": "semio_viz_bio_pathway_defaults:",
+        "validateMacro": "semio_viz_bio_pathway_validate:",
+        "styles": [
+          "activate",
+          "inhibit",
+          "flux",
+          "plain"
+        ],
+        "types": []
+      },
+      {
+        "name": "sci-circuit",
+        "defaults": "mode=schematic,symbolSize=4,labels=true,elements={\\q_no_value}",
+        "defaultsMacro": "semio_viz_eng_circuit_defaults:",
+        "validateMacro": "semio_viz_eng_circuit_validate:",
+        "styles": [],
+        "types": [
+          "wire",
+          "node",
+          "ground",
+          "resistor",
+          "capacitor",
+          "inductor",
+          "source",
+          "diode",
+          "transistor",
+          "opamp",
+          "block",
+          "not",
+          "and",
+          "or",
+          "xor",
+          "nand",
+          "contact",
+          "coil",
+          "signal"
+        ]
+      },
+      {
+        "name": "sci-abstract-diagram",
+        "defaults": "mode=commutative,unit=18,nodeShape=none,nodes={\\q_no_value},edges={\\q_no_value}",
+        "defaultsMacro": "semio_viz_math_abstract_defaults:",
+        "validateMacro": "semio_viz_math_abstract_validate:",
+        "styles": [
+          "arrow",
+          "hook",
+          "double",
+          "dashed",
+          "wire",
+          "leg",
+          "order",
+          "dynkin-double"
+        ],
+        "types": []
+      }
+    ],
+    "cases": [
+      {
+        "id": "sci-pathway-unicode-division",
+        "family": "sci-pathway",
+        "options": "nodes={α/{6/2}/2/A,β/12/5/B},edges={α/β/activate/}",
+        "valid": true,
+        "oracle": {
+          "nodes": [
+            [
+              "α",
+              3,
+              2,
+              "A"
+            ],
+            [
+              "β",
+              12,
+              5,
+              "B"
+            ]
+          ],
+          "edges": [
+            [
+              "α",
+              "β",
+              "activate",
+              ""
+            ]
+          ],
+          "elements": [],
+          "unit": 1,
+          "nodeShape": "box",
+          "symbolSize": 4
+        }
+      },
+      {
+        "id": "sci-pathway-empty",
+        "family": "sci-pathway",
+        "options": "nodes={},edges={}",
+        "valid": true,
+        "oracle": {
+          "nodes": [],
+          "edges": [],
+          "elements": [],
+          "unit": 1,
+          "nodeShape": "box",
+          "symbolSize": 4
+        }
+      },
+      {
+        "id": "sci-pathway-parallel",
+        "family": "sci-pathway",
+        "options": "nodes={α/3/2/A,β/12/5/B},edges={α/β/activate/,α/β/activate/}",
+        "valid": true,
+        "oracle": {
+          "nodes": [
+            [
+              "α",
+              3,
+              2,
+              "A"
+            ],
+            [
+              "β",
+              12,
+              5,
+              "B"
+            ]
+          ],
+          "edges": [
+            [
+              "α",
+              "β",
+              "activate",
+              ""
+            ],
+            [
+              "α",
+              "β",
+              "activate",
+              ""
+            ]
+          ],
+          "elements": [],
+          "unit": 1,
+          "nodeShape": "box",
+          "symbolSize": 4
+        }
+      },
+      {
+        "id": "sci-pathway-duplicate",
+        "family": "sci-pathway",
+        "options": "nodes={α/3/2/A,α/12/5/B},edges={}",
+        "valid": false,
+        "oracle": {
+          "nodes": [
+            [
+              "α",
+              3,
+              2,
+              "A"
+            ],
+            [
+              "α",
+              12,
+              5,
+              "B"
+            ]
+          ],
+          "edges": [],
+          "elements": [],
+          "unit": 1,
+          "nodeShape": "box",
+          "symbolSize": 4
+        }
+      },
+      {
+        "id": "sci-pathway-blank-id",
+        "family": "sci-pathway",
+        "options": "nodes={/3/2/A},edges={}",
+        "valid": false,
+        "oracle": {
+          "nodes": [
+            [
+              "",
+              3,
+              2,
+              "A"
+            ]
+          ],
+          "edges": [],
+          "elements": [],
+          "unit": 1,
+          "nodeShape": "box",
+          "symbolSize": 4
+        }
+      },
+      {
+        "id": "sci-pathway-dangling",
+        "family": "sci-pathway",
+        "options": "nodes={α/3/2/A},edges={α/β/activate/}",
+        "valid": false,
+        "oracle": {
+          "nodes": [
+            [
+              "α",
+              3,
+              2,
+              "A"
+            ]
+          ],
+          "edges": [
+            [
+              "α",
+              "β",
+              "activate",
+              ""
+            ]
+          ],
+          "elements": [],
+          "unit": 1,
+          "nodeShape": "box",
+          "symbolSize": 4
+        }
+      },
+      {
+        "id": "sci-pathway-style",
+        "family": "sci-pathway",
+        "options": "nodes={α/3/2/A,β/12/5/B},edges={α/β/unknown/}",
+        "valid": false,
+        "oracle": {
+          "nodes": [
+            [
+              "α",
+              3,
+              2,
+              "A"
+            ],
+            [
+              "β",
+              12,
+              5,
+              "B"
+            ]
+          ],
+          "edges": [
+            [
+              "α",
+              "β",
+              "unknown",
+              ""
+            ]
+          ],
+          "elements": [],
+          "unit": 1,
+          "nodeShape": "box",
+          "symbolSize": 4
+        }
+      },
+      {
+        "id": "sci-pathway-node-arity",
+        "family": "sci-pathway",
+        "options": "nodes={α/3/2},edges={}",
+        "valid": false,
+        "oracle": {
+          "nodes": [
+            [
+              "α",
+              3,
+              2
+            ]
+          ],
+          "edges": [],
+          "elements": [],
+          "unit": 1,
+          "nodeShape": "box",
+          "symbolSize": 4
+        }
+      },
+      {
+        "id": "sci-pathway-edge-arity",
+        "family": "sci-pathway",
+        "options": "nodes={α/3/2/A,β/12/5/B},edges={α/β/activate}",
+        "valid": false,
+        "oracle": {
+          "nodes": [
+            [
+              "α",
+              3,
+              2,
+              "A"
+            ],
+            [
+              "β",
+              12,
+              5,
+              "B"
+            ]
+          ],
+          "edges": [
+            [
+              "α",
+              "β",
+              "activate"
+            ]
+          ],
+          "elements": [],
+          "unit": 1,
+          "nodeShape": "box",
+          "symbolSize": 4
+        }
+      },
+      {
+        "id": "sci-pathway-infinite",
+        "family": "sci-pathway",
+        "options": "nodes={α/inf/2/A},edges={}",
+        "valid": false,
+        "oracle": {
+          "nodes": [
+            [
+              "α",
+              "inf",
+              2,
+              "A"
+            ]
+          ],
+          "edges": [],
+          "elements": [],
+          "unit": 1,
+          "nodeShape": "box",
+          "symbolSize": 4
+        }
+      },
+      {
+        "id": "sci-pathway-unit-zero",
+        "family": "sci-pathway",
+        "options": "nodes={},edges={},unit={1-1}",
+        "valid": false,
+        "oracle": {
+          "nodes": [],
+          "edges": [],
+          "elements": [],
+          "unit": 0,
+          "nodeShape": "box",
+          "symbolSize": 4
+        }
+      },
+      {
+        "id": "sci-pathway-shape",
+        "family": "sci-pathway",
+        "options": "nodes={},edges={},nodeShape=triangle",
+        "valid": false,
+        "oracle": {
+          "nodes": [],
+          "edges": [],
+          "elements": [],
+          "unit": 1,
+          "nodeShape": "triangle",
+          "symbolSize": 4
+        }
+      },
+      {
+        "id": "sci-abstract-diagram-unicode-division",
+        "family": "sci-abstract-diagram",
+        "options": "nodes={α/{6/2}/2/A,β/12/5/B},edges={α/β/arrow/}",
+        "valid": true,
+        "oracle": {
+          "nodes": [
+            [
+              "α",
+              3,
+              2,
+              "A"
+            ],
+            [
+              "β",
+              12,
+              5,
+              "B"
+            ]
+          ],
+          "edges": [
+            [
+              "α",
+              "β",
+              "arrow",
+              ""
+            ]
+          ],
+          "elements": [],
+          "unit": 1,
+          "nodeShape": "none",
+          "symbolSize": 4
+        }
+      },
+      {
+        "id": "sci-abstract-diagram-empty",
+        "family": "sci-abstract-diagram",
+        "options": "nodes={},edges={}",
+        "valid": true,
+        "oracle": {
+          "nodes": [],
+          "edges": [],
+          "elements": [],
+          "unit": 1,
+          "nodeShape": "none",
+          "symbolSize": 4
+        }
+      },
+      {
+        "id": "sci-abstract-diagram-parallel",
+        "family": "sci-abstract-diagram",
+        "options": "nodes={α/3/2/A,β/12/5/B},edges={α/β/arrow/,α/β/arrow/}",
+        "valid": true,
+        "oracle": {
+          "nodes": [
+            [
+              "α",
+              3,
+              2,
+              "A"
+            ],
+            [
+              "β",
+              12,
+              5,
+              "B"
+            ]
+          ],
+          "edges": [
+            [
+              "α",
+              "β",
+              "arrow",
+              ""
+            ],
+            [
+              "α",
+              "β",
+              "arrow",
+              ""
+            ]
+          ],
+          "elements": [],
+          "unit": 1,
+          "nodeShape": "none",
+          "symbolSize": 4
+        }
+      },
+      {
+        "id": "sci-abstract-diagram-duplicate",
+        "family": "sci-abstract-diagram",
+        "options": "nodes={α/3/2/A,α/12/5/B},edges={}",
+        "valid": false,
+        "oracle": {
+          "nodes": [
+            [
+              "α",
+              3,
+              2,
+              "A"
+            ],
+            [
+              "α",
+              12,
+              5,
+              "B"
+            ]
+          ],
+          "edges": [],
+          "elements": [],
+          "unit": 1,
+          "nodeShape": "none",
+          "symbolSize": 4
+        }
+      },
+      {
+        "id": "sci-abstract-diagram-blank-id",
+        "family": "sci-abstract-diagram",
+        "options": "nodes={/3/2/A},edges={}",
+        "valid": false,
+        "oracle": {
+          "nodes": [
+            [
+              "",
+              3,
+              2,
+              "A"
+            ]
+          ],
+          "edges": [],
+          "elements": [],
+          "unit": 1,
+          "nodeShape": "none",
+          "symbolSize": 4
+        }
+      },
+      {
+        "id": "sci-abstract-diagram-dangling",
+        "family": "sci-abstract-diagram",
+        "options": "nodes={α/3/2/A},edges={α/β/arrow/}",
+        "valid": false,
+        "oracle": {
+          "nodes": [
+            [
+              "α",
+              3,
+              2,
+              "A"
+            ]
+          ],
+          "edges": [
+            [
+              "α",
+              "β",
+              "arrow",
+              ""
+            ]
+          ],
+          "elements": [],
+          "unit": 1,
+          "nodeShape": "none",
+          "symbolSize": 4
+        }
+      },
+      {
+        "id": "sci-abstract-diagram-style",
+        "family": "sci-abstract-diagram",
+        "options": "nodes={α/3/2/A,β/12/5/B},edges={α/β/unknown/}",
+        "valid": false,
+        "oracle": {
+          "nodes": [
+            [
+              "α",
+              3,
+              2,
+              "A"
+            ],
+            [
+              "β",
+              12,
+              5,
+              "B"
+            ]
+          ],
+          "edges": [
+            [
+              "α",
+              "β",
+              "unknown",
+              ""
+            ]
+          ],
+          "elements": [],
+          "unit": 1,
+          "nodeShape": "none",
+          "symbolSize": 4
+        }
+      },
+      {
+        "id": "sci-abstract-diagram-node-arity",
+        "family": "sci-abstract-diagram",
+        "options": "nodes={α/3/2},edges={}",
+        "valid": false,
+        "oracle": {
+          "nodes": [
+            [
+              "α",
+              3,
+              2
+            ]
+          ],
+          "edges": [],
+          "elements": [],
+          "unit": 1,
+          "nodeShape": "none",
+          "symbolSize": 4
+        }
+      },
+      {
+        "id": "sci-abstract-diagram-edge-arity",
+        "family": "sci-abstract-diagram",
+        "options": "nodes={α/3/2/A,β/12/5/B},edges={α/β/arrow}",
+        "valid": false,
+        "oracle": {
+          "nodes": [
+            [
+              "α",
+              3,
+              2,
+              "A"
+            ],
+            [
+              "β",
+              12,
+              5,
+              "B"
+            ]
+          ],
+          "edges": [
+            [
+              "α",
+              "β",
+              "arrow"
+            ]
+          ],
+          "elements": [],
+          "unit": 1,
+          "nodeShape": "none",
+          "symbolSize": 4
+        }
+      },
+      {
+        "id": "sci-abstract-diagram-infinite",
+        "family": "sci-abstract-diagram",
+        "options": "nodes={α/inf/2/A},edges={}",
+        "valid": false,
+        "oracle": {
+          "nodes": [
+            [
+              "α",
+              "inf",
+              2,
+              "A"
+            ]
+          ],
+          "edges": [],
+          "elements": [],
+          "unit": 1,
+          "nodeShape": "none",
+          "symbolSize": 4
+        }
+      },
+      {
+        "id": "sci-abstract-diagram-unit-zero",
+        "family": "sci-abstract-diagram",
+        "options": "nodes={},edges={},unit={1-1}",
+        "valid": false,
+        "oracle": {
+          "nodes": [],
+          "edges": [],
+          "elements": [],
+          "unit": 0,
+          "nodeShape": "none",
+          "symbolSize": 4
+        }
+      },
+      {
+        "id": "sci-abstract-diagram-shape",
+        "family": "sci-abstract-diagram",
+        "options": "nodes={},edges={},nodeShape=triangle",
+        "valid": false,
+        "oracle": {
+          "nodes": [],
+          "edges": [],
+          "elements": [],
+          "unit": 1,
+          "nodeShape": "triangle",
+          "symbolSize": 4
+        }
+      },
+      {
+        "id": "sci-circuit-division",
+        "family": "sci-circuit",
+        "options": "elements={wire/0/0/{24/2}/0/}",
+        "valid": true,
+        "oracle": {
+          "nodes": [],
+          "edges": [],
+          "elements": [
+            [
+              "wire",
+              0,
+              0,
+              12,
+              0,
+              ""
+            ]
+          ],
+          "unit": 1,
+          "nodeShape": "none",
+          "symbolSize": 4
+        }
+      },
+      {
+        "id": "sci-circuit-empty",
+        "family": "sci-circuit",
+        "options": "elements={}",
+        "valid": true,
+        "oracle": {
+          "nodes": [],
+          "edges": [],
+          "elements": [],
+          "unit": 1,
+          "nodeShape": "none",
+          "symbolSize": 4
+        }
+      },
+      {
+        "id": "sci-circuit-kind",
+        "family": "sci-circuit",
+        "options": "elements={unknown/0/0/12/0/}",
+        "valid": false,
+        "oracle": {
+          "nodes": [],
+          "edges": [],
+          "elements": [
+            [
+              "unknown",
+              0,
+              0,
+              12,
+              0,
+              ""
+            ]
+          ],
+          "unit": 1,
+          "nodeShape": "none",
+          "symbolSize": 4
+        }
+      },
+      {
+        "id": "sci-circuit-arity",
+        "family": "sci-circuit",
+        "options": "elements={wire/0/0/12/0}",
+        "valid": false,
+        "oracle": {
+          "nodes": [],
+          "edges": [],
+          "elements": [
+            [
+              "wire",
+              0,
+              0,
+              12,
+              0
+            ]
+          ],
+          "unit": 1,
+          "nodeShape": "none",
+          "symbolSize": 4
+        }
+      },
+      {
+        "id": "sci-circuit-infinite",
+        "family": "sci-circuit",
+        "options": "elements={wire/0/0/inf/0/}",
+        "valid": false,
+        "oracle": {
+          "nodes": [],
+          "edges": [],
+          "elements": [
+            [
+              "wire",
+              0,
+              0,
+              "inf",
+              0,
+              ""
+            ]
+          ],
+          "unit": 1,
+          "nodeShape": "none",
+          "symbolSize": 4
+        }
+      },
+      {
+        "id": "sci-circuit-size-zero",
+        "family": "sci-circuit",
+        "options": "elements={},symbolSize={2-2}",
+        "valid": false,
+        "oracle": {
+          "nodes": [],
+          "edges": [],
+          "elements": [],
+          "unit": 1,
+          "nodeShape": "none",
+          "symbolSize": 0
+        }
+      }
+    ],
+    "hardCases": [
+      {
+        "id": "pathway-duplicate",
+        "family": "sci-pathway",
+        "options": "nodes={a/0/0/A,a/12/0/B},edges={}"
+      },
+      {
+        "id": "abstract-style",
+        "family": "sci-abstract-diagram",
+        "options": "nodes={a/0/0/A,b/1/0/B},edges={a/b/unknown/}"
+      },
+      {
+        "id": "circuit-kind",
+        "family": "sci-circuit",
+        "options": "elements={unknown/0/0/12/0/}"
+      }
+    ]
+  }
+}

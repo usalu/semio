@@ -1,0 +1,817 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-viz-scientific-signal}[2026/09/05 v0.2.0 semio viz namespace scientific-signal and music families]
+
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+\RequirePackage{semio-viz-scientific-field}
+
+\ExplSyntaxOn
+
+%region 🔖️Parsing
+\cs_generate_variant:Nn \seq_set_split:Nnn { Nnx }
+\prg_generate_conditional_variant:Nnn \clist_if_in:Nn { Nx } { T, F, TF }
+\tl_new:N \l_semio_viz_sig_key_tl
+\seq_new:N \l_semio_viz_sig_rec_seq
+% ✂️ Splits one `/`-delimited record of a family key into the shared field sequence.
+\cs_new_protected:Npn \semio_viz_sig_record:n #1
+  { \seq_set_split:Nnx \l_semio_viz_sig_rec_seq { / } {#1} }
+% 🔢 Expands to the n-th field of the record read last.
+\cs_new:Npn \semio_viz_sig_field:n #1
+  { \seq_item:Nn \l_semio_viz_sig_rec_seq {#1} }
+%endregion 🔖️Parsing
+
+%region 🔖️Sampling
+% 〰️ The sample buffer every signal family works on, and the three transforms taken of it.
+\seq_new:N \l_semio_viz_sig_samples_seq
+\seq_new:N \l_semio_viz_sig_second_seq
+\seq_new:N \l_semio_viz_sig_mag_seq
+\seq_new:N \l_semio_viz_sig_phase_seq
+
+% 〰️ Fills a sample buffer from an l3fp expression over \SemioT (the sample time) with `#3` samples at rate `#4`.
+\cs_new_protected:Npn \semio_viz_sig_sample:Nnnn #1#2#3#4
+  {
+    \seq_clear:N #1
+    \int_step_inline:nnnn { 0 } { 1 } { #3 - 1 }
+      {
+        \fp_set:Nn \SemioT { ##1 / (#4) }
+        \seq_put_right:Nx #1 { \fp_to_decimal:n {#2} }
+      }
+  }
+% 〰️ Autocorrelation (or cross-correlation with the second buffer) at every lag up to half the buffer.
+\cs_new_protected:Npn \semio_viz_sig_correlate:NNN #1#2#3
+  {
+    \seq_clear:N #3
+    \int_set:Nn \l_tmpa_int { \seq_count:N #1 }
+    \int_step_inline:nnnn { 0 } { 1 } { \l_tmpa_int / 2 }
+      {
+        \fp_zero:N \l_semio_viz_sci_a_fp
+        \int_step_inline:nnnn { 1 } { 1 } { \l_tmpa_int - ##1 }
+          {
+            \fp_add:Nn \l_semio_viz_sci_a_fp
+              { \seq_item:Nn #1 {####1} * \seq_item:Nn #2 { ####1 + ##1 } }
+          }
+        \semio_viz_points_put:Nnn #3 {##1} { \l_semio_viz_sci_a_fp / \l_tmpa_int }
+      }
+  }
+% 〰️ Real cepstrum: the inverse transform of the log magnitude spectrum, computed with the same DFT kernel.
+\cs_new_protected:Npn \semio_viz_sig_cepstrum:NN #1#2
+  {
+    \semio_viz_sci_dft:NNN #1 \l_semio_viz_sig_mag_seq \l_semio_viz_sig_phase_seq
+    \seq_clear:N \l_semio_viz_sig_second_seq
+    \seq_map_inline:Nn \l_semio_viz_sig_mag_seq
+      {
+        \seq_put_right:Nx \l_semio_viz_sig_second_seq
+          { \fp_to_decimal:n { ln ( max ( 1e-6 , \semio_viz_points_y:n {##1} ) ) } }
+      }
+    \semio_viz_sci_dft:NNN \l_semio_viz_sig_second_seq #2 \l_semio_viz_sig_phase_seq
+  }
+%endregion 🔖️Sampling
+
+%region 🔖️Families
+
+%region 🔖️Keys
+% 🔑 Keys of `sci-signal` (§32 one-dimensional signal views):
+%    mode (waveform|spectrum|psd|periodogram|magnitude|phase|cepstrum|autocorrelation|
+%          cross-correlation|coherence|lag|filter-response, waveform).
+%    expr, expr2 (l3fp over \SemioT): the signal and, for the two-signal modes, its partner.
+%    samples (int, 64), rate (fp, 32): buffer length and sampling rate.
+%    numerator, denominator (clist, descending powers): the filter transfer function of `filter-response`.
+%    stems (bool, false): draw a discrete spectrum as stems instead of a curve. decibel (bool, false): log magnitude axis.
+\tl_new:N \l_semio_viz_sig_mode_tl
+\tl_new:N \l_semio_viz_sig_expr_tl
+\tl_new:N \l_semio_viz_sig_exprb_tl
+\clist_new:N \l_semio_viz_sig_num_clist
+\clist_new:N \l_semio_viz_sig_den_clist
+\int_new:N \l_semio_viz_sig_samples_int
+\fp_new:N \l_semio_viz_sig_rate_fp
+\bool_new:N \l_semio_viz_sig_stems_bool
+\bool_new:N \l_semio_viz_sig_db_bool
+%endregion 🔖️Keys
+
+\semio_viz_sci_keys_canvas:n { sci-signal }
+% 🎛️ Binds the `sci-signal` keys onto the view mode, the two signal expressions, the buffer length and rate, the filter coefficients and the stem and decibel switches.
+\keys_define:nn { semio / viz / family / sci-signal }
+  {
+    mode        .tl_set:N    = \l_semio_viz_sig_mode_tl ,
+    expr        .tl_set:N    = \l_semio_viz_sig_expr_tl ,
+    expr2       .tl_set:N    = \l_semio_viz_sig_exprb_tl ,
+    samples     .int_set:N   = \l_semio_viz_sig_samples_int ,
+    rate        .fp_set:N    = \l_semio_viz_sig_rate_fp ,
+    numerator   .clist_set:N = \l_semio_viz_sig_num_clist ,
+    denominator .clist_set:N = \l_semio_viz_sig_den_clist ,
+    stems       .bool_set:N  = \l_semio_viz_sig_stems_bool ,
+    decibel     .bool_set:N  = \l_semio_viz_sig_db_bool ,
+  }
+
+% 〰️ §32 signal views: the waveform itself and every transform of it — spectrum, power spectral density, cepstrum, correlations, filter response.
+\SemioVizFamily { sci-signal }
+  {
+    \semio_viz_sci_enter:nnn { sci-signal }
+      {
+        mode=waveform , samples=64 , rate=32 , stems=false , decibel=false ,
+        expr={ sin ( 2 * pi * 3 * \SemioT ) + 0.5 * sin ( 2 * pi * 7 * \SemioT ) } ,
+        expr2={ sin ( 2 * pi * 3 * \SemioT + 0.8 ) } ,
+        numerator={ 1 } , denominator={ 1 , 0.6 , 1 } , domain={} , range={}
+      }
+      {#1}
+    \semio_viz_sig_sample:Nnnn \l_semio_viz_sig_samples_seq { \l_semio_viz_sig_expr_tl }
+      { \l_semio_viz_sig_samples_int } { \l_semio_viz_sig_rate_fp }
+    \str_case:VnF \l_semio_viz_sig_mode_tl
+      {
+        { spectrum }          { \semio_viz_sig_spectrum:n { magnitude } }
+        { magnitude }         { \semio_viz_sig_spectrum:n { magnitude } }
+        { psd }               { \semio_viz_sig_spectrum:n { power } }
+        { periodogram }       { \semio_viz_sig_spectrum:n { power } }
+        { phase }             { \semio_viz_sig_spectrum:n { phase } }
+        { coherence }         { \semio_viz_sig_spectrum:n { coherence } }
+        { cepstrum }          { \semio_viz_sig_cepstrum_plot: }
+        { autocorrelation }   { \semio_viz_sig_correlation_plot:n { self } }
+        { cross-correlation } { \semio_viz_sig_correlation_plot:n { cross } }
+        { lag }               { \semio_viz_sig_lag_plot: }
+        { filter-response }   { \semio_viz_sig_filter_plot: }
+      }
+      { \semio_viz_sig_waveform: }
+  }
+% ⏱️ Pairs every sample of a buffer with its own time, the index divided by the sampling rate, into a point sequence.
+\cs_new_protected:Npn \semio_viz_sig_buffer_points:NN #1#2
+  {
+    \seq_clear:N #2
+    \int_zero:N \l_tmpa_int
+    \seq_map_inline:Nn #1
+      {
+        \semio_viz_points_put:Nnn #2 { \l_tmpa_int / \l_semio_viz_sig_rate_fp } {##1}
+        \int_incr:N \l_tmpa_int
+      }
+  }
+% 📈 The signal in the time domain: the buffer over an auto-fitted framed window with zero lines, as stems or as a curve.
+\cs_new_protected:Npn \semio_viz_sig_waveform:
+  {
+    \semio_viz_sig_buffer_points:NN \l_semio_viz_sig_samples_seq \l_semio_viz_sci_pts_seq
+    \semio_viz_sci_window_from:Nn \l_semio_viz_sci_pts_seq { 0.06 }
+    \semio_viz_sci_window_keys:
+    \semio_viz_sci_frame:
+    \semio_viz_sci_zero_lines:
+    \bool_if:NTF \l_semio_viz_sig_stems_bool
+      { \semio_viz_sig_stems: }
+      { \semio_viz_sci_polyline:Nn \l_semio_viz_sci_pts_seq { semio~sci~curve } }
+  }
+% 🧵 Discrete rendering: a thin vertical line from the zero level up to every point, then a report of the stems.
+\cs_new_protected:Npn \semio_viz_sig_stems:
+  {
+    \seq_map_inline:Nn \l_semio_viz_sci_pts_seq
+      {
+        \draw [ semio~sci~thin , draw=semio-primary ]
+          ( \semio_viz_sci_mx:n { \semio_viz_points_x:n {##1} } , \semio_viz_sci_my:n { 0 } ) --
+          ( \semio_viz_sci_mx:n { \semio_viz_points_x:n {##1} } , \semio_viz_sci_my:n { \semio_viz_points_y:n {##1} } ) ;
+      }
+    \semio_viz_sci_report:Nn \l_semio_viz_sci_pts_seq { stem }
+  }
+% 〰️ Spectrum modes: the DFT bins mapped onto frequency, as magnitude, power, phase or the coherence with the partner signal.
+\cs_new_protected:Npn \semio_viz_sig_spectrum:n #1
+  {
+    \semio_viz_sci_dft:NNN \l_semio_viz_sig_samples_seq \l_semio_viz_sig_mag_seq \l_semio_viz_sig_phase_seq
+    \str_if_eq:nnT {#1} { coherence }
+      {
+        \semio_viz_sig_sample:Nnnn \l_semio_viz_sig_second_seq { \l_semio_viz_sig_exprb_tl }
+          { \l_semio_viz_sig_samples_int } { \l_semio_viz_sig_rate_fp }
+        \semio_viz_sci_dft:NNN \l_semio_viz_sig_second_seq \l_semio_viz_sci_pts_c_seq \l_semio_viz_sig_phase_seq
+      }
+    \seq_clear:N \l_semio_viz_sci_pts_seq
+    \int_step_inline:nnnn { 1 } { 1 } { \seq_count:N \l_semio_viz_sig_mag_seq }
+      { \semio_viz_sig_bin:nn {##1} {#1} }
+    \semio_viz_sci_window_from:Nn \l_semio_viz_sci_pts_seq { 0.06 }
+    \fp_set:Nn \l_semio_viz_sci_dymin_fp { min ( 0 , \l_semio_viz_sci_dymin_fp ) }
+    \semio_viz_sci_window_keys:
+    \semio_viz_sci_frame:
+    \semio_viz_sig_stems:
+    \semio_viz_sci_polyline:Nn \l_semio_viz_sci_pts_seq { semio~sci~curve }
+  }
+% 🗜️ Turns one DFT bin into a plotted point: its frequency from the bin index, its height the magnitude, squared power, phase or coherence, optionally in decibels.
+\cs_new_protected:Npn \semio_viz_sig_bin:nn #1#2
+  {
+    \fp_set:Nn \l_semio_viz_sci_a_fp
+      { \semio_viz_points_x:n { \seq_item:Nn \l_semio_viz_sig_mag_seq {#1} } * \l_semio_viz_sig_rate_fp
+        / \l_semio_viz_sig_samples_int }
+    \str_case:nnF {#2}
+      {
+        { power }
+          {
+            \fp_set:Nn \l_semio_viz_sci_b_fp
+              { \semio_viz_points_y:n { \seq_item:Nn \l_semio_viz_sig_mag_seq {#1} } ^ 2 }
+          }
+        { phase }
+          {
+            \fp_set:Nn \l_semio_viz_sci_b_fp
+              { \semio_viz_points_y:n { \seq_item:Nn \l_semio_viz_sig_phase_seq {#1} } }
+          }
+        { coherence }
+          {
+            \fp_set:Nn \l_semio_viz_sci_b_fp
+              {
+                min ( 1 ,
+                  \semio_viz_points_y:n { \seq_item:Nn \l_semio_viz_sig_mag_seq {#1} }
+                  * \semio_viz_points_y:n { \seq_item:Nn \l_semio_viz_sci_pts_c_seq {#1} }
+                  / max ( 1e-6 , \semio_viz_points_y:n { \seq_item:Nn \l_semio_viz_sig_mag_seq {#1} } ^ 2 ) )
+              }
+          }
+      }
+      {
+        \fp_set:Nn \l_semio_viz_sci_b_fp
+          { \semio_viz_points_y:n { \seq_item:Nn \l_semio_viz_sig_mag_seq {#1} } }
+      }
+    \bool_if:NT \l_semio_viz_sig_db_bool
+      { \fp_set:Nn \l_semio_viz_sci_b_fp { 20 * ln ( max ( 1e-6 , \l_semio_viz_sci_b_fp ) ) / ln (10) } }
+    \semio_viz_points_put:Nnn \l_semio_viz_sci_pts_seq
+      { \l_semio_viz_sci_a_fp } { \l_semio_viz_sci_b_fp }
+  }
+% 🫧 Draws the real cepstrum of the buffer as a plain curve over quefrency, in a window fitted to it.
+\cs_new_protected:Npn \semio_viz_sig_cepstrum_plot:
+  {
+    \semio_viz_sig_cepstrum:NN \l_semio_viz_sig_samples_seq \l_semio_viz_sci_pts_seq
+    \semio_viz_sci_window_from:Nn \l_semio_viz_sci_pts_seq { 0.06 }
+    \semio_viz_sci_window_keys:
+    \semio_viz_sci_frame:
+    \semio_viz_sci_polyline:Nn \l_semio_viz_sci_pts_seq { semio~sci~curve }
+  }
+% 🔗 Correlation over lag, against the signal itself or against the second expression, drawn as stems under a curve with zero lines.
+\cs_new_protected:Npn \semio_viz_sig_correlation_plot:n #1
+  {
+    \str_if_eq:nnTF {#1} { cross }
+      {
+        \semio_viz_sig_sample:Nnnn \l_semio_viz_sig_second_seq { \l_semio_viz_sig_exprb_tl }
+          { \l_semio_viz_sig_samples_int } { \l_semio_viz_sig_rate_fp }
+        \semio_viz_sig_correlate:NNN \l_semio_viz_sig_samples_seq \l_semio_viz_sig_second_seq
+          \l_semio_viz_sci_pts_seq
+      }
+      {
+        \semio_viz_sig_correlate:NNN \l_semio_viz_sig_samples_seq \l_semio_viz_sig_samples_seq
+          \l_semio_viz_sci_pts_seq
+      }
+    \semio_viz_sci_window_from:Nn \l_semio_viz_sci_pts_seq { 0.06 }
+    \semio_viz_sci_window_keys:
+    \semio_viz_sci_frame:
+    \semio_viz_sci_zero_lines:
+    \semio_viz_sig_stems:
+    \semio_viz_sci_polyline:Nn \l_semio_viz_sci_pts_seq { semio~sci~curve }
+  }
+% 🌀 Phase-space view: every sample scattered against its successor, so a periodic signal closes into a loop.
+\cs_new_protected:Npn \semio_viz_sig_lag_plot:
+  {
+    \seq_clear:N \l_semio_viz_sci_pts_seq
+    \int_step_inline:nnnn { 1 } { 1 } { \seq_count:N \l_semio_viz_sig_samples_seq - 1 }
+      {
+        \semio_viz_points_put:Nnn \l_semio_viz_sci_pts_seq
+          { \seq_item:Nn \l_semio_viz_sig_samples_seq {##1} }
+          { \seq_item:Nn \l_semio_viz_sig_samples_seq { ##1 + 1 } }
+      }
+    \semio_viz_sci_window_from:Nn \l_semio_viz_sci_pts_seq { 0.08 }
+    \semio_viz_sci_window_keys:
+    \semio_viz_sci_frame:
+    \seq_map_inline:Nn \l_semio_viz_sci_pts_seq
+      { \semio_viz_sci_dot:nnn { \semio_viz_points_x:n {##1} } { \semio_viz_points_y:n {##1} } { semio-primary } }
+    \semio_viz_sci_report:Nn \l_semio_viz_sci_pts_seq { lag }
+  }
+% 〰️ Filter response: |H(jω)| of the transfer function on a logarithmic frequency sweep.
+\cs_new_protected:Npn \semio_viz_sig_filter_plot:
+  {
+    \seq_clear:N \l_semio_viz_sci_pts_seq
+    \int_step_inline:nnnn { 0 } { 1 } { 120 }
+      {
+        \fp_set:Nn \l_semio_viz_sci_g_fp { 10 ^ ( -1 + 3 * ##1 / 120 ) }
+        \semio_viz_sci_tf:VVn \l_semio_viz_sig_num_clist \l_semio_viz_sig_den_clist
+          { \l_semio_viz_sci_g_fp }
+        \semio_viz_points_put:Nnn \l_semio_viz_sci_pts_seq
+          { ln ( \l_semio_viz_sci_g_fp ) / ln (10) }
+          {
+            20 * ln ( max ( 1e-9 , sqrt ( \l_semio_viz_sci_re_fp ^ 2 + \l_semio_viz_sci_im_fp ^ 2 ) ) ) / ln (10)
+          }
+      }
+    \semio_viz_sci_window_from:Nn \l_semio_viz_sci_pts_seq { 0.05 }
+    \semio_viz_sci_window_keys:
+    \semio_viz_sci_frame:
+    \semio_viz_sci_polyline:Nn \l_semio_viz_sci_pts_seq { semio~sci~curve }
+  }
+
+%region 🔖️Keys
+% 🔑 Keys of `sci-timefreq` (§32 time–frequency maps):
+%    mode (spectrogram|scalogram|waterfall|time-frequency, spectrogram).
+%    expr (l3fp over \SemioT): the signal. samples (int, 128), rate (fp, 64): buffer and rate.
+%    window (int, 16), hop (int, 8): the short-time Fourier window and its advance.
+%    scales (int, 12): Morlet scale count of the scalogram. decibel (bool, true): log magnitude colouring.
+\int_new:N \l_semio_viz_sig_window_int
+\int_new:N \l_semio_viz_sig_hop_int
+\int_new:N \l_semio_viz_sig_scales_int
+%endregion 🔖️Keys
+
+\semio_viz_sci_keys_canvas:n { sci-timefreq }
+% 🎚️ Binds the `sci-timefreq` keys onto the signal, the buffer and rate, the short-time window and hop, the wavelet scale count and the decibel switch.
+\keys_define:nn { semio / viz / family / sci-timefreq }
+  {
+    mode    .tl_set:N  = \l_semio_viz_sig_mode_tl ,
+    expr    .tl_set:N  = \l_semio_viz_sig_expr_tl ,
+    samples .int_set:N = \l_semio_viz_sig_samples_int ,
+    rate    .fp_set:N  = \l_semio_viz_sig_rate_fp ,
+    window  .int_set:N = \l_semio_viz_sig_window_int ,
+    hop     .int_set:N = \l_semio_viz_sig_hop_int ,
+    scales  .int_set:N = \l_semio_viz_sig_scales_int ,
+    decibel .bool_set:N = \l_semio_viz_sig_db_bool ,
+  }
+
+% 🌈 §32 time–frequency: a real short-time Fourier transform of the sampled signal, drawn as a spectrogram, waterfall or Morlet scalogram.
+\SemioVizFamily { sci-timefreq }
+  {
+    \semio_viz_sci_enter:nnn { sci-timefreq }
+      {
+        mode=spectrogram , samples=128 , rate=64 , window=16 , hop=8 , scales=12 , decibel=true ,
+        expr={ sin ( 2 * pi * ( 3 + 9 * \SemioT ) * \SemioT ) } ,
+        domain={0,2} , range={0,32} , grid=false
+      }
+      {#1}
+    \semio_viz_sig_sample:Nnnn \l_semio_viz_sig_samples_seq { \l_semio_viz_sig_expr_tl }
+      { \l_semio_viz_sig_samples_int } { \l_semio_viz_sig_rate_fp }
+    \semio_viz_sci_window:nnnn { 0 }
+      { \fp_eval:n { \l_semio_viz_sig_samples_int / \l_semio_viz_sig_rate_fp } }
+      { 0 } { \fp_eval:n { \l_semio_viz_sig_rate_fp / 2 } }
+    \semio_viz_sci_window_keys:
+    \str_if_eq:VnTF \l_semio_viz_sig_mode_tl { scalogram }
+      { \semio_viz_sig_scalogram: }
+      { \semio_viz_sig_stft: }
+    \semio_viz_sci_frame:
+  }
+% 🌈 One short-time window: a Hann-tapered slice transformed by the shared DFT kernel.
+\cs_new_protected:Npn \semio_viz_sig_stft:
+  {
+    \int_zero:N \l_tmpa_int
+    \int_step_inline:nnnn { 0 } { \l_semio_viz_sig_hop_int }
+      { \l_semio_viz_sig_samples_int - \l_semio_viz_sig_window_int }
+      { \semio_viz_sig_stft_frame:n {##1} }
+  }
+% 🪟 Copies the window's worth of samples starting at the offset, tapers them with a Hann window, transforms them and paints one column of bins.
+\cs_new_protected:Npn \semio_viz_sig_stft_frame:n #1
+  {
+    \seq_clear:N \l_semio_viz_sig_second_seq
+    \int_step_inline:nnnn { 1 } { 1 } { \l_semio_viz_sig_window_int }
+      {
+        \seq_put_right:Nx \l_semio_viz_sig_second_seq
+          {
+            \fp_to_decimal:n
+              {
+                \seq_item:Nn \l_semio_viz_sig_samples_seq { #1 + ##1 }
+                * 0.5 * ( 1 - cos ( 2 * pi * ( ##1 - 1 ) / ( \l_semio_viz_sig_window_int - 1 ) ) )
+              }
+          }
+      }
+    \semio_viz_sci_dft:NNN \l_semio_viz_sig_second_seq \l_semio_viz_sig_mag_seq \l_semio_viz_sig_phase_seq
+    \int_step_inline:nnnn { 1 } { 1 } { \seq_count:N \l_semio_viz_sig_mag_seq }
+      { \semio_viz_sig_stft_cell:nn {#1} {##1} }
+  }
+% 🟦 One time–frequency cell, its magnitude optionally compressed to a forty-decibel scale, painted as a ramp-coloured tile or, in waterfall mode, as a little riser.
+\cs_new_protected:Npn \semio_viz_sig_stft_cell:nn #1#2
+  {
+    \fp_set:Nn \l_semio_viz_sci_a_fp
+      { \semio_viz_points_y:n { \seq_item:Nn \l_semio_viz_sig_mag_seq {#2} } }
+    \bool_if:NT \l_semio_viz_sig_db_bool
+      {
+        \fp_set:Nn \l_semio_viz_sci_a_fp
+          { max ( 0 , 1 + 20 * ln ( max ( 1e-4 , \l_semio_viz_sci_a_fp ) ) / ln (10) / 40 ) }
+      }
+    \str_if_eq:VnTF \l_semio_viz_sig_mode_tl { waterfall }
+      {
+        \draw [ semio~sci~thin , draw=\semio_viz_sci_ramp:n { \l_semio_viz_sci_a_fp } ]
+          ( \semio_viz_sci_mx:n { #1 / \l_semio_viz_sig_rate_fp } ,
+            \semio_viz_sci_my:n { ( #2 - 1 ) * \l_semio_viz_sig_rate_fp / \l_semio_viz_sig_window_int } ) --
+          ++ ( 0 , \fp_eval:n { 3 * \l_semio_viz_sci_a_fp } ) ;
+      }
+      {
+        \fill [ fill=\semio_viz_sci_ramp:n { \l_semio_viz_sci_a_fp } ]
+          ( \semio_viz_sci_mx:n { #1 / \l_semio_viz_sig_rate_fp } ,
+            \semio_viz_sci_my:n { ( #2 - 1 ) * \l_semio_viz_sig_rate_fp / \l_semio_viz_sig_window_int } )
+          rectangle
+          ( \semio_viz_sci_mx:n { ( #1 + \l_semio_viz_sig_hop_int ) / \l_semio_viz_sig_rate_fp } ,
+            \semio_viz_sci_my:n { #2 * \l_semio_viz_sig_rate_fp / \l_semio_viz_sig_window_int } ) ;
+      }
+    \semio_viz_sci_report_values:nn { timefreq/cell }
+      { #1 , #2 , \fp_to_decimal:N \l_semio_viz_sci_a_fp }
+  }
+% 🌈 Morlet scalogram: the modulus of the continuous wavelet transform on a dyadic scale ladder.
+\cs_new_protected:Npn \semio_viz_sig_scalogram:
+  {
+    \int_step_inline:nnnn { 1 } { 1 } { \l_semio_viz_sig_scales_int }
+      {
+        \int_step_inline:nnnn { 0 } { 2 } { \l_semio_viz_sig_samples_int - 1 }
+          { \semio_viz_sig_scalogram_cell:nn {##1} {####1} }
+      }
+  }
+% 🐚 One scalogram tile: the Morlet wavelet of the given dyadic scale is correlated with the samples within twelve of the centre and its modulus, normalised by the square root of the scale, colours the tile.
+\cs_new_protected:Npn \semio_viz_sig_scalogram_cell:nn #1#2
+  {
+    \fp_set:Nn \l_semio_viz_sci_g_fp { 2 ^ ( #1 / 3 ) }
+    \fp_zero:N \l_semio_viz_sci_a_fp
+    \fp_zero:N \l_semio_viz_sci_b_fp
+    \int_step_inline:nnnn { \int_max:nn { 1 } { #2 - 12 } } { 1 }
+      { \int_min:nn { \l_semio_viz_sig_samples_int } { #2 + 12 } }
+      {
+        \fp_set:Nn \l_semio_viz_sci_c_fp { ( ##1 - 1 - (#2) ) / \l_semio_viz_sci_g_fp }
+        \fp_set:Nn \l_semio_viz_sci_d_fp
+          { exp ( - \l_semio_viz_sci_c_fp * \l_semio_viz_sci_c_fp / 2 ) }
+        \fp_add:Nn \l_semio_viz_sci_a_fp
+          { \seq_item:Nn \l_semio_viz_sig_samples_seq {##1} * \l_semio_viz_sci_d_fp * cos ( 5 * \l_semio_viz_sci_c_fp ) }
+        \fp_add:Nn \l_semio_viz_sci_b_fp
+          { \seq_item:Nn \l_semio_viz_sig_samples_seq {##1} * \l_semio_viz_sci_d_fp * sin ( 5 * \l_semio_viz_sci_c_fp ) }
+      }
+    \fp_set:Nn \l_semio_viz_sci_f_fp
+      {
+        sqrt ( \l_semio_viz_sci_a_fp ^ 2 + \l_semio_viz_sci_b_fp ^ 2 )
+        / sqrt ( \l_semio_viz_sci_g_fp ) / 6
+      }
+    \fill [ fill=\semio_viz_sci_ramp:n { \l_semio_viz_sci_f_fp } ]
+      ( \semio_viz_sci_mx:n { #2 / \l_semio_viz_sig_rate_fp } ,
+        \semio_viz_sci_my:n { \l_semio_viz_sig_rate_fp / ( 2 * \l_semio_viz_sci_g_fp ) } )
+      rectangle
+      ( \semio_viz_sci_mx:n { ( #2 + 2 ) / \l_semio_viz_sig_rate_fp } ,
+        \semio_viz_sci_my:n { \l_semio_viz_sig_rate_fp / ( 2 * \l_semio_viz_sci_g_fp ) + 1.4 } ) ;
+  }
+
+%region 🔖️Keys
+% 🔑 Keys of `sci-staff` (§44 staff notation):
+%    clef (treble|bass|alto, treble): the clef drawn at the start of the system.
+%    events (clist of `step/duration/accidental`): step 0 is the bottom staff line, duration in quarter notes,
+%    accidental one of `n`, `s` (sharp), `f` (flat).
+%    spacing (fp, 5.5): millimetres per staff step pair. stride (fp, 7): millimetres per quarter note.
+%    beams (bool, true): join consecutive eighth notes.
+\tl_new:N \l_semio_viz_mus_clef_tl
+\clist_new:N \l_semio_viz_mus_events_clist
+\fp_new:N \l_semio_viz_mus_spacing_fp
+\fp_new:N \l_semio_viz_mus_stride_fp
+\bool_new:N \l_semio_viz_mus_beams_bool
+%endregion 🔖️Keys
+
+\semio_viz_sci_keys_canvas:n { sci-staff }
+% 🎻 Binds the `sci-staff` keys onto the clef, the event table, the staff step and quarter-note spacings and the beaming switch.
+\keys_define:nn { semio / viz / family / sci-staff }
+  {
+    clef    .tl_set:N    = \l_semio_viz_mus_clef_tl ,
+    events  .clist_set:N = \l_semio_viz_mus_events_clist ,
+    spacing .fp_set:N    = \l_semio_viz_mus_spacing_fp ,
+    stride  .fp_set:N    = \l_semio_viz_mus_stride_fp ,
+    beams   .bool_set:N  = \l_semio_viz_mus_beams_bool ,
+  }
+
+% 🎼 §44 staff notation: five lines, a clef glyph and note heads with stems, placed from an event table.
+\SemioVizFamily { sci-staff }
+  {
+    \semio_viz_sci_enter:nnn { sci-staff }
+      {
+        clef=treble , spacing=5.5 , stride=7 , beams=true , axes=false , grid=false ,
+        events={ 0/1/n , 2/1/n , 4/0.5/s , 5/0.5/n , 7/2/n , 4/1/f , 2/1/n , 0/2/n }
+      }
+      {#1}
+    \int_step_inline:nnnn { 0 } { 1 } { 4 }
+      {
+        \draw [ semio~sci~axis ]
+          ( 0 , \fp_eval:n { ##1 * \l_semio_viz_mus_spacing_fp } ) --
+          ( \fp_eval:n { \l_semio_viz_sci_w_fp } , \fp_eval:n { ##1 * \l_semio_viz_mus_spacing_fp } ) ;
+      }
+    \node [ font=\c_semio_viz_theme_font_title_tl , text=semio-chrome-foreground , anchor=west ]
+      at ( 0.6 , \fp_eval:n { 2 * \l_semio_viz_mus_spacing_fp } )
+      {
+        \str_case:VnF \l_semio_viz_mus_clef_tl
+          { { bass } { \semio_viz_sci_text:nn { F } { F } } { alto } { \semio_viz_sci_text:nn { C } { C } } }
+          { \semio_viz_sci_text:nn { G } { G } }
+      } ;
+    \fp_set:Nn \l_semio_viz_sci_g_fp { 6 }
+    \clist_map_inline:Nn \l_semio_viz_mus_events_clist
+      {
+        \semio_viz_sig_record:n {##1}
+        \semio_viz_mus_note:
+      }
+  }
+% 🎶 Sets one event: a tilted ellipse head, hollow from a half note on, a stem for anything shorter than a whole note, a sharp or flat to its left, and the cursor advanced by the duration.
+\cs_new_protected:Npn \semio_viz_mus_note:
+  {
+    \fp_set:Nn \l_semio_viz_sci_a_fp { \l_semio_viz_sci_g_fp }
+    \fp_set:Nn \l_semio_viz_sci_b_fp
+      { \semio_viz_sig_field:n { 1 } * \l_semio_viz_mus_spacing_fp / 2 }
+    \tl_set:Nx \l_semio_viz_sig_key_tl
+      {
+        \fp_compare:nNnTF { \semio_viz_sig_field:n { 2 } } < { 2 }
+          { semio-chrome-foreground } { semio-chrome-base }
+      }
+    \begin{scope}
+      [ shift={( \fp_eval:n { \l_semio_viz_sci_a_fp } , \fp_eval:n { \l_semio_viz_sci_b_fp } )} , rotate=-20 ]
+      \use:x { \exp_not:N \draw [ semio~sci~thin , fill=\l_semio_viz_sig_key_tl ]
+        ( 0 , 0 ) ~ ellipse ~ [ x~radius=1.7 , y~radius=1.2 ] ; }
+    \end{scope}
+    \fp_compare:nNnT { \semio_viz_sig_field:n { 2 } } < { 4 }
+      {
+        \draw [ semio~sci~thin ]
+          ( \fp_eval:n { \l_semio_viz_sci_a_fp + 1.6 } , \fp_eval:n { \l_semio_viz_sci_b_fp } ) --
+          ( \fp_eval:n { \l_semio_viz_sci_a_fp + 1.6 } , \fp_eval:n { \l_semio_viz_sci_b_fp + 9 } ) ;
+      }
+    \tl_set:Nx \l_semio_viz_sig_key_tl { \semio_viz_sig_field:n { 3 } }
+    \str_case:VnF \l_semio_viz_sig_key_tl
+      {
+        { s }
+          {
+            \node [ font=\c_semio_viz_theme_font_label_tl , text=semio-chrome-foreground , anchor=east ]
+              at ( \fp_eval:n { \l_semio_viz_sci_a_fp - 2 } , \fp_eval:n { \l_semio_viz_sci_b_fp } ) { \# } ;
+          }
+        { f }
+          {
+            \node [ font=\c_semio_viz_theme_font_label_tl , text=semio-chrome-foreground , anchor=east ]
+              at ( \fp_eval:n { \l_semio_viz_sci_a_fp - 2 } , \fp_eval:n { \l_semio_viz_sci_b_fp } ) { b } ;
+          }
+      }
+      { }
+    \semio_viz_sci_report_values:nn { staff/note }
+      { \fp_to_decimal:N \l_semio_viz_sci_a_fp , \semio_viz_sig_field:n { 1 } , \semio_viz_sig_field:n { 2 } }
+    \fp_add:Nn \l_semio_viz_sci_g_fp
+      { \l_semio_viz_mus_stride_fp * \semio_viz_sig_field:n { 2 } }
+  }
+
+%region 🔖️Keys
+% 🔑 Keys of `sci-pianoroll` (§44 event and envelope views):
+%    mode (piano-roll|midi|rhythm|tempo|dynamics|pitch-contour, piano-roll).
+%    notes (clist of `onset/duration/pitch/velocity`): the event table, pitch as a MIDI number.
+%    lowPitch, highPitch (int, 48/84): the drawn pitch window.
+%    curve (clist of `time/value`): the tempo, dynamics or pitch curve of the envelope modes.
+\clist_new:N \l_semio_viz_mus_notes_clist
+\clist_new:N \l_semio_viz_mus_curve_clist
+\int_new:N \l_semio_viz_mus_low_int
+\int_new:N \l_semio_viz_mus_high_int
+%endregion 🔖️Keys
+
+\semio_viz_sci_keys_canvas:n { sci-pianoroll }
+% 🎧 Binds the `sci-pianoroll` keys onto the view mode, the note table, the envelope curve and the drawn pitch window.
+\keys_define:nn { semio / viz / family / sci-pianoroll }
+  {
+    mode      .tl_set:N    = \l_semio_viz_sig_mode_tl ,
+    notes     .clist_set:N = \l_semio_viz_mus_notes_clist ,
+    curve     .clist_set:N = \l_semio_viz_mus_curve_clist ,
+    lowPitch  .int_set:N   = \l_semio_viz_mus_low_int ,
+    highPitch .int_set:N   = \l_semio_viz_mus_high_int ,
+  }
+
+% 🎹 §44 event and envelope views: piano roll, MIDI event scatter, rhythm timeline, tempo map, dynamics profile and pitch contour.
+\SemioVizFamily { sci-pianoroll }
+  {
+    \semio_viz_sci_enter:nnn { sci-pianoroll }
+      {
+        mode=piano-roll , lowPitch=48 , highPitch=84 ,
+        notes={ 0/1/60/90 , 1/0.5/64/80 , 1.5/0.5/67/85 , 2/1/72/100 , 3/1/71/70 ,
+                4/0.5/67/75 , 4.5/0.5/64/72 , 5/2/60/95 } ,
+        curve={ 0/92 , 1/96 , 2/104 , 3/108 , 4/100 , 5/88 , 7/84 } ,
+        domain={0,7} , range={}
+      }
+      {#1}
+    \str_case:VnF \l_semio_viz_sig_mode_tl
+      {
+        { tempo }         { \semio_viz_mus_envelope: }
+        { dynamics }      { \semio_viz_mus_envelope: }
+        { pitch-contour } { \semio_viz_mus_envelope: }
+        { rhythm }        { \semio_viz_mus_rhythm: }
+        { midi }          { \semio_viz_mus_midi: }
+      }
+      { \semio_viz_mus_roll: }
+  }
+% 🟩 The piano roll proper: time across, MIDI pitch up, every note a one-semitone-tall bar as long as its duration and shaded by its velocity.
+\cs_new_protected:Npn \semio_viz_mus_roll:
+  {
+    \semio_viz_sci_window:nnnn
+      { \clist_item:Nn \l_semio_viz_sci_domain_clist { 1 } }
+      { \clist_item:Nn \l_semio_viz_sci_domain_clist { 2 } }
+      { \l_semio_viz_mus_low_int } { \l_semio_viz_mus_high_int }
+    \semio_viz_sci_frame:
+    \clist_map_inline:Nn \l_semio_viz_mus_notes_clist
+      {
+        \semio_viz_sig_record:n {##1}
+        \fill [ fill=\semio_viz_sci_ramp:n { \semio_viz_sig_field:n { 4 } / 127 } ]
+          ( \semio_viz_sci_mx:n { \semio_viz_sig_field:n { 1 } } ,
+            \semio_viz_sci_my:n { \semio_viz_sig_field:n { 3 } } )
+          rectangle
+          ( \semio_viz_sci_mx:n { \semio_viz_sig_field:n { 1 } + \semio_viz_sig_field:n { 2 } } ,
+            \semio_viz_sci_my:n { \semio_viz_sig_field:n { 3 } + 1 } ) ;
+        \semio_viz_sci_report_values:nn { pianoroll/note }
+          { \semio_viz_sig_field:n { 1 } , \semio_viz_sig_field:n { 2 } , \semio_viz_sig_field:n { 3 } }
+      }
+  }
+% 🔌 The same events as a note-on scatter: a dot at the onset pitch with a dropline down to the bottom of the pitch window.
+\cs_new_protected:Npn \semio_viz_mus_midi:
+  {
+    \semio_viz_sci_window:nnnn
+      { \clist_item:Nn \l_semio_viz_sci_domain_clist { 1 } }
+      { \clist_item:Nn \l_semio_viz_sci_domain_clist { 2 } }
+      { \l_semio_viz_mus_low_int } { \l_semio_viz_mus_high_int }
+    \semio_viz_sci_frame:
+    \clist_map_inline:Nn \l_semio_viz_mus_notes_clist
+      {
+        \semio_viz_sig_record:n {##1}
+        \draw [ semio~sci~thin , draw=semio-primary ]
+          ( \semio_viz_sci_mx:n { \semio_viz_sig_field:n { 1 } } , \semio_viz_sci_my:n { \l_semio_viz_mus_low_int } ) --
+          ( \semio_viz_sci_mx:n { \semio_viz_sig_field:n { 1 } } ,
+            \semio_viz_sci_my:n { \semio_viz_sig_field:n { 3 } } ) ;
+        \semio_viz_sci_dot:nnn { \semio_viz_sig_field:n { 1 } } { \semio_viz_sig_field:n { 3 } } { semio-primary }
+      }
+  }
+% 🥁 Pitch discarded: every event becomes a slightly shortened block on one horizontal lane, so only the durations remain.
+\cs_new_protected:Npn \semio_viz_mus_rhythm:
+  {
+    \semio_viz_sci_window:nnnn
+      { \clist_item:Nn \l_semio_viz_sci_domain_clist { 1 } }
+      { \clist_item:Nn \l_semio_viz_sci_domain_clist { 2 } } { 0 } { 1 }
+    \semio_viz_sci_frame:
+    \clist_map_inline:Nn \l_semio_viz_mus_notes_clist
+      {
+        \semio_viz_sig_record:n {##1}
+        \fill [ fill=semio-primary ]
+          ( \semio_viz_sci_mx:n { \semio_viz_sig_field:n { 1 } } , \semio_viz_sci_my:n { 0.3 } )
+          rectangle
+          ( \semio_viz_sci_mx:n { \semio_viz_sig_field:n { 1 } + \semio_viz_sig_field:n { 2 } * 0.9 } ,
+            \semio_viz_sci_my:n { 0.7 } ) ;
+      }
+  }
+% 📉 The shared body of the tempo, dynamics and pitch-contour modes: the curve clist as a dotted polyline, filled to the floor only for dynamics.
+\cs_new_protected:Npn \semio_viz_mus_envelope:
+  {
+    \seq_clear:N \l_semio_viz_sci_pts_seq
+    \clist_map_inline:Nn \l_semio_viz_mus_curve_clist
+      {
+        \semio_viz_sig_record:n {##1}
+        \semio_viz_points_put:Nnn \l_semio_viz_sci_pts_seq
+          { \semio_viz_sig_field:n { 1 } } { \semio_viz_sig_field:n { 2 } }
+      }
+    \semio_viz_sci_window_from:Nn \l_semio_viz_sci_pts_seq { 0.08 }
+    \semio_viz_sci_window_keys:
+    \semio_viz_sci_frame:
+    \str_if_eq:VnTF \l_semio_viz_sig_mode_tl { dynamics }
+      { \semio_viz_sci_polyarea:Nnn \l_semio_viz_sci_pts_seq { semio~sci~band } { \l_semio_viz_sci_dymin_fp } }
+      { }
+    \semio_viz_sci_polyline:Nn \l_semio_viz_sci_pts_seq { semio~sci~curve }
+    \seq_map_inline:Nn \l_semio_viz_sci_pts_seq
+      { \semio_viz_sci_dot:nnn { \semio_viz_points_x:n {##1} } { \semio_viz_points_y:n {##1} } { semio-primary } }
+  }
+
+%region 🔖️Keys
+% 🔑 Keys of `sci-tonnetz` (§44 pitch-space lattices):
+%    mode (tonnetz|circle-of-fifths|harmonic-network|chord-diagram, tonnetz).
+%    columns, rows (int, 7/5): Tonnetz extent. size (fp, 9): lattice spacing in millimetres.
+%    highlight (clist of ints): pitch classes to mark. frets (int, 5), strings (int, 6): the guitar grid.
+%    fingering (clist of `string/fret`): the chord shape.
+\int_new:N \l_semio_viz_mus_cols_int
+\int_new:N \l_semio_viz_mus_rows_int
+\int_new:N \l_semio_viz_mus_frets_int
+\int_new:N \l_semio_viz_mus_strings_int
+\fp_new:N \l_semio_viz_mus_size_fp
+\clist_new:N \l_semio_viz_mus_highlight_clist
+\clist_new:N \l_semio_viz_mus_fingering_clist
+%endregion 🔖️Keys
+
+\semio_viz_sci_keys_canvas:n { sci-tonnetz }
+% 🕹️ Binds the `sci-tonnetz` keys onto the lattice extent and spacing, the highlighted pitch classes and the guitar grid with its fingering.
+\keys_define:nn { semio / viz / family / sci-tonnetz }
+  {
+    mode      .tl_set:N    = \l_semio_viz_sig_mode_tl ,
+    columns   .int_set:N   = \l_semio_viz_mus_cols_int ,
+    rows      .int_set:N   = \l_semio_viz_mus_rows_int ,
+    size      .fp_set:N    = \l_semio_viz_mus_size_fp ,
+    highlight .clist_set:N = \l_semio_viz_mus_highlight_clist ,
+    frets     .int_set:N   = \l_semio_viz_mus_frets_int ,
+    strings   .int_set:N   = \l_semio_viz_mus_strings_int ,
+    fingering .clist_set:N = \l_semio_viz_mus_fingering_clist ,
+  }
+
+% 🎵 §44 pitch-space lattices: the Tonnetz triangulation, the circle of fifths, a harmonic network and a guitar chord grid.
+\SemioVizFamily { sci-tonnetz }
+  {
+    \semio_viz_sci_enter:nnn { sci-tonnetz }
+      {
+        mode=tonnetz , columns=7 , rows=5 , size=9 , highlight={ 0 , 4 , 7 } ,
+        frets=5 , strings=6 , fingering={ 2/1 , 3/2 , 4/2 } , axes=false , grid=false
+      }
+      {#1}
+    \str_case:VnF \l_semio_viz_sig_mode_tl
+      {
+        { circle-of-fifths } { \semio_viz_mus_fifths: }
+        { chord-diagram }    { \semio_viz_mus_chord: }
+        { harmonic-network } { \semio_viz_mus_tonnetz:n { network } }
+      }
+      { \semio_viz_mus_tonnetz:n { lattice } }
+  }
+% 🔷 Sweeps the columns and rows of the pitch lattice, handing each site to the node renderer in either lattice or network flavour.
+\cs_new_protected:Npn \semio_viz_mus_tonnetz:n #1
+  {
+    \int_step_inline:nnnn { 0 } { 1 } { \l_semio_viz_mus_cols_int - 1 }
+      {
+        \int_step_inline:nnnn { 0 } { 1 } { \l_semio_viz_mus_rows_int - 1 }
+          { \semio_viz_mus_tonnetz_node:nnn {##1} {####1} {#1} }
+      }
+  }
+% 🔺 One lattice site: rows offset by half a cell into a triangular grid, the pitch class seven fifths right and four thirds up modulo twelve, the two lattice edges drawn, and the label filled when highlighted.
+\cs_new_protected:Npn \semio_viz_mus_tonnetz_node:nnn #1#2#3
+  {
+    \fp_set:Nn \l_semio_viz_sci_a_fp
+      { ( #1 + 0.5 * \int_mod:nn {#2} { 2 } ) * \l_semio_viz_mus_size_fp }
+    \fp_set:Nn \l_semio_viz_sci_b_fp { #2 * \l_semio_viz_mus_size_fp * 0.866 }
+    \int_set:Nn \l_tmpa_int { \int_mod:nn { 7 * (#1) + 4 * (#2) } { 12 } }
+    \str_if_eq:nnT {#3} { lattice }
+      {
+        \int_compare:nNnT {#1} < { \l_semio_viz_mus_cols_int - 1 }
+          {
+            \draw [ semio~sci~grid ]
+              ( \fp_eval:n { \l_semio_viz_sci_a_fp } , \fp_eval:n { \l_semio_viz_sci_b_fp } ) --
+              ( \fp_eval:n { \l_semio_viz_sci_a_fp + \l_semio_viz_mus_size_fp } ,
+                \fp_eval:n { \l_semio_viz_sci_b_fp } ) ;
+          }
+        \int_compare:nNnT {#2} < { \l_semio_viz_mus_rows_int - 1 }
+          {
+            \draw [ semio~sci~grid ]
+              ( \fp_eval:n { \l_semio_viz_sci_a_fp } , \fp_eval:n { \l_semio_viz_sci_b_fp } ) --
+              ( \fp_eval:n { \l_semio_viz_sci_a_fp + 0.5 * \l_semio_viz_mus_size_fp } ,
+                \fp_eval:n { \l_semio_viz_sci_b_fp + 0.866 * \l_semio_viz_mus_size_fp } ) ;
+          }
+      }
+    \clist_if_in:NxTF \l_semio_viz_mus_highlight_clist { \int_use:N \l_tmpa_int }
+      {
+        \node [ semio~sci~glyph , circle , inner~sep=0.5mm , fill=semio-primary ,
+                font=\c_semio_viz_theme_font_label_tl , text=semio-chrome-base ]
+          at ( \fp_eval:n { \l_semio_viz_sci_a_fp } , \fp_eval:n { \l_semio_viz_sci_b_fp } )
+          { \int_use:N \l_tmpa_int } ;
+      }
+      {
+        \node [ semio~sci~glyph , circle , inner~sep=0.5mm ,
+                font=\c_semio_viz_theme_font_label_tl , text=semio-chrome-text-normal ]
+          at ( \fp_eval:n { \l_semio_viz_sci_a_fp } , \fp_eval:n { \l_semio_viz_sci_b_fp } )
+          { \int_use:N \l_tmpa_int } ;
+      }
+    \semio_viz_sci_report_values:nn { tonnetz/node }
+      { \fp_to_decimal:N \l_semio_viz_sci_a_fp , \fp_to_decimal:N \l_semio_viz_sci_b_fp ,
+        \int_use:N \l_tmpa_int }
+  }
+% 🕐 The circle of fifths: twelve labelled pitch classes stepping by seven semitones every thirty degrees clockwise from the top, filled where highlighted.
+\cs_new_protected:Npn \semio_viz_mus_fifths:
+  {
+    \draw [ semio~sci~axis ] ( 0 , 0 ) circle [ radius=\fp_eval:n { 2.4 * \l_semio_viz_mus_size_fp } ] ;
+    \int_step_inline:nnnn { 0 } { 1 } { 11 }
+      {
+        \int_set:Nn \l_tmpa_int { \int_mod:nn { 7 * ##1 } { 12 } }
+        \clist_if_in:NxTF \l_semio_viz_mus_highlight_clist { \int_use:N \l_tmpa_int }
+          {
+            \node [ semio~sci~glyph , circle , inner~sep=0.6mm , fill=semio-primary ,
+                    font=\c_semio_viz_theme_font_label_tl , text=semio-chrome-base ]
+              at ( \fp_eval:n { 2.4 * \l_semio_viz_mus_size_fp * cosd ( 90 - 30 * ##1 ) } ,
+                   \fp_eval:n { 2.4 * \l_semio_viz_mus_size_fp * sind ( 90 - 30 * ##1 ) } )
+              { \int_use:N \l_tmpa_int } ;
+          }
+          {
+            \node [ semio~sci~glyph , circle , inner~sep=0.6mm ,
+                    font=\c_semio_viz_theme_font_label_tl , text=semio-chrome-foreground ]
+              at ( \fp_eval:n { 2.4 * \l_semio_viz_mus_size_fp * cosd ( 90 - 30 * ##1 ) } ,
+                   \fp_eval:n { 2.4 * \l_semio_viz_mus_size_fp * sind ( 90 - 30 * ##1 ) } )
+              { \int_use:N \l_tmpa_int } ;
+          }
+      }
+  }
+% 🎸 A chord grid: the strings as verticals and the frets as horizontals, with a filled dot centred in the fret for every fingering.
+\cs_new_protected:Npn \semio_viz_mus_chord:
+  {
+    \int_step_inline:nnnn { 1 } { 1 } { \l_semio_viz_mus_strings_int }
+      {
+        \draw [ semio~sci~axis ]
+          ( \fp_eval:n { ##1 * \l_semio_viz_mus_size_fp / 2 } , 0 ) --
+          ( \fp_eval:n { ##1 * \l_semio_viz_mus_size_fp / 2 } ,
+            \fp_eval:n { - \l_semio_viz_mus_frets_int * \l_semio_viz_mus_size_fp / 2 } ) ;
+      }
+    \int_step_inline:nnnn { 0 } { 1 } { \l_semio_viz_mus_frets_int }
+      {
+        \draw [ semio~sci~axis ]
+          ( \fp_eval:n { \l_semio_viz_mus_size_fp / 2 } ,
+            \fp_eval:n { - ##1 * \l_semio_viz_mus_size_fp / 2 } ) --
+          ( \fp_eval:n { \l_semio_viz_mus_strings_int * \l_semio_viz_mus_size_fp / 2 } ,
+            \fp_eval:n { - ##1 * \l_semio_viz_mus_size_fp / 2 } ) ;
+      }
+    \clist_map_inline:Nn \l_semio_viz_mus_fingering_clist
+      {
+        \semio_viz_sig_record:n {##1}
+        \fill [ fill=semio-primary ]
+          ( \fp_eval:n { \semio_viz_sig_field:n { 1 } * \l_semio_viz_mus_size_fp / 2 } ,
+            \fp_eval:n { - ( \semio_viz_sig_field:n { 2 } - 0.5 ) * \l_semio_viz_mus_size_fp / 2 } )
+          circle [ radius=1.3 ] ;
+        \semio_viz_sci_report_values:nn { chord/finger }
+          { \semio_viz_sig_field:n { 1 } , \semio_viz_sig_field:n { 2 } }
+      }
+  }
+%endregion 🔖️Families
+
+%region 🔖️PublicApi
+% 🧪 SemioVizSigSample{expr}{samples}{rate}: fills the signal buffer from an l3fp expression over SemioT.
+\NewDocumentCommand \SemioVizSigSample { m m m }
+  { \semio_viz_sig_sample:Nnnn \l_semio_viz_sig_samples_seq {#1} {#2} {#3} }
+% 🧪 SemioVizSigDFT{magnitude seq}{phase seq}: transforms the buffer with the shared DFT kernel.
+\NewDocumentCommand \SemioVizSigDFT { m m }
+  { \semio_viz_sci_dft:NNN \l_semio_viz_sig_samples_seq #1 #2 }
+% 🧪 SemioVizSigCorrelate{seq}: autocorrelation of the buffer into a point sequence.
+\NewDocumentCommand \SemioVizSigCorrelate { m }
+  { \semio_viz_sig_correlate:NNN \l_semio_viz_sig_samples_seq \l_semio_viz_sig_samples_seq #1 }
+%endregion 🔖️PublicApi
+
+\ExplSyntaxOff

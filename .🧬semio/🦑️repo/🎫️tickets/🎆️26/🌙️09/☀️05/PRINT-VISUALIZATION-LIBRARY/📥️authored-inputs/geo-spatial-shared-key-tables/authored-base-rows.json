@@ -1,0 +1,86 @@
+[
+  [
+    "fit",
+    "string",
+    "geometry",
+    "Projection fitting reference: geometry fits the selected collection; world fits the world collection. Family presets may choose world.",
+    "Referenz der Projektionsanpassung: geometry passt die gewählte Sammlung an; world passt die Weltsammlung an. Familienvorgaben können world wählen."
+  ],
+  [
+    "geometry",
+    "string",
+    "demo-geo-regions",
+    "Named geographic geometry collection used by the family.",
+    "Benannte geografische Geometriesammlung der Familie."
+  ],
+  [
+    "height",
+    "number",
+    "44",
+    "Height of the fitted geographic frame in millimetres.",
+    "Höhe des angepassten geografischen Rahmens in Millimetern."
+  ],
+  [
+    "lineWidth",
+    "string",
+    "semio@stroke@hairline",
+    "Outline width as a TeX dimension from the theme hairline token.",
+    "Umrissbreite als TeX-Dimension aus dem Haarlinienwert des Themas."
+  ],
+  [
+    "opacity",
+    "number",
+    "1",
+    "Fill opacity from zero to one.",
+    "Füllungsdeckkraft von null bis eins."
+  ],
+  [
+    "palette",
+    "string",
+    "sequential",
+    "Colour ramp: sequential, diverging, terrain, bathymetric or neutral.",
+    "Farbverlauf: sequential, diverging, terrain, bathymetric oder neutral."
+  ],
+  [
+    "parallels",
+    "string",
+    "0,60",
+    "Comma-separated pair of conic standard parallels in degrees.",
+    "Kommagetrenntes Paar der Standardbreiten der Kegelprojektion in Grad."
+  ],
+  [
+    "projection",
+    "string",
+    "equirectangular",
+    "Projection kind used to define the family projection before fitting its frame.",
+    "Projektionsart zur Definition der Familienprojektion vor der Rahmenanpassung."
+  ],
+  [
+    "rotate",
+    "string",
+    "0,0,0",
+    "Comma-separated longitude, latitude and roll rotation angles in degrees.",
+    "Kommagetrennte Drehwinkel für Länge, Breite und Rollwinkel in Grad."
+  ],
+  [
+    "steps",
+    "integer",
+    "5",
+    "Number of discrete colour-ramp levels. Vector families may bind steps to their integration count.",
+    "Anzahl diskreter Farbverlaufsstufen. Vektorfamilien können steps an ihre Integrationszahl binden."
+  ],
+  [
+    "stroke",
+    "string",
+    "semio-chrome-border-emphasized",
+    "Outline colour as a native colour expression.",
+    "Umrissfarbe als nativer Farbausdruck."
+  ],
+  [
+    "width",
+    "number",
+    "76",
+    "Width of the fitted geographic frame in millimetres.",
+    "Breite des angepassten geografischen Rahmens in Millimetern."
+  ]
+]

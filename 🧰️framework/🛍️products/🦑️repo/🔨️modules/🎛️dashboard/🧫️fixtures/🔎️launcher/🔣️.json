@@ -1,0 +1,5 @@
+{
+  "options": ["test / ui / rust", "build / quiz / rust", "dev / demo / react / all examples", "dev / demo / wgpu-native / examples / first", "Aufgaben / Übung"],
+  "cases": [{"filter":"test ui","index":0},{"filter":"quiz","index":1},{"filter":"dev react","index":2},{"filter":"native first","index":3},{"filter":"ÜBUNG","index":4},{"filter":"nothing","index":null}],
+  "pointer": [{"filter":"dev","selected":1,"height":4,"row":1,"index":2},{"filter":"dev","selected":1,"height":4,"row":2,"index":3},{"filter":"","selected":4,"height":3,"row":1,"index":3},{"filter":"","selected":4,"height":3,"row":0,"index":null}]
+}

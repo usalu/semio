@@ -1,0 +1,5 @@
+# Final Closure Retention Safety Crosscheck — 2026-10-06
+
+Actionable omissions: none found in current bounded manifest scope. Independent hash inventory confirms all104 authored candidates (68duplicates+36unique) have exact retained copies under 📥️authored-inputs; generated4before/next snapshots remain excluded. Fresh candidate extension scan found no new script/config path since the108manifest. All52curatedsourceowners still exist; no unrelated diff attribution added. Ticket Markdown and authored manifests are outside generated root and retained.
+
+Cleanup blocker remains live ownership: native grammar Bun47044→38252; APIpublication46460→30960; current strict check51520, all using exact ticket generated Bun/tool root. Native compiler descendants may also be live. No processes terminated. Whole generated-root deletion remains unsafe until allcurrentowners terminate and final receipts are retained. Recheck full Win32 commandline/parent inventory immediately before guarded cleanup; transient snapshot is not durable clearance.

@@ -2,10 +2,11 @@ import { createHash, randomUUID } from "node:crypto";
 import { lstatSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, renameSync, rmSync, symlinkSync, unlinkSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { basename, dirname, isAbsolute, join, relative } from "node:path";
-import { runBun } from "../📦️dependencies/📜️script.ts";
+import { runTool } from "../📦️dependencies/📜️script.ts";
+import { prepareBun } from "./🟦️bun/📜️script.ts";
 import { withResourceLeases } from "../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
 
-export type NxTooling = { readonly cli: string; readonly modulePath: string };
+export type NxTooling = { readonly cli: string; readonly modulePath: string; readonly bun: string };
 const RECIPE = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools";
 const STORE = ".🧬semio/🦑️repo/⚡️cache/tools/nx-tooling";
 
@@ -57,7 +58,8 @@ export async function provisionNxTools(workspace: string, signal: AbortSignal): 
   const root = realpathSync(workspace), recipe = join(root, RECIPE), files = new Map<string, Buffer>();
   for (const name of ["package.json", "bun.lock"]) files.set(name, readFileSync(join(recipe, name)));
   const manifest = JSON.parse(files.get("package.json")!.toString());
-  if (manifest.packageManager !== `bun@${process.versions.bun}`) throw new Error(`Nx bootstrap requires ${manifest.packageManager}`);
+  if (!/^bun@\d+\.\d+\.\d+$/.test(manifest.packageManager)) throw new Error("Invalid Nx tooling Bun pin");
+  const bun = await prepareBun(root,manifest.packageManager.slice(4),signal);
   const patches = manifest.semio?.toolPatches;
   if (!patches || typeof patches!=="object" || Array.isArray(patches) || Object.entries(patches).some(([name,path])=>!name || typeof path!=="string")) throw new Error("Invalid authored tooling patch contribution");
   const nativeManifest={...manifest, patchedDependencies: patches}; delete nativeManifest.semio;
@@ -82,7 +84,7 @@ export async function provisionNxTools(workspace: string, signal: AbortSignal): 
       const path = realpathSync(require.resolve(name + "/package.json")), local = relative(modulePath, path);
       if (isAbsolute(local) || local.startsWith("..") || JSON.parse(readFileSync(path, "utf8")).version !== version) throw new Error(`Incomplete Nx tooling: ${name}`);
     }
-    return { cli: require.resolve("nx/bin/nx.js"), modulePath };
+    return { cli: require.resolve("nx/bin/nx.js"), modulePath, bun };
   };
   let present = true;
   try { lstatSync(destination); }
@@ -92,7 +94,7 @@ export async function provisionNxTools(workspace: string, signal: AbortSignal): 
   try {
     for (const [name, bytes] of files) { mkdirSync(dirname(join(staging, name)), { recursive: true }); writeFileSync(join(staging, name), bytes); }
     console.log(`Acquiring pinned Nx ${manifest.dependencies.nx} tooling…`);
-    await runBun(["install", "--frozen-lockfile", "--ignore-scripts", "--cache-dir", join(staging, ".bun-cache"), "--backend", "copyfile"], staging, signal);
+    await runTool(bun, ["install", "--frozen-lockfile", "--ignore-scripts", "--cache-dir", join(staging, ".bun-cache"), "--backend", "copyfile"], staging, signal);
     signal.throwIfAborted();
     writeFileSync(join(staging, ".semio-nx-tooling.json"), JSON.stringify({ version: 1, digest }));
     installed(staging);

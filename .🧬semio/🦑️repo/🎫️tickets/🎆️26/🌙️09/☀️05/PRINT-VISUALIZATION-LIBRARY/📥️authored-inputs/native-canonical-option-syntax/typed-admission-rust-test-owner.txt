@@ -1,0 +1,12 @@
+/// 🛃️ Neutral descriptor primitives and grammar alternatives survive actual mutation replay before native compilation.
+#[test]
+fn canonical_option_descriptor_admission(){
+ let source=fixture();let mut failures=Vec::new();
+ for case in source["optionSyntax"]["admission"].as_array().unwrap(){let before=ChartSnapshot::from_value(DslValue::from(case["snapshot"].clone())).unwrap();let mut current=before.clone();
+  for value in case["mutations"].as_array().unwrap(){let mutation=ChangeChartValue::from_value(DslValue::from(value.clone())).unwrap();let outcome=mutation.diff(&current);assert!(outcome.messages().is_empty(),"{:?}",outcome.messages());let next=outcome.diff().apply(&current).unwrap();assert_eq!(outcome.diff().inverse(&current).apply(&next).unwrap(),current);current=next;}
+  let result=ChartInference::infer(&current).unwrap();let valid=case["valid"].as_bool().unwrap();if result.complete!=valid{failures.push(format!("{}: actual {}, expected {}, {:?}",case["id"],result.complete,valid,result.diagnostics));}
+  if valid&&result.complete{if let Some(root)=std::env::var_os("PRINT_NATIVE_OPTION_TIKZ"){let root=std::path::Path::new(&root).join("admission");std::fs::create_dir_all(&root).unwrap();std::fs::write(root.join(format!("{}.tex",case["id"].as_str().unwrap())),result.tikz).unwrap();}}
+  assert_eq!(before,ChartSnapshot::from_value(DslValue::from(case["snapshot"].clone())).unwrap());
+ }
+ assert!(failures.is_empty(),"{}",failures.join("\n"));eprintln!("[DEBUG] Rust declared option admission: 58 neutral en/de actual mutation/replay/inference controls PASS; valid emission requires actual native compiler");
+}

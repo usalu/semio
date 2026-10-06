@@ -1,0 +1,81 @@
+%region 🔖️NativeDataGeoKeyTables
+\subsection{\Key{api-path-data}}
+\ApiScopeSource{api-path-data}{semio / viz / data}
+\SemioTableLong[text-size=8pt]{\Key{api-path-data} \ApiText{Data roles, sampling and CSV controls}{Datenrollen, Abtastung und CSV-Steuerung}}{0.19,0.15,0.20,0.46}{\ApiKey & \ApiType & \ApiDefault & \ApiMeaning}{%
+  \SemioTableRow{\Key{id} & \Key{string} & \Key{id} & \ApiText{Column for the id role.}{Spalte für die Rolle id.}}
+  \SemioTableRow{\Key{parent} & \Key{string} & \Key{parent} & \ApiText{Column for the parent role.}{Spalte für die Rolle parent.}}
+  \SemioTableRow{\Key{value} & \Key{string} & \Key{value} & \ApiText{Column for the value role.}{Spalte für die Rolle value.}}
+  \SemioTableRow{\Key{source} & \Key{string} & \Key{source} & \ApiText{Column for the source role.}{Spalte für die Rolle source.}}
+  \SemioTableRow{\Key{target} & \Key{string} & \Key{target} & \ApiText{Column for the target role.}{Spalte für die Rolle target.}}
+  \SemioTableRow{\Key{weight} & \Key{string} & \Key{weight} & \ApiText{Column for the weight role.}{Spalte für die Rolle weight.}}
+  \SemioTableRow{\Key{row} & \Key{string} & \Key{row} & \ApiText{Column for the row role.}{Spalte für die Rolle row.}}
+  \SemioTableRow{\Key{col} & \Key{string} & \Key{col} & \ApiText{Column for the col role.}{Spalte für die Rolle col.}}
+  \SemioTableRow{\Key{ring} & \Key{string} & \Key{ring} & \ApiText{Column for the ring role.}{Spalte für die Rolle ring.}}
+  \SemioTableRow{\Key{lon} & \Key{string} & \Key{lon} & \ApiText{Column for the lon role.}{Spalte für die Rolle lon.}}
+  \SemioTableRow{\Key{lat} & \Key{string} & \Key{lat} & \ApiText{Column for the lat role.}{Spalte für die Rolle lat.}}
+  \SemioTableRow{\Key{label} & \Key{string} & \Key{label} & \ApiText{Column for the label role.}{Spalte für die Rolle label.}}
+  \SemioTableRow{\Key{nodes} & \Key{string} & \ApiText{empty}{leer} & \ApiText{Named table for nodes.}{Benannte Tabelle für nodes.}}
+  \SemioTableRow{\Key{edges} & \Key{string} & \ApiText{empty}{leer} & \ApiText{Named table for edges.}{Benannte Tabelle für edges.}}
+  \SemioTableRow{\Key{domain} & \Key{number-list} & \Key{0,1} & \ApiText{Sampling domain endpoints.}{Grenzen des Abtastbereichs.}}
+  \SemioTableRow{\Key{samples} & \Key{integer} & \Key{100} & \ApiText{Number of sampled rows.}{Anzahl der abgetasteten Zeilen.}}
+  \SemioTableRow{\Key{delimiter} & \Key{string} & \Key{,} & \ApiText{CSV field delimiter.}{CSV-Feldtrennzeichen.}}
+  \SemioTableRow{\Key{quote} & \Key{string} & \Key{"} & \ApiText{CSV quoting character.}{CSV-Anführungszeichen.}}
+  \SemioTableRow{\Key{header} & \Key{boolean} & \Key{true} & \ApiText{Read the first CSV row as headers.}{Erste CSV-Zeile als Spaltenüberschriften lesen.}}
+  \SemioTableRow{\Key{columns} & \Key{column list} & \ApiText{empty}{leer} & \ApiText{Explicit ordered CSV column names.}{Explizite geordnete CSV-Spaltennamen.}}
+}
+
+\subsection{\Key{api-path-geo-part}}
+\ApiScopeSource{api-path-geo-part}{semio / viz / geo / part}
+\SemioTableLong[text-size=8pt]{\Key{api-path-geo-part} \ApiText{Geographic part controls}{Steuerung geografischer Teile}}{0.19,0.15,0.20,0.46}{\ApiKey & \ApiType & \ApiDefault & \ApiMeaning}{%
+  \SemioTableRow{\Key{id} & \Key{string} & \ApiText{empty}{leer} & \ApiText{Identifier of this geometry part.}{Kennung dieses Geometrieteils.}}
+  \SemioTableRow{\Key{value} & \Key{string} & \Key{0} & \ApiText{Value token retained with this geometry part.}{Mit diesem Geometrieteil gespeicherter Wert.}}
+}
+
+\subsection{\Key{api-path-geo-projection}}
+\ApiScopeSource{api-path-geo-projection}{semio / viz / geo / projection}
+\ApiText{Defaults are applied for the selected kind before authored options; scale, center, parallels and clipAngle depend on that kind.}{Vorgaben werden für die gewählte Art vor verfassten Optionen angewandt; scale, center, parallels und clipAngle hängen von dieser Art ab.}
+\SemioTableLong[text-size=8pt]{\Key{api-path-geo-projection} \ApiText{Projection controls}{Projektionssteuerung}}{0.19,0.15,0.20,0.46}{\ApiKey & \ApiType & \ApiDefault & \ApiMeaning}{%
+  \SemioTableRow{\Key{kind} & \Key{string} & \Key{equirectangular} & \ApiText{Projection kind.}{Projektionsart.}}
+  \SemioTableRow{\Key{scale} & \Key{number} & \ApiText{depends on kind}{abhängig von der Art} & \ApiText{Projection scale in plane units.}{Projektionsmaßstab in Ebeneneinheiten.}}
+  \SemioTableRow{\Key{translate} & \Key{number-list} & \Key{480,250} & \ApiText{Plane translation.}{Verschiebung in der Ebene.}}
+  \SemioTableRow{\Key{center} & \Key{number-list} & \ApiText{depends on kind}{abhängig von der Art} & \ApiText{Geographic center in degrees.}{Geografisches Zentrum in Grad.}}
+  \SemioTableRow{\Key{rotate} & \Key{number-list} & \Key{0,0,0} & \ApiText{Spherical rotation in degrees.}{Sphärische Drehung in Grad.}}
+  \SemioTableRow{\Key{parallels} & \Key{number-list} & \ApiText{depends on kind}{abhängig von der Art} & \ApiText{Conic standard parallels in degrees.}{Standardparallelen der Kegelprojektion in Grad.}}
+  \SemioTableRow{\Key{clipAngle} & \Key{string} & \ApiText{depends on kind}{abhängig von der Art} & \ApiText{Spherical clip angle; empty disables it.}{Sphärischer Beschneidungswinkel; leer deaktiviert ihn.}}
+  \SemioTableRow{\Key{clipExtent} & \Key{number-list} & \ApiText{empty}{leer} & \ApiText{Plane clipping rectangle.}{Beschneidungsrechteck in der Ebene.}}
+  \SemioTableRow{\Key{precision} & \Key{number} & \Key{sqrt(0.5)} & \ApiText{Adaptive resampling tolerance; zero disables resampling.}{Toleranz der adaptiven Abtastung; null deaktiviert sie.}}
+}
+
+\subsection{\Key{api-path-geo-layout}}
+\ApiScopeSource{api-path-geo-layout}{semio / viz / geo / layout}
+\SemioTableLong[text-size=8pt]{\Key{api-path-geo-layout} \ApiText{Geographic layout controls}{Geografische Anordnungssteuerung}}{0.19,0.15,0.20,0.46}{\ApiKey & \ApiType & \ApiDefault & \ApiMeaning}{%
+  \SemioTableRow{\Key{projection} & \Key{string} & \Key{equirectangular} & \ApiText{Projection name.}{Projektionsname.}}
+  \SemioTableRow{\Key{fit} & \Key{string} & \Key{extent} & \ApiText{Fit mode; extent fits to the rectangle.}{Anpassungsmodus; extent passt ins Rechteck.}}
+  \SemioTableRow{\Key{x0} & \Key{number} & \Key{0} & \ApiText{Lower horizontal plane bound.}{Untere horizontale Ebenengrenze.}}
+  \SemioTableRow{\Key{y0} & \Key{number} & \Key{0} & \ApiText{Lower vertical plane bound.}{Untere vertikale Ebenengrenze.}}
+  \SemioTableRow{\Key{x1} & \Key{number} & \Key{100} & \ApiText{Upper horizontal plane bound.}{Obere horizontale Ebenengrenze.}}
+  \SemioTableRow{\Key{y1} & \Key{number} & \Key{60} & \ApiText{Upper vertical plane bound.}{Obere vertikale Ebenengrenze.}}
+}
+
+\subsection{\Key{api-path-geo-graticule}}
+\ApiScopeSource{api-path-geo-graticule}{semio / viz / geo / graticule}
+\SemioTableLong[text-size=8pt]{\Key{api-path-geo-graticule} \ApiText{Graticule controls}{Gradnetzsteuerung}}{0.19,0.15,0.20,0.46}{\ApiKey & \ApiType & \ApiDefault & \ApiMeaning}{%
+  \SemioTableRow{\Key{step} & \Key{number-list} & \ApiText{separate minor and major values}{getrennte kleine und große Werte} & \ApiText{Set minor and major angular steps together.}{Kleine und große Winkelschritte gemeinsam setzen.}}
+  \SemioTableRow{\Key{stepMinor} & \Key{number-list} & \Key{10,10} & \ApiText{Minor angular step in degrees.}{Kleiner Winkelschritt in Grad.}}
+  \SemioTableRow{\Key{stepMajor} & \Key{number-list} & \Key{90,360} & \ApiText{Major angular step in degrees.}{Großer Winkelschritt in Grad.}}
+  \SemioTableRow{\Key{extent} & \Key{number-list} & \ApiText{separate minor and major values}{getrennte kleine und große Werte} & \ApiText{Set both geographic extents together.}{Beide geografischen Grenzen gemeinsam setzen.}}
+  \SemioTableRow{\Key{extentMinor} & \Key{number-list} & \Key{-180,-80.000001,180,80.000001} & \ApiText{Minor geographic extent.}{Kleiner geografischer Bereich.}}
+  \SemioTableRow{\Key{extentMajor} & \Key{number-list} & \Key{-180,-89.999999,180,89.999999} & \ApiText{Major geographic extent.}{Großer geografischer Bereich.}}
+  \SemioTableRow{\Key{precision} & \Key{number} & \Key{2.5} & \ApiText{Parallel sampling step in degrees.}{Abtastschritt der Breitenkreise in Grad.}}
+}
+
+\subsection{\Key{api-path-geo-solver}}
+\ApiScopeSource{api-path-geo-solver}{semio / viz / geo / solver}
+\ApiText{These are the initial iteration counts. Explicit solver settings persist across projection declarations.}{Dies sind die anfänglichen Iterationszahlen. Explizite Lösereinstellungen bleiben über Projektionsdeklarationen hinweg bestehen.}
+\SemioTableLong[text-size=8pt]{\Key{api-path-geo-solver} \ApiText{Geographic solver controls}{Geografische Lösersteuerung}}{0.19,0.15,0.20,0.46}{\ApiKey & \ApiType & \ApiDefault & \ApiMeaning}{%
+  \SemioTableRow{\Key{invertSteps} & \Key{integer} & \Key{12} & \ApiText{Equal-earth inverse Newton iterations.}{Newton-Iterationen der Equal-Earth-Umkehrung.}}
+  \SemioTableRow{\Key{clipSteps} & \Key{integer} & \Key{48} & \ApiText{Great-circle clipping bisection iterations.}{Halbierungsiterationen der Großkreis-Beschneidung.}}
+}
+
+%endregion 🔖️NativeDataGeoKeyTables
+

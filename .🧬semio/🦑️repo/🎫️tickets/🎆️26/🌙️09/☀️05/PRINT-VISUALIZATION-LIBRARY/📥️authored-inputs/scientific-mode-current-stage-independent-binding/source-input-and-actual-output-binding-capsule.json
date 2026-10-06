@@ -1,0 +1,139 @@
+{
+  "auditUtc": "2026-10-05T16:32:17.9186541Z",
+  "purpose": "Actual staged source/PDF binding without duplicate compiler",
+  "sourceInputs": [
+    {
+      "source": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/scientific-mode-defaults-green-restored-neutral/scientific-modes/light/🧪️probe-source/.semio-library/semio-latex/semio-viz-scientific-field.sty",
+      "retained": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/📥️authored-inputs/scientific-mode-current-stage-independent-binding/light-semio-viz-scientific-field.sty",
+      "sha256": "63E76C197A48A17E07DAF81DF97426E03A9B8A9FEBE861D1ECD90A27F1F1F899",
+      "currentOwnerSha256": "63E76C197A48A17E07DAF81DF97426E03A9B8A9FEBE861D1ECD90A27F1F1F899"
+    },
+    {
+      "source": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/scientific-mode-defaults-green-restored-neutral/scientific-modes/light/🧪️probe-source/.semio-library/semio-latex/semio-viz-scientific-biology.sty",
+      "retained": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/📥️authored-inputs/scientific-mode-current-stage-independent-binding/light-semio-viz-scientific-biology.sty",
+      "sha256": "5B1C85306DC1F4E4706B155464C96CF91FE599F34DA6B83F80E9F979F2242EE4",
+      "currentOwnerSha256": "5B1C85306DC1F4E4706B155464C96CF91FE599F34DA6B83F80E9F979F2242EE4"
+    },
+    {
+      "source": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/scientific-mode-defaults-green-restored-neutral/scientific-modes/light/🧪️probe-source/.semio-library/semio-latex/semio-viz-scientific-engineering.sty",
+      "retained": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/📥️authored-inputs/scientific-mode-current-stage-independent-binding/light-semio-viz-scientific-engineering.sty",
+      "sha256": "A9700F62866A65522E3029EA49F52BF8E73E686F3C43D3D7C52C9FA5C66C9294",
+      "currentOwnerSha256": "A9700F62866A65522E3029EA49F52BF8E73E686F3C43D3D7C52C9FA5C66C9294"
+    },
+    {
+      "source": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/scientific-mode-defaults-green-restored-neutral/scientific-modes/light/🧪️probe-source/.semio-library/semio-latex/semio-viz-scientific-mathematics.sty",
+      "retained": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/📥️authored-inputs/scientific-mode-current-stage-independent-binding/light-semio-viz-scientific-mathematics.sty",
+      "sha256": "1195B36F5BD4BB88BA98EE5C1244A168D5758E4B84A16F21746BB4AAA619CB37",
+      "currentOwnerSha256": "1195B36F5BD4BB88BA98EE5C1244A168D5758E4B84A16F21746BB4AAA619CB37"
+    },
+    {
+      "source": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/scientific-mode-defaults-green-restored-neutral/scientific-modes/light/🧪️probe-input/light.tex",
+      "retained": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/📥️authored-inputs/scientific-mode-current-stage-independent-binding/light-actual-emitted-input.tex",
+      "sha256": "7E5499C8F10C93A67DA167B2FBDE0950A840F3567A89223A23AE83437CEC3EB0"
+    },
+    {
+      "source": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/scientific-mode-defaults-green-restored-neutral/scientific-modes/dark/🧪️probe-source/.semio-library/semio-latex/semio-viz-scientific-field.sty",
+      "retained": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/📥️authored-inputs/scientific-mode-current-stage-independent-binding/dark-semio-viz-scientific-field.sty",
+      "sha256": "63E76C197A48A17E07DAF81DF97426E03A9B8A9FEBE861D1ECD90A27F1F1F899",
+      "currentOwnerSha256": "63E76C197A48A17E07DAF81DF97426E03A9B8A9FEBE861D1ECD90A27F1F1F899"
+    },
+    {
+      "source": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/scientific-mode-defaults-green-restored-neutral/scientific-modes/dark/🧪️probe-source/.semio-library/semio-latex/semio-viz-scientific-biology.sty",
+      "retained": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/📥️authored-inputs/scientific-mode-current-stage-independent-binding/dark-semio-viz-scientific-biology.sty",
+      "sha256": "5B1C85306DC1F4E4706B155464C96CF91FE599F34DA6B83F80E9F979F2242EE4",
+      "currentOwnerSha256": "5B1C85306DC1F4E4706B155464C96CF91FE599F34DA6B83F80E9F979F2242EE4"
+    },
+    {
+      "source": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/scientific-mode-defaults-green-restored-neutral/scientific-modes/dark/🧪️probe-source/.semio-library/semio-latex/semio-viz-scientific-engineering.sty",
+      "retained": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/📥️authored-inputs/scientific-mode-current-stage-independent-binding/dark-semio-viz-scientific-engineering.sty",
+      "sha256": "A9700F62866A65522E3029EA49F52BF8E73E686F3C43D3D7C52C9FA5C66C9294",
+      "currentOwnerSha256": "A9700F62866A65522E3029EA49F52BF8E73E686F3C43D3D7C52C9FA5C66C9294"
+    },
+    {
+      "source": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/scientific-mode-defaults-green-restored-neutral/scientific-modes/dark/🧪️probe-source/.semio-library/semio-latex/semio-viz-scientific-mathematics.sty",
+      "retained": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/📥️authored-inputs/scientific-mode-current-stage-independent-binding/dark-semio-viz-scientific-mathematics.sty",
+      "sha256": "1195B36F5BD4BB88BA98EE5C1244A168D5758E4B84A16F21746BB4AAA619CB37",
+      "currentOwnerSha256": "1195B36F5BD4BB88BA98EE5C1244A168D5758E4B84A16F21746BB4AAA619CB37"
+    },
+    {
+      "source": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/scientific-mode-defaults-green-restored-neutral/scientific-modes/dark/🧪️probe-input/dark.tex",
+      "retained": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/📥️authored-inputs/scientific-mode-current-stage-independent-binding/dark-actual-emitted-input.tex",
+      "sha256": "CF9289057E0F4545F19DB877E0985A0D38B17A307642B29C995EE9FE78B52BF1"
+    },
+    {
+      "source": "C:/git/semio/🧰️framework/🛍️products/📓️print/🧪️tests/🧬️native-chart-grammar/🔣️.json",
+      "retained": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/📥️authored-inputs/scientific-mode-current-stage-independent-binding/current-neutral-fixture.json",
+      "sha256": "F48C8CB8EB10994232E343C805DD91FD712062BF71E03F6C8049145A82E37ADE",
+      "scope": "Current audit input, not transported producer execution receipt"
+    },
+    {
+      "source": "C:/git/semio/🧰️framework/🛍️products/📓️print/🧪️tests/🧬️native-chart-grammar/🟦️.ts",
+      "retained": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/📥️authored-inputs/scientific-mode-current-stage-independent-binding/current-neutral-helper-source.txt",
+      "sha256": "1AC4463F59B6BA7112E90929DD3AA36ACD4F3B86890E6D98FF0D90145370D071",
+      "scope": "Current audit input, not transported producer execution receipt"
+    }
+  ],
+  "outputBindings": [
+    {
+      "path": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/scientific-mode-defaults-green-restored-neutral/scientific-modes/light/🧪️probe-out/light.pdf",
+      "sha256": "D94986489E40E5CE24ADE72ACB4B750964352C852DB437CC15E0B440632CB14A",
+      "bytes": 96321
+    },
+    {
+      "path": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/scientific-mode-defaults-green-restored-neutral/scientific-modes/light/actual-owned-paint.json",
+      "sha256": "C75A582C78A110FB95C18FB06B4DEA68FB4F1A6F4D91F5F2D68AF0832EB67A68",
+      "bytes": 4800839
+    },
+    {
+      "path": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/scientific-mode-defaults-green-restored-neutral/scientific-modes/dark/🧪️probe-out/dark.pdf",
+      "sha256": "CB8C005841D5199B64634B1B5461680B3199956F05DEC86B40AA75FB4BEE4765",
+      "bytes": 96312
+    },
+    {
+      "path": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/scientific-mode-defaults-green-restored-neutral/scientific-modes/dark/actual-owned-paint.json",
+      "sha256": "29C3D590CA26215CC1EBC446554CC6F6DB7AD13CDDD2AB2B22D1715B5AF62E32",
+      "bytes": 4807635
+    },
+    {
+      "path": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/scientific-mode-defaults-green.log",
+      "sha256": "79A9F0A9DFB7C6B54790AB7803499C99B2750909CEF3B342D1E539CCDC37BA8B",
+      "bytes": 3803
+    },
+    {
+      "path": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/scientific-mode-defaults-green-restored-neutral.log",
+      "sha256": "483F4731781341C2046FAE31ECC3966164B11403CFFD3BDAE361C5CB23CB7ED7",
+      "bytes": 9893
+    },
+    {
+      "path": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/scientific-mode-defaults-green-actualhead-replay.log",
+      "sha256": "AE08587C630C0361EE30B51F3C995334A00B005FE64E0C74EADFCAA38FEDECA4",
+      "bytes": 667
+    }
+  ],
+  "readerPublishedCounts": [
+    {
+      "theme": "light",
+      "bodies": 36,
+      "elements": 72,
+      "bodyPaths": 604,
+      "glyphs": 154
+    },
+    {
+      "theme": "dark",
+      "bodies": 36,
+      "elements": 72,
+      "bodyPaths": 604,
+      "glyphs": 154
+    }
+  ],
+  "terminal": "Trusted direct parent result: replay session74613 completed exit0; focused unchanged-PDF replay from57062 only. Preceding two green-named jobs actual status1. No current full Mode GREEN.",
+  "limitations": "Output counts read from published reader result, not independently rerendered PDF. PDF bytes and actual emitted inputs bound. Eight staged owner bytes match current at audit. Current helper/fixture inputs are not producer execution transport receipts.",
+  "actualTerminalReceipt": {
+    "source": "Direct trusted parent collaboration message",
+    "session": 74613,
+    "exitCode": 0,
+    "scope": "Focused mode actualhead replay of unchanged PDFs from57062",
+    "fullModeGreen": false,
+    "pdfBindings": "outputBindings in this capsule"
+  }
+}

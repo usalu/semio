@@ -1,0 +1,12 @@
+# Scientific Style Current Independent Stage Binding
+
+Parent trusted terminal session73265 actualexit0,16 actual EN/light and DE/dark relation-style cases with D3 shafts/multiplicity/targetheads/injectionhooks/PDFdash. Independently observed final DEBUG matches that bounded scope. LogSHA-256 CB56C0583858537414EF2D911266CC71C0E131F27878D85942417DFB9D6D7001. No duplicate compile.
+
+Retained11 inputs under 📥️authored-inputs/scientific-style-current-independent-binding:8 exact staged scientific field/biology/engineering/mathematics STYs,2 actual emitted TeX inputs and a binding capsule. Actual2 PDF and2 owned-style paint JSON hashes retained in capsule; outputs remain generated. The JSON lives at each theme directory actual-owned-styles.json, outside probe-out. The initial output-directory-only enumeration missed it; the capsule and report are corrected after inspecting the existing helper write path. Copied namespace hash rows340 are an inventory, not proof that every style was loaded. Source input copies remain exact stage bytes despite later live changes.
+
+Current drift has14 rows:2 known graph staging path-normalization differences and12 scientific owner rows across both themes. Changed owner names are biology,chemistry,engineering,field,geometry,mathematics. Staged field5F9DC7F0,bio6A030144,eng30697231,math6C5A7408; current field745CF124,bio062FB347,eng79B73803,math4D00F2DD at read. Chemistry and geometry were copied by the namespace too and subsequently changed. Parent reports8 mode-closure edits after stage; drift is expected but requires fresh final authoritative jobs before whole-current claims. The focused16 relation-style GREEN applies to its exact stage and does not establish all current mode guards, full80 scientific branches or the1738-kind catalogue.
+
+Final owned union must include this report and all11 retained inputs; generatedPDF/log cleanup remains Root-owned lifecycle work. No close/cleanup action here.
+
+The stage chemistry and geometry bytes are already retained in `📥️authored-inputs/all-family-mode-vocabulary-source/semio-viz-scientific-chemistry.sty` SHA CC1A6C821F34BE15A3070535DCED7523949CF5A9CBB333909A55B85138F3186A and geometry SHA C1728F0E9507329DF00EA1FB8BC773E3CA2A7BDECFF7063149703BC8FB15BC6B. Independently hash-checked equal to both theme stage rows. Therefore all6 drifted scientific owner versions from the stage have retained exact input copies across these two existing directories, without duplicating those immutable files.
+

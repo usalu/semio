@@ -1,0 +1,5 @@
+# Final Full-Census Admission Preparation — 2026-10-06
+
+Current neutral contract fixes1966leaves/1738kinds eachtheme and7source-backed glyph exceptions: word-cloud,frequency-cloud,tag-cloud,export-safe-typography,text-mark,sequence-logo,motif-logo. Pending fulloutput will be independently checked for pertheme count+exacttaxonomy leafset+cataloguekindset, unique ownership and required bodyink, valid finite geometricbounds and exceptionclass only for these7kinds. Equalgeometrygroups remain diagnostic source-adjudication data, not universal uniqueness acceptance.
+
+Current search found no kind-painted-coverage.json yet in ticket generatedroot, including fleet-full-catalogue-current. No currentcensus PASS claimed. Core17802 identifies the execution-tool session, not a Win32PID, so lookup of PID17802 would not establish its job state. Parent confirms live fullgate; logs currently include fontconfig diagnostics but no finalconsumer receipt. No publisher/test/source edit initiated here. Actual census audit is pending emitted finalJSON.

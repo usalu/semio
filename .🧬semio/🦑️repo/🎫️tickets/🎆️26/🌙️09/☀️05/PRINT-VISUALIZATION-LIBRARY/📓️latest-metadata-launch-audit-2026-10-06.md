@@ -1,0 +1,13 @@
+# Current Joint Metadata and Launch Registration Audit
+
+Read-only source observation 2026-10-06, exact hashes/time retained in `📥️authored-inputs/latest-metadata-launch-audit-source-capsule-2026-10-06.json`. No rerun of proven unaffected runtime gates.
+
+At this observation the existing native grammar helper has 52 distinct direct PRINT_NATIVE_GRAMMAR_PHASE dispatch values. Launch seed has 51; generated launch has 50. One source phase, process-controls, has no seed registration. One seed phase, neural-self, is absent from generated launch. This is a current source registration gap, not a runtime phase failure; shared launch/source edits can change these counts immediately. Regenerate through the existing registry projection after final seed edits. No hand-written replacement launch generator is needed.
+
+Recent registered commands are present in both seed and generated launch: generate-font-metrics; scientific-construction-window; scientific-record-domain; scientific-scalar-admission; scientific-mode-domain; domain-reference-controls; token-publication; critical-path-controls. The typed-ID controls are being integrated by root into the existing owner, so this audit does not invent a new phase requirement for an unfinished dispatch.
+
+Current typed metadata declares lexical syntax, numeric bounds, enums, recordFields with nonempty/unique/reference fields and defaultsByMode. It has no machine-readable applicability condition field. Latest geo-flow flow descriptor explicitly enumerates band/arrow/desire/migration with default band and EN/de description. Scientific joint density levels explicitly says contours apply to joint mode and nonjoint modes do not use contour levels. The engineering-diagram mode descriptor enumerates its existing native assembly/exploded/gear/kinematic/linkage/mechanism/truss branches. These source descriptions improve conditional applicability but do not constitute generic machine-readable disablement/validation conditions. This is a metadata capability boundary, not a claim that these current controls are inert.
+
+A clean future applicability extension would belong in the existing VizOptionSyntaxDescriptor/VizFamilyOption schema/type and catalogue validator, with explicit mode predicates derived from native branches. Do not reinstate earlier unproven geo-flow ignored-setter claims: Catalogue owns its current vector/flow behavior and has actual canonical receipts. Likewise this read-only audit makes no new family runtime GREEN assertion.
+
+The existing registered font metrics target is under print's TypeScript package project (📦️packages/🟦️typescript/📋️project.json), not a product-root project.json. User command ownership remains Bun/Nx plus the existing script owner.

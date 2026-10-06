@@ -1,0 +1,560 @@
+{
+  "kind": "Authored actual current runtime gate/source audit",
+  "capturedAt": "2026-10-05T13:46:28.8367282Z",
+  "scope": "Actual current 4 registered terminals; exact host runtime29 closure. Whole goal remains incomplete: subsequent 44-to52 test-only controls and wider declared-but-unused feature repair/paint-census still required.",
+  "gates": [
+    {
+      "name": "strict",
+      "actualTerminal": 50565,
+      "exitCode": 0,
+      "status": "PASS",
+      "logSha256": "f55dc4cd60ad7012a1262c77140646d560e8dfb7761fefd99eb6d7ab4ee5447a",
+      "tail": [
+        "",
+        " NX   Successfully ran target check for project @semio-tech/print",
+        "",
+        "",
+        "  Run duration:      42.7s",
+        "  Cache:             Skipped (--skip-nx-cache)",
+        "  Critical path:     41.9s (1 task)",
+        "  Recoverable time:  <1ms",
+        "",
+        "  Recommendations:",
+        "    - Cache: drop --skip-nx-cache to restore unchanged tasks instantly.",
+        "    - Speed up or split the longest tasks on the critical path:",
+        "        @semio-tech/print:check    41.9s"
+      ]
+    },
+    {
+      "name": "canonical",
+      "actualTerminal": 84218,
+      "exitCode": 0,
+      "status": "PASS",
+      "logSha256": "4d89885914f8a8d2758b92ae4b9937624e4ea21a5a7a121c256b37c55b827ea4",
+      "tail": [
+        "[viz-inference] geo         passed=32 failed=0",
+        "[viz-inference] hierarchy   passed=17 failed=0",
+        "[viz-inference] layer       passed=76 failed=0",
+        "[viz-inference] mark        passed=58 failed=0",
+        "[viz-inference] mutation    passed=16 failed=0",
+        "[viz-inference] network     passed=8 failed=0",
+        "[viz-inference] render      passed=174 failed=0",
+        "[viz-inference] scale       passed=114 failed=0",
+        "[viz-inference] shape       passed=11 failed=0",
+        "[viz-inference] spatial     passed=9 failed=0",
+        "[viz-inference] theme       passed=7 failed=0",
+        "[viz-inference] transform   passed=20 failed=0",
+        "[viz-inference] level=exhaustive checks=634 passed=634 failed=0 errored=0"
+      ]
+    },
+    {
+      "name": "three-hosts",
+      "actualTerminal": 90414,
+      "exitCode": 0,
+      "status": "PASS",
+      "logSha256": "0fcba3eb32387c0cc40be4e29bfd943c8788970d247bc022d7a441a80efcefab",
+      "tail": [
+        "$ bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts nx exec \"--projects=@semio-tech/print\" --excludeTaskDependencies --skip-nx-cache -- \"C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/tools/bun-1.3.14/bun-windows-x64/bun.exe\" --cwd C:/git/semio \"C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/📜️async-runtime/📜️script.ts\"",
+        "[DEBUG] {\"host\":\"Bun\",\"version\":\"1.3.14\",\"pass\":true,\"evidence\":{\"complete\":true,\"deterministic\":true,\"progress\":[{\"completed\":0,\"total\":9},{\"completed\":1,\"total\":9},{\"completed\":2,\"total\":9},{\"completed\":3,\"total\":9},{\"completed\":6,\"total\":9},{\"completed\":7,\"total\":9},{\"completed\":8,\"total\":9},{\"completed\":9,\"total\":9}],\"progressValid\":true,\"earlyProgress\":0,\"earlyAtomic\":true,\"started\":true,\"fired\":true,\"startProgress\":{\"completed\":129,\"total\":50007},\"cancelAtomic\":true,\"texts\":[[\"0\",\"Anta\"],[\"0.5\",\"Anta\"],[\"1\",\"Anta\"],[\"1.5\",\"Anta\"],[\"2\",\"Anta\"],[\"Axis\",\"Share Tech Mono\"],[\"Palette\",\"Share Tech Mono\"],[\"A\",\"Anta\"],[\"B\",\"Anta\"]],\"sceneTexts\":[[\"0\",\"Anta\"],[\"0.5\",\"Anta\"],[\"1\",\"Anta\"],[\"1.5\",\"Anta\"],[\"2\",\"Anta\"],[\"Axis\",\"Share Tech Mono\"],[\"Palette\",\"Share Tech Mono\"],[\"A\",\"Anta\"],[\"B\",\"Anta\"]],\"fontTransport\":true,\"tikzFontSelectors\":true},\"admissions\":[{\"owned\":true,\"ajv\":true,\"errors\":null},{\"owned\":true,\"ajv\":true,\"errors\":null},{\"owned\":true,\"ajv\":true,\"errors\":null}],\"fontAdmission\":[{\"surface\":\"plan\",\"input\":\"absent\",\"expected\":true,\"owned\":true,\"ajv\":true,\"pass\":true},{\"surface\":\"plan\",\"input\":\"Custom Family\",\"expected\":true,\"owned\":true,\"ajv\":true,\"pass\":true},{\"surface\":\"plan\",\"input\":\"\",\"expected\":false,\"owned\":false,\"ajv\":false,\"pass\":true},{\"surface\":\"plan\",\"input\":42,\"expected\":false,\"owned\":false,\"ajv\":false,\"pass\":true},{\"surface\":\"plan\",\"input\":\"non-text\",\"expected\":false,\"owned\":false,\"ajv\":false,\"pass\":true},{\"surface\":\"scene\",\"input\":\"absent\",\"expected\":true,\"owned\":true,\"ajv\":true,\"pass\":true},{\"surface\":\"scene\",\"input\":\"Custom Family\",\"expected\":true,\"owned\":true,\"ajv\":true,\"pass\":true},{\"surface\":\"scene\",\"input\":\"\",\"expected\":false,\"owned\":false,\"ajv\":false,\"pass\":true},{\"surface\":\"scene\",\"input\":42,\"expected\":false,\"owned\":false,\"ajv\":false,\"pass\":true},{\"surface\":\"scene\",\"input\":\"non-text\",\"expected\":false,\"owned\":false,\"ajv\":false,\"pass\":true}]}",
+        "[DEBUG] {\"host\":\"Chromium\",\"version\":\"151.0.7922.34\",\"pass\":true,\"evidence\":{\"complete\":true,\"deterministic\":true,\"progress\":[{\"completed\":0,\"total\":9},{\"completed\":1,\"total\":9},{\"completed\":2,\"total\":9},{\"completed\":3,\"total\":9},{\"completed\":6,\"total\":9},{\"completed\":7,\"total\":9},{\"completed\":8,\"total\":9},{\"completed\":9,\"total\":9}],\"progressValid\":true,\"earlyProgress\":0,\"earlyAtomic\":true,\"started\":true,\"fired\":true,\"startProgress\":{\"completed\":129,\"total\":50007},\"cancelAtomic\":true,\"texts\":[[\"0\",\"Anta\"],[\"0.5\",\"Anta\"],[\"1\",\"Anta\"],[\"1.5\",\"Anta\"],[\"2\",\"Anta\"],[\"Axis\",\"Share Tech Mono\"],[\"Palette\",\"Share Tech Mono\"],[\"A\",\"Anta\"],[\"B\",\"Anta\"]],\"sceneTexts\":[[\"0\",\"Anta\"],[\"0.5\",\"Anta\"],[\"1\",\"Anta\"],[\"1.5\",\"Anta\"],[\"2\",\"Anta\"],[\"Axis\",\"Share Tech Mono\"],[\"Palette\",\"Share Tech Mono\"],[\"A\",\"Anta\"],[\"B\",\"Anta\"]],\"fontTransport\":true,\"tikzFontSelectors\":true},\"admissions\":[{\"owned\":true,\"ajv\":true,\"errors\":null},{\"owned\":true,\"ajv\":true,\"errors\":null},{\"owned\":true,\"ajv\":true,\"errors\":null}],\"fontAdmission\":[{\"surface\":\"plan\",\"input\":\"absent\",\"expected\":true,\"owned\":true,\"ajv\":true,\"pass\":true},{\"surface\":\"plan\",\"input\":\"Custom Family\",\"expected\":true,\"owned\":true,\"ajv\":true,\"pass\":true},{\"surface\":\"plan\",\"input\":\"\",\"expected\":false,\"owned\":false,\"ajv\":false,\"pass\":true},{\"surface\":\"plan\",\"input\":42,\"expected\":false,\"owned\":false,\"ajv\":false,\"pass\":true},{\"surface\":\"plan\",\"input\":\"non-text\",\"expected\":false,\"owned\":false,\"ajv\":false,\"pass\":true},{\"surface\":\"scene\",\"input\":\"absent\",\"expected\":true,\"owned\":true,\"ajv\":true,\"pass\":true},{\"surface\":\"scene\",\"input\":\"Custom Family\",\"expected\":true,\"owned\":true,\"ajv\":true,\"pass\":true},{\"surface\":\"scene\",\"input\":\"\",\"expected\":false,\"owned\":false,\"ajv\":false,\"pass\":true},{\"surface\":\"scene\",\"input\":42,\"expected\":false,\"owned\":false,\"ajv\":false,\"pass\":true},{\"surface\":\"scene\",\"input\":\"non-text\",\"expected\":false,\"owned\":false,\"ajv\":false,\"pass\":true}]}",
+        "[DEBUG] {\"host\":\"Node\",\"version\":\"v24.14.1\",\"pass\":true,\"evidence\":{\"complete\":true,\"deterministic\":true,\"progress\":[{\"completed\":0,\"total\":9},{\"completed\":1,\"total\":9},{\"completed\":2,\"total\":9},{\"completed\":3,\"total\":9},{\"completed\":6,\"total\":9},{\"completed\":7,\"total\":9},{\"completed\":8,\"total\":9},{\"completed\":9,\"total\":9}],\"progressValid\":true,\"earlyProgress\":0,\"earlyAtomic\":true,\"started\":true,\"fired\":true,\"startProgress\":{\"completed\":129,\"total\":50007},\"cancelAtomic\":true,\"texts\":[[\"0\",\"Anta\"],[\"0.5\",\"Anta\"],[\"1\",\"Anta\"],[\"1.5\",\"Anta\"],[\"2\",\"Anta\"],[\"Axis\",\"Share Tech Mono\"],[\"Palette\",\"Share Tech Mono\"],[\"A\",\"Anta\"],[\"B\",\"Anta\"]],\"sceneTexts\":[[\"0\",\"Anta\"],[\"0.5\",\"Anta\"],[\"1\",\"Anta\"],[\"1.5\",\"Anta\"],[\"2\",\"Anta\"],[\"Axis\",\"Share Tech Mono\"],[\"Palette\",\"Share Tech Mono\"],[\"A\",\"Anta\"],[\"B\",\"Anta\"]],\"fontTransport\":true,\"tikzFontSelectors\":true},\"admissions\":[{\"owned\":true,\"ajv\":true,\"errors\":null},{\"owned\":true,\"ajv\":true,\"errors\":null},{\"owned\":true,\"ajv\":true,\"errors\":null}],\"fontAdmission\":[{\"surface\":\"plan\",\"input\":\"absent\",\"expected\":true,\"owned\":true,\"ajv\":true,\"pass\":true},{\"surface\":\"plan\",\"input\":\"Custom Family\",\"expected\":true,\"owned\":true,\"ajv\":true,\"pass\":true},{\"surface\":\"plan\",\"input\":\"\",\"expected\":false,\"owned\":false,\"ajv\":false,\"pass\":true},{\"surface\":\"plan\",\"input\":42,\"expected\":false,\"owned\":false,\"ajv\":false,\"pass\":true},{\"surface\":\"plan\",\"input\":\"non-text\",\"expected\":false,\"owned\":false,\"ajv\":false,\"pass\":true},{\"surface\":\"scene\",\"input\":\"absent\",\"expected\":true,\"owned\":true,\"ajv\":true,\"pass\":true},{\"surface\":\"scene\",\"input\":\"Custom Family\",\"expected\":true,\"owned\":true,\"ajv\":true,\"pass\":true},{\"surface\":\"scene\",\"input\":\"\",\"expected\":false,\"owned\":false,\"ajv\":false,\"pass\":true},{\"surface\":\"scene\",\"input\":42,\"expected\":false,\"owned\":false,\"ajv\":false,\"pass\":true},{\"surface\":\"scene\",\"input\":\"non-text\",\"expected\":false,\"owned\":false,\"ajv\":false,\"pass\":true}]}"
+      ]
+    },
+    {
+      "name": "inference-build",
+      "actualTerminal": 52101,
+      "exitCode": 0,
+      "status": "PASS",
+      "logSha256": "7b509ea4de8e8f9c1f408b9053f3495cc64060b16d4f09f8d27c1be19a795307",
+      "tail": [
+        "$ bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts nx exec \"--projects=@semio-tech/print-viz-inference\" --excludeTaskDependencies --skip-nx-cache -- \"C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/tools/bun-1.3.14/bun-windows-x64/bun.exe\" --cwd C:/git/semio/🧰️framework/🛍️products/📓️print/🧬️schema/💡️inferences/📦️packages/🟦️typescript ./📜️script.ts build",
+        "Waiting for graph construction in another process to complete",
+        "[print-viz-inference-typecheck] running elapsedMs=10039",
+        "[print-viz-inference-typecheck] running elapsedMs=20063",
+        "[print-viz-inference-typecheck] running elapsedMs=30076",
+        "[print-viz-inference-typecheck] running elapsedMs=40089",
+        "[print-viz-native-grammar-typecheck] running elapsedMs=10023",
+        "[print-viz-native-grammar-typecheck] running elapsedMs=20047",
+        "[print-viz-native-grammar-typecheck] running elapsedMs=30071",
+        "[print-viz-native-grammar-typecheck] running elapsedMs=40099",
+        "[viz-inference] barrel exports 253 symbols"
+      ]
+    }
+  ],
+  "hosts": [
+    {
+      "host": "Bun",
+      "version": "1.3.14",
+      "pass": true,
+      "complete": true,
+      "deterministic": true,
+      "progressValid": true,
+      "earlyAtomic": true,
+      "cancelAtomic": true,
+      "timerStarted": true,
+      "timerFired": true,
+      "fontTransport": true,
+      "fontAdmissionChecks": 10,
+      "admissionChecks": 3
+    },
+    {
+      "host": "Chromium",
+      "version": "151.0.7922.34",
+      "pass": true,
+      "complete": true,
+      "deterministic": true,
+      "progressValid": true,
+      "earlyAtomic": true,
+      "cancelAtomic": true,
+      "timerStarted": true,
+      "timerFired": true,
+      "fontTransport": true,
+      "fontAdmissionChecks": 10,
+      "admissionChecks": 3
+    },
+    {
+      "host": "Node",
+      "version": "v24.14.1",
+      "pass": true,
+      "complete": true,
+      "deterministic": true,
+      "progressValid": true,
+      "earlyAtomic": true,
+      "cancelAtomic": true,
+      "timerStarted": true,
+      "timerFired": true,
+      "fontTransport": true,
+      "fontAdmissionChecks": 10,
+      "admissionChecks": 3
+    }
+  ],
+  "runtimeClosure": {
+    "initialSha256": "5958ddb7355dc26f3bc73819260c3486212c93bc24d94d93df255c60380440e4",
+    "finalSha256": "5958ddb7355dc26f3bc73819260c3486212c93bc24d94d93df255c60380440e4",
+    "stable": true,
+    "files": 29
+  },
+  "runtimeSourceBindings": [
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🔨️modules\\🖱️ui\\🎨️styling\\🌗️mixing\\🟦️.ts",
+      "actualSha256": "400624f3790f23cd71a69e13a2746eacc13007e0a661a7025e0eb85269e9dc79",
+      "currentSha256": "400624f3790f23cd71a69e13a2746eacc13007e0a661a7025e0eb85269e9dc79",
+      "stable": true
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🔨️modules\\🖱️ui\\🎨️styling\\🔣️.json",
+      "actualSha256": "09e8b5afb79a554b01429a7ab71d7a84b61195b9ca1738f1c0bdac1dde66aaca",
+      "currentSha256": "09e8b5afb79a554b01429a7ab71d7a84b61195b9ca1738f1c0bdac1dde66aaca",
+      "stable": true
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🔨️modules\\🧬️schema\\✅️validator\\🟦️.ts",
+      "actualSha256": "2617c03029c26a0cb97b3cf7fab1fa159b03c3f821d163ba55a55902c76170f3",
+      "currentSha256": "2617c03029c26a0cb97b3cf7fab1fa159b03c3f821d163ba55a55902c76170f3",
+      "stable": true
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🔨️modules\\🎨print-design-token-paints\\🧮️resolution\\🟦️.ts",
+      "actualSha256": "b3f26600887b2de5b5fd755d989294ba84ab760e70b9e636d35260f0a30f46dd",
+      "currentSha256": "b3f26600887b2de5b5fd755d989294ba84ab760e70b9e636d35260f0a30f46dd",
+      "stable": true
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🔨️modules\\🔤print-font-catalog\\📏️metrics\\🔣️.json",
+      "actualSha256": "68829670a0124ebf1053816bef7a05bf65684f71f33f28b31e6f4690affc12eb",
+      "currentSha256": "68829670a0124ebf1053816bef7a05bf65684f71f33f28b31e6f4690affc12eb",
+      "stable": true
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🔨️modules\\🔤print-font-catalog\\📏️metrics\\🟦️.ts",
+      "actualSha256": "c2de06b5dbe7b1d3cc6e7434f501f7d8739639c3cffcbfe5ef079f825e5494a5",
+      "currentSha256": "c2de06b5dbe7b1d3cc6e7434f501f7d8739639c3cffcbfe5ef079f825e5494a5",
+      "stable": true
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🔨️modules\\🔤print-font-catalog\\🔣️.json",
+      "actualSha256": "b63eb4a1255760f5b19a02298da33c34bf14c21a4135db78eb344b02839ab451",
+      "currentSha256": "b63eb4a1255760f5b19a02298da33c34bf14c21a4135db78eb344b02839ab451",
+      "stable": true
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🖼️assets\\🔣️viz-catalog.json",
+      "actualSha256": "83cab801138c01f1f469384a62ec9c2860f879c15d5e7e4873f3c90b065e88da",
+      "currentSha256": "83cab801138c01f1f469384a62ec9c2860f879c15d5e7e4873f3c90b065e88da",
+      "stable": true
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\💡️inferences\\✅️validation\\🟦️.ts",
+      "actualSha256": "4482a28ee677bc8b85b930600ce4ab07b94df4dd56336a6347744f297f18d369",
+      "currentSha256": "4482a28ee677bc8b85b930600ce4ab07b94df4dd56336a6347744f297f18d369",
+      "stable": true
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\💡️inferences\\✒️mark\\🟦️.ts",
+      "actualSha256": "b50edba869c3f21d35d58a854fc9601dc3972229229307341255f5242a7f748a",
+      "currentSha256": "b50edba869c3f21d35d58a854fc9601dc3972229229307341255f5242a7f748a",
+      "stable": true
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\💡️inferences\\🌊flow\\🟦️.ts",
+      "actualSha256": "a0f20875427dbe943a80f74aa439652efbb56f62a81ea296dea60cc4466c4b01",
+      "currentSha256": "a0f20875427dbe943a80f74aa439652efbb56f62a81ea296dea60cc4466c4b01",
+      "stable": true
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\💡️inferences\\🌍geo\\🟦️.ts",
+      "actualSha256": "9d4d9deb711813fa49f0446ad1d8fdc84bf0b40ffbf5c133c3990ebf37abaf0c",
+      "currentSha256": "9d4d9deb711813fa49f0446ad1d8fdc84bf0b40ffbf5c133c3990ebf37abaf0c",
+      "stable": true
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\💡️inferences\\🌳hierarchy\\🟦️.ts",
+      "actualSha256": "4c84cea6ee7f39110c071f32be8d883b9103c8cb54cab975c42968e9f99a08f8",
+      "currentSha256": "4c84cea6ee7f39110c071f32be8d883b9103c8cb54cab975c42968e9f99a08f8",
+      "stable": true
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\💡️inferences\\🎨theme\\🟦️.ts",
+      "actualSha256": "7a65e22068cb4d9fae540d3584d9e280056f3c74c2a60c9ce9ddaa1ef8232d64",
+      "currentSha256": "7a65e22068cb4d9fae540d3584d9e280056f3c74c2a60c9ce9ddaa1ef8232d64",
+      "stable": true
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\💡️inferences\\📍spatial\\🟦️.ts",
+      "actualSha256": "58adbb55e17d190f0d2092c320c3d102d776f3b9a8b1dfc5fad778359b642edf",
+      "currentSha256": "58adbb55e17d190f0d2092c320c3d102d776f3b9a8b1dfc5fad778359b642edf",
+      "stable": true
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\💡️inferences\\📐scale\\🟦️.ts",
+      "actualSha256": "25837eba287f63342521ae4123f79c609641e9edc925f37091e78b60f74a1477",
+      "currentSha256": "25837eba287f63342521ae4123f79c609641e9edc925f37091e78b60f74a1477",
+      "stable": true
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\💡️inferences\\📚️catalogue\\🟦️.ts",
+      "actualSha256": "5127dea1de7c923c3dc61fafc1ece7789441732fea3d16c65ef904287d20022a",
+      "currentSha256": "5127dea1de7c923c3dc61fafc1ece7789441732fea3d16c65ef904287d20022a",
+      "stable": true
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\💡️inferences\\🔢format\\🟦️.ts",
+      "actualSha256": "6c6e25d5d6899030907782fc7245dbf7386fbf2997276bdaeb5dac1b54101d0c",
+      "currentSha256": "6c6e25d5d6899030907782fc7245dbf7386fbf2997276bdaeb5dac1b54101d0c",
+      "stable": true
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\💡️inferences\\🔣️.json",
+      "actualSha256": "a1232c89dcf15c63c22962af544e2521196529dc6a03b151141fdda6a255d7d3",
+      "currentSha256": "a1232c89dcf15c63c22962af544e2521196529dc6a03b151141fdda6a255d7d3",
+      "stable": true
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\💡️inferences\\🕸️network\\🟦️.ts",
+      "actualSha256": "db0f836e4794eac93fb4465bd2c0001337889cf5348f2f369da0b14bdcf27668",
+      "currentSha256": "db0f836e4794eac93fb4465bd2c0001337889cf5348f2f369da0b14bdcf27668",
+      "stable": true
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\💡️inferences\\🖼️render\\🟦️.ts",
+      "actualSha256": "83cbca27822db8ecb72cf041a18d999be560122e8d19164934d8484b5b51dca4",
+      "currentSha256": "83cbca27822db8ecb72cf041a18d999be560122e8d19164934d8484b5b51dca4",
+      "stable": true
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\💡️inferences\\🟦️.ts",
+      "actualSha256": "edb3dfe3639b08a14ef87d750e3aee277a6dd08abb647f91708a177224620dd9",
+      "currentSha256": "edb3dfe3639b08a14ef87d750e3aee277a6dd08abb647f91708a177224620dd9",
+      "stable": true
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\💡️inferences\\🥧shape\\🟦️.ts",
+      "actualSha256": "d854c5267131fd6b41fffbf300097d87549aa02a250c172f5a8e75bed9363d1c",
+      "currentSha256": "d854c5267131fd6b41fffbf300097d87549aa02a250c172f5a8e75bed9363d1c",
+      "stable": true
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\💡️inferences\\🧭coordinate\\🟦️.ts",
+      "actualSha256": "a71d09747c422927db8b9d529a34a406a0599449887cb9c3409774562bd9e449",
+      "currentSha256": "a71d09747c422927db8b9d529a34a406a0599449887cb9c3409774562bd9e449",
+      "stable": true
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\💡️inferences\\🧮transform\\🟦️.ts",
+      "actualSha256": "c7d3db330ac9ded4c09cd931e6c7927841946885db72e9beb156daa2d80f158e",
+      "currentSha256": "c7d3db330ac9ded4c09cd931e6c7927841946885db72e9beb156daa2d80f158e",
+      "stable": true
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\💡️inferences\\🧵️worker\\🟦️.ts",
+      "actualSha256": "56a17cf00bfa0dff40560c2150a8434473ff6598aec3e6d6e97464bc437acbb8",
+      "currentSha256": "56a17cf00bfa0dff40560c2150a8434473ff6598aec3e6d6e97464bc437acbb8",
+      "stable": true
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\📸️snapshot\\📊️chart\\🎨️color\\🔣️.json",
+      "actualSha256": "def3436d7f6ee7265d9e21dc44bcd9ddd22b18aa36485d2171133afda608b0b0",
+      "currentSha256": "def3436d7f6ee7265d9e21dc44bcd9ddd22b18aa36485d2171133afda608b0b0",
+      "stable": true
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\📸️snapshot\\📊️chart\\🟦️.ts",
+      "actualSha256": "2848b50e6e3fe7333e3622affbf76821e0e52f481fed99be989b09acb78877ef",
+      "currentSha256": "2848b50e6e3fe7333e3622affbf76821e0e52f481fed99be989b09acb78877ef",
+      "stable": true
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\🔣️.json",
+      "actualSha256": "eac7c86e37be89cb78beaa406974289b585d08f11bb54711928950c923d9d446",
+      "currentSha256": "eac7c86e37be89cb78beaa406974289b585d08f11bb54711928950c923d9d446",
+      "stable": true
+    }
+  ],
+  "runtimeEvidenceSha256": "ed880aeeb735bbe365597afc56909db61a962a5842600d060bdb503062d5a676",
+  "explicit40BeforeAfterBindings": [
+    {
+      "path": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\📜️async-runtime\\📜️script.ts",
+      "beforeSha256": "2608c9d70a395e23c2d6a363aa4fc68a252a2a5749ce54ec801daba739fbfe08",
+      "afterSha256": "2608c9d70a395e23c2d6a363aa4fc68a252a2a5749ce54ec801daba739fbfe08",
+      "stable": true
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🔨️modules\\🖱️ui\\🎨️styling\\🌗️mixing\\🟦️.ts",
+      "beforeSha256": "400624f3790f23cd71a69e13a2746eacc13007e0a661a7025e0eb85269e9dc79",
+      "afterSha256": "400624f3790f23cd71a69e13a2746eacc13007e0a661a7025e0eb85269e9dc79",
+      "stable": true
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🔨️modules\\🖱️ui\\🎨️styling\\🔣️.json",
+      "beforeSha256": "09e8b5afb79a554b01429a7ab71d7a84b61195b9ca1738f1c0bdac1dde66aaca",
+      "afterSha256": "09e8b5afb79a554b01429a7ab71d7a84b61195b9ca1738f1c0bdac1dde66aaca",
+      "stable": true
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🔨️modules\\🧬️schema\\✅️validator\\🟦️.ts",
+      "beforeSha256": "2617c03029c26a0cb97b3cf7fab1fa159b03c3f821d163ba55a55902c76170f3",
+      "afterSha256": "2617c03029c26a0cb97b3cf7fab1fa159b03c3f821d163ba55a55902c76170f3",
+      "stable": true
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\📦️packages\\🟦️typescript\\📋️project.json",
+      "beforeSha256": "67c3c8efda57462ac3f81fd687ae5043b23c96596f97b61dee5be2fb1bdeb639",
+      "afterSha256": "67c3c8efda57462ac3f81fd687ae5043b23c96596f97b61dee5be2fb1bdeb639",
+      "stable": true
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\📦️packages\\🟦️typescript\\📜️script.ts",
+      "beforeSha256": "534daa399c3a5c576f7075e878b29d39e1cb93cb29888278830b9a479ba5b98c",
+      "afterSha256": "534daa399c3a5c576f7075e878b29d39e1cb93cb29888278830b9a479ba5b98c",
+      "stable": true
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🔨️modules\\🎨print-design-token-paints\\🧮️resolution\\🟦️.ts",
+      "beforeSha256": "b3f26600887b2de5b5fd755d989294ba84ab760e70b9e636d35260f0a30f46dd",
+      "afterSha256": "b3f26600887b2de5b5fd755d989294ba84ab760e70b9e636d35260f0a30f46dd",
+      "stable": true
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🔨️modules\\🔤print-font-catalog\\📏️metrics\\🔣️.json",
+      "beforeSha256": "68829670a0124ebf1053816bef7a05bf65684f71f33f28b31e6f4690affc12eb",
+      "afterSha256": "68829670a0124ebf1053816bef7a05bf65684f71f33f28b31e6f4690affc12eb",
+      "stable": true
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🔨️modules\\🔤print-font-catalog\\📏️metrics\\🟦️.ts",
+      "beforeSha256": "c2de06b5dbe7b1d3cc6e7434f501f7d8739639c3cffcbfe5ef079f825e5494a5",
+      "afterSha256": "c2de06b5dbe7b1d3cc6e7434f501f7d8739639c3cffcbfe5ef079f825e5494a5",
+      "stable": true
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🔨️modules\\🔤print-font-catalog\\🔣️.json",
+      "beforeSha256": "b63eb4a1255760f5b19a02298da33c34bf14c21a4135db78eb344b02839ab451",
+      "afterSha256": "b63eb4a1255760f5b19a02298da33c34bf14c21a4135db78eb344b02839ab451",
+      "stable": true
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🖼️assets\\🔣️viz-catalog.json",
+      "beforeSha256": "83cab801138c01f1f469384a62ec9c2860f879c15d5e7e4873f3c90b065e88da",
+      "afterSha256": "83cab801138c01f1f469384a62ec9c2860f879c15d5e7e4873f3c90b065e88da",
+      "stable": true
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧪️tests\\🧬️native-chart-grammar\\🔣️.json",
+      "beforeSha256": "bdcf08630dd1f6077b27600b2c05cb9ed84edd1a0f19c14dd7f40e47658b3300",
+      "afterSha256": "ea54448c6b6dfecf54b8be96222f3da47bac7a2388a0cbd75af5898d72870982",
+      "stable": false
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧪️tests\\🧬️native-chart-grammar\\🟦️.ts",
+      "beforeSha256": "988f48e51e3d7fc18f000a0672a541f7814057d2b2d2c02fa8cad7f4a1250740",
+      "afterSha256": "be4ece9bdd8a2a49307d8be319856be6afe080470d119a71fb0cbdfbbbe00ca1",
+      "stable": false
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\💡️inferences\\✅️validation\\🟦️.ts",
+      "beforeSha256": "4482a28ee677bc8b85b930600ce4ab07b94df4dd56336a6347744f297f18d369",
+      "afterSha256": "4482a28ee677bc8b85b930600ce4ab07b94df4dd56336a6347744f297f18d369",
+      "stable": true
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\💡️inferences\\✒️mark\\🟦️.ts",
+      "beforeSha256": "b50edba869c3f21d35d58a854fc9601dc3972229229307341255f5242a7f748a",
+      "afterSha256": "b50edba869c3f21d35d58a854fc9601dc3972229229307341255f5242a7f748a",
+      "stable": true
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\💡️inferences\\🌊flow\\🟦️.ts",
+      "beforeSha256": "a0f20875427dbe943a80f74aa439652efbb56f62a81ea296dea60cc4466c4b01",
+      "afterSha256": "a0f20875427dbe943a80f74aa439652efbb56f62a81ea296dea60cc4466c4b01",
+      "stable": true
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\💡️inferences\\🌍geo\\🟦️.ts",
+      "beforeSha256": "9d4d9deb711813fa49f0446ad1d8fdc84bf0b40ffbf5c133c3990ebf37abaf0c",
+      "afterSha256": "9d4d9deb711813fa49f0446ad1d8fdc84bf0b40ffbf5c133c3990ebf37abaf0c",
+      "stable": true
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\💡️inferences\\🌳hierarchy\\🟦️.ts",
+      "beforeSha256": "4c84cea6ee7f39110c071f32be8d883b9103c8cb54cab975c42968e9f99a08f8",
+      "afterSha256": "4c84cea6ee7f39110c071f32be8d883b9103c8cb54cab975c42968e9f99a08f8",
+      "stable": true
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\💡️inferences\\🎨theme\\🟦️.ts",
+      "beforeSha256": "7a65e22068cb4d9fae540d3584d9e280056f3c74c2a60c9ce9ddaa1ef8232d64",
+      "afterSha256": "7a65e22068cb4d9fae540d3584d9e280056f3c74c2a60c9ce9ddaa1ef8232d64",
+      "stable": true
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\💡️inferences\\📍spatial\\🟦️.ts",
+      "beforeSha256": "58adbb55e17d190f0d2092c320c3d102d776f3b9a8b1dfc5fad778359b642edf",
+      "afterSha256": "58adbb55e17d190f0d2092c320c3d102d776f3b9a8b1dfc5fad778359b642edf",
+      "stable": true
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\💡️inferences\\📐scale\\🟦️.ts",
+      "beforeSha256": "25837eba287f63342521ae4123f79c609641e9edc925f37091e78b60f74a1477",
+      "afterSha256": "25837eba287f63342521ae4123f79c609641e9edc925f37091e78b60f74a1477",
+      "stable": true
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\💡️inferences\\📚️catalogue\\🟦️.ts",
+      "beforeSha256": "5127dea1de7c923c3dc61fafc1ece7789441732fea3d16c65ef904287d20022a",
+      "afterSha256": "5127dea1de7c923c3dc61fafc1ece7789441732fea3d16c65ef904287d20022a",
+      "stable": true
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\💡️inferences\\📦️packages\\🟦️typescript\\📋️project.json",
+      "beforeSha256": "46a396bea6a4377e937954b9c7a331604cfde9f4f4bddfbc61392774fc3d5d58",
+      "afterSha256": "46a396bea6a4377e937954b9c7a331604cfde9f4f4bddfbc61392774fc3d5d58",
+      "stable": true
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\💡️inferences\\📦️packages\\🟦️typescript\\📜️script.ts",
+      "beforeSha256": "bab08c7b316b908aa495b01ba549838e32359290bb44b8130bb1ded4c0cec86e",
+      "afterSha256": "bab08c7b316b908aa495b01ba549838e32359290bb44b8130bb1ded4c0cec86e",
+      "stable": true
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\💡️inferences\\📦️packages\\🟦️typescript\\🔬️probes\\🟦️.ts",
+      "beforeSha256": "b534f0b8fdb4bf42f1e160b8dd41499b4ec6e80a599666d77079aa5db1bf5914",
+      "afterSha256": "b534f0b8fdb4bf42f1e160b8dd41499b4ec6e80a599666d77079aa5db1bf5914",
+      "stable": true
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\💡️inferences\\🔢format\\🟦️.ts",
+      "beforeSha256": "6c6e25d5d6899030907782fc7245dbf7386fbf2997276bdaeb5dac1b54101d0c",
+      "afterSha256": "6c6e25d5d6899030907782fc7245dbf7386fbf2997276bdaeb5dac1b54101d0c",
+      "stable": true
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\💡️inferences\\🔣️.json",
+      "beforeSha256": "a1232c89dcf15c63c22962af544e2521196529dc6a03b151141fdda6a255d7d3",
+      "afterSha256": "a1232c89dcf15c63c22962af544e2521196529dc6a03b151141fdda6a255d7d3",
+      "stable": true
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\💡️inferences\\🕸️network\\🟦️.ts",
+      "beforeSha256": "db0f836e4794eac93fb4465bd2c0001337889cf5348f2f369da0b14bdcf27668",
+      "afterSha256": "db0f836e4794eac93fb4465bd2c0001337889cf5348f2f369da0b14bdcf27668",
+      "stable": true
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\💡️inferences\\🖼️render\\🟦️.ts",
+      "beforeSha256": "83cbca27822db8ecb72cf041a18d999be560122e8d19164934d8484b5b51dca4",
+      "afterSha256": "83cbca27822db8ecb72cf041a18d999be560122e8d19164934d8484b5b51dca4",
+      "stable": true
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\💡️inferences\\🥧shape\\🟦️.ts",
+      "beforeSha256": "d854c5267131fd6b41fffbf300097d87549aa02a250c172f5a8e75bed9363d1c",
+      "afterSha256": "d854c5267131fd6b41fffbf300097d87549aa02a250c172f5a8e75bed9363d1c",
+      "stable": true
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\💡️inferences\\🦀️.rs",
+      "beforeSha256": "d03e707f165781273ce56327b92395970a818ee9a642fe0f7d9c11a70b63dc6b",
+      "afterSha256": "d03e707f165781273ce56327b92395970a818ee9a642fe0f7d9c11a70b63dc6b",
+      "stable": true
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\💡️inferences\\🧭coordinate\\🟦️.ts",
+      "beforeSha256": "a71d09747c422927db8b9d529a34a406a0599449887cb9c3409774562bd9e449",
+      "afterSha256": "a71d09747c422927db8b9d529a34a406a0599449887cb9c3409774562bd9e449",
+      "stable": true
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\💡️inferences\\🧮transform\\🟦️.ts",
+      "beforeSha256": "c7d3db330ac9ded4c09cd931e6c7927841946885db72e9beb156daa2d80f158e",
+      "afterSha256": "c7d3db330ac9ded4c09cd931e6c7927841946885db72e9beb156daa2d80f158e",
+      "stable": true
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\💡️inferences\\🧵️worker\\🟦️.ts",
+      "beforeSha256": "56a17cf00bfa0dff40560c2150a8434473ff6598aec3e6d6e97464bc437acbb8",
+      "afterSha256": "56a17cf00bfa0dff40560c2150a8434473ff6598aec3e6d6e97464bc437acbb8",
+      "stable": true
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\💡️inferences\\🟦️.ts",
+      "beforeSha256": "edb3dfe3639b08a14ef87d750e3aee277a6dd08abb647f91708a177224620dd9",
+      "afterSha256": "edb3dfe3639b08a14ef87d750e3aee277a6dd08abb647f91708a177224620dd9",
+      "stable": true
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\📸️snapshot\\📊️chart\\🎨️color\\🔣️.json",
+      "beforeSha256": "def3436d7f6ee7265d9e21dc44bcd9ddd22b18aa36485d2171133afda608b0b0",
+      "afterSha256": "def3436d7f6ee7265d9e21dc44bcd9ddd22b18aa36485d2171133afda608b0b0",
+      "stable": true
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\📸️snapshot\\📊️chart\\🟦️.ts",
+      "beforeSha256": "2848b50e6e3fe7333e3622affbf76821e0e52f481fed99be989b09acb78877ef",
+      "afterSha256": "2848b50e6e3fe7333e3622affbf76821e0e52f481fed99be989b09acb78877ef",
+      "stable": true
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\🔣️.json",
+      "beforeSha256": "eac7c86e37be89cb78beaa406974289b585d08f11bb54711928950c923d9d446",
+      "afterSha256": "eac7c86e37be89cb78beaa406974289b585d08f11bb54711928950c923d9d446",
+      "stable": true
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\🟦️.ts",
+      "beforeSha256": "8425cfe4e6a22b14e2ed8955dca41f9c0f516d9c34b1d51858635acd82f08b3f",
+      "afterSha256": "8425cfe4e6a22b14e2ed8955dca41f9c0f516d9c34b1d51858635acd82f08b3f",
+      "stable": true
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\README.md",
+      "beforeSha256": "29fa37c470ebbf6daa368cf41c586bed155d398665e09b822f1d6f9576f1f01d",
+      "afterSha256": "29fa37c470ebbf6daa368cf41c586bed155d398665e09b822f1d6f9576f1f01d",
+      "stable": true
+    }
+  ],
+  "changedExplicitPaths": [
+    "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧪️tests\\🧬️native-chart-grammar\\🔣️.json",
+    "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧪️tests\\🧬️native-chart-grammar\\🟦️.ts"
+  ]
+}

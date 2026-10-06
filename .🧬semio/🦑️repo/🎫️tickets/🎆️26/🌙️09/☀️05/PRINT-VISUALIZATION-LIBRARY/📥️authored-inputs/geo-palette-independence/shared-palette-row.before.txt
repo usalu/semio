@@ -1,0 +1,1 @@
+  \SemioTableRow{\Key{steps} & \Key{integer} & \Key{5} & \ApiText{Number of discrete colour-ramp levels. Vector families may bind steps to their integration count.}{Anzahl diskreter Farbverlaufsstufen. Vektorfamilien können steps an ihre Integrationszahl binden.}}

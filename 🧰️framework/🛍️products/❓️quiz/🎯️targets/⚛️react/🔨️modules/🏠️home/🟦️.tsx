@@ -10,13 +10,14 @@
  * leaderboard the learner looks at polled while home shows, the crowd of every quiz asked for again whenever its answer
  * says that a run was submitted. Pan and glide run whatever the device says about motion, as on play.
  * Each card sits compact in its cell of the card grid, whose cells are those of the strip: three columns from 1024 px
- * (the leaderboard in the larger centre cell), two from 768 px (the leaderboard alone on its row) and a list of sections
- * below, the design system's own breakpoints — measured in the learner's text size, so larger text gets the layout of
- * the narrower viewport it leaves, and a viewport too short for every card to fit its cell (three rows of cells on a
- * desktop, five on a tablet) gets the list as well. Should a card still be taller than its cell, it scrolls inside the
- * cell and never lies over the card below. In the list every card is as wide as the screen leaves it, up to a width
- * that reads (`.quiz-home-entry`). Pages are pure views over session state: showing, revealing or keeping one
- * live never runs a command.
+ * (the leaderboard in the larger centre cell), two from 768 px (the leaderboard alone on its row), the design system's
+ * own breakpoints — measured in the learner's text size, so larger text gets the layout of the narrower viewport it
+ * leaves. Below 768 px, and wherever the viewport is too short for every card to fit its cell (three rows of cells on a
+ * desktop, five on a tablet), the learner swipes through the same grid instead — three columns on a phone — one page
+ * at a time, its card on it and the pages around it named at the edges they lie behind, as on play. Should a card still
+ * be taller than its cell, it scrolls inside the cell and never lies over the card below. While swiping every card is as
+ * wide as the screen leaves it, up to a width that reads (`.quiz-home-entry`). Pages are pure views over session state:
+ * showing, revealing or keeping one live never runs a command.
  *
  * @see ../../🎨️.css — `.quiz-home-grid`
  * @see ../🚏️navigation/🟦️.tsx — the navbar's ways and the address that names the opened page
@@ -26,8 +27,8 @@
 
 import { useEffect, useMemo, useState, type CSSProperties, type ReactElement, type ReactNode } from "react";
 import { learnerTag } from "@semio-tech/quiz";
-import { LayeredOverview, UI_MOBILE_MAX_WIDTH_PX, UI_TABLET_MAX_WIDTH_PX, stripGrid, useMediaQuery, type IconName, type LayeredCardState, type LayeredCell, type LayeredPane } from "@semio-tech/ui-react/chrome";
-import { localized, type QuizLocale, type QuizText } from "../🌐️i18n/🟦️.ts";
+import { LayeredOverview, UI_MOBILE_MAX_WIDTH_PX, UI_TABLET_MAX_WIDTH_PX, stripGrid, useMediaQuery, type IconName, type LayeredCardState, type LayeredCell, type LayeredDirection, type LayeredMode, type LayeredPane } from "@semio-tech/ui-react/chrome";
+import { localized, titled, type QuizLocale, type QuizText } from "../🌐️i18n/🟦️.ts";
 import { failureProblem, learnerName, thrownProblem } from "../🪪️identity/🟦️.tsx";
 import { LEADERBOARD_POLL_MS, LeaderboardCard, LeaderboardPage, usePolling } from "../🏆️leaderboard/🟦️.tsx";
 import { BadgesCard, BadgesPage } from "../🏅️badges/🟦️.tsx";
@@ -38,8 +39,23 @@ import { QuizCardView, QuizPage, type Act } from "../📖️quiz-page/🟦️.ts
 import { BodyButton, ProblemNote, type Problem } from "../🪟️chrome/🟦️.tsx";
 import { HOME_PAGES, type QuizSession, type QuizState } from "../🧭️session/🟦️.ts";
 
-/** 🗺️ How the overview is laid out: three columns, two columns (the leaderboard on a row of its own) or a list. */
-export type HomeLayout = "desktop" | "tablet" | "list";
+/** 🗺️ The grid of the overview: three columns, or two with the leaderboard on a row of its own. */
+export type HomeGrid = "desktop" | "tablet";
+
+/** 🗺️ How the overview is laid out: its grid, and whether its cards stand fixed on it (`strip`) or the learner swipes through it
+ * one page at a time (`swipe`). */
+export interface HomeLayout {
+  readonly grid: HomeGrid;
+  readonly mode: LayeredMode;
+}
+
+/** 🗺️ The layout the matched media queries of {@link homeLayoutQueries} give: the tablet grid between the breakpoints, the desktop grid
+ * on either side of them (a phone swipes through the ring of nine), swiping below the mobile breakpoint and wherever the grid's cards
+ * would not fit their cells. */
+export function homeLayout(matched: { readonly narrow: boolean; readonly medium: boolean; readonly short: { readonly [G in HomeGrid]: boolean } }): HomeLayout {
+  const grid: HomeGrid = matched.medium ? "tablet" : "desktop";
+  return { grid, mode: matched.narrow || matched.short[grid] ? "swipe" : "strip" };
+}
 
 /** 🧩️ The pages of home in reading order for a catalog with `quizzes`: the ring of nine around the leaderboard — the
  * learner, quiz 1, the introduction, quiz 2, the leaderboard, quiz 3, the badges, quiz 4, the preferences — where
@@ -49,15 +65,15 @@ export function homePages(quizzes: readonly string[]): readonly string[] {
   return [HOME_PAGES.learner, ...quiz(0), HOME_PAGES.introduction, ...quiz(1), HOME_PAGES.leaderboard, ...quiz(2), HOME_PAGES.badges, ...quiz(3), HOME_PAGES.preferences, ...quizzes.slice(4)];
 }
 
-/** 📍️ The cell of every page on the strip for a layout, matching where its card sits on the overview: row by row in
+/** 📍️ The cell of every page on the strip for a grid, matching where its card sits on the overview: row by row in
  * three columns on desktop; in two columns on tablets, where the leaderboard takes a row of its own. */
-export function homeCells(pages: readonly string[], layout: Exclude<HomeLayout, "list">): Readonly<Record<string, LayeredCell>> {
-  const columns = layout === "desktop" ? 3 : 2;
+export function homeCells(pages: readonly string[], grid: HomeGrid): Readonly<Record<string, LayeredCell>> {
+  const columns = grid === "desktop" ? 3 : 2;
   const cells: Record<string, LayeredCell> = {};
   let column = 0;
   let row = 0;
   for (const page of pages) {
-    const alone = layout === "tablet" && page === HOME_PAGES.leaderboard;
+    const alone = grid === "tablet" && page === HOME_PAGES.leaderboard;
     if (alone && column !== 0) {
       column = 0;
       row += 1;
@@ -88,21 +104,21 @@ export const HOME_GRID_ROW_HEIGHT_PX = 160;
 /** 🎩️ The height (px at the normal text size) of what stands above the overview: the navigation bar. */
 export const HOME_CHROME_HEIGHT_PX = 56;
 
-/** 🪜️ The least viewport height (px at the normal text size) at which every card of `pages` fits its cell in `layout`:
- * the navigation bar and a grid whose lowest row is {@link HOME_GRID_ROW_HEIGHT_PX} high. Below it the overview is a
- * list, as on a phone — a phone held sideways, a small window, a strongly zoomed page, large text. */
-export function homeGridMinHeight(layout: Exclude<HomeLayout, "list">, pages: readonly string[]): number {
-  const rows = Math.max(0, ...Object.values(homeCells(pages, layout)).map((cell) => cell.row + 1));
-  const weights = Array.from({ length: rows }, (_, row) => (layout === "desktop" ? (HOME_GRID_TRACKS.rows[row] ?? 1) : 1));
+/** 🪜️ The least viewport height (px at the normal text size) at which every card of `pages` fits its cell in `grid`:
+ * the navigation bar and a grid whose lowest row is {@link HOME_GRID_ROW_HEIGHT_PX} high. Below it the learner swipes
+ * through the grid, as on a phone — a phone held sideways, a small window, a strongly zoomed page, large text. */
+export function homeGridMinHeight(grid: HomeGrid, pages: readonly string[]): number {
+  const rows = Math.max(0, ...Object.values(homeCells(pages, grid)).map((cell) => cell.row + 1));
+  const weights = Array.from({ length: rows }, (_, row) => (grid === "desktop" ? (HOME_GRID_TRACKS.rows[row] ?? 1) : 1));
   return Math.ceil(HOME_CHROME_HEIGHT_PX + (HOME_GRID_ROW_HEIGHT_PX * weights.reduce((sum, weight) => sum + weight, 0)) / Math.min(...weights));
 }
 
 /** 📐️ The media queries that choose the layout of `pages` at a text `scale`: the design system's breakpoints and the
  * least height of either grid, each multiplied by the scale — text 1.5 times as large leaves a viewport two thirds as
  * wide and as high. */
-export function homeLayoutQueries(scale: number, pages: readonly string[]): { readonly narrow: string; readonly medium: string; readonly short: { readonly [L in Exclude<HomeLayout, "list">]: string } } {
+export function homeLayoutQueries(scale: number, pages: readonly string[]): { readonly narrow: string; readonly medium: string; readonly short: { readonly [G in HomeGrid]: string } } {
   const narrow = Math.floor(UI_MOBILE_MAX_WIDTH_PX * scale);
-  const short = (layout: Exclude<HomeLayout, "list">): string => `(max-height: ${Math.floor(homeGridMinHeight(layout, pages) * scale) - 1}px)`;
+  const short = (grid: HomeGrid): string => `(max-height: ${Math.floor(homeGridMinHeight(grid, pages) * scale) - 1}px)`;
   return {
     narrow: `(max-width: ${narrow}px)`,
     medium: `(min-width: ${narrow + 1}px) and (max-width: ${Math.floor(UI_TABLET_MAX_WIDTH_PX * scale)}px)`,
@@ -119,24 +135,30 @@ interface HomeProps {
   readonly onPreferences: (preferences: QuizPreferences) => void;
 }
 
-const ICONS: { readonly [page: string]: IconName } = { [HOME_PAGES.learner]: "user", [HOME_PAGES.introduction]: "info", [HOME_PAGES.leaderboard]: "list-ordered", [HOME_PAGES.badges]: "award", [HOME_PAGES.preferences]: "settings" };
+/** 🧭️ What the hint of a page one swipe away is called, by the direction it lies in. */
+const NEIGHBOUR_TEXTS = { up: "quiz.home.neighbourUp", left: "quiz.home.neighbourLeft", right: "quiz.home.neighbourRight", down: "quiz.home.neighbourDown" } as const satisfies { readonly [D in LayeredDirection]: string };
+
+const ICONS: { readonly [page: string]: IconName } ={ [HOME_PAGES.learner]: "user", [HOME_PAGES.introduction]: "info", [HOME_PAGES.leaderboard]: "list-ordered", [HOME_PAGES.badges]: "award", [HOME_PAGES.preferences]: "settings" };
 
 /** 🏷️ What a page of home is called: a quiz by its title, the learner's page by the learner's name, the others by what
  * they hold; nothing for a page home does not have. */
-export function pageLabel(page: string, state: Pick<QuizState, "catalog" | "learner">, locale: QuizLocale, text: QuizText): string | undefined {
+export function pageLabel(page: string, state: Pick<QuizState, "catalog" | "learner">, locale: QuizLocale, text: QuizText, compact = false): string | undefined {
   const quiz = state.catalog?.quizzes.find((candidate) => candidate.id === page);
-  if (quiz !== undefined) return localized(quiz.title, locale);
+  if (quiz !== undefined) {
+    const names = titled(quiz, locale);
+    return compact ? names.short : names.full;
+  }
   switch (page) {
     case HOME_PAGES.learner:
       return state.learner === undefined ? undefined : learnerName(state.learner.identity, learnerTag(state.learner.id), text);
     case HOME_PAGES.introduction:
-      return text("quiz.home.howItWorks");
+      return compact ? text("quiz.home.howItWorksShort") : text("quiz.home.howItWorks");
     case HOME_PAGES.leaderboard:
-      return text("quiz.leaderboard.title");
+      return compact ? text("quiz.leaderboard.titleShort") : text("quiz.leaderboard.title");
     case HOME_PAGES.badges:
       return text("quiz.home.badges");
     case HOME_PAGES.preferences:
-      return text("quiz.preferences.title");
+      return compact ? text("quiz.preferences.titleShort") : text("quiz.preferences.title");
     default:
       return undefined;
   }
@@ -161,8 +183,7 @@ export function HomeScreen(props: HomeProps): ReactElement | null {
   useEffect(() => () => pending?.abort(), [pending]);
   const { catalog, learner } = state;
   if (catalog === undefined || learner === undefined) return null;
-  const wide = medium ? "tablet" : "desktop";
-  const layout: HomeLayout = narrow || short[wide] ? "list" : wide;
+  const layout = homeLayout({ narrow, medium, short });
   const busy = pending !== undefined;
   const act: Act = (run) => {
     if (pending !== undefined) return;
@@ -175,9 +196,13 @@ export function HomeScreen(props: HomeProps): ReactElement | null {
       .finally(() => setPending((current) => (current === controller ? undefined : current)));
   };
   const common = { session, state, text, locale };
-  const panes: readonly LayeredPane[] = pages.map((page) => ({
+  const panes: readonly LayeredPane[] = pages.map((page) => {
+    const label = pageLabel(page, state, locale, text) ?? page;
+    const shortLabel = pageLabel(page, state, locale, text, true) ?? label;
+    return {
     id: page,
-    label: pageLabel(page, state, locale, text) ?? page,
+    label,
+    shortLabel,
     icon: ICONS[page],
     render: (pane) => {
       const view = { opened: pane.opened, revealed: pane.revealed };
@@ -196,10 +221,11 @@ export function HomeScreen(props: HomeProps): ReactElement | null {
           return <PreferencesPage preferences={preferences} locale={locale} text={text} onChange={onPreferences} view={view} />;
       }
     },
-  }));
-  const cells = homeCells(pages, layout === "tablet" ? "tablet" : "desktop");
+  };
+  });
+  const cells = homeCells(pages, layout.grid);
   const strip = stripGrid(Object.values(cells));
-  const tracks: { readonly columns?: readonly number[]; readonly rows?: readonly number[] } = layout === "desktop" ? HOME_GRID_TRACKS : {};
+  const tracks: { readonly columns?: readonly number[]; readonly rows?: readonly number[] } = layout.grid === "desktop" ? HOME_GRID_TRACKS : {};
   const renderCard = (pane: LayeredPane, card: LayeredCardState): ReactNode => {
     const cell = cells[pane.id];
     const body = cardOf(pane, card);
@@ -250,7 +276,7 @@ export function HomeScreen(props: HomeProps): ReactElement | null {
           renderCard={renderCard}
           overlayClassName="quiz-home-grid"
           overlayStyle={{ "--quiz-home-columns": homeTrackTemplate(tracks.columns, strip.columns), "--quiz-home-rows": homeTrackTemplate(tracks.rows, strip.rows) } as CSSProperties}
-          mode={layout === "list" ? "list" : "strip"}
+          mode={layout.mode}
           routing="none"
           openedId={opened}
           onOpenedIdChange={(page) => session.open(page === null ? { screen: "home" } : { screen: "home", page })}
@@ -259,6 +285,7 @@ export function HomeScreen(props: HomeProps): ReactElement | null {
             grid: text("quiz.home.cards"),
             waiting: (pane) => text("quiz.home.pageWaiting", { page: pane.label }),
             failed: (pane) => text("quiz.home.pageFailed", { page: pane.label }),
+            neighbour: (pane, direction) => text(NEIGHBOUR_TEXTS[direction], { page: pane.label }),
           }}
         />
       </div>

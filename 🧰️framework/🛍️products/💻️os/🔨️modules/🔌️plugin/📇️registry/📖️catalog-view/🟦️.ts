@@ -13,12 +13,12 @@ export const GENERATED_PLUGINS_PROJECTION = "🔌️plugins.json";
 export const GENERATED_PLAYGROUNDS_PROJECTION = "🎠️playgrounds.json";
 
 /** 📦️Admits only deployment directories declared by the supplied registry owners. */
-export function registryModuleDirectories(entries: readonly DeployedRegistryEntryV1[]): readonly ModuleDirectory[] {
+export function registryModuleDirectories(entries: readonly ModuleDirectory[]): readonly ModuleDirectory[] {
   return parseModuleDirectories({ version: 1, modules: entries.map(({ pluginId, directoryName }) => ({ pluginId, directoryName })) });
 }
 
 /** 📖️ Reads the rows `generate` just projected into `🤖️generated` so one dev boot walks the repository once instead of once per consumer; the projection is the language-agnostic twin of [[generatePluginRegistry]] and [[generatePlaygroundRegistry]]. */
-export function readGeneratedCatalogProjection(generatedDir = join(import.meta.dir, "..", "🤖️generated")): GeneratedCatalogProjection {
+export function readGeneratedCatalogProjection(generatedDir = runtimeCatalogProjectionRoot()): GeneratedCatalogProjection {
   const read = <T>(name: string): readonly T[] => {
     const parsed: unknown = JSON.parse(readFileSync(join(generatedDir, name), "utf8"));
     if (!Array.isArray(parsed)) throw new Error(`📇️registry: ${name} is not a projected row array`);
@@ -52,4 +52,13 @@ export function filterProjectedPluginRegistry(projection: GeneratedCatalogProjec
 const requireDiscovery = createRequire(import.meta.url);
 function loadDiscovery(): { resolveRegistryPluginIdsForFilter: (filter: string, entries: readonly DeployedRegistryEntryV1[], playgrounds: GeneratedCatalogProjection["playgrounds"]) => readonly string[] } {
   return requireDiscovery('../🔎️discovery/🟦️.ts');
+}
+
+
+/** 🎮️ Binds a selected runtime to the immutable catalog published with its session. */
+function runtimeCatalogProjectionRoot(): string {
+  const variant=process.env.SEMIO_PLUGIN;
+  if(variant===undefined || variant==="") return join(import.meta.dir,"..","🤖️generated");
+  if(!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(variant)) throw new Error("Invalid runtime catalog variant");
+  return join(import.meta.dir,"..","dist","sessions",variant);
 }

@@ -89,7 +89,8 @@ export class OwnerGraphWireCheckScript extends BundleScript {
 /** 🧪️Runs portable graph ownership and independent schema laws without native compilation. */
 export class ManifestContractScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    if (segments.length) throw new Error("Graph manifest contract takes no arguments");
-    await runOwnedCommand("bun", ["test", resolve(this.root, "../../🧪️tests/🧩️suite/🟦️.ts")], this.repoRoot, "graph:manifest-contract", cmdBudgetMs(), { env: process.env });
+    if (segments.length && (segments.length !== 1 || segments[0] !== "native-prerequisites")) throw new Error("Unknown graph contract selection");
+    const test = segments[0] === "native-prerequisites" ? "🧩️native-prerequisites" : "🧩️suite";
+    await runOwnedCommand("bun", ["test", resolve(this.root, `../../🧪️tests/${test}/🟦️.ts`)], this.repoRoot, "graph:manifest-contract", cmdBudgetMs(), { env: process.env });
   }
 }

@@ -108,10 +108,10 @@ export function ClassificationTaskView(props: TaskViewProps<SheetClassificationT
     const hint = asked.get(item.id);
     const hintId = hint === undefined ? undefined : elementId(scope, item.id, "hint");
     return (
-      <li key={item.id} data-quiz-drag="" data-quiz-item={item.id} data-presence-anchor={PRESENCE_ANCHORS.item(item.id)} data-pet-prop={petProp(topic, item.id)} className="quiz-chip border border-normal bg-background p-single">
+      <li key={item.id} data-icon-host="" data-quiz-drag="" data-quiz-item={item.id} data-presence-anchor={PRESENCE_ANCHORS.item(item.id)} data-pet-prop={petProp(topic, item.id)} className="quiz-chip border border-normal bg-background p-single">
         <DragGrip title={text("quiz.classification.drag", { item: itemLabel(item) })} locked={locked} onDrop={drop(item)} />
         <span className="quiz-row-label min-w-0 text-sm font-semibold">
-          <IconLabel icon={item.icon} order={task.items.indexOf(item)}>
+          <IconLabel icon={item.icon}>
             {itemLabel(item)}
           </IconLabel>
           {hint === undefined || hintId === undefined ? null : (
@@ -155,13 +155,13 @@ export function ClassificationTaskView(props: TaskViewProps<SheetClassificationT
           {text("quiz.classification.categories")}
         </h3>
         <div className="quiz-bins">
-          {task.categories.map((category, place) => {
+          {task.categories.map((category) => {
             const members = task.items.filter((item) => assignments[item.id] === category.id);
             const label = localized(category.label, locale);
             return (
               <section key={category.id} data-quiz-drop={`${CATEGORY_ZONE}${category.id}`} data-presence-anchor={PRESENCE_ANCHORS.category(category.id)} aria-labelledby={elementId(scope, "category", category.id)} className={DROP_ZONE_CLASS}>
-                <h4 id={elementId(scope, "category", category.id)} className="m-0 text-sm font-semibold">
-                  <IconLabel icon={category.icon} order={place}>
+                <h4 data-icon-host="" id={elementId(scope, "category", category.id)} className="m-0 text-sm font-semibold">
+                  <IconLabel icon={category.icon}>
                     {label}
                   </IconLabel>
                 </h4>

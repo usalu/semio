@@ -1,0 +1,82 @@
+%region 🔖️PlanarFrame
+% 🧭️ A planar display frame preserves raw bin/KDE coordinates and fits visible paths with stroke clearance.
+\fp_new:N \l_semio_viz_geosym_xmin_fp
+\fp_new:N \l_semio_viz_geosym_ymin_fp
+\fp_new:N \l_semio_viz_geosym_xmax_fp
+\fp_new:N \l_semio_viz_geosym_ymax_fp
+\fp_new:N \l_semio_viz_geosym_scale_fp
+\fp_new:N \l_semio_viz_geosym_tx_fp
+\fp_new:N \l_semio_viz_geosym_ty_fp
+\fp_new:N \l_semio_viz_geosym_level_fp
+\seq_new:N \l_semio_viz_geosym_draw_rings_seq
+
+\keys_define:nn { semio / viz / geo / planar }
+  {
+    width .fp_set:N = \l_semio_viz_geo_f_width_fp ,
+    height .fp_set:N = \l_semio_viz_geo_f_height_fp ,
+    palette .tl_set:N = \l_semio_viz_geo_f_palette_tl ,
+    stroke .tl_set:N = \l_semio_viz_geo_f_stroke_tl ,
+    lineWidth .tl_set:N = \l_semio_viz_geo_f_linewidth_tl ,
+    opacity .fp_set:N = \l_semio_viz_geo_f_opacity_fp ,
+    paletteSteps .int_set:N = \l_semio_viz_geo_f_palette_steps_int ,
+    unknown .code:n = { } ,
+  }
+
+% 🧮️ Starts a raw visible-path extent before applying the authored planar display frame.
+\cs_new_protected:Npn \semio_viz_geosym_extent_reset:
+  {
+    \fp_set:Nn \l_semio_viz_geosym_xmin_fp { inf }
+    \fp_set:Nn \l_semio_viz_geosym_ymin_fp { inf }
+    \fp_set:Nn \l_semio_viz_geosym_xmax_fp { -inf }
+    \fp_set:Nn \l_semio_viz_geosym_ymax_fp { -inf }
+  }
+
+% 🪡️ Extends the raw geometric extent by one planar path vertex.
+\cs_new_protected:Npn \semio_viz_geosym_extent_point:nn #1#2
+  {
+    \fp_set:Nn \l_semio_viz_geosym_xmin_fp { min ( \l_semio_viz_geosym_xmin_fp , #1 ) }
+    \fp_set:Nn \l_semio_viz_geosym_ymin_fp { min ( \l_semio_viz_geosym_ymin_fp , #2 ) }
+    \fp_set:Nn \l_semio_viz_geosym_xmax_fp { max ( \l_semio_viz_geosym_xmax_fp , #1 ) }
+    \fp_set:Nn \l_semio_viz_geosym_ymax_fp { max ( \l_semio_viz_geosym_ymax_fp , #2 ) }
+  }
+
+% 🖼️ Fits raw path geometry uniformly and centres it with half-stroke clearance on every edge.
+\cs_new_protected:Npn \semio_viz_geosym_fit:
+  {
+    \fp_set:Nn \l_tmpa_fp
+      { \dim_to_fp:n { \l_semio_viz_geo_f_linewidth_tl } / \dim_to_fp:n { 1mm } }
+    \fp_set:Nn \l_semio_viz_geosym_scale_fp
+      {
+        min
+          ( ( \l_semio_viz_geo_f_width_fp - \l_tmpa_fp )
+            / ( \l_semio_viz_geosym_xmax_fp - \l_semio_viz_geosym_xmin_fp ) ,
+            ( \l_semio_viz_geo_f_height_fp - \l_tmpa_fp )
+            / ( \l_semio_viz_geosym_ymax_fp - \l_semio_viz_geosym_ymin_fp ) )
+      }
+    \fp_set:Nn \l_semio_viz_geosym_tx_fp
+      { ( \l_semio_viz_geo_f_width_fp - \l_semio_viz_geosym_scale_fp
+          * ( \l_semio_viz_geosym_xmax_fp + \l_semio_viz_geosym_xmin_fp ) ) / 2 }
+    \fp_set:Nn \l_semio_viz_geosym_ty_fp
+      { ( \l_semio_viz_geo_f_height_fp - \l_semio_viz_geosym_scale_fp
+          * ( \l_semio_viz_geosym_ymax_fp + \l_semio_viz_geosym_ymin_fp ) ) / 2 }
+  }
+
+% 🐝️ Includes all six displayed hexagon vertices without changing the raw binning radius.
+\cs_new_protected:Npn \semio_viz_geosym_hexextent:nnn #1#2#3
+  {
+    \semio_viz_geosym_extent_point:nn
+      { #2 - \l_semio_viz_geosym_radius_fp * 0.92 * cosd (30) }
+      { #3 - \l_semio_viz_geosym_radius_fp * 0.92 }
+    \semio_viz_geosym_extent_point:nn
+      { #2 + \l_semio_viz_geosym_radius_fp * 0.92 * cosd (30) }
+      { #3 + \l_semio_viz_geosym_radius_fp * 0.92 }
+  }
+
+% 🫧️ Restores a collected raw contour and its palette level for fitted rendering.
+\cs_new_protected:Npn \semio_viz_geosym_render_ring:nn #1#2
+  {
+    \fp_set:Nn \l_tmpa_fp {#1}
+    \seq_set_split:Nnn \l_tmpb_seq { ; } {#2}
+    \semio_viz_geosym_ring_draw:
+  }
+%endregion 🔖️PlanarFrame

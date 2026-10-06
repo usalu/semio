@@ -1,0 +1,36 @@
+{
+  "capturedAt": "2026-10-05T07:15:51.7046133Z",
+  "purpose": "Prospective current final045 source fixture and existing native consumer owner before scoped Rust producer26669",
+  "inputs": [
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧬️schema/🔣️.json",
+      "bytes": 1591487,
+      "sha256": "045A015FA5E12521D32D0BA87E70F938424E853548B6E323720EC407B10A38BA"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧬️schema/💡️inferences/🦀️.rs",
+      "bytes": 40425,
+      "sha256": "A9B36E9DA1751399CCDA8FFCC2741CFF878336E7AC68F97626C0AF6E09CA66E9"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧪️tests/🧬️chart-mutations/🦀️.rs",
+      "bytes": 17938,
+      "sha256": "F1F070FB060D834E33C05671975BA40C4886A745F0863E2C3B21E2CF5D5BC135"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧫️fixtures/🧬️chart-mutations/🔣️.json",
+      "bytes": 106096,
+      "sha256": "96B14BA6222AEE901A481633CEF3C5444E2DDF16CACFD6F551B63749E34A6326"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧪️tests/🖼️family-containment/🟦️.ts",
+      "bytes": 69297,
+      "sha256": "18E9C578E5DE7370E0670C0173A62903BF655DABCC59C6DBFEF5A93AE7001649"
+    }
+  ],
+  "producerSession": 26669,
+  "producerFilter": "long --lib tests::canonical_ --skip tests::canonical_spatial_data_mutation_vectors",
+  "expectedOptions": 10,
+  "expectedAdmission": 58,
+  "expectedValidAdmissionSources": 28
+}

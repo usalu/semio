@@ -1,0 +1,124 @@
+{
+  "contract": {
+    "projection": "mutation-inference-nativeCompiler",
+    "oracle": "D3"
+  },
+  "snapshot": {
+    "chart": {
+      "width": 40,
+      "height": 20,
+      "language": "en",
+      "layers": [],
+      "scales": [
+        {
+          "name": "nice-control",
+          "kind": "linear",
+          "domain": [
+            0.13,
+            0.87
+          ],
+          "range": [
+            0,
+            10
+          ],
+          "options": {
+            "nice": 2
+          }
+        }
+      ],
+      "margin": {
+        "left": 0,
+        "right": 0,
+        "top": 0,
+        "bottom": 0
+      },
+      "tables": [
+        {
+          "name": "nice-data",
+          "columns": [
+            "t",
+            "val"
+          ],
+          "rows": [
+            {
+              "t": 0,
+              "val": 0
+            },
+            {
+              "t": 5,
+              "val": 5
+            },
+            {
+              "t": 10,
+              "val": 10
+            }
+          ]
+        }
+      ],
+      "presets": [
+        {
+          "kind": "circle",
+          "data": "nice-data",
+          "options": {
+            "size": 1
+          }
+        }
+      ]
+    }
+  },
+  "inputs": [
+    0.13,
+    0.5,
+    0.87
+  ],
+  "cases": [
+    {
+      "id": "disabled-en",
+      "language": "en",
+      "value": false
+    },
+    {
+      "id": "disabled-de",
+      "language": "de",
+      "value": false
+    },
+    {
+      "id": "omitted-en",
+      "language": "en"
+    },
+    {
+      "id": "omitted-de",
+      "language": "de"
+    },
+    {
+      "id": "true-en",
+      "language": "en",
+      "value": true
+    },
+    {
+      "id": "true-de",
+      "language": "de",
+      "value": true
+    },
+    {
+      "id": "count-en",
+      "language": "en",
+      "value": 4
+    },
+    {
+      "id": "count-de",
+      "language": "de",
+      "value": 4
+    },
+    {
+      "id": "fraction-en",
+      "language": "en",
+      "value": 2.5
+    },
+    {
+      "id": "fraction-de",
+      "language": "de",
+      "value": 2.5
+    }
+  ]
+}

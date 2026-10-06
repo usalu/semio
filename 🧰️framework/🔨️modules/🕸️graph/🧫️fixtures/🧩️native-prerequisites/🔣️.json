@@ -1,0 +1,61 @@
+{
+  "owners": [
+    {
+      "contractId": "semio-s-artifact-writer-writer-graph-catalog",
+      "packageRoot": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust",
+      "target": "@semio-tech/writer-writer-rs:graph-generate",
+      "owner": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer"
+    },
+    {
+      "contractId": "semio-s-artifact-reasoning-wires-graph-catalog",
+      "packageRoot": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/📦️packages/🦀️rust",
+      "target": "@semio-tech/reasoning-wires-rs:graph-generate",
+      "owner": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires"
+    },
+    {
+      "contractId": "draw-drawing-graph",
+      "packageRoot": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/📦️packages/🦀️rust",
+      "target": "@semio-tech/draw-drawing-rs:graph-generate",
+      "owner": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing"
+    },
+    {
+      "contractId": "semio-s-artifact-trinity-jack-graph-catalog",
+      "packageRoot": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust",
+      "target": "@semio-tech/trinity-jack-rs:graph-generate",
+      "owner": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack"
+    },
+    {
+      "contractId": "rewriting-graph-catalog",
+      "packageRoot": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🦀️rust",
+      "target": "@semio-tech/trinity-rewriting-rs:graph-generate",
+      "owner": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting"
+    },
+    {
+      "contractId": "semio-s-artifact-puzzle-3d-graph-catalog",
+      "packageRoot": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/📦️packages/🦀️rust",
+      "target": "@semio-tech/puzzle-3d-rs:graph-generate",
+      "owner": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d"
+    },
+    {
+      "contractId": "semio-s-artifact-puzzle-5d-graph-catalog",
+      "packageRoot": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📦️packages/🦀️rust",
+      "target": "@semio-tech/puzzle-5d-rs:graph-generate",
+      "owner": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d"
+    },
+    {
+      "contractId": "semio-s-artifact-puzzle-2d-graph-catalog",
+      "packageRoot": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/📦️packages/🦀️rust",
+      "target": "@semio-tech/puzzle-2d-rs:graph-generate",
+      "owner": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d"
+    }
+  ],
+  "consumers": [
+    {
+      "packageRoot": "🌎️hub/🧩️compositions/🖍️draw/📦️packages/🦀️rust",
+      "target": "@semio-tech/draw-plugin:component-dev",
+      "required": [
+        "@semio-tech/draw-drawing-rs:graph-generate"
+      ]
+    }
+  ]
+}

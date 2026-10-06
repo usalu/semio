@@ -1,0 +1,54 @@
+{
+  "session": 63868,
+  "exitCode": 1,
+  "actualFailures": 18,
+  "passingCases": 20,
+  "themes": {
+    "light": {
+      "pdf": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\gn1\\genome-window-controls\\light\\🧪️probe-out\\light.pdf",
+      "sha256": "7d96e67604d353ca9851c5ac45986186d04a3de4f2bce82ab4f738f737893965",
+      "firstExonActualBounds": [
+        8.000061453713311,
+        17.000125122070312,
+        17.60013560189141,
+        23.00017339918348
+      ],
+      "D3expectedBounds": [
+        4,
+        7,
+        8.8,
+        13
+      ]
+    },
+    "dark": {
+      "pdf": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\gn1\\genome-window-controls\\dark\\🧪️probe-out\\dark.pdf",
+      "sha256": "28dc40564b09909a328a05d233163807ce07382d4950e352cff9df11e325ac98",
+      "firstExonActualBounds": [
+        8.000061453713311,
+        17.000125122070312,
+        17.60013560189141,
+        23.00017339918348
+      ],
+      "D3expectedBounds": [
+        4,
+        7,
+        8.8,
+        13
+      ]
+    }
+  },
+  "sources": {
+    "light.tex": "3269241d7c363830fec011a2a06014760441cdf1ee5fb14763f806739cfa769d",
+    "light-semio-viz-scientific-biology.sty": "062fb347e807995bb16b434813ad101aa42dfdf6f3e64b25a047d6d711075230",
+    "light-semio-viz-scientific-field.sty": "745cf1244ecde64a3da82d5d653a4a1d042029a817b7e785b1258b69e0a07ee8",
+    "dark.tex": "3e49e3dbfe805411ae517897d66b608f936560a98a27475601d73b032da27551",
+    "dark-semio-viz-scientific-biology.sty": "062fb347e807995bb16b434813ad101aa42dfdf6f3e64b25a047d6d711075230",
+    "dark-semio-viz-scientific-field.sty": "745cf1244ecde64a3da82d5d653a4a1d042029a817b7e785b1258b69e0a07ee8",
+    "neutral.json": "732868bfdc8ccc8520a8702923c95f19d9d8b8bf05fc190d86b678f810d0773d",
+    "helper.txt": "a0dc74d8d7aa0c28f96321cb65002cb4f47b76b8dbbffa8bf7c33a25db2831dc"
+  },
+  "log": {
+    "path": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\catalogue-genome-window-native-red.log",
+    "sha256": "a488d9a3fad295154061ea3ac4fba02b8aac1553620d1c229ef4db184e12f04e"
+  }
+}

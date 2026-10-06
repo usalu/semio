@@ -1,0 +1,24 @@
+{
+  "process": 80327,
+  "terminal": 0,
+  "actualPages": 64,
+  "pictures": 48,
+  "wholeTexts": 48,
+  "modeAlphaCases": 32,
+  "ownerSources": {
+    "helper": "df3b0c5df65da991f85f1b4aa5969bb95a988e28e61542732201086e708e5254",
+    "observer": "d5b1c2eb83d1b1c4f0a6193bedff129b4a39e9e2bc36892568438af1b2e6a12d"
+  },
+  "staged": {
+    "light": {
+      "mark": "923cafe62098a65763355e5a87d01d801a2d00e77bf22ab865dafcd976a64bba",
+      "pdf": "40bbd2f4e8589c1136b8514896a97c524c7e38a2ec9cabd1f7eafdb6f59c2671",
+      "compilerInput": "a963f0ae7fe1d17446e3b913157da1fddb4d9f5e2566fca506cfcad65b8242b3"
+    },
+    "dark": {
+      "mark": "923cafe62098a65763355e5a87d01d801a2d00e77bf22ab865dafcd976a64bba",
+      "pdf": "ef40faff33ec21de73319234c1bb7a57585c27b4d68e0d00af7a49899e6fca01",
+      "compilerInput": "d4a389157923bcf49adef748ab2ebc4ec8a8895473d49380a6c26cb45fa5f6a2"
+    }
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "markerPrefix": "SemioVizLeaf",
+  "leaves": 1966,
+  "kinds": 1738,
+  "tolerancePt": 0.05,
+  "glyphKinds": [
+    { "slug": "word-cloud", "family": "text-viz", "source": "semio-viz-text.sty", "definition": "semio_viz_tx_word" },
+    { "slug": "frequency-cloud", "family": "text-viz", "source": "semio-viz-text.sty", "definition": "semio_viz_tx_word" },
+    { "slug": "tag-cloud", "family": "text-viz", "source": "semio-viz-text.sty", "definition": "semio_viz_tx_word" },
+    { "slug": "export-safe-typography", "family": "figure", "source": "semio-viz-showcase.sty", "definition": "semio_viz_scf_typography" },
+    { "slug": "text-mark", "family": "mark-point", "source": "semio-viz-mark.sty", "definition": "semio_viz_fam_points_render" },
+    { "slug": "sequence-logo", "family": "sci-seqlogo", "source": "semio-viz-scientific-biology.sty", "definition": "semio_viz_bio_logo_letter" },
+    { "slug": "motif-logo", "family": "sci-seqlogo", "source": "semio-viz-scientific-biology.sty", "definition": "semio_viz_bio_logo_letter" }
+  ],
+  "cases": [
+    { "id": "nested-transformed-graphic", "class": "graphic", "body": "\\begin{scope}[shift={(3,4)},scale=2]\\special{pdf:literal direct /NeutralInner BMC}\\fill (0,0) rectangle (10,5);\\special{pdf:literal direct EMC}\\end{scope}", "valid": true, "expectedBoundsMm": [3,23,4,14] },
+    { "id": "authored-glyph", "class": "glyph", "body": "\\node[anchor=base west] at (0,0) {X};", "valid": true },
+    { "id": "graphic-text-only", "class": "graphic", "body": "\\node at (0,0) {Title};", "valid": false },
+    { "id": "outer-frame-only", "class": "graphic", "body": "", "valid": false },
+    { "id": "transparent-path", "class": "graphic", "body": "\\fill[opacity=0] (0,0) rectangle (10,5);", "valid": false },
+    { "id": "clip-only", "class": "graphic", "body": "\\clip (0,0) rectangle (10,5);", "valid": false },
+    { "id": "transparent-glyph", "class": "glyph", "body": "\\node[opacity=0] at (0,0) {X};", "valid": false },
+    { "id": "actual-image", "class": "graphic", "body": "\\node[inner sep=0] at (5,2.5) {\\includegraphics[width=10mm,height=5mm]{neutral.png}};", "valid": true },
+    { "id": "outside-clip", "class": "graphic", "body": "\\clip (0,0) rectangle (1,1);\\fill (10,10) rectangle (20,20);", "valid": false },
+    { "id": "stock-text-mark", "class": "glyph", "body": "\\SemioVizChart{text-mark}", "chart": true, "valid": true },
+    { "id": "bound-text-mark", "class": "glyph", "body": "\\SemioVizTable{paint-text}{t,val}\\SemioVizRow{paint-text}{0,2}\\SemioVizRow{paint-text}{1,5}\\SemioVizRow{paint-text}{2,9}\\SemioVizChart{text-mark}[data=paint-text]", "chart": true, "valid": true, "expectedData": [[0,2],[1,5],[2,9]] },
+    { "id": "stock-sequence-logo", "class": "glyph", "body": "\\SemioVizChart{sequence-logo}[axes=false,grid=false]", "chart": true, "catalogueSlug": "sequence-logo", "valid": true },
+    { "id": "stock-motif-logo", "class": "glyph", "body": "\\SemioVizChart{motif-logo}[axes=false,grid=false]", "chart": true, "catalogueSlug": "motif-logo", "valid": true },
+    { "id": "degenerate-fill", "class": "graphic", "body": "\\fill (0,0)--(10,5)--cycle;", "valid": false },
+    { "id": "cancelled-evenodd-fill", "class": "graphic", "body": "\\fill[even odd rule] (0,0) rectangle (10,5) (0,0) rectangle (10,5);", "valid": false }
+  ]
+}

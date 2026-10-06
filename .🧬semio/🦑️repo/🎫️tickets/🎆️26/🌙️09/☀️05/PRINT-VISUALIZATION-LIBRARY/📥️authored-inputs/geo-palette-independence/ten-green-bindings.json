@@ -1,0 +1,792 @@
+{
+  "session": 28997,
+  "terminal": 0,
+  "targetDurationSeconds": 205,
+  "cases": 10,
+  "d3RampChecks": 100,
+  "nativePathLengths": 10,
+  "records": 110,
+  "recordsPerScenario": 11,
+  "scenarios": [
+    "default-en",
+    "palette-en",
+    "single-en",
+    "integration-en",
+    "both-en",
+    "default-de",
+    "palette-de",
+    "single-de",
+    "integration-de",
+    "both-de"
+  ],
+  "native": {
+    "file": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🖋️latex\\semio-viz-geo.sty",
+    "sha256": "735EE60A114BFC98CFFD173C20457EF048ADE4AD322903F68CDE96056EB9DE92",
+    "staged": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\geo-palette-ten-green\\geo-palette\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-geo.sty",
+    "stagedSha256": "735EE60A114BFC98CFFD173C20457EF048ADE4AD322903F68CDE96056EB9DE92"
+  },
+  "fixture": {
+    "file": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧪️tests\\🧬️native-chart-grammar\\🔣️.json",
+    "sha256": "D854B4E5581AA62F000BEA1C03D4AA5C7F91E72E73470652A4B400CEBC796E42"
+  },
+  "helper": {
+    "file": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧪️tests\\🧬️native-chart-grammar\\🟦️.ts",
+    "sha256": "9E493AF377230C8474D752F06123B50337BC72597024BC6E473A25135EF08C96"
+  },
+  "producerSchema": "855CDD6B98CBBA96308C3184A32AF39E011779546ABCA1F38B75DEA518DEDCE1",
+  "pdf": {
+    "file": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\geo-palette-ten-green\\geo-palette\\🧪️probe-out\\controls.pdf",
+    "sha256": "D52361D54E447CEB220AF6D253B2E8BD124D675AE97AC82CB5CCF5423B7A69B7"
+  },
+  "probe": {
+    "file": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\geo-palette-ten-green\\geo-palette\\🧪️probe-out\\controls.probe.jsonl",
+    "sha256": "CCF6429AC211C8B23E401EF8C83C147617FECB2C03F1669FE72AF1F10EDDDC52"
+  },
+  "log": {
+    "file": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\geo-palette-ten-green.log",
+    "sha256": "55BF73916E821AAE77235E550A86F29D53FA311A84E8174AA82DB50DD03226F4"
+  },
+  "artifacts": [
+    {
+      "file": "geo-palette/🧪️probe-input/controls.tex",
+      "sha256": "6532B40E1F91DF78DC6DBD857E1C457EE0CA87B9548955104DD9F54315DA613D"
+    },
+    {
+      "file": "geo-palette/🧪️probe-out/controls-blx.bib",
+      "sha256": "06A4960F3B98D1DEEFEAEB96E3F18B87B60B91093868983FADAA7BD5A16742B9"
+    },
+    {
+      "file": "geo-palette/🧪️probe-out/controls.aux",
+      "sha256": "AA730B1BE60F16B49BA3E70F660F2BBD43CB8A7F82892E05D39ECA69D974C849"
+    },
+    {
+      "file": "geo-palette/🧪️probe-out/controls.bbl",
+      "sha256": "CC57356938B88ABCFD097751ADAAAC5B0A76EA34EC2C212ACD323DB071D25B49"
+    },
+    {
+      "file": "geo-palette/🧪️probe-out/controls.blg",
+      "sha256": "C85D96B575721120679B5C56B156D66B5999506E7061CA570BFDB0D4A7F54A16"
+    },
+    {
+      "file": "geo-palette/🧪️probe-out/controls.log",
+      "sha256": "ED40E4F85ED46D9C17188487C6B2CFF871F1910B59085B48514C74077925442B"
+    },
+    {
+      "file": "geo-palette/🧪️probe-out/controls.pdf",
+      "sha256": "D52361D54E447CEB220AF6D253B2E8BD124D675AE97AC82CB5CCF5423B7A69B7"
+    },
+    {
+      "file": "geo-palette/🧪️probe-out/controls.probe.jsonl",
+      "sha256": "CCF6429AC211C8B23E401EF8C83C147617FECB2C03F1669FE72AF1F10EDDDC52"
+    },
+    {
+      "file": "geo-palette/🧪️probe-out/controls.run.xml",
+      "sha256": "B66ECD5CB56F586D2F021304BC340AB0705468FD1B8CEC76F197916755BAD0C7"
+    },
+    {
+      "file": "geo-palette/🧪️probe-out/controls.window-breaks",
+      "sha256": "7000C0935141C7E6EE8FB94FF31C8B593E20AC5CD0B1F9B161ECDF483217386C"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/modules/graph/_.tex",
+      "sha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-components.sty",
+      "sha256": "B604034E18005F13206430F59C32B05E89DC47DCE89559B847476DD0A9FA795C"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-core.sty",
+      "sha256": "654FD134F3B08D7964C405DF4627B2BA5F73953C1528FC69B55F3981BD99BCFF"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-fonts.sty",
+      "sha256": "33355D4403FBB0168B87763CE345E83EFE3F146F152C9316925CF7A73887174F"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-graph.sty",
+      "sha256": "F33D5F16EDAD2B842ED95FE37B6DD5CC5347DCC2C0AF025D51153812502F1A63"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-logo.sty",
+      "sha256": "80B767D33294A478CC4DFDBAFC998ACF085A826D6161191A5E79ED458AE122BF"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-phd.sty",
+      "sha256": "FD2EB7E7C52B3476FB0C13FC90FAD3E312BDDA2A82C674738B39CA5824FF55F3"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-table.sty",
+      "sha256": "B40AD60C74855589FA4A942A00943DABC9ABAEDAD124DEA545AA9AC43FFA4EEE"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-tokens.sty",
+      "sha256": "DC7308B3D41914374591A3F1988523DA89869AC9FD349A4058DE4A601673795E"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-tree.sty",
+      "sha256": "2905B9C2C71837989C128DB0EDCB3D2DCB9E0FC8284A19890356B04071CF9B4C"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-annotation.sty",
+      "sha256": "39F9C80D4D58268C299A3DDBB73F02E6A90F040CD2AD185469AE4166EB593C4D"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-catalog-labels.sty",
+      "sha256": "33ED2921DEA258AA88C198592D5174B4C1B0533334DCB5BA35133C8E43F45031"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-catalog.sty",
+      "sha256": "79BCF915705231A0E3068C162033BC46B8BF9EAE85E2389DFD71ABE203B821E7"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-ai-neural.sty",
+      "sha256": "752B16C95B5D15D27A15D93C099DBED5102BBEDE4D0E08126FC8907D7699D21B"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-annotation-driven.sty",
+      "sha256": "5AC32AC82F0CD522F0EE328B8D46A5DE0E91790F4837768DEA256955AA3820FB"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-architecture-spatial.sty",
+      "sha256": "6F13D92E4F07294D7F49EEFF0CAA4DA7AE34742685A6DD29B480BBE113F4717B"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-axis-specialized.sty",
+      "sha256": "550A1305958072C292E5E7FD55B9BF639EFF558CF678229CA000201B49A02A62"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-biology-ecology.sty",
+      "sha256": "0768135C1994880CCA0B038D837FC550B74B501CCB4DBB7F616D9FD2F71677E1"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-chemistry.sty",
+      "sha256": "8895FC58B98D6B75B1635555502AB49969180273457D46CFCAA858133D62C062"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-circular-genomic.sty",
+      "sha256": "BB325EA1D81A397D45BED06BCE6FAD24FE4ADC8C351C771CFD6AABF7CBC7F13B"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-circular-seat.sty",
+      "sha256": "8CEDEEFF80E065386F87E5A1EF08ED2212CC5BD161811B2A937A886C72E8EF05"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-comparison.sty",
+      "sha256": "248CF6296BC52B4424B4CF56146533CEB041EED50A481323A90DF3579112B74E"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-composite-coordinated.sty",
+      "sha256": "96F29F5D4F9D3FD5C6D99FC57C5481EDAE8A085B1F8B9BD9F3548B07AEF5AA5B"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-coordinate-system.sty",
+      "sha256": "B7EF6E16D343CECB67B5BB93630A3F1373A9E4D9285DBD90B22A608ADC55A7E2"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-cybersecurity.sty",
+      "sha256": "B31ADA9C8237FBCC271737C7DB532551F27249F8161B35D3F1B007A42F33B2BA"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-d3-equivalent.sty",
+      "sha256": "73032E4A21EF471A27B2DD381520DAA8C759F756E0E238ED045F956ACFC79708"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-database.sty",
+      "sha256": "4FEF35BF72E90915B9BF7BCED534DE3033255B309770D8CDBC6E92C7DCC0F4CF"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-diagrammatic-grids.sty",
+      "sha256": "F29CA6DC02FA86BB4C12A1D7D5E92752E9A5E7D38D5A199C4C16FA8A68C64B5C"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-distribution.sty",
+      "sha256": "F2142BEFAAA1E6F195E48748EAD760DE284715981D9DD8874624B27610BE16E8"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-earth-climate.sty",
+      "sha256": "5CC1EBAB2F12B72F195B3528292393B8F7062D27EF199A38C5BF9A7FA170CB17"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-education-conceptual.sty",
+      "sha256": "86E488877117E30885748B7A3F448379B3B42FB92930D6FDD01499BD4BAC6874"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-election-political.sty",
+      "sha256": "C3A24AF6DC3B02089D51EECB9B0C7D2332A9402D19849DC36872D3305E071DEC"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-electrical-electronics.sty",
+      "sha256": "69ABE9D5A1E90FE895E964B3370324060F33F5EC896058FF1FFB112278802397"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-engineering.sty",
+      "sha256": "71E7D1013717073F9E3CC4541D55C8EEA775A232CDB11C050C25ED0006C217E4"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-experimental-design.sty",
+      "sha256": "588DA34FB493BE78B656218A45358CBDBEA3C94FA243EB5437AA65A14E456381"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-faceting-repeated.sty",
+      "sha256": "37953BE80785C31418679AC200E7BD8D16B612A022D501CBE8A56006E49E3F32"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-financial-economic.sty",
+      "sha256": "68C7AD000259C9DDDC8689A796612FF5BD81C7EAC71893E11139C6DF1B2A5777"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-flow.sty",
+      "sha256": "1F79575C4566A226D3DE96A0998EDDF36626B8424C38E81AD93013DE66ABBB13"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-formal-language.sty",
+      "sha256": "E6E3CB8102E8896E5A975FC66BF683505FEB9D95527889C81BB9E155C4D084A8"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-funnel-conversion.sty",
+      "sha256": "97E41E7813432914F1004B0180CAC1F86A12816C65EAE1D793855FE9E39DE721"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-geometry.sty",
+      "sha256": "D558B7A243DC2611DBF72E5AEE7414C4563C88D20A44888F39E8A0DB1642F863"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-geospatial-cartographic.sty",
+      "sha256": "45FD48635EBCE658DC192B78BCE0FE3ABEA75836A42AE5494446E7AD728C2800"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-graph-network.sty",
+      "sha256": "9CF8DFCC43B90CAC17BBCC594D31BE3B3E60D645460AE34CC023E1C82D0BC963"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-graphical-notation.sty",
+      "sha256": "2B81DD540DE4CB81ECFDFD7E8178095AF1CD47C0700E88CAAEA6A5886C082ABD"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-graphical-schedules.sty",
+      "sha256": "F4E9D9856D3AB1854806B75A1F991EF6B0770BDBF7D38338ACF902DB7C599272"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-hierarchical.sty",
+      "sha256": "0EC6933AD569837B9CEB87FB463EC911E7BB6B70A6AC3128C826F3C54859CF85"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-infographic-style.sty",
+      "sha256": "46F9700709F7A4A17C9ADC779A6A2AC62E4C59A5C6DE66325D0B05709F5070C3"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-kpi-dashboard.sty",
+      "sha256": "F5D16F34D72DEFF782DFB48F947568213B7C1EEFECBF5BE67D0EC985E5F8F2B4"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-layout-algorithms.sty",
+      "sha256": "E64094E3AB845B439B39B346F0B1785F8E9E46C28E276EDD14CC8E112E6F20CE"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-layout-spatial.sty",
+      "sha256": "8781F32827509A0F82842D0FB41ADFCB73A971CF92BA192A3167693A4B1FF258"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-logistics-transportation.sty",
+      "sha256": "3076AF43A957E19F4E7C281BFA6F7A6623F124CA4CB99DDAF0B5ABAE88C8B3A0"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-mathematical-abstract.sty",
+      "sha256": "907188A22F65283AA2732FC8D87224C179B78D9F9D0E3E431BCB6C6EF6280553"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-mathematical-function.sty",
+      "sha256": "F085463FB5F5A117F494E54405313AE4DB1A15D4E927C561AFE14D97A3C739D6"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-matrix-heatmap.sty",
+      "sha256": "11AC0EA57EA38FBEC20DAA1F89325BC20D951CF6A8508125251BA0CA6E0235DC"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-medical-biomedical.sty",
+      "sha256": "0FEB5165AAA35849C5D29272ABEE21618D34C56DC131F47FEA94A3ABD51F7EE8"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-meta-composition.sty",
+      "sha256": "33C4834599A50324F1CD71C76C2F1940B51A43BE1ED2C4FA3C482CA499DC6BFC"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-model-evaluation.sty",
+      "sha256": "855EE3E4A0B8E8923588DC7FD4F934ADE3622E6066007FF62B8264E323C54D35"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-multivariate.sty",
+      "sha256": "5DAFB617DE68D6D3E61916F33AE3EE300E4D52C49B406CE873908BCB3DD6254A"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-music.sty",
+      "sha256": "FC74EB29741AC90B40A237589CC17BCE66CA3BFEC0ADAD8B0AC0D884F7B2B540"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-network-system.sty",
+      "sha256": "FFF980BAF525ABE752A200FE8C1AF704F6913A39654E641D8FAABACDF34DF42E"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-optimization-operations.sty",
+      "sha256": "FA21308CDA81F5002915763A139ACC399D816C15FF27AC2EFC68E371F75714C8"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-part-whole.sty",
+      "sha256": "3FC2F5EDDE350068FE7F0E5874F8A65E86F7F8742746F0B05963C921E9775817"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-physics.sty",
+      "sha256": "60E42829DC54A4B5FE0F24CC01D4582C88D55D96A8AC577949801F54E0B18C63"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-polar-radial.sty",
+      "sha256": "03536310082F10BDA5C9403F958E1CD23846BE54856476866DA69BEB092D3516"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-probability.sty",
+      "sha256": "D3466612B9558E415672A8627DC8EAC71673F0442D3DFC951871FCEAD4159E5B"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-process-workflow.sty",
+      "sha256": "FEC43BCEBF5F7C18A9B58F227CC65F99EA16FC9CC2526B2B23E36A1555438F79"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-project-management.sty",
+      "sha256": "BF8F3F3749E9E6F04F4D29870E476EA2A0954ADEED9978622BE476224C6EBF0F"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-provenance-lineage.sty",
+      "sha256": "59D4956A6F455339B83BB32C80CC5A89781CE0CA28A8170AC61345BF5E05863B"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-recommended-top.sty",
+      "sha256": "68F2E2722E27079B912FEF2C5289C99B01541A65C6DA5BB8BB18FBBB0E6582A8"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-relationship-conceptual.sty",
+      "sha256": "32DE645EA4DB412A6BC33D8EF54EA71CEDEEFB5C8D0D256A2C0130032A895D9A"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-relationship-correlation.sty",
+      "sha256": "E98E1484E16C6CDA0515AE871C8B5EECE8A93FC48C79B1F706F688E1AC41CD4E"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-scalar-field.sty",
+      "sha256": "515E539D5EBB6833A80FD21AB4C89ACAEAF477F061C5B1E2C88A7F61E82240C7"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-scientific-publication.sty",
+      "sha256": "C698209E2271EE334D09EC8FCB19C8479972A8AF4CD16CD10CF867CFE6DF43CC"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-set-overlap.sty",
+      "sha256": "C7A6BD88B734676FBB88C59E4549BA6C715DBA84C1200DF7A42E22F0F6BCD563"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-signal-processing.sty",
+      "sha256": "AF9E538C57E860842E6C3D97F4118267486366A932B0978494B051CCFD075603"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-software-performance.sty",
+      "sha256": "A7C18117EC4EC463BDE1975FC04F61C01745697B6B8C16CF9CA6F1ABC213E09D"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-specialized-analytical.sty",
+      "sha256": "309D2E290587212B6546908E206CAAC23D0DC0E40CB6B28C52ACF0FAF35FB0C0"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-sports.sty",
+      "sha256": "E4BEE5D0FF938ED57B8C4B1458BDD439FFF81CD64A12F75535C902C240DA26C0"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-static-equivalents.sty",
+      "sha256": "6F05DC02A211C67FD5A10853B0DDF6F3C0704E9876B5D706D028F2F5F4D141E7"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-statistical-inference.sty",
+      "sha256": "14625B0725D67D8B459EEAAD95848D7E701424129226BCEC9D05862F68D4F851"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-storytelling-narrative.sty",
+      "sha256": "4B7B6FDD17FAF269865FA0360DAC6A493C5162985938FC87C9E6062D4F81881A"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-survey-polling.sty",
+      "sha256": "E112A4A2BA8A886708CB726963B7CE585A05515B526F8DBB3ECA64FFAF5780F1"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-table-oriented.sty",
+      "sha256": "F2934594BDCF700CD9D0F97DCC3C348C606D593698A0009D33335208E7741605"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-text-language.sty",
+      "sha256": "7D4B69DFB45DBA4AEDBD85E8D6F6185CD0B5981B9ED57A46D23AD6D904DE971B"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-three-dimensional.sty",
+      "sha256": "A158DBE62728E5120A1B12E4B8BCEF88A9B7920046B54F37ABBE417FE84A09D5"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-time-series.sty",
+      "sha256": "8F5B551DC601A577B32ECC9CC09C50F53E736F1C63853A05E52BA03D593137FB"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-ultimate-api.sty",
+      "sha256": "4A579B556D6B29C60B63BF50F01EE13DAFA8ADDBE00D9747C19A84FE658DA797"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-uml-software.sty",
+      "sha256": "E01E0CF24F69ED30DFBFB40727C70D571D3F513CDE69764F079AEB53726B7468"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-unusual-niche.sty",
+      "sha256": "50D76ADCA27F5EC37920775BBB480CD139E6399C53FFA76BBF8BF0A181450589"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-vector-field.sty",
+      "sha256": "2C4D802B02133F5A976DE43908374627C5A3EDBDC27814C492D17B40AE9170C2"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-version-control.sty",
+      "sha256": "0337C2ACBFB23C39FFC3BAF87D0EA250CC331819ABF7B05502D8EF59C0BE14C3"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-chart-visual-encodings.sty",
+      "sha256": "0A62CCD96AEA710FD1BFBC760E7F4D40A0DD58D22086CA7238D94B5E144F7190"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-charts-area.sty",
+      "sha256": "4945C6618A591E5A6E7D0969CCDF09268B5B6D1BA6193E09AC50EF7678121315"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-charts-bar.sty",
+      "sha256": "77C2CE15B70B2C72A962B508B7817E62ECEC3F191C3CBD70C062C39655C0222C"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-charts-dashboard.sty",
+      "sha256": "8F5B99F43ECB6EF312844466B83AD54917840D4B38E7FA8970AA490E391476E0"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-charts-distribution.sty",
+      "sha256": "A588D5821EE0F9C21EE3AC2C4459EBECB811255F3440C65DE1E5F85FD246DCB9"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-charts-financial.sty",
+      "sha256": "2DDA8FC1E0715CFDCF656417A52256FF381F2489CC60D58626375992BB0FD1AB"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-charts-funnel.sty",
+      "sha256": "90383F1167415A98CAEB06F9173BE0D300591AFA576AA62FFA2BADC296EA61A7"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-charts-line.sty",
+      "sha256": "DF0C798F99428DA7FB0896CE36EA39157E0D047B3DDD93BE872BAF6C7FA7CBD7"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-charts-polar.sty",
+      "sha256": "638387DD41DBE5ED3061FF5F17518D47BC9837B4A49CB803E4AECB40EAE60C65"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-charts-scatter.sty",
+      "sha256": "D93C27F2FE2C6023DFC91C82F588AD85655288AFE745E2EE8B0589D3558C8EE0"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-charts-statistical.sty",
+      "sha256": "F64893AF051C4C93633142C90AB6858AAA5CF593F71A0BFA38297B43922F30FC"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-charts-timeline.sty",
+      "sha256": "08D1BC5989F5B1D382200A4FD9A77B24FBF5EC5D73CA1DF3333C9DA3DCEAA3CA"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-charts.sty",
+      "sha256": "EA9FFFFD88763D00039F024C729BDD101E5CEA893FFDCEE48163E36D3FAC4DD9"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-composition.sty",
+      "sha256": "29CDC68523EF187F40D3F0D2FE561C9BED08120F88371E14451BBFD45D0584BE"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-coordinate.sty",
+      "sha256": "0DD15CDB805EF48189498DFE8803828BFFC670DE3048B9CC006FB704259F223E"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-data.sty",
+      "sha256": "6A84E7A2A65FDFA5977882E851AB9C1DDE7BC7545FC90311A5AE75F9FF367923"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-diagram-architecture.sty",
+      "sha256": "7D4F4191A32852BCEB324795206289E0932B3E345D5E25EB999A50D51DCB2BD9"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-diagram-concept.sty",
+      "sha256": "D5BD013026A2D9B53EACD4C013D7BFCBF1A2701D31431BF167E1B83E2A126F57"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-diagram-flowchart.sty",
+      "sha256": "E2B5DE23CCBF47B44D505D8E275197C1AA5B505B94E0A6E93711E1D0563E013D"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-diagram-process.sty",
+      "sha256": "B4E830D9A6AE944A7326A1088B1C78D15ED757F1651549483DED56DB06594CB7"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-diagram-uml.sty",
+      "sha256": "829FC63B9248379936862F038E739100D3D04E18D3F18D27A368C085F02DB103"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-domain.sty",
+      "sha256": "268455FE5D3CB89BC49150B7859F055229397BF51FAE3067E017566330BFF6F2"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-facet.sty",
+      "sha256": "D5FF45272EED07B444775153C07991D297762093545453A7DB6E9CCD9A31304B"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-family.sty",
+      "sha256": "D7C8BAB330D4BE95008D9BFEF75E01F2D3C1CD38AA9A1536A24D465272F01F53"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-flow-alluvial.sty",
+      "sha256": "FD26AEBF9AE306FFD64B574542168C9949801E5F0CDC1F59B38AD8D7532090F0"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-flow-parallelsets.sty",
+      "sha256": "06F25750E0BCDBF4369040F9F1CDB0DFD8916DD30DC62FB024C9A93FFFC656AA"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-flow-sankey.sty",
+      "sha256": "B734B8AA5DB1165687AECAA38A7ACC236B39A579106CD7C47DE2437F9AB7D32F"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-flow.sty",
+      "sha256": "0E79C84406EB9EC79E9D82628A7EBBA9F63B9351B64A8C2E1A3F96AFD32411F9"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-format.sty",
+      "sha256": "A9F078195E8C051382044C79D2E2489AC5CCD49D2FE8A4EC90A5D1F92B5892E6"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-geo-choropleth.sty",
+      "sha256": "6D557467CF71FAD08B09D9E7ADA2CE9DEDA3C75D54E444F7C31368D3D965BA56"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-geo-contours.sty",
+      "sha256": "ED810FF0CF1A7CC3ADF2E0CDDCC8FBB479774C53DD596FA8DACB3F3C39802467"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-geo-map.sty",
+      "sha256": "01BC451D6FF129FD92F89F3CC18F8E239D917CDC84210B249CF90F5DE79748BB"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-geo-projection.sty",
+      "sha256": "A36860B72454C1CEC15AD5BE5E4919968710F65784A9883104DFA55D64FE0BF0"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-geo-routes.sty",
+      "sha256": "D02E1EBAEC78E7960CE03BFDB6D18CB662E739B0D8EC0E807FD503F5115D6E86"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-geo-symbols.sty",
+      "sha256": "72E4EDFE02E5C85C0087C862231E156C84C9ABC2B46B8869BCF2D86A914CE0EF"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-geo.sty",
+      "sha256": "735EE60A114BFC98CFFD173C20457EF048ADE4AD322903F68CDE96056EB9DE92"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-guide.sty",
+      "sha256": "623D4F9EE92C09983F784E484978D01776EC4FF8CF4C4A55712FBE3C93A053ED"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-hierarchy-dendrogram.sty",
+      "sha256": "97AC79953B9D2EB1B70CCBB483C92266E338214B236FBA20994EC7AB0A8FF67E"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-hierarchy-pack.sty",
+      "sha256": "E0B1D7C81159572BA2EB11C14BAC96792B5F7F4052D2B1BD8760D6C7B2930AF1"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-hierarchy-packing.sty",
+      "sha256": "6F67BC3E106174AD8051B2A80DE305D2788C7258B7EAED2ED787505C0CE8EB54"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-hierarchy-partition.sty",
+      "sha256": "BA1EC24EDDFE51C70AA47FE0D5597C87C3D47A342480904D425D55476C5ED5C7"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-hierarchy-tiling.sty",
+      "sha256": "B0532C5779F3245601061EAF0B0ECC63E7224B7C296E652A8D7789893777736F"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-hierarchy-tree.sty",
+      "sha256": "BE9451F30F8942822B3FF4773CA387AF92546C3C949934AA2CD064FB8C32CECA"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-hierarchy-treemap.sty",
+      "sha256": "88E428B6D798AFBE04675A7955400B0EDB2091C0FAC8F19CACAFD109174B4656"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-hierarchy.sty",
+      "sha256": "D9A893C219295791BB657810ADD0D367EFAA419FD21F7D3E1AA81352DCB43BAD"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-infographic.sty",
+      "sha256": "AE1C0D5B4C592BE5FB8627B2B5556406AF531E1BCE315A98F2755E8C4EDF83F8"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-interactionstate.sty",
+      "sha256": "4AD31C86ED4101E31745679B716FEEC1F3EB98C95F25282824B9044BD51BFB87"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-label.sty",
+      "sha256": "7E2C72C66B927C5388CE45F7B517E686EEF531085FDF2A54B69ED026F44E8F63"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-layout.sty",
+      "sha256": "859BFBE993414A5024C1F19518BD15D81684D7E46354924AE69CF756FEE0197A"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-mark.sty",
+      "sha256": "5736881919461E54311E18F4F68B29DA713C2AA66E16888CEAE562B241E7112B"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-matrix-correlation.sty",
+      "sha256": "035E8B6E458C7C24EA57AE9178B54464FD629372DDEF2EF0A11B4DE9F8870F86"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-matrix-heatmap.sty",
+      "sha256": "9C917700563E570F5FE83212630E395910FB7A1DD49ADBE76B2E59BFAEE1D397"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-network-arc.sty",
+      "sha256": "67E16AD2F93F6B009B114C7C61C1445CAF5A22487E2EEA81306ADA688CCB348E"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-network-bundling.sty",
+      "sha256": "E9055A5656E105EB26B8C648D0BF169D7422680723AE4E1104CE61108118967D"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-network-chord.sty",
+      "sha256": "D379FF729DCD0F9392B2AD70A320233854332D5B499154C79E871F0E08DB4137"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-network-graph.sty",
+      "sha256": "E7E70BD06B1FA0C720423C58EFEE3537867394BF9FDC2B28545246C46016F4E7"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-network-matrix.sty",
+      "sha256": "E907ECA8A0E9D065B59BB94DC145E49B9DE5583FD28C8F364A288825F09D11F0"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-network.sty",
+      "sha256": "75B03BE67391F39304F5AB1DEE06013B9B6C23D49F9ECECC5DA11B0E8A82697A"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-plot.sty",
+      "sha256": "34B46A9D6272E2D6471F82C15F6C713834D828E4B1A0576B2C33B1E9E90F08D1"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-probe.sty",
+      "sha256": "A1B444BBB1433A629E0DB51ED05914EDC4D568275373E14D4150C06309B7CA3B"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-scale.sty",
+      "sha256": "6D7A3A1573129790321A00FE0B1CF7B1E16127FB8DF2F063AB2A0E764B51068A"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-scientific-3d.sty",
+      "sha256": "745BC6317244C544518AC2C2BF758B785A4655934B44D8279E8C390817CF3866"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-scientific-biology.sty",
+      "sha256": "DF3CB79F21EC2C097492DF3851DCC72384F8F33703B7880EBE75FE96E9F5916D"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-scientific-chemistry.sty",
+      "sha256": "2DD740454E7640DA268FA5F7DB9027DDFEA0C2F93065EFAEE6EA2552F8401442"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-scientific-engineering.sty",
+      "sha256": "05225652A914073F07F80383960AC8475D7D02F1031A436799CB37A107A447D2"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-scientific-field.sty",
+      "sha256": "3087D2FF69C4CB68DE6AD32B8B8AE8E7F8D5E23C13A9B503E23FD87F33FEB62F"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-scientific-geometry.sty",
+      "sha256": "A8A7210D6F0159D1353CE169F482F389AEFC4D6487E48364DAAE82B44058601A"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-scientific-mathematics.sty",
+      "sha256": "0D68F6393B8C80FA7DCE37C7846CBEB0C593394DD864C1B2124A10BF639EEB01"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-scientific-physics.sty",
+      "sha256": "52DFB58BEB621CD36EACECFB727CB9D41E9DC2C7509709FCD86EB986A59CB994"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-scientific-signal.sty",
+      "sha256": "3F6D3B9B3433BEC7EA2137959767F5363547DDB350D1E00158DB979EA8DFE892"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-scientific-surface.sty",
+      "sha256": "C646E80C3FB83C8AE7BD578134F95B871F4353BE6F549D9E1002AB58A983852A"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-shape.sty",
+      "sha256": "19920A1A055AAC012213AFBD54444346957D329D6FCA6892B7688015B3AD6918"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-showcase.sty",
+      "sha256": "1BB88854093FB4957BFF161CC172AE6F42B1BB13854199EF4532C5BD9ACD3532"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-spatial.sty",
+      "sha256": "9F15CB7679AD20D6EDA26A79D334A38391B361F8E9B9CB9D21716900936CFD1E"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-table.sty",
+      "sha256": "A7AD5BB51125962D08424748D55DB3008D8825D18E3945AA4353D1D03D9FD342"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-text.sty",
+      "sha256": "264764603D704381BA40C8BE5ECF14767E85108A764F5E4D6DDD461551599939"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-theme.sty",
+      "sha256": "9414969ACB929ACD2F597FB984BD8C77FC30020F8339F65BE948DC2D17D6DD30"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz-transform.sty",
+      "sha256": "B810EE303DA1A44DC8C8939009FA04E24E106DFC4CA6DDFD5FB449BD482650D9"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-viz.sty",
+      "sha256": "F2277314E69747B06F8FECE032CA71AF7CD1A3C0765BDDE6A9A52489F80C852C"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio-window.sty",
+      "sha256": "9027901E660FEDBD311E801F0E970A08954146B5EA6F2FBF3AF096D408BFDA8D"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/semio.cls",
+      "sha256": "DC34C8DCDC3F40AAE3C3F1EFCC2FF5BD950F8C236DA20677DED6B5E048E53D92"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/texput.log",
+      "sha256": "AC726A100BDF9B7AA8907E50BFC7288AC420D92235B4C516B6DDACF22651E091"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/.semio-library/semio-latex/zukunftbau.cls",
+      "sha256": "BD197432A9A776F9CF2625C55F8E2A8C9913057100EB044D0161B75E44AC8A9D"
+    },
+    {
+      "file": "geo-palette/🧪️probe-source/controls.tex",
+      "sha256": "6532B40E1F91DF78DC6DBD857E1C457EE0CA87B9548955104DD9F54315DA613D"
+    }
+  ],
+  "scope": "One compiled light paper, explicit EN/de valid count/default/integration controls. Invalid primitive descriptor admission and comprehensive native/source closure remain separate pending gates."
+}

@@ -30,6 +30,7 @@
       "{workspaceRoot}/🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/⏱️trace/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/⏱️trace/🧮️memory/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/⏳️async/🪃️continuation/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/⏳️async/🎟️lease-pool/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/⏳️async/🔁️jittered-backoff/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/⏳️async/🔔️event-wait/🟦️.ts",

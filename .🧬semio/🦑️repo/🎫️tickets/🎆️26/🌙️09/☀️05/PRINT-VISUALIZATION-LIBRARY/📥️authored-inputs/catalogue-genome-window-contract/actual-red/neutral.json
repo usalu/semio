@@ -1,0 +1,274 @@
+{
+  "schema": {
+    "type": "object",
+    "required": [
+      "canvas",
+      "span",
+      "laneHeight",
+      "features",
+      "coverage",
+      "modes",
+      "windows",
+      "extraWindows",
+      "toleranceMm"
+    ],
+    "additionalProperties": false,
+    "properties": {
+      "canvas": {
+        "type": "array",
+        "items": {
+          "type": "number"
+        },
+        "minItems": 2,
+        "maxItems": 2
+      },
+      "span": {
+        "type": "array",
+        "items": {
+          "type": "number"
+        },
+        "minItems": 2,
+        "maxItems": 2
+      },
+      "laneHeight": {
+        "type": "number",
+        "exclusiveMinimum": 0
+      },
+      "coverage": {
+        "type": "array",
+        "items": {
+          "type": "number",
+          "minimum": 0
+        },
+        "minItems": 2
+      },
+      "features": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": [
+            "start",
+            "end",
+            "strand",
+            "kind",
+            "label"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "start": {
+              "type": "number"
+            },
+            "end": {
+              "type": "number"
+            },
+            "strand": {
+              "enum": [
+                "+",
+                "-"
+              ]
+            },
+            "kind": {
+              "enum": [
+                "exon",
+                "intron",
+                "domain",
+                "variant"
+              ]
+            },
+            "label": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "modes": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": [
+            "kind",
+            "mode"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "type": "string"
+            },
+            "mode": {
+              "enum": [
+                "gene-structure",
+                "domain",
+                "variant",
+                "pileup",
+                "transcript",
+                "synteny",
+                "coverage",
+                "multi"
+              ]
+            }
+          }
+        }
+      },
+      "windows": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": [
+            "id",
+            "domain",
+            "range"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "domain": {
+              "type": "string"
+            },
+            "range": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "extraWindows": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": [
+            "id",
+            "domain",
+            "range"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "domain": {
+              "type": "string"
+            },
+            "range": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "toleranceMm": {
+        "type": "number",
+        "exclusiveMinimum": 0
+      }
+    }
+  },
+  "vectors": {
+    "canvas": [
+      80,
+      40
+    ],
+    "span": [
+      0,
+      1000
+    ],
+    "laneHeight": 6,
+    "features": [
+      {
+        "start": 100,
+        "end": 220,
+        "strand": "+",
+        "kind": "exon",
+        "label": "e1"
+      },
+      {
+        "start": 220,
+        "end": 430,
+        "strand": "+",
+        "kind": "intron",
+        "label": ""
+      },
+      {
+        "start": 430,
+        "end": 560,
+        "strand": "+",
+        "kind": "domain",
+        "label": "d1"
+      },
+      {
+        "start": 300,
+        "end": 305,
+        "strand": "+",
+        "kind": "variant",
+        "label": "v1"
+      }
+    ],
+    "coverage": [
+      2,
+      8,
+      4
+    ],
+    "modes": [
+      {
+        "kind": "exon-intron-diagram",
+        "mode": "gene-structure"
+      },
+      {
+        "kind": "protein-domain-diagram",
+        "mode": "domain"
+      },
+      {
+        "kind": "variant-track",
+        "mode": "variant"
+      },
+      {
+        "kind": "read-pileup",
+        "mode": "pileup"
+      },
+      {
+        "kind": "transcript-diagram",
+        "mode": "transcript"
+      },
+      {
+        "kind": "synteny-plot",
+        "mode": "synteny"
+      },
+      {
+        "kind": "coverage-track",
+        "mode": "coverage"
+      },
+      {
+        "kind": "genome-track",
+        "mode": "multi"
+      }
+    ],
+    "windows": [
+      {
+        "id": "omitted",
+        "domain": "",
+        "range": ""
+      },
+      {
+        "id": "both",
+        "domain": "0,2000",
+        "range": "0,2"
+      }
+    ],
+    "extraWindows": [
+      {
+        "id": "domain-only",
+        "domain": "0,2000",
+        "range": ""
+      },
+      {
+        "id": "range-only",
+        "domain": "",
+        "range": "0,2"
+      },
+      {
+        "id": "reversed",
+        "domain": "2000,0",
+        "range": "2,0"
+      }
+    ],
+    "toleranceMm": 0.035
+  }
+}

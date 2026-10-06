@@ -19,8 +19,6 @@ pub(crate) const EXTENDED_STARTUPINFO_PRESENT: u32 = 0x0008_0000;
 pub(crate) const HANDLE_FLAG_INHERIT: u32 = 0x0000_0001;
 pub(crate) const INVALID_HANDLE_VALUE: HANDLE = -1isize as HANDLE;
 pub(crate) const PROC_THREAD_ATTRIBUTE_PSEUDOCONSOLE: usize = 0x0002_0016;
-pub(crate) const STD_INPUT_HANDLE: u32 = -10i32 as u32;
-pub(crate) const STD_OUTPUT_HANDLE: u32 = -11i32 as u32;
 pub(crate) const STILL_ACTIVE: i32 = 259;
 pub(crate) const WAIT_OBJECT_0: u32 = 0;
 pub(crate) const WAIT_TIMEOUT: u32 = 258;
@@ -147,6 +145,11 @@ pub(crate) struct OVERLAPPED_0_0 {
 
 #[link(name = "kernel32")]
 extern "system" {
+    pub(crate) fn CreateJobObjectW(attributes: *const SECURITY_ATTRIBUTES, name: *const u16) -> HANDLE;
+    pub(crate) fn SetInformationJobObject(job: HANDLE, class: i32, information: *const c_void, length: u32) -> i32;
+    pub(crate) fn AssignProcessToJobObject(job: HANDLE, process: HANDLE) -> i32;
+    pub(crate) fn TerminateJobObject(job: HANDLE, exit_code: u32) -> i32;
+    pub(crate) fn ResumeThread(thread: HANDLE) -> u32;
     pub(crate) fn CloseHandle(handle: HANDLE) -> i32;
     pub(crate) fn SetHandleInformation(handle: HANDLE, mask: u32, flags: u32) -> i32;
     pub(crate) fn ReadFile(handle: HANDLE, buffer: *mut u8, bytes_to_read: u32, bytes_read: *mut u32, overlapped: *mut OVERLAPPED) -> i32;
@@ -154,8 +157,11 @@ extern "system" {
     pub(crate) fn ClosePseudoConsole(hpcon: HPCON);
     pub(crate) fn CreatePseudoConsole(size: COORD, input: HANDLE, output: HANDLE, flags: u32, hpcon: *mut HPCON) -> i32;
     pub(crate) fn GetConsoleMode(console: HANDLE, mode: *mut u32) -> i32;
+    pub(crate) fn GetConsoleCP() -> u32;
+    pub(crate) fn GetConsoleOutputCP() -> u32;
+    pub(crate) fn SetConsoleCP(code_page: u32) -> i32;
+    pub(crate) fn SetConsoleOutputCP(code_page: u32) -> i32;
     pub(crate) fn GetConsoleScreenBufferInfo(console: HANDLE, info: *mut CONSOLE_SCREEN_BUFFER_INFO) -> i32;
-    pub(crate) fn GetStdHandle(std_handle: u32) -> HANDLE;
     pub(crate) fn ResizePseudoConsole(hpcon: HPCON, size: COORD) -> i32;
     pub(crate) fn SetConsoleMode(console: HANDLE, mode: u32) -> i32;
     pub(crate) fn CreatePipe(read_pipe: *mut HANDLE, write_pipe: *mut HANDLE, attributes: *const SECURITY_ATTRIBUTES, size: u32) -> i32;
@@ -179,6 +185,32 @@ extern "system" {
     pub(crate) fn TerminateProcess(process: HANDLE, exit_code: u32) -> i32;
     pub(crate) fn UpdateProcThreadAttribute(attribute_list: *mut c_void, flags: u32, attribute: usize, value: *const c_void, size: usize, previous_value: *mut c_void, return_size: *const usize) -> i32;
     pub(crate) fn WaitForSingleObject(handle: HANDLE, milliseconds: u32) -> u32;
+}
+
+/// 🌳 The native job limit layout; closing the last job handle terminates its process tree.
+#[repr(C)]
+#[derive(Default)]
+pub(crate) struct JOBOBJECT_BASIC_LIMIT_INFORMATION {
+    pub(crate) PerProcessUserTimeLimit: i64,
+    pub(crate) PerJobUserTimeLimit: i64,
+    pub(crate) LimitFlags: u32,
+    pub(crate) MinimumWorkingSetSize: usize,
+    pub(crate) MaximumWorkingSetSize: usize,
+    pub(crate) ActiveProcessLimit: u32,
+    pub(crate) Affinity: usize,
+    pub(crate) PriorityClass: u32,
+    pub(crate) SchedulingClass: u32,
+}
+
+#[repr(C)]
+#[derive(Default)]
+pub(crate) struct JOBOBJECT_EXTENDED_LIMIT_INFORMATION {
+    pub(crate) BasicLimitInformation: JOBOBJECT_BASIC_LIMIT_INFORMATION,
+    pub(crate) IoInfo: [u64; 6],
+    pub(crate) ProcessMemoryLimit: usize,
+    pub(crate) JobMemoryLimit: usize,
+    pub(crate) PeakProcessMemoryUsed: usize,
+    pub(crate) PeakJobMemoryUsed: usize,
 }
 
 /// 🔒 An owning Win32 handle that closes exactly once and rejects sentinel values.
@@ -219,8 +251,9 @@ impl OwnedPseudoConsole {
 
 impl Drop for OwnedPseudoConsole {
     fn drop(&mut self) {
-        unsafe {
-            ClosePseudoConsole(self.0);
+        let hpcon = self.0;
+        if std::thread::Builder::new().name("ConPTY cleanup".into()).stack_size(64 * 1024).spawn(move || unsafe { ClosePseudoConsole(hpcon) }).is_err() {
+            unsafe { ClosePseudoConsole(hpcon); }
         }
     }
 }
@@ -252,7 +285,7 @@ impl ProcThreadAttributeList {
     }
 
     pub(crate) unsafe fn set_pseudo_console(&mut self, hpcon: HPCON) -> std::io::Result<()> {
-        if unsafe { UpdateProcThreadAttribute(self.as_mut_ptr(), 0, PROC_THREAD_ATTRIBUTE_PSEUDOCONSOLE, (&hpcon as *const HPCON).cast(), size_of::<HPCON>(), core::ptr::null_mut(), core::ptr::null()) } == 0 {
+        if unsafe { UpdateProcThreadAttribute(self.as_mut_ptr(), 0, PROC_THREAD_ATTRIBUTE_PSEUDOCONSOLE, hpcon as *const c_void, size_of::<HPCON>(), core::ptr::null_mut(), core::ptr::null()) } == 0 {
             return Err(std::io::Error::last_os_error());
         }
         Ok(())

@@ -1,0 +1,30 @@
+[
+  {
+    "sha256": "070B13D03B8FE6B0B69F57759C3119CA1CF1B12CF37AB370F9A31C46FED1813A",
+    "missingCharacterCount": 0,
+    "trackedNotoFilePresent": true,
+    "path": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/critical-cjk-canonical-green-2026-10-06/critical-path-controls/light/🧪️probe-out/light.log",
+    "trackedAntaFilePresent": true
+  },
+  {
+    "sha256": "3885DC75BB1C4CC6AB73886B46884FDC226E47A0955AF01887354089CF96FA48",
+    "missingCharacterCount": 0,
+    "trackedNotoFilePresent": true,
+    "path": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/critical-cjk-canonical-green-2026-10-06/critical-path-controls/dark/🧪️probe-out/dark.log",
+    "trackedAntaFilePresent": true
+  },
+  {
+    "sha256": "2BD3E50F57426A77CBAF6547051879D8986B8F484180014709E9847E27A6F557",
+    "missingCharacterCount": 0,
+    "trackedNotoFilePresent": true,
+    "path": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/forest-ordinal-current-green-2026-10-06/domain-reference-controls/light/🧪️probe-out/light.log",
+    "trackedAntaFilePresent": true
+  },
+  {
+    "sha256": "7C3C8D9B0BDB16118C711DAC4F4ACCF8BB199E0253022106808A87A32763BC17",
+    "missingCharacterCount": 0,
+    "trackedNotoFilePresent": true,
+    "path": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/forest-ordinal-current-green-2026-10-06/domain-reference-controls/dark/🧪️probe-out/dark.log",
+    "trackedAntaFilePresent": true
+  }
+]

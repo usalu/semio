@@ -1,0 +1,27 @@
+[
+  {
+    "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧪️tests\\🧬️native-chart-grammar\\🟦️.ts",
+    "bytes": 361460,
+    "sha256": "772F2A1FB4D1C67009C9D4B777DE5270740DFE56B40892E69538FACD70868B55"
+  },
+  {
+    "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧪️tests\\🧬️native-chart-grammar\\🔣️.json",
+    "bytes": 505747,
+    "sha256": "91B03EB38856D8F8D56842236EA24B46D3B81354C37165411859789AD2CAD598"
+  },
+  {
+    "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🖋️latex\\semio-viz-domain.sty",
+    "bytes": 218886,
+    "sha256": "0F923F9B1200769FCB5F4212FDA2D08D5C3779FFB30489955729ED6ADD655EB2"
+  },
+  {
+    "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🖋️latex\\semio-viz-data.sty",
+    "bytes": 54999,
+    "sha256": "B55592D8721622AA74175C69E49E4DDC74CAD870690C74E2308CECAD9278ADAA"
+  },
+  {
+    "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\💡️inferences\\📚️catalogue\\🟦️.ts",
+    "bytes": 17502,
+    "sha256": "95FD78E9EAF25A8DD29A60F79D818BA95E0CC9B0FD15BFA0221478699C10BC72"
+  }
+]

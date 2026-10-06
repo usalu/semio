@@ -1,0 +1,65 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-viz-hierarchy-dendrogram}[2026/09/05 v0.3.0 semio viz namespace hierarchy-dendrogram families]
+
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+\RequirePackage{semio-viz-hierarchy}
+\RequirePackage{semio-viz-family}
+
+\ExplSyntaxOn
+
+%region 🔖️Keys
+% 📋 `semio / viz / family / dendrogram` accepts every key of
+% `semio / viz / hierarchy`, `… / hierarchy / layout` and `… / hierarchy / render`
+% (see semio-viz-hierarchy.sty) plus its own:
+%   heightColumn  (column with a merge height; empty uses the cluster depth) default empty
+%   scale         (`cluster` keeps d3's uniform rows, `height` reads heightColumn) default cluster
+\tl_new:N \l_semio_viz_hierarchy_dendro_heightcol_tl
+\tl_new:N \l_semio_viz_hierarchy_dendro_scale_tl
+\fp_new:N \l_semio_viz_hierarchy_dendro_max_fp
+
+\keys_define:nn { semio / viz / family / dendrogram } {
+  heightColumn .tl_set:N = \l_semio_viz_hierarchy_dendro_heightcol_tl,
+  scale        .tl_set:N = \l_semio_viz_hierarchy_dendro_scale_tl,
+}
+%endregion 🔖️Keys
+
+%region 🔖️Families
+% 🍂 The d3 cluster layout: every leaf on the deepest row, every parent on the
+% mean abscissa of its children. Horizontal, vertical, radial and circular
+% dendrograms are the `orientation` key; `link=orthogonal` gives the classic
+% elbow dendrogram, `link=straight` the cluster tree.
+\SemioVizFamily{dendrogram}{
+  \tl_clear:N \l_semio_viz_hierarchy_dendro_heightcol_tl
+  \tl_set:Nn \l_semio_viz_hierarchy_dendro_scale_tl { cluster }
+  \semio_viz_hierarchy_family_setup:nnn { dendrogram }
+    { link = orthogonal, node = dot, leafLabels = true } {#1}
+  \semio_viz_hierarchy_family_layout:n { cluster }
+  \str_if_eq:VnT \l_semio_viz_hierarchy_dendro_scale_tl { height }
+    { \semio_viz_hierarchy_dendro_heights: }
+  \semio_viz_hierarchy_family_draw_tree:
+}
+
+% 📏 Replaces the uniform cluster rows by a merge height read from a column, the
+% way an agglomerative clustering dendrogram is drawn.
+\cs_new_protected:Npn \semio_viz_hierarchy_dendro_heights: {
+  \fp_set:Nn \l_semio_viz_hierarchy_dendro_max_fp { 0 }
+  \semio_viz_hierarchy_map_pre:nn { \c_semio_viz_hierarchy_family_tl } {
+    \semio_viz_table_cell:nnnN { \l_semio_viz_hierarchy_table_tl } {##1}
+      { \l_semio_viz_hierarchy_dendro_heightcol_tl } \l_semio_viz_hierarchy_cell_tl
+    \semio_viz_hierarchy_number:NN \l_semio_viz_hierarchy_cell_tl \l_semio_viz_hierarchy_own_fp
+    \semio_viz_hierarchy_set:nnnn { \c_semio_viz_hierarchy_family_tl } { len } {##1}
+      { \fp_use:N \l_semio_viz_hierarchy_own_fp }
+    \fp_set:Nn \l_semio_viz_hierarchy_dendro_max_fp
+      { max ( \l_semio_viz_hierarchy_dendro_max_fp , \l_semio_viz_hierarchy_own_fp ) }
+  }
+  \semio_viz_hierarchy_map_pre:nn { \c_semio_viz_hierarchy_family_tl } {
+    \semio_viz_hierarchy_set:nnnn { \c_semio_viz_hierarchy_family_tl } { y } {##1}
+      { \fp_eval:n { \l_semio_viz_hierarchy_dendro_max_fp == 0 ? 0 :
+        ( 1 - \semio_viz_hierarchy_get:nnn { \c_semio_viz_hierarchy_family_tl } { len } {##1}
+        / \l_semio_viz_hierarchy_dendro_max_fp ) * \l_semio_viz_hierarchy_dy_fp } }
+  }
+}
+%endregion 🔖️Families
+
+\ExplSyntaxOff

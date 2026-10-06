@@ -1,0 +1,2170 @@
+{
+  "auditUtc": "2026-10-05T16:46:10.4483194Z",
+  "sourceInputs": [
+    {
+      "source": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/scientific-mode-current-fresh/scientific-modes/light/🧪️probe-source/.semio-library/semio-latex/semio-viz-scientific-field.sty",
+      "retained": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/📥️authored-inputs/scientific-mode-fresh-green-independent-binding/light-semio-viz-scientific-field.sty",
+      "sha256": "63E76C197A48A17E07DAF81DF97426E03A9B8A9FEBE861D1ECD90A27F1F1F899",
+      "currentOwnerSha256": "9B0AC1145706C1DBC5860810709C76E246BD6976FF32EEE55892458A2FFDF419"
+    },
+    {
+      "source": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/scientific-mode-current-fresh/scientific-modes/light/🧪️probe-source/.semio-library/semio-latex/semio-viz-scientific-biology.sty",
+      "retained": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/📥️authored-inputs/scientific-mode-fresh-green-independent-binding/light-semio-viz-scientific-biology.sty",
+      "sha256": "5B1C85306DC1F4E4706B155464C96CF91FE599F34DA6B83F80E9F979F2242EE4",
+      "currentOwnerSha256": "6A030144A2BCCC31CA050E65529CF77B9E5B359EA5423EF2D5E5818625453B94"
+    },
+    {
+      "source": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/scientific-mode-current-fresh/scientific-modes/light/🧪️probe-source/.semio-library/semio-latex/semio-viz-scientific-engineering.sty",
+      "retained": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/📥️authored-inputs/scientific-mode-fresh-green-independent-binding/light-semio-viz-scientific-engineering.sty",
+      "sha256": "A9700F62866A65522E3029EA49F52BF8E73E686F3C43D3D7C52C9FA5C66C9294",
+      "currentOwnerSha256": "306972314A9B37CB9B7FB43070C201AB036E9EDF99DCF81EB96F33FB00CD1A80"
+    },
+    {
+      "source": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/scientific-mode-current-fresh/scientific-modes/light/🧪️probe-source/.semio-library/semio-latex/semio-viz-scientific-mathematics.sty",
+      "retained": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/📥️authored-inputs/scientific-mode-fresh-green-independent-binding/light-semio-viz-scientific-mathematics.sty",
+      "sha256": "1195B36F5BD4BB88BA98EE5C1244A168D5758E4B84A16F21746BB4AAA619CB37",
+      "currentOwnerSha256": "F9AA187955BAC959F53DBDB925F9FA3088892E3A1126250A56D56E6BC77AD4BE"
+    },
+    {
+      "source": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/scientific-mode-current-fresh/scientific-modes/light/🧪️probe-input/light.tex",
+      "retained": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/📥️authored-inputs/scientific-mode-fresh-green-independent-binding/light-actual-emitted-input.tex",
+      "sha256": "7E5499C8F10C93A67DA167B2FBDE0950A840F3567A89223A23AE83437CEC3EB0"
+    },
+    {
+      "source": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/scientific-mode-current-fresh/scientific-modes/dark/🧪️probe-source/.semio-library/semio-latex/semio-viz-scientific-field.sty",
+      "retained": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/📥️authored-inputs/scientific-mode-fresh-green-independent-binding/dark-semio-viz-scientific-field.sty",
+      "sha256": "63E76C197A48A17E07DAF81DF97426E03A9B8A9FEBE861D1ECD90A27F1F1F899",
+      "currentOwnerSha256": "9B0AC1145706C1DBC5860810709C76E246BD6976FF32EEE55892458A2FFDF419"
+    },
+    {
+      "source": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/scientific-mode-current-fresh/scientific-modes/dark/🧪️probe-source/.semio-library/semio-latex/semio-viz-scientific-biology.sty",
+      "retained": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/📥️authored-inputs/scientific-mode-fresh-green-independent-binding/dark-semio-viz-scientific-biology.sty",
+      "sha256": "5B1C85306DC1F4E4706B155464C96CF91FE599F34DA6B83F80E9F979F2242EE4",
+      "currentOwnerSha256": "6A030144A2BCCC31CA050E65529CF77B9E5B359EA5423EF2D5E5818625453B94"
+    },
+    {
+      "source": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/scientific-mode-current-fresh/scientific-modes/dark/🧪️probe-source/.semio-library/semio-latex/semio-viz-scientific-engineering.sty",
+      "retained": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/📥️authored-inputs/scientific-mode-fresh-green-independent-binding/dark-semio-viz-scientific-engineering.sty",
+      "sha256": "A9700F62866A65522E3029EA49F52BF8E73E686F3C43D3D7C52C9FA5C66C9294",
+      "currentOwnerSha256": "306972314A9B37CB9B7FB43070C201AB036E9EDF99DCF81EB96F33FB00CD1A80"
+    },
+    {
+      "source": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/scientific-mode-current-fresh/scientific-modes/dark/🧪️probe-source/.semio-library/semio-latex/semio-viz-scientific-mathematics.sty",
+      "retained": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/📥️authored-inputs/scientific-mode-fresh-green-independent-binding/dark-semio-viz-scientific-mathematics.sty",
+      "sha256": "1195B36F5BD4BB88BA98EE5C1244A168D5758E4B84A16F21746BB4AAA619CB37",
+      "currentOwnerSha256": "F9AA187955BAC959F53DBDB925F9FA3088892E3A1126250A56D56E6BC77AD4BE"
+    },
+    {
+      "source": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/scientific-mode-current-fresh/scientific-modes/dark/🧪️probe-input/dark.tex",
+      "retained": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/📥️authored-inputs/scientific-mode-fresh-green-independent-binding/dark-actual-emitted-input.tex",
+      "sha256": "CF9289057E0F4545F19DB877E0985A0D38B17A307642B29C995EE9FE78B52BF1"
+    },
+    {
+      "source": "C:/git/semio/🧰️framework/🛍️products/📓️print/🧪️tests/🧬️native-chart-grammar/🔣️.json",
+      "retained": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/📥️authored-inputs/scientific-mode-fresh-green-independent-binding/current-neutral-fixture.json",
+      "sha256": "6BC6D123E88663ABE2E1D690AA678321020D9BB45E8808E0E2233EDCB007852F",
+      "scope": "Current audit input, not transported producer execution receipt"
+    },
+    {
+      "source": "C:/git/semio/🧰️framework/🛍️products/📓️print/🧪️tests/🧬️native-chart-grammar/🟦️.ts",
+      "retained": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/📥️authored-inputs/scientific-mode-fresh-green-independent-binding/current-neutral-helper-source.txt",
+      "sha256": "A35130D21A4855A67983123CBE9B3F1CC5F5472292A6C886CBBC5A79B2AECDBC",
+      "scope": "Current audit input, not transported producer execution receipt"
+    }
+  ],
+  "outputBindings": [
+    {
+      "path": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/scientific-mode-current-fresh/scientific-modes/light/🧪️probe-out/light.pdf",
+      "sha256": "D94986489E40E5CE24ADE72ACB4B750964352C852DB437CC15E0B440632CB14A",
+      "bytes": 96321
+    },
+    {
+      "path": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/scientific-mode-current-fresh/scientific-modes/light/actual-owned-paint.json",
+      "sha256": "C75A582C78A110FB95C18FB06B4DEA68FB4F1A6F4D91F5F2D68AF0832EB67A68",
+      "bytes": 4800839
+    },
+    {
+      "path": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/scientific-mode-current-fresh/scientific-modes/dark/🧪️probe-out/dark.pdf",
+      "sha256": "CB8C005841D5199B64634B1B5461680B3199956F05DEC86B40AA75FB4BEE4765",
+      "bytes": 96312
+    },
+    {
+      "path": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/scientific-mode-current-fresh/scientific-modes/dark/actual-owned-paint.json",
+      "sha256": "29C3D590CA26215CC1EBC446554CC6F6DB7AD13CDDD2AB2B22D1715B5AF62E32",
+      "bytes": 4807635
+    },
+    {
+      "path": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/scientific-mode-current-fresh.log",
+      "sha256": "C8014FF0FF31422F0E99C09D894BA904713A5C7C37DF301625A119BAFF78111B",
+      "bytes": 6036
+    }
+  ],
+  "readerPublishedCounts": [
+    {
+      "theme": "light",
+      "bodies": 36,
+      "elements": 72,
+      "bodyPaths": 604,
+      "glyphs": 154
+    },
+    {
+      "theme": "dark",
+      "bodies": 36,
+      "elements": 72,
+      "bodyPaths": 604,
+      "glyphs": 154
+    }
+  ],
+  "stageNamespaceStyleClosure": [
+    {
+      "theme": "light",
+      "name": "semio-components.sty",
+      "stageSha256": "B604034E18005F13206430F59C32B05E89DC47DCE89559B847476DD0A9FA795C",
+      "currentSha256": "B604034E18005F13206430F59C32B05E89DC47DCE89559B847476DD0A9FA795C"
+    },
+    {
+      "theme": "light",
+      "name": "semio-core.sty",
+      "stageSha256": "654FD134F3B08D7964C405DF4627B2BA5F73953C1528FC69B55F3981BD99BCFF",
+      "currentSha256": "654FD134F3B08D7964C405DF4627B2BA5F73953C1528FC69B55F3981BD99BCFF"
+    },
+    {
+      "theme": "light",
+      "name": "semio-fonts.sty",
+      "stageSha256": "33355D4403FBB0168B87763CE345E83EFE3F146F152C9316925CF7A73887174F",
+      "currentSha256": "33355D4403FBB0168B87763CE345E83EFE3F146F152C9316925CF7A73887174F"
+    },
+    {
+      "theme": "light",
+      "name": "semio-graph.sty",
+      "stageSha256": "F33D5F16EDAD2B842ED95FE37B6DD5CC5347DCC2C0AF025D51153812502F1A63",
+      "currentSha256": "642FD78CEC301AA3C5060D3F1AA22F05FB6C9437BFF5A6F27132292997F3726F"
+    },
+    {
+      "theme": "light",
+      "name": "semio-logo.sty",
+      "stageSha256": "80B767D33294A478CC4DFDBAFC998ACF085A826D6161191A5E79ED458AE122BF",
+      "currentSha256": "80B767D33294A478CC4DFDBAFC998ACF085A826D6161191A5E79ED458AE122BF"
+    },
+    {
+      "theme": "light",
+      "name": "semio-phd.sty",
+      "stageSha256": "FD2EB7E7C52B3476FB0C13FC90FAD3E312BDDA2A82C674738B39CA5824FF55F3",
+      "currentSha256": "FD2EB7E7C52B3476FB0C13FC90FAD3E312BDDA2A82C674738B39CA5824FF55F3"
+    },
+    {
+      "theme": "light",
+      "name": "semio-table.sty",
+      "stageSha256": "B40AD60C74855589FA4A942A00943DABC9ABAEDAD124DEA545AA9AC43FFA4EEE",
+      "currentSha256": "B40AD60C74855589FA4A942A00943DABC9ABAEDAD124DEA545AA9AC43FFA4EEE"
+    },
+    {
+      "theme": "light",
+      "name": "semio-tokens.sty",
+      "stageSha256": "DC7308B3D41914374591A3F1988523DA89869AC9FD349A4058DE4A601673795E",
+      "currentSha256": "DC7308B3D41914374591A3F1988523DA89869AC9FD349A4058DE4A601673795E"
+    },
+    {
+      "theme": "light",
+      "name": "semio-tree.sty",
+      "stageSha256": "2905B9C2C71837989C128DB0EDCB3D2DCB9E0FC8284A19890356B04071CF9B4C",
+      "currentSha256": "2905B9C2C71837989C128DB0EDCB3D2DCB9E0FC8284A19890356B04071CF9B4C"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-annotation.sty",
+      "stageSha256": "39F9C80D4D58268C299A3DDBB73F02E6A90F040CD2AD185469AE4166EB593C4D",
+      "currentSha256": "39F9C80D4D58268C299A3DDBB73F02E6A90F040CD2AD185469AE4166EB593C4D"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-catalog-labels.sty",
+      "stageSha256": "33ED2921DEA258AA88C198592D5174B4C1B0533334DCB5BA35133C8E43F45031",
+      "currentSha256": "33ED2921DEA258AA88C198592D5174B4C1B0533334DCB5BA35133C8E43F45031"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-catalog.sty",
+      "stageSha256": "0F863CEE00569D0A1DCEC4133545EFEC159D80B1946BF39BE35DE9A8B244744A",
+      "currentSha256": "54D672C1154A093AF5E8F93A718BED72D0B05275A64EC2D689926B33A635B241"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-ai-neural.sty",
+      "stageSha256": "752B16C95B5D15D27A15D93C099DBED5102BBEDE4D0E08126FC8907D7699D21B",
+      "currentSha256": "752B16C95B5D15D27A15D93C099DBED5102BBEDE4D0E08126FC8907D7699D21B"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-annotation-driven.sty",
+      "stageSha256": "5AC32AC82F0CD522F0EE328B8D46A5DE0E91790F4837768DEA256955AA3820FB",
+      "currentSha256": "5AC32AC82F0CD522F0EE328B8D46A5DE0E91790F4837768DEA256955AA3820FB"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-architecture-spatial.sty",
+      "stageSha256": "6F13D92E4F07294D7F49EEFF0CAA4DA7AE34742685A6DD29B480BBE113F4717B",
+      "currentSha256": "6F13D92E4F07294D7F49EEFF0CAA4DA7AE34742685A6DD29B480BBE113F4717B"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-axis-specialized.sty",
+      "stageSha256": "550A1305958072C292E5E7FD55B9BF639EFF558CF678229CA000201B49A02A62",
+      "currentSha256": "550A1305958072C292E5E7FD55B9BF639EFF558CF678229CA000201B49A02A62"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-biology-ecology.sty",
+      "stageSha256": "0768135C1994880CCA0B038D837FC550B74B501CCB4DBB7F616D9FD2F71677E1",
+      "currentSha256": "0768135C1994880CCA0B038D837FC550B74B501CCB4DBB7F616D9FD2F71677E1"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-chemistry.sty",
+      "stageSha256": "8895FC58B98D6B75B1635555502AB49969180273457D46CFCAA858133D62C062",
+      "currentSha256": "8895FC58B98D6B75B1635555502AB49969180273457D46CFCAA858133D62C062"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-circular-genomic.sty",
+      "stageSha256": "BB325EA1D81A397D45BED06BCE6FAD24FE4ADC8C351C771CFD6AABF7CBC7F13B",
+      "currentSha256": "BB325EA1D81A397D45BED06BCE6FAD24FE4ADC8C351C771CFD6AABF7CBC7F13B"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-circular-seat.sty",
+      "stageSha256": "8CEDEEFF80E065386F87E5A1EF08ED2212CC5BD161811B2A937A886C72E8EF05",
+      "currentSha256": "8CEDEEFF80E065386F87E5A1EF08ED2212CC5BD161811B2A937A886C72E8EF05"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-comparison.sty",
+      "stageSha256": "248CF6296BC52B4424B4CF56146533CEB041EED50A481323A90DF3579112B74E",
+      "currentSha256": "248CF6296BC52B4424B4CF56146533CEB041EED50A481323A90DF3579112B74E"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-composite-coordinated.sty",
+      "stageSha256": "96F29F5D4F9D3FD5C6D99FC57C5481EDAE8A085B1F8B9BD9F3548B07AEF5AA5B",
+      "currentSha256": "96F29F5D4F9D3FD5C6D99FC57C5481EDAE8A085B1F8B9BD9F3548B07AEF5AA5B"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-coordinate-system.sty",
+      "stageSha256": "B7EF6E16D343CECB67B5BB93630A3F1373A9E4D9285DBD90B22A608ADC55A7E2",
+      "currentSha256": "B7EF6E16D343CECB67B5BB93630A3F1373A9E4D9285DBD90B22A608ADC55A7E2"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-cybersecurity.sty",
+      "stageSha256": "B31ADA9C8237FBCC271737C7DB532551F27249F8161B35D3F1B007A42F33B2BA",
+      "currentSha256": "B31ADA9C8237FBCC271737C7DB532551F27249F8161B35D3F1B007A42F33B2BA"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-d3-equivalent.sty",
+      "stageSha256": "73032E4A21EF471A27B2DD381520DAA8C759F756E0E238ED045F956ACFC79708",
+      "currentSha256": "73032E4A21EF471A27B2DD381520DAA8C759F756E0E238ED045F956ACFC79708"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-database.sty",
+      "stageSha256": "4FEF35BF72E90915B9BF7BCED534DE3033255B309770D8CDBC6E92C7DCC0F4CF",
+      "currentSha256": "4FEF35BF72E90915B9BF7BCED534DE3033255B309770D8CDBC6E92C7DCC0F4CF"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-diagrammatic-grids.sty",
+      "stageSha256": "F29CA6DC02FA86BB4C12A1D7D5E92752E9A5E7D38D5A199C4C16FA8A68C64B5C",
+      "currentSha256": "F29CA6DC02FA86BB4C12A1D7D5E92752E9A5E7D38D5A199C4C16FA8A68C64B5C"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-distribution.sty",
+      "stageSha256": "F2142BEFAAA1E6F195E48748EAD760DE284715981D9DD8874624B27610BE16E8",
+      "currentSha256": "F2142BEFAAA1E6F195E48748EAD760DE284715981D9DD8874624B27610BE16E8"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-earth-climate.sty",
+      "stageSha256": "5CC1EBAB2F12B72F195B3528292393B8F7062D27EF199A38C5BF9A7FA170CB17",
+      "currentSha256": "5CC1EBAB2F12B72F195B3528292393B8F7062D27EF199A38C5BF9A7FA170CB17"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-education-conceptual.sty",
+      "stageSha256": "86E488877117E30885748B7A3F448379B3B42FB92930D6FDD01499BD4BAC6874",
+      "currentSha256": "86E488877117E30885748B7A3F448379B3B42FB92930D6FDD01499BD4BAC6874"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-election-political.sty",
+      "stageSha256": "C3A24AF6DC3B02089D51EECB9B0C7D2332A9402D19849DC36872D3305E071DEC",
+      "currentSha256": "C3A24AF6DC3B02089D51EECB9B0C7D2332A9402D19849DC36872D3305E071DEC"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-electrical-electronics.sty",
+      "stageSha256": "69ABE9D5A1E90FE895E964B3370324060F33F5EC896058FF1FFB112278802397",
+      "currentSha256": "69ABE9D5A1E90FE895E964B3370324060F33F5EC896058FF1FFB112278802397"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-engineering.sty",
+      "stageSha256": "71E7D1013717073F9E3CC4541D55C8EEA775A232CDB11C050C25ED0006C217E4",
+      "currentSha256": "71E7D1013717073F9E3CC4541D55C8EEA775A232CDB11C050C25ED0006C217E4"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-experimental-design.sty",
+      "stageSha256": "588DA34FB493BE78B656218A45358CBDBEA3C94FA243EB5437AA65A14E456381",
+      "currentSha256": "588DA34FB493BE78B656218A45358CBDBEA3C94FA243EB5437AA65A14E456381"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-faceting-repeated.sty",
+      "stageSha256": "37953BE80785C31418679AC200E7BD8D16B612A022D501CBE8A56006E49E3F32",
+      "currentSha256": "37953BE80785C31418679AC200E7BD8D16B612A022D501CBE8A56006E49E3F32"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-financial-economic.sty",
+      "stageSha256": "68C7AD000259C9DDDC8689A796612FF5BD81C7EAC71893E11139C6DF1B2A5777",
+      "currentSha256": "68C7AD000259C9DDDC8689A796612FF5BD81C7EAC71893E11139C6DF1B2A5777"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-flow.sty",
+      "stageSha256": "1F79575C4566A226D3DE96A0998EDDF36626B8424C38E81AD93013DE66ABBB13",
+      "currentSha256": "1F79575C4566A226D3DE96A0998EDDF36626B8424C38E81AD93013DE66ABBB13"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-formal-language.sty",
+      "stageSha256": "E6E3CB8102E8896E5A975FC66BF683505FEB9D95527889C81BB9E155C4D084A8",
+      "currentSha256": "E6E3CB8102E8896E5A975FC66BF683505FEB9D95527889C81BB9E155C4D084A8"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-funnel-conversion.sty",
+      "stageSha256": "97E41E7813432914F1004B0180CAC1F86A12816C65EAE1D793855FE9E39DE721",
+      "currentSha256": "97E41E7813432914F1004B0180CAC1F86A12816C65EAE1D793855FE9E39DE721"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-geometry.sty",
+      "stageSha256": "D558B7A243DC2611DBF72E5AEE7414C4563C88D20A44888F39E8A0DB1642F863",
+      "currentSha256": "D558B7A243DC2611DBF72E5AEE7414C4563C88D20A44888F39E8A0DB1642F863"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-geospatial-cartographic.sty",
+      "stageSha256": "45FD48635EBCE658DC192B78BCE0FE3ABEA75836A42AE5494446E7AD728C2800",
+      "currentSha256": "45FD48635EBCE658DC192B78BCE0FE3ABEA75836A42AE5494446E7AD728C2800"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-graph-network.sty",
+      "stageSha256": "9CF8DFCC43B90CAC17BBCC594D31BE3B3E60D645460AE34CC023E1C82D0BC963",
+      "currentSha256": "9CF8DFCC43B90CAC17BBCC594D31BE3B3E60D645460AE34CC023E1C82D0BC963"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-graphical-notation.sty",
+      "stageSha256": "2B81DD540DE4CB81ECFDFD7E8178095AF1CD47C0700E88CAAEA6A5886C082ABD",
+      "currentSha256": "2B81DD540DE4CB81ECFDFD7E8178095AF1CD47C0700E88CAAEA6A5886C082ABD"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-graphical-schedules.sty",
+      "stageSha256": "F4E9D9856D3AB1854806B75A1F991EF6B0770BDBF7D38338ACF902DB7C599272",
+      "currentSha256": "F4E9D9856D3AB1854806B75A1F991EF6B0770BDBF7D38338ACF902DB7C599272"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-hierarchical.sty",
+      "stageSha256": "0EC6933AD569837B9CEB87FB463EC911E7BB6B70A6AC3128C826F3C54859CF85",
+      "currentSha256": "0EC6933AD569837B9CEB87FB463EC911E7BB6B70A6AC3128C826F3C54859CF85"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-infographic-style.sty",
+      "stageSha256": "46F9700709F7A4A17C9ADC779A6A2AC62E4C59A5C6DE66325D0B05709F5070C3",
+      "currentSha256": "46F9700709F7A4A17C9ADC779A6A2AC62E4C59A5C6DE66325D0B05709F5070C3"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-kpi-dashboard.sty",
+      "stageSha256": "F5D16F34D72DEFF782DFB48F947568213B7C1EEFECBF5BE67D0EC985E5F8F2B4",
+      "currentSha256": "F5D16F34D72DEFF782DFB48F947568213B7C1EEFECBF5BE67D0EC985E5F8F2B4"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-layout-algorithms.sty",
+      "stageSha256": "E64094E3AB845B439B39B346F0B1785F8E9E46C28E276EDD14CC8E112E6F20CE",
+      "currentSha256": "E64094E3AB845B439B39B346F0B1785F8E9E46C28E276EDD14CC8E112E6F20CE"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-layout-spatial.sty",
+      "stageSha256": "8781F32827509A0F82842D0FB41ADFCB73A971CF92BA192A3167693A4B1FF258",
+      "currentSha256": "8781F32827509A0F82842D0FB41ADFCB73A971CF92BA192A3167693A4B1FF258"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-logistics-transportation.sty",
+      "stageSha256": "3076AF43A957E19F4E7C281BFA6F7A6623F124CA4CB99DDAF0B5ABAE88C8B3A0",
+      "currentSha256": "3076AF43A957E19F4E7C281BFA6F7A6623F124CA4CB99DDAF0B5ABAE88C8B3A0"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-mathematical-abstract.sty",
+      "stageSha256": "907188A22F65283AA2732FC8D87224C179B78D9F9D0E3E431BCB6C6EF6280553",
+      "currentSha256": "907188A22F65283AA2732FC8D87224C179B78D9F9D0E3E431BCB6C6EF6280553"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-mathematical-function.sty",
+      "stageSha256": "F085463FB5F5A117F494E54405313AE4DB1A15D4E927C561AFE14D97A3C739D6",
+      "currentSha256": "F085463FB5F5A117F494E54405313AE4DB1A15D4E927C561AFE14D97A3C739D6"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-matrix-heatmap.sty",
+      "stageSha256": "11AC0EA57EA38FBEC20DAA1F89325BC20D951CF6A8508125251BA0CA6E0235DC",
+      "currentSha256": "11AC0EA57EA38FBEC20DAA1F89325BC20D951CF6A8508125251BA0CA6E0235DC"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-medical-biomedical.sty",
+      "stageSha256": "0FEB5165AAA35849C5D29272ABEE21618D34C56DC131F47FEA94A3ABD51F7EE8",
+      "currentSha256": "0FEB5165AAA35849C5D29272ABEE21618D34C56DC131F47FEA94A3ABD51F7EE8"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-meta-composition.sty",
+      "stageSha256": "33C4834599A50324F1CD71C76C2F1940B51A43BE1ED2C4FA3C482CA499DC6BFC",
+      "currentSha256": "33C4834599A50324F1CD71C76C2F1940B51A43BE1ED2C4FA3C482CA499DC6BFC"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-model-evaluation.sty",
+      "stageSha256": "855EE3E4A0B8E8923588DC7FD4F934ADE3622E6066007FF62B8264E323C54D35",
+      "currentSha256": "855EE3E4A0B8E8923588DC7FD4F934ADE3622E6066007FF62B8264E323C54D35"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-multivariate.sty",
+      "stageSha256": "5DAFB617DE68D6D3E61916F33AE3EE300E4D52C49B406CE873908BCB3DD6254A",
+      "currentSha256": "5DAFB617DE68D6D3E61916F33AE3EE300E4D52C49B406CE873908BCB3DD6254A"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-music.sty",
+      "stageSha256": "FC74EB29741AC90B40A237589CC17BCE66CA3BFEC0ADAD8B0AC0D884F7B2B540",
+      "currentSha256": "FC74EB29741AC90B40A237589CC17BCE66CA3BFEC0ADAD8B0AC0D884F7B2B540"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-network-system.sty",
+      "stageSha256": "FFF980BAF525ABE752A200FE8C1AF704F6913A39654E641D8FAABACDF34DF42E",
+      "currentSha256": "FFF980BAF525ABE752A200FE8C1AF704F6913A39654E641D8FAABACDF34DF42E"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-optimization-operations.sty",
+      "stageSha256": "FA21308CDA81F5002915763A139ACC399D816C15FF27AC2EFC68E371F75714C8",
+      "currentSha256": "FA21308CDA81F5002915763A139ACC399D816C15FF27AC2EFC68E371F75714C8"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-part-whole.sty",
+      "stageSha256": "3FC2F5EDDE350068FE7F0E5874F8A65E86F7F8742746F0B05963C921E9775817",
+      "currentSha256": "3FC2F5EDDE350068FE7F0E5874F8A65E86F7F8742746F0B05963C921E9775817"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-physics.sty",
+      "stageSha256": "60E42829DC54A4B5FE0F24CC01D4582C88D55D96A8AC577949801F54E0B18C63",
+      "currentSha256": "60E42829DC54A4B5FE0F24CC01D4582C88D55D96A8AC577949801F54E0B18C63"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-polar-radial.sty",
+      "stageSha256": "03536310082F10BDA5C9403F958E1CD23846BE54856476866DA69BEB092D3516",
+      "currentSha256": "03536310082F10BDA5C9403F958E1CD23846BE54856476866DA69BEB092D3516"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-probability.sty",
+      "stageSha256": "D3466612B9558E415672A8627DC8EAC71673F0442D3DFC951871FCEAD4159E5B",
+      "currentSha256": "D3466612B9558E415672A8627DC8EAC71673F0442D3DFC951871FCEAD4159E5B"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-process-workflow.sty",
+      "stageSha256": "FEC43BCEBF5F7C18A9B58F227CC65F99EA16FC9CC2526B2B23E36A1555438F79",
+      "currentSha256": "FEC43BCEBF5F7C18A9B58F227CC65F99EA16FC9CC2526B2B23E36A1555438F79"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-project-management.sty",
+      "stageSha256": "BF8F3F3749E9E6F04F4D29870E476EA2A0954ADEED9978622BE476224C6EBF0F",
+      "currentSha256": "BF8F3F3749E9E6F04F4D29870E476EA2A0954ADEED9978622BE476224C6EBF0F"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-provenance-lineage.sty",
+      "stageSha256": "59D4956A6F455339B83BB32C80CC5A89781CE0CA28A8170AC61345BF5E05863B",
+      "currentSha256": "59D4956A6F455339B83BB32C80CC5A89781CE0CA28A8170AC61345BF5E05863B"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-recommended-top.sty",
+      "stageSha256": "68F2E2722E27079B912FEF2C5289C99B01541A65C6DA5BB8BB18FBBB0E6582A8",
+      "currentSha256": "68F2E2722E27079B912FEF2C5289C99B01541A65C6DA5BB8BB18FBBB0E6582A8"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-relationship-conceptual.sty",
+      "stageSha256": "32DE645EA4DB412A6BC33D8EF54EA71CEDEEFB5C8D0D256A2C0130032A895D9A",
+      "currentSha256": "32DE645EA4DB412A6BC33D8EF54EA71CEDEEFB5C8D0D256A2C0130032A895D9A"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-relationship-correlation.sty",
+      "stageSha256": "E98E1484E16C6CDA0515AE871C8B5EECE8A93FC48C79B1F706F688E1AC41CD4E",
+      "currentSha256": "E98E1484E16C6CDA0515AE871C8B5EECE8A93FC48C79B1F706F688E1AC41CD4E"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-scalar-field.sty",
+      "stageSha256": "515E539D5EBB6833A80FD21AB4C89ACAEAF477F061C5B1E2C88A7F61E82240C7",
+      "currentSha256": "515E539D5EBB6833A80FD21AB4C89ACAEAF477F061C5B1E2C88A7F61E82240C7"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-scientific-publication.sty",
+      "stageSha256": "C698209E2271EE334D09EC8FCB19C8479972A8AF4CD16CD10CF867CFE6DF43CC",
+      "currentSha256": "C698209E2271EE334D09EC8FCB19C8479972A8AF4CD16CD10CF867CFE6DF43CC"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-set-overlap.sty",
+      "stageSha256": "C7A6BD88B734676FBB88C59E4549BA6C715DBA84C1200DF7A42E22F0F6BCD563",
+      "currentSha256": "C7A6BD88B734676FBB88C59E4549BA6C715DBA84C1200DF7A42E22F0F6BCD563"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-signal-processing.sty",
+      "stageSha256": "AF9E538C57E860842E6C3D97F4118267486366A932B0978494B051CCFD075603",
+      "currentSha256": "AF9E538C57E860842E6C3D97F4118267486366A932B0978494B051CCFD075603"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-software-performance.sty",
+      "stageSha256": "A7C18117EC4EC463BDE1975FC04F61C01745697B6B8C16CF9CA6F1ABC213E09D",
+      "currentSha256": "A7C18117EC4EC463BDE1975FC04F61C01745697B6B8C16CF9CA6F1ABC213E09D"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-specialized-analytical.sty",
+      "stageSha256": "309D2E290587212B6546908E206CAAC23D0DC0E40CB6B28C52ACF0FAF35FB0C0",
+      "currentSha256": "309D2E290587212B6546908E206CAAC23D0DC0E40CB6B28C52ACF0FAF35FB0C0"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-sports.sty",
+      "stageSha256": "E4BEE5D0FF938ED57B8C4B1458BDD439FFF81CD64A12F75535C902C240DA26C0",
+      "currentSha256": "E4BEE5D0FF938ED57B8C4B1458BDD439FFF81CD64A12F75535C902C240DA26C0"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-static-equivalents.sty",
+      "stageSha256": "6F05DC02A211C67FD5A10853B0DDF6F3C0704E9876B5D706D028F2F5F4D141E7",
+      "currentSha256": "6F05DC02A211C67FD5A10853B0DDF6F3C0704E9876B5D706D028F2F5F4D141E7"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-statistical-inference.sty",
+      "stageSha256": "14625B0725D67D8B459EEAAD95848D7E701424129226BCEC9D05862F68D4F851",
+      "currentSha256": "14625B0725D67D8B459EEAAD95848D7E701424129226BCEC9D05862F68D4F851"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-storytelling-narrative.sty",
+      "stageSha256": "4B7B6FDD17FAF269865FA0360DAC6A493C5162985938FC87C9E6062D4F81881A",
+      "currentSha256": "4B7B6FDD17FAF269865FA0360DAC6A493C5162985938FC87C9E6062D4F81881A"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-survey-polling.sty",
+      "stageSha256": "E112A4A2BA8A886708CB726963B7CE585A05515B526F8DBB3ECA64FFAF5780F1",
+      "currentSha256": "E112A4A2BA8A886708CB726963B7CE585A05515B526F8DBB3ECA64FFAF5780F1"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-table-oriented.sty",
+      "stageSha256": "F2934594BDCF700CD9D0F97DCC3C348C606D593698A0009D33335208E7741605",
+      "currentSha256": "F2934594BDCF700CD9D0F97DCC3C348C606D593698A0009D33335208E7741605"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-text-language.sty",
+      "stageSha256": "7D4B69DFB45DBA4AEDBD85E8D6F6185CD0B5981B9ED57A46D23AD6D904DE971B",
+      "currentSha256": "7D4B69DFB45DBA4AEDBD85E8D6F6185CD0B5981B9ED57A46D23AD6D904DE971B"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-three-dimensional.sty",
+      "stageSha256": "A158DBE62728E5120A1B12E4B8BCEF88A9B7920046B54F37ABBE417FE84A09D5",
+      "currentSha256": "A158DBE62728E5120A1B12E4B8BCEF88A9B7920046B54F37ABBE417FE84A09D5"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-time-series.sty",
+      "stageSha256": "8F5B551DC601A577B32ECC9CC09C50F53E736F1C63853A05E52BA03D593137FB",
+      "currentSha256": "8F5B551DC601A577B32ECC9CC09C50F53E736F1C63853A05E52BA03D593137FB"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-ultimate-api.sty",
+      "stageSha256": "4A579B556D6B29C60B63BF50F01EE13DAFA8ADDBE00D9747C19A84FE658DA797",
+      "currentSha256": "4A579B556D6B29C60B63BF50F01EE13DAFA8ADDBE00D9747C19A84FE658DA797"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-uml-software.sty",
+      "stageSha256": "E01E0CF24F69ED30DFBFB40727C70D571D3F513CDE69764F079AEB53726B7468",
+      "currentSha256": "E01E0CF24F69ED30DFBFB40727C70D571D3F513CDE69764F079AEB53726B7468"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-unusual-niche.sty",
+      "stageSha256": "50D76ADCA27F5EC37920775BBB480CD139E6399C53FFA76BBF8BF0A181450589",
+      "currentSha256": "50D76ADCA27F5EC37920775BBB480CD139E6399C53FFA76BBF8BF0A181450589"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-vector-field.sty",
+      "stageSha256": "2C4D802B02133F5A976DE43908374627C5A3EDBDC27814C492D17B40AE9170C2",
+      "currentSha256": "2C4D802B02133F5A976DE43908374627C5A3EDBDC27814C492D17B40AE9170C2"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-version-control.sty",
+      "stageSha256": "0337C2ACBFB23C39FFC3BAF87D0EA250CC331819ABF7B05502D8EF59C0BE14C3",
+      "currentSha256": "0337C2ACBFB23C39FFC3BAF87D0EA250CC331819ABF7B05502D8EF59C0BE14C3"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-chart-visual-encodings.sty",
+      "stageSha256": "0A62CCD96AEA710FD1BFBC760E7F4D40A0DD58D22086CA7238D94B5E144F7190",
+      "currentSha256": "0A62CCD96AEA710FD1BFBC760E7F4D40A0DD58D22086CA7238D94B5E144F7190"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-charts-area.sty",
+      "stageSha256": "4945C6618A591E5A6E7D0969CCDF09268B5B6D1BA6193E09AC50EF7678121315",
+      "currentSha256": "4945C6618A591E5A6E7D0969CCDF09268B5B6D1BA6193E09AC50EF7678121315"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-charts-bar.sty",
+      "stageSha256": "77C2CE15B70B2C72A962B508B7817E62ECEC3F191C3CBD70C062C39655C0222C",
+      "currentSha256": "77C2CE15B70B2C72A962B508B7817E62ECEC3F191C3CBD70C062C39655C0222C"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-charts-dashboard.sty",
+      "stageSha256": "8F5B99F43ECB6EF312844466B83AD54917840D4B38E7FA8970AA490E391476E0",
+      "currentSha256": "8F5B99F43ECB6EF312844466B83AD54917840D4B38E7FA8970AA490E391476E0"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-charts-distribution.sty",
+      "stageSha256": "A588D5821EE0F9C21EE3AC2C4459EBECB811255F3440C65DE1E5F85FD246DCB9",
+      "currentSha256": "A588D5821EE0F9C21EE3AC2C4459EBECB811255F3440C65DE1E5F85FD246DCB9"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-charts-financial.sty",
+      "stageSha256": "2DDA8FC1E0715CFDCF656417A52256FF381F2489CC60D58626375992BB0FD1AB",
+      "currentSha256": "2DDA8FC1E0715CFDCF656417A52256FF381F2489CC60D58626375992BB0FD1AB"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-charts-funnel.sty",
+      "stageSha256": "90383F1167415A98CAEB06F9173BE0D300591AFA576AA62FFA2BADC296EA61A7",
+      "currentSha256": "90383F1167415A98CAEB06F9173BE0D300591AFA576AA62FFA2BADC296EA61A7"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-charts-line.sty",
+      "stageSha256": "DF0C798F99428DA7FB0896CE36EA39157E0D047B3DDD93BE872BAF6C7FA7CBD7",
+      "currentSha256": "DF0C798F99428DA7FB0896CE36EA39157E0D047B3DDD93BE872BAF6C7FA7CBD7"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-charts-polar.sty",
+      "stageSha256": "638387DD41DBE5ED3061FF5F17518D47BC9837B4A49CB803E4AECB40EAE60C65",
+      "currentSha256": "638387DD41DBE5ED3061FF5F17518D47BC9837B4A49CB803E4AECB40EAE60C65"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-charts-scatter.sty",
+      "stageSha256": "D93C27F2FE2C6023DFC91C82F588AD85655288AFE745E2EE8B0589D3558C8EE0",
+      "currentSha256": "D93C27F2FE2C6023DFC91C82F588AD85655288AFE745E2EE8B0589D3558C8EE0"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-charts-statistical.sty",
+      "stageSha256": "F64893AF051C4C93633142C90AB6858AAA5CF593F71A0BFA38297B43922F30FC",
+      "currentSha256": "F64893AF051C4C93633142C90AB6858AAA5CF593F71A0BFA38297B43922F30FC"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-charts-timeline.sty",
+      "stageSha256": "08D1BC5989F5B1D382200A4FD9A77B24FBF5EC5D73CA1DF3333C9DA3DCEAA3CA",
+      "currentSha256": "08D1BC5989F5B1D382200A4FD9A77B24FBF5EC5D73CA1DF3333C9DA3DCEAA3CA"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-charts.sty",
+      "stageSha256": "EA9FFFFD88763D00039F024C729BDD101E5CEA893FFDCEE48163E36D3FAC4DD9",
+      "currentSha256": "EA9FFFFD88763D00039F024C729BDD101E5CEA893FFDCEE48163E36D3FAC4DD9"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-composition.sty",
+      "stageSha256": "29CDC68523EF187F40D3F0D2FE561C9BED08120F88371E14451BBFD45D0584BE",
+      "currentSha256": "29CDC68523EF187F40D3F0D2FE561C9BED08120F88371E14451BBFD45D0584BE"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-coordinate.sty",
+      "stageSha256": "0DD15CDB805EF48189498DFE8803828BFFC670DE3048B9CC006FB704259F223E",
+      "currentSha256": "0DD15CDB805EF48189498DFE8803828BFFC670DE3048B9CC006FB704259F223E"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-data.sty",
+      "stageSha256": "B55592D8721622AA74175C69E49E4DDC74CAD870690C74E2308CECAD9278ADAA",
+      "currentSha256": "B55592D8721622AA74175C69E49E4DDC74CAD870690C74E2308CECAD9278ADAA"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-diagram-architecture.sty",
+      "stageSha256": "7D4F4191A32852BCEB324795206289E0932B3E345D5E25EB999A50D51DCB2BD9",
+      "currentSha256": "7D4F4191A32852BCEB324795206289E0932B3E345D5E25EB999A50D51DCB2BD9"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-diagram-concept.sty",
+      "stageSha256": "EA3FAB89FF2B5D7D135A3F9B65BFC4E6FB0BDC7BFE9CFEDD82EA895E0AA587AE",
+      "currentSha256": "EA3FAB89FF2B5D7D135A3F9B65BFC4E6FB0BDC7BFE9CFEDD82EA895E0AA587AE"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-diagram-flowchart.sty",
+      "stageSha256": "57C62803AD40E20B58E4D7609E2EB8217862ECBBC29F5AE8722C6B2471F6D6B7",
+      "currentSha256": "57C62803AD40E20B58E4D7609E2EB8217862ECBBC29F5AE8722C6B2471F6D6B7"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-diagram-process.sty",
+      "stageSha256": "E5048AF3A1E73C69D4243B391B31AD0E2E10980B1A0493A17149E026EB815D81",
+      "currentSha256": "E5048AF3A1E73C69D4243B391B31AD0E2E10980B1A0493A17149E026EB815D81"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-diagram-uml.sty",
+      "stageSha256": "2EAB88A18DD518ACD44D799D8E35DFD1600DB8793A27678D28746995B7EDAAE0",
+      "currentSha256": "2EAB88A18DD518ACD44D799D8E35DFD1600DB8793A27678D28746995B7EDAAE0"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-domain.sty",
+      "stageSha256": "1A5FF24E58E2D59926229DB43217EB29999EA766D69E002B1F8D57841AF3C478",
+      "currentSha256": "1A5FF24E58E2D59926229DB43217EB29999EA766D69E002B1F8D57841AF3C478"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-facet.sty",
+      "stageSha256": "D5FF45272EED07B444775153C07991D297762093545453A7DB6E9CCD9A31304B",
+      "currentSha256": "D5FF45272EED07B444775153C07991D297762093545453A7DB6E9CCD9A31304B"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-family.sty",
+      "stageSha256": "D7C8BAB330D4BE95008D9BFEF75E01F2D3C1CD38AA9A1536A24D465272F01F53",
+      "currentSha256": "D7C8BAB330D4BE95008D9BFEF75E01F2D3C1CD38AA9A1536A24D465272F01F53"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-flow-alluvial.sty",
+      "stageSha256": "FD26AEBF9AE306FFD64B574542168C9949801E5F0CDC1F59B38AD8D7532090F0",
+      "currentSha256": "FD26AEBF9AE306FFD64B574542168C9949801E5F0CDC1F59B38AD8D7532090F0"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-flow-parallelsets.sty",
+      "stageSha256": "06F25750E0BCDBF4369040F9F1CDB0DFD8916DD30DC62FB024C9A93FFFC656AA",
+      "currentSha256": "06F25750E0BCDBF4369040F9F1CDB0DFD8916DD30DC62FB024C9A93FFFC656AA"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-flow-sankey.sty",
+      "stageSha256": "B734B8AA5DB1165687AECAA38A7ACC236B39A579106CD7C47DE2437F9AB7D32F",
+      "currentSha256": "B734B8AA5DB1165687AECAA38A7ACC236B39A579106CD7C47DE2437F9AB7D32F"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-flow.sty",
+      "stageSha256": "0E79C84406EB9EC79E9D82628A7EBBA9F63B9351B64A8C2E1A3F96AFD32411F9",
+      "currentSha256": "0E79C84406EB9EC79E9D82628A7EBBA9F63B9351B64A8C2E1A3F96AFD32411F9"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-format.sty",
+      "stageSha256": "A9F078195E8C051382044C79D2E2489AC5CCD49D2FE8A4EC90A5D1F92B5892E6",
+      "currentSha256": "A9F078195E8C051382044C79D2E2489AC5CCD49D2FE8A4EC90A5D1F92B5892E6"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-geo-choropleth.sty",
+      "stageSha256": "B27BFFF38A8910BB0516818C09262C57B52D4C960EFED47849400933CDACE949",
+      "currentSha256": "B27BFFF38A8910BB0516818C09262C57B52D4C960EFED47849400933CDACE949"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-geo-contours.sty",
+      "stageSha256": "ED810FF0CF1A7CC3ADF2E0CDDCC8FBB479774C53DD596FA8DACB3F3C39802467",
+      "currentSha256": "ED810FF0CF1A7CC3ADF2E0CDDCC8FBB479774C53DD596FA8DACB3F3C39802467"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-geo-map.sty",
+      "stageSha256": "01BC451D6FF129FD92F89F3CC18F8E239D917CDC84210B249CF90F5DE79748BB",
+      "currentSha256": "01BC451D6FF129FD92F89F3CC18F8E239D917CDC84210B249CF90F5DE79748BB"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-geo-projection.sty",
+      "stageSha256": "A36860B72454C1CEC15AD5BE5E4919968710F65784A9883104DFA55D64FE0BF0",
+      "currentSha256": "A36860B72454C1CEC15AD5BE5E4919968710F65784A9883104DFA55D64FE0BF0"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-geo-routes.sty",
+      "stageSha256": "434E42F1AE4C623B81DD2478E98CD85C196AD99E99C8FEA8AE2F569998BBA3C9",
+      "currentSha256": "434E42F1AE4C623B81DD2478E98CD85C196AD99E99C8FEA8AE2F569998BBA3C9"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-geo-symbols.sty",
+      "stageSha256": "329A8E8E9695F2B594B35D605A94155B1A417D4823DE1A1AAE32C3C7893591AC",
+      "currentSha256": "329A8E8E9695F2B594B35D605A94155B1A417D4823DE1A1AAE32C3C7893591AC"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-geo.sty",
+      "stageSha256": "04A45F0CF3C7B9AE61FB76B805C0E8F1ADBFD5A44A3D7A78597A67F6ADF0CC66",
+      "currentSha256": "04A45F0CF3C7B9AE61FB76B805C0E8F1ADBFD5A44A3D7A78597A67F6ADF0CC66"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-guide.sty",
+      "stageSha256": "623D4F9EE92C09983F784E484978D01776EC4FF8CF4C4A55712FBE3C93A053ED",
+      "currentSha256": "623D4F9EE92C09983F784E484978D01776EC4FF8CF4C4A55712FBE3C93A053ED"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-hierarchy-dendrogram.sty",
+      "stageSha256": "97AC79953B9D2EB1B70CCBB483C92266E338214B236FBA20994EC7AB0A8FF67E",
+      "currentSha256": "97AC79953B9D2EB1B70CCBB483C92266E338214B236FBA20994EC7AB0A8FF67E"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-hierarchy-pack.sty",
+      "stageSha256": "E0B1D7C81159572BA2EB11C14BAC96792B5F7F4052D2B1BD8760D6C7B2930AF1",
+      "currentSha256": "E0B1D7C81159572BA2EB11C14BAC96792B5F7F4052D2B1BD8760D6C7B2930AF1"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-hierarchy-packing.sty",
+      "stageSha256": "6F67BC3E106174AD8051B2A80DE305D2788C7258B7EAED2ED787505C0CE8EB54",
+      "currentSha256": "6F67BC3E106174AD8051B2A80DE305D2788C7258B7EAED2ED787505C0CE8EB54"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-hierarchy-partition.sty",
+      "stageSha256": "BA1EC24EDDFE51C70AA47FE0D5597C87C3D47A342480904D425D55476C5ED5C7",
+      "currentSha256": "BA1EC24EDDFE51C70AA47FE0D5597C87C3D47A342480904D425D55476C5ED5C7"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-hierarchy-tiling.sty",
+      "stageSha256": "B0532C5779F3245601061EAF0B0ECC63E7224B7C296E652A8D7789893777736F",
+      "currentSha256": "B0532C5779F3245601061EAF0B0ECC63E7224B7C296E652A8D7789893777736F"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-hierarchy-tree.sty",
+      "stageSha256": "BE9451F30F8942822B3FF4773CA387AF92546C3C949934AA2CD064FB8C32CECA",
+      "currentSha256": "BE9451F30F8942822B3FF4773CA387AF92546C3C949934AA2CD064FB8C32CECA"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-hierarchy-treemap.sty",
+      "stageSha256": "88E428B6D798AFBE04675A7955400B0EDB2091C0FAC8F19CACAFD109174B4656",
+      "currentSha256": "88E428B6D798AFBE04675A7955400B0EDB2091C0FAC8F19CACAFD109174B4656"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-hierarchy.sty",
+      "stageSha256": "D9A893C219295791BB657810ADD0D367EFAA419FD21F7D3E1AA81352DCB43BAD",
+      "currentSha256": "D9A893C219295791BB657810ADD0D367EFAA419FD21F7D3E1AA81352DCB43BAD"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-infographic.sty",
+      "stageSha256": "304A2DECD8F327C6DE5725A75F6B4B7ECADBD011B54CED79CE7368BF6EE2ADA8",
+      "currentSha256": "304A2DECD8F327C6DE5725A75F6B4B7ECADBD011B54CED79CE7368BF6EE2ADA8"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-interactionstate.sty",
+      "stageSha256": "4AD31C86ED4101E31745679B716FEEC1F3EB98C95F25282824B9044BD51BFB87",
+      "currentSha256": "4AD31C86ED4101E31745679B716FEEC1F3EB98C95F25282824B9044BD51BFB87"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-label.sty",
+      "stageSha256": "7E2C72C66B927C5388CE45F7B517E686EEF531085FDF2A54B69ED026F44E8F63",
+      "currentSha256": "7E2C72C66B927C5388CE45F7B517E686EEF531085FDF2A54B69ED026F44E8F63"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-layout.sty",
+      "stageSha256": "859BFBE993414A5024C1F19518BD15D81684D7E46354924AE69CF756FEE0197A",
+      "currentSha256": "859BFBE993414A5024C1F19518BD15D81684D7E46354924AE69CF756FEE0197A"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-mark.sty",
+      "stageSha256": "90FF0671AE5C3CBC9581CCFD1E286FF39C5A923C74B48AAEE55BB23D125AC446",
+      "currentSha256": "90FF0671AE5C3CBC9581CCFD1E286FF39C5A923C74B48AAEE55BB23D125AC446"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-matrix-correlation.sty",
+      "stageSha256": "035E8B6E458C7C24EA57AE9178B54464FD629372DDEF2EF0A11B4DE9F8870F86",
+      "currentSha256": "035E8B6E458C7C24EA57AE9178B54464FD629372DDEF2EF0A11B4DE9F8870F86"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-matrix-heatmap.sty",
+      "stageSha256": "9C917700563E570F5FE83212630E395910FB7A1DD49ADBE76B2E59BFAEE1D397",
+      "currentSha256": "9C917700563E570F5FE83212630E395910FB7A1DD49ADBE76B2E59BFAEE1D397"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-network-arc.sty",
+      "stageSha256": "67E16AD2F93F6B009B114C7C61C1445CAF5A22487E2EEA81306ADA688CCB348E",
+      "currentSha256": "67E16AD2F93F6B009B114C7C61C1445CAF5A22487E2EEA81306ADA688CCB348E"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-network-bundling.sty",
+      "stageSha256": "E9055A5656E105EB26B8C648D0BF169D7422680723AE4E1104CE61108118967D",
+      "currentSha256": "E9055A5656E105EB26B8C648D0BF169D7422680723AE4E1104CE61108118967D"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-network-chord.sty",
+      "stageSha256": "D379FF729DCD0F9392B2AD70A320233854332D5B499154C79E871F0E08DB4137",
+      "currentSha256": "D379FF729DCD0F9392B2AD70A320233854332D5B499154C79E871F0E08DB4137"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-network-graph.sty",
+      "stageSha256": "D7F6FD2683C5C0C507595FB60B7C8B9952140F65FF4D6F2028E518703988D0B6",
+      "currentSha256": "D7F6FD2683C5C0C507595FB60B7C8B9952140F65FF4D6F2028E518703988D0B6"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-network-matrix.sty",
+      "stageSha256": "D3AD6A69C244DD0C1E33D24130FF390AC8F4E9F2F5FC2F0D2F465FD93CAA1488",
+      "currentSha256": "D3AD6A69C244DD0C1E33D24130FF390AC8F4E9F2F5FC2F0D2F465FD93CAA1488"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-network.sty",
+      "stageSha256": "75B03BE67391F39304F5AB1DEE06013B9B6C23D49F9ECECC5DA11B0E8A82697A",
+      "currentSha256": "75B03BE67391F39304F5AB1DEE06013B9B6C23D49F9ECECC5DA11B0E8A82697A"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-plot.sty",
+      "stageSha256": "34B46A9D6272E2D6471F82C15F6C713834D828E4B1A0576B2C33B1E9E90F08D1",
+      "currentSha256": "34B46A9D6272E2D6471F82C15F6C713834D828E4B1A0576B2C33B1E9E90F08D1"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-probe.sty",
+      "stageSha256": "A1B444BBB1433A629E0DB51ED05914EDC4D568275373E14D4150C06309B7CA3B",
+      "currentSha256": "A1B444BBB1433A629E0DB51ED05914EDC4D568275373E14D4150C06309B7CA3B"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-scale.sty",
+      "stageSha256": "6D7A3A1573129790321A00FE0B1CF7B1E16127FB8DF2F063AB2A0E764B51068A",
+      "currentSha256": "6D7A3A1573129790321A00FE0B1CF7B1E16127FB8DF2F063AB2A0E764B51068A"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-scientific-3d.sty",
+      "stageSha256": "DB8C99134B447B9871B4F733B80C759FD6DA58F27D3973728EDC99299B53C4D2",
+      "currentSha256": "DB8C99134B447B9871B4F733B80C759FD6DA58F27D3973728EDC99299B53C4D2"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-scientific-biology.sty",
+      "stageSha256": "5B1C85306DC1F4E4706B155464C96CF91FE599F34DA6B83F80E9F979F2242EE4",
+      "currentSha256": "6A030144A2BCCC31CA050E65529CF77B9E5B359EA5423EF2D5E5818625453B94"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-scientific-chemistry.sty",
+      "stageSha256": "CC1A6C821F34BE15A3070535DCED7523949CF5A9CBB333909A55B85138F3186A",
+      "currentSha256": "CC1A6C821F34BE15A3070535DCED7523949CF5A9CBB333909A55B85138F3186A"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-scientific-engineering.sty",
+      "stageSha256": "A9700F62866A65522E3029EA49F52BF8E73E686F3C43D3D7C52C9FA5C66C9294",
+      "currentSha256": "306972314A9B37CB9B7FB43070C201AB036E9EDF99DCF81EB96F33FB00CD1A80"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-scientific-field.sty",
+      "stageSha256": "63E76C197A48A17E07DAF81DF97426E03A9B8A9FEBE861D1ECD90A27F1F1F899",
+      "currentSha256": "9B0AC1145706C1DBC5860810709C76E246BD6976FF32EEE55892458A2FFDF419"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-scientific-geometry.sty",
+      "stageSha256": "C1728F0E9507329DF00EA1FB8BC773E3CA2A7BDECFF7063149703BC8FB15BC6B",
+      "currentSha256": "C1728F0E9507329DF00EA1FB8BC773E3CA2A7BDECFF7063149703BC8FB15BC6B"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-scientific-mathematics.sty",
+      "stageSha256": "1195B36F5BD4BB88BA98EE5C1244A168D5758E4B84A16F21746BB4AAA619CB37",
+      "currentSha256": "F9AA187955BAC959F53DBDB925F9FA3088892E3A1126250A56D56E6BC77AD4BE"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-scientific-physics.sty",
+      "stageSha256": "164C84AF065FB7B3B0057D96DD1400587F15BB40FFEB5368172C87F35F0A18DD",
+      "currentSha256": "164C84AF065FB7B3B0057D96DD1400587F15BB40FFEB5368172C87F35F0A18DD"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-scientific-signal.sty",
+      "stageSha256": "D31E8214211FAF4737FC5534E0F4D73AA02B6C5F447CEEB94CF57A7EDDD7C713",
+      "currentSha256": "D31E8214211FAF4737FC5534E0F4D73AA02B6C5F447CEEB94CF57A7EDDD7C713"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-scientific-surface.sty",
+      "stageSha256": "A04790A75B05F2FC945CA7A783A336ADC5EA29F7097A3205B0B90BEC819D3018",
+      "currentSha256": "A04790A75B05F2FC945CA7A783A336ADC5EA29F7097A3205B0B90BEC819D3018"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-shape.sty",
+      "stageSha256": "19920A1A055AAC012213AFBD54444346957D329D6FCA6892B7688015B3AD6918",
+      "currentSha256": "19920A1A055AAC012213AFBD54444346957D329D6FCA6892B7688015B3AD6918"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-showcase.sty",
+      "stageSha256": "1BB88854093FB4957BFF161CC172AE6F42B1BB13854199EF4532C5BD9ACD3532",
+      "currentSha256": "1BB88854093FB4957BFF161CC172AE6F42B1BB13854199EF4532C5BD9ACD3532"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-spatial.sty",
+      "stageSha256": "39A6AA0F9DA9E755A46D04B86A060A11C8B621191114A8BBA82DB47BA23A3B73",
+      "currentSha256": "39A6AA0F9DA9E755A46D04B86A060A11C8B621191114A8BBA82DB47BA23A3B73"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-table.sty",
+      "stageSha256": "A7AD5BB51125962D08424748D55DB3008D8825D18E3945AA4353D1D03D9FD342",
+      "currentSha256": "A7AD5BB51125962D08424748D55DB3008D8825D18E3945AA4353D1D03D9FD342"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-text.sty",
+      "stageSha256": "264764603D704381BA40C8BE5ECF14767E85108A764F5E4D6DDD461551599939",
+      "currentSha256": "264764603D704381BA40C8BE5ECF14767E85108A764F5E4D6DDD461551599939"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-theme.sty",
+      "stageSha256": "9414969ACB929ACD2F597FB984BD8C77FC30020F8339F65BE948DC2D17D6DD30",
+      "currentSha256": "9414969ACB929ACD2F597FB984BD8C77FC30020F8339F65BE948DC2D17D6DD30"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-transform.sty",
+      "stageSha256": "B810EE303DA1A44DC8C8939009FA04E24E106DFC4CA6DDFD5FB449BD482650D9",
+      "currentSha256": "B810EE303DA1A44DC8C8939009FA04E24E106DFC4CA6DDFD5FB449BD482650D9"
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz.sty",
+      "stageSha256": "F2277314E69747B06F8FECE032CA71AF7CD1A3C0765BDDE6A9A52489F80C852C",
+      "currentSha256": "F2277314E69747B06F8FECE032CA71AF7CD1A3C0765BDDE6A9A52489F80C852C"
+    },
+    {
+      "theme": "light",
+      "name": "semio-window.sty",
+      "stageSha256": "9027901E660FEDBD311E801F0E970A08954146B5EA6F2FBF3AF096D408BFDA8D",
+      "currentSha256": "9027901E660FEDBD311E801F0E970A08954146B5EA6F2FBF3AF096D408BFDA8D"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-components.sty",
+      "stageSha256": "B604034E18005F13206430F59C32B05E89DC47DCE89559B847476DD0A9FA795C",
+      "currentSha256": "B604034E18005F13206430F59C32B05E89DC47DCE89559B847476DD0A9FA795C"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-core.sty",
+      "stageSha256": "654FD134F3B08D7964C405DF4627B2BA5F73953C1528FC69B55F3981BD99BCFF",
+      "currentSha256": "654FD134F3B08D7964C405DF4627B2BA5F73953C1528FC69B55F3981BD99BCFF"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-fonts.sty",
+      "stageSha256": "33355D4403FBB0168B87763CE345E83EFE3F146F152C9316925CF7A73887174F",
+      "currentSha256": "33355D4403FBB0168B87763CE345E83EFE3F146F152C9316925CF7A73887174F"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-graph.sty",
+      "stageSha256": "F33D5F16EDAD2B842ED95FE37B6DD5CC5347DCC2C0AF025D51153812502F1A63",
+      "currentSha256": "642FD78CEC301AA3C5060D3F1AA22F05FB6C9437BFF5A6F27132292997F3726F"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-logo.sty",
+      "stageSha256": "80B767D33294A478CC4DFDBAFC998ACF085A826D6161191A5E79ED458AE122BF",
+      "currentSha256": "80B767D33294A478CC4DFDBAFC998ACF085A826D6161191A5E79ED458AE122BF"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-phd.sty",
+      "stageSha256": "FD2EB7E7C52B3476FB0C13FC90FAD3E312BDDA2A82C674738B39CA5824FF55F3",
+      "currentSha256": "FD2EB7E7C52B3476FB0C13FC90FAD3E312BDDA2A82C674738B39CA5824FF55F3"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-table.sty",
+      "stageSha256": "B40AD60C74855589FA4A942A00943DABC9ABAEDAD124DEA545AA9AC43FFA4EEE",
+      "currentSha256": "B40AD60C74855589FA4A942A00943DABC9ABAEDAD124DEA545AA9AC43FFA4EEE"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-tokens.sty",
+      "stageSha256": "DC7308B3D41914374591A3F1988523DA89869AC9FD349A4058DE4A601673795E",
+      "currentSha256": "DC7308B3D41914374591A3F1988523DA89869AC9FD349A4058DE4A601673795E"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-tree.sty",
+      "stageSha256": "2905B9C2C71837989C128DB0EDCB3D2DCB9E0FC8284A19890356B04071CF9B4C",
+      "currentSha256": "2905B9C2C71837989C128DB0EDCB3D2DCB9E0FC8284A19890356B04071CF9B4C"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-annotation.sty",
+      "stageSha256": "39F9C80D4D58268C299A3DDBB73F02E6A90F040CD2AD185469AE4166EB593C4D",
+      "currentSha256": "39F9C80D4D58268C299A3DDBB73F02E6A90F040CD2AD185469AE4166EB593C4D"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-catalog-labels.sty",
+      "stageSha256": "33ED2921DEA258AA88C198592D5174B4C1B0533334DCB5BA35133C8E43F45031",
+      "currentSha256": "33ED2921DEA258AA88C198592D5174B4C1B0533334DCB5BA35133C8E43F45031"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-catalog.sty",
+      "stageSha256": "0F863CEE00569D0A1DCEC4133545EFEC159D80B1946BF39BE35DE9A8B244744A",
+      "currentSha256": "54D672C1154A093AF5E8F93A718BED72D0B05275A64EC2D689926B33A635B241"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-ai-neural.sty",
+      "stageSha256": "752B16C95B5D15D27A15D93C099DBED5102BBEDE4D0E08126FC8907D7699D21B",
+      "currentSha256": "752B16C95B5D15D27A15D93C099DBED5102BBEDE4D0E08126FC8907D7699D21B"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-annotation-driven.sty",
+      "stageSha256": "5AC32AC82F0CD522F0EE328B8D46A5DE0E91790F4837768DEA256955AA3820FB",
+      "currentSha256": "5AC32AC82F0CD522F0EE328B8D46A5DE0E91790F4837768DEA256955AA3820FB"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-architecture-spatial.sty",
+      "stageSha256": "6F13D92E4F07294D7F49EEFF0CAA4DA7AE34742685A6DD29B480BBE113F4717B",
+      "currentSha256": "6F13D92E4F07294D7F49EEFF0CAA4DA7AE34742685A6DD29B480BBE113F4717B"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-axis-specialized.sty",
+      "stageSha256": "550A1305958072C292E5E7FD55B9BF639EFF558CF678229CA000201B49A02A62",
+      "currentSha256": "550A1305958072C292E5E7FD55B9BF639EFF558CF678229CA000201B49A02A62"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-biology-ecology.sty",
+      "stageSha256": "0768135C1994880CCA0B038D837FC550B74B501CCB4DBB7F616D9FD2F71677E1",
+      "currentSha256": "0768135C1994880CCA0B038D837FC550B74B501CCB4DBB7F616D9FD2F71677E1"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-chemistry.sty",
+      "stageSha256": "8895FC58B98D6B75B1635555502AB49969180273457D46CFCAA858133D62C062",
+      "currentSha256": "8895FC58B98D6B75B1635555502AB49969180273457D46CFCAA858133D62C062"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-circular-genomic.sty",
+      "stageSha256": "BB325EA1D81A397D45BED06BCE6FAD24FE4ADC8C351C771CFD6AABF7CBC7F13B",
+      "currentSha256": "BB325EA1D81A397D45BED06BCE6FAD24FE4ADC8C351C771CFD6AABF7CBC7F13B"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-circular-seat.sty",
+      "stageSha256": "8CEDEEFF80E065386F87E5A1EF08ED2212CC5BD161811B2A937A886C72E8EF05",
+      "currentSha256": "8CEDEEFF80E065386F87E5A1EF08ED2212CC5BD161811B2A937A886C72E8EF05"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-comparison.sty",
+      "stageSha256": "248CF6296BC52B4424B4CF56146533CEB041EED50A481323A90DF3579112B74E",
+      "currentSha256": "248CF6296BC52B4424B4CF56146533CEB041EED50A481323A90DF3579112B74E"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-composite-coordinated.sty",
+      "stageSha256": "96F29F5D4F9D3FD5C6D99FC57C5481EDAE8A085B1F8B9BD9F3548B07AEF5AA5B",
+      "currentSha256": "96F29F5D4F9D3FD5C6D99FC57C5481EDAE8A085B1F8B9BD9F3548B07AEF5AA5B"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-coordinate-system.sty",
+      "stageSha256": "B7EF6E16D343CECB67B5BB93630A3F1373A9E4D9285DBD90B22A608ADC55A7E2",
+      "currentSha256": "B7EF6E16D343CECB67B5BB93630A3F1373A9E4D9285DBD90B22A608ADC55A7E2"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-cybersecurity.sty",
+      "stageSha256": "B31ADA9C8237FBCC271737C7DB532551F27249F8161B35D3F1B007A42F33B2BA",
+      "currentSha256": "B31ADA9C8237FBCC271737C7DB532551F27249F8161B35D3F1B007A42F33B2BA"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-d3-equivalent.sty",
+      "stageSha256": "73032E4A21EF471A27B2DD381520DAA8C759F756E0E238ED045F956ACFC79708",
+      "currentSha256": "73032E4A21EF471A27B2DD381520DAA8C759F756E0E238ED045F956ACFC79708"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-database.sty",
+      "stageSha256": "4FEF35BF72E90915B9BF7BCED534DE3033255B309770D8CDBC6E92C7DCC0F4CF",
+      "currentSha256": "4FEF35BF72E90915B9BF7BCED534DE3033255B309770D8CDBC6E92C7DCC0F4CF"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-diagrammatic-grids.sty",
+      "stageSha256": "F29CA6DC02FA86BB4C12A1D7D5E92752E9A5E7D38D5A199C4C16FA8A68C64B5C",
+      "currentSha256": "F29CA6DC02FA86BB4C12A1D7D5E92752E9A5E7D38D5A199C4C16FA8A68C64B5C"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-distribution.sty",
+      "stageSha256": "F2142BEFAAA1E6F195E48748EAD760DE284715981D9DD8874624B27610BE16E8",
+      "currentSha256": "F2142BEFAAA1E6F195E48748EAD760DE284715981D9DD8874624B27610BE16E8"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-earth-climate.sty",
+      "stageSha256": "5CC1EBAB2F12B72F195B3528292393B8F7062D27EF199A38C5BF9A7FA170CB17",
+      "currentSha256": "5CC1EBAB2F12B72F195B3528292393B8F7062D27EF199A38C5BF9A7FA170CB17"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-education-conceptual.sty",
+      "stageSha256": "86E488877117E30885748B7A3F448379B3B42FB92930D6FDD01499BD4BAC6874",
+      "currentSha256": "86E488877117E30885748B7A3F448379B3B42FB92930D6FDD01499BD4BAC6874"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-election-political.sty",
+      "stageSha256": "C3A24AF6DC3B02089D51EECB9B0C7D2332A9402D19849DC36872D3305E071DEC",
+      "currentSha256": "C3A24AF6DC3B02089D51EECB9B0C7D2332A9402D19849DC36872D3305E071DEC"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-electrical-electronics.sty",
+      "stageSha256": "69ABE9D5A1E90FE895E964B3370324060F33F5EC896058FF1FFB112278802397",
+      "currentSha256": "69ABE9D5A1E90FE895E964B3370324060F33F5EC896058FF1FFB112278802397"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-engineering.sty",
+      "stageSha256": "71E7D1013717073F9E3CC4541D55C8EEA775A232CDB11C050C25ED0006C217E4",
+      "currentSha256": "71E7D1013717073F9E3CC4541D55C8EEA775A232CDB11C050C25ED0006C217E4"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-experimental-design.sty",
+      "stageSha256": "588DA34FB493BE78B656218A45358CBDBEA3C94FA243EB5437AA65A14E456381",
+      "currentSha256": "588DA34FB493BE78B656218A45358CBDBEA3C94FA243EB5437AA65A14E456381"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-faceting-repeated.sty",
+      "stageSha256": "37953BE80785C31418679AC200E7BD8D16B612A022D501CBE8A56006E49E3F32",
+      "currentSha256": "37953BE80785C31418679AC200E7BD8D16B612A022D501CBE8A56006E49E3F32"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-financial-economic.sty",
+      "stageSha256": "68C7AD000259C9DDDC8689A796612FF5BD81C7EAC71893E11139C6DF1B2A5777",
+      "currentSha256": "68C7AD000259C9DDDC8689A796612FF5BD81C7EAC71893E11139C6DF1B2A5777"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-flow.sty",
+      "stageSha256": "1F79575C4566A226D3DE96A0998EDDF36626B8424C38E81AD93013DE66ABBB13",
+      "currentSha256": "1F79575C4566A226D3DE96A0998EDDF36626B8424C38E81AD93013DE66ABBB13"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-formal-language.sty",
+      "stageSha256": "E6E3CB8102E8896E5A975FC66BF683505FEB9D95527889C81BB9E155C4D084A8",
+      "currentSha256": "E6E3CB8102E8896E5A975FC66BF683505FEB9D95527889C81BB9E155C4D084A8"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-funnel-conversion.sty",
+      "stageSha256": "97E41E7813432914F1004B0180CAC1F86A12816C65EAE1D793855FE9E39DE721",
+      "currentSha256": "97E41E7813432914F1004B0180CAC1F86A12816C65EAE1D793855FE9E39DE721"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-geometry.sty",
+      "stageSha256": "D558B7A243DC2611DBF72E5AEE7414C4563C88D20A44888F39E8A0DB1642F863",
+      "currentSha256": "D558B7A243DC2611DBF72E5AEE7414C4563C88D20A44888F39E8A0DB1642F863"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-geospatial-cartographic.sty",
+      "stageSha256": "45FD48635EBCE658DC192B78BCE0FE3ABEA75836A42AE5494446E7AD728C2800",
+      "currentSha256": "45FD48635EBCE658DC192B78BCE0FE3ABEA75836A42AE5494446E7AD728C2800"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-graph-network.sty",
+      "stageSha256": "9CF8DFCC43B90CAC17BBCC594D31BE3B3E60D645460AE34CC023E1C82D0BC963",
+      "currentSha256": "9CF8DFCC43B90CAC17BBCC594D31BE3B3E60D645460AE34CC023E1C82D0BC963"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-graphical-notation.sty",
+      "stageSha256": "2B81DD540DE4CB81ECFDFD7E8178095AF1CD47C0700E88CAAEA6A5886C082ABD",
+      "currentSha256": "2B81DD540DE4CB81ECFDFD7E8178095AF1CD47C0700E88CAAEA6A5886C082ABD"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-graphical-schedules.sty",
+      "stageSha256": "F4E9D9856D3AB1854806B75A1F991EF6B0770BDBF7D38338ACF902DB7C599272",
+      "currentSha256": "F4E9D9856D3AB1854806B75A1F991EF6B0770BDBF7D38338ACF902DB7C599272"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-hierarchical.sty",
+      "stageSha256": "0EC6933AD569837B9CEB87FB463EC911E7BB6B70A6AC3128C826F3C54859CF85",
+      "currentSha256": "0EC6933AD569837B9CEB87FB463EC911E7BB6B70A6AC3128C826F3C54859CF85"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-infographic-style.sty",
+      "stageSha256": "46F9700709F7A4A17C9ADC779A6A2AC62E4C59A5C6DE66325D0B05709F5070C3",
+      "currentSha256": "46F9700709F7A4A17C9ADC779A6A2AC62E4C59A5C6DE66325D0B05709F5070C3"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-kpi-dashboard.sty",
+      "stageSha256": "F5D16F34D72DEFF782DFB48F947568213B7C1EEFECBF5BE67D0EC985E5F8F2B4",
+      "currentSha256": "F5D16F34D72DEFF782DFB48F947568213B7C1EEFECBF5BE67D0EC985E5F8F2B4"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-layout-algorithms.sty",
+      "stageSha256": "E64094E3AB845B439B39B346F0B1785F8E9E46C28E276EDD14CC8E112E6F20CE",
+      "currentSha256": "E64094E3AB845B439B39B346F0B1785F8E9E46C28E276EDD14CC8E112E6F20CE"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-layout-spatial.sty",
+      "stageSha256": "8781F32827509A0F82842D0FB41ADFCB73A971CF92BA192A3167693A4B1FF258",
+      "currentSha256": "8781F32827509A0F82842D0FB41ADFCB73A971CF92BA192A3167693A4B1FF258"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-logistics-transportation.sty",
+      "stageSha256": "3076AF43A957E19F4E7C281BFA6F7A6623F124CA4CB99DDAF0B5ABAE88C8B3A0",
+      "currentSha256": "3076AF43A957E19F4E7C281BFA6F7A6623F124CA4CB99DDAF0B5ABAE88C8B3A0"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-mathematical-abstract.sty",
+      "stageSha256": "907188A22F65283AA2732FC8D87224C179B78D9F9D0E3E431BCB6C6EF6280553",
+      "currentSha256": "907188A22F65283AA2732FC8D87224C179B78D9F9D0E3E431BCB6C6EF6280553"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-mathematical-function.sty",
+      "stageSha256": "F085463FB5F5A117F494E54405313AE4DB1A15D4E927C561AFE14D97A3C739D6",
+      "currentSha256": "F085463FB5F5A117F494E54405313AE4DB1A15D4E927C561AFE14D97A3C739D6"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-matrix-heatmap.sty",
+      "stageSha256": "11AC0EA57EA38FBEC20DAA1F89325BC20D951CF6A8508125251BA0CA6E0235DC",
+      "currentSha256": "11AC0EA57EA38FBEC20DAA1F89325BC20D951CF6A8508125251BA0CA6E0235DC"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-medical-biomedical.sty",
+      "stageSha256": "0FEB5165AAA35849C5D29272ABEE21618D34C56DC131F47FEA94A3ABD51F7EE8",
+      "currentSha256": "0FEB5165AAA35849C5D29272ABEE21618D34C56DC131F47FEA94A3ABD51F7EE8"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-meta-composition.sty",
+      "stageSha256": "33C4834599A50324F1CD71C76C2F1940B51A43BE1ED2C4FA3C482CA499DC6BFC",
+      "currentSha256": "33C4834599A50324F1CD71C76C2F1940B51A43BE1ED2C4FA3C482CA499DC6BFC"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-model-evaluation.sty",
+      "stageSha256": "855EE3E4A0B8E8923588DC7FD4F934ADE3622E6066007FF62B8264E323C54D35",
+      "currentSha256": "855EE3E4A0B8E8923588DC7FD4F934ADE3622E6066007FF62B8264E323C54D35"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-multivariate.sty",
+      "stageSha256": "5DAFB617DE68D6D3E61916F33AE3EE300E4D52C49B406CE873908BCB3DD6254A",
+      "currentSha256": "5DAFB617DE68D6D3E61916F33AE3EE300E4D52C49B406CE873908BCB3DD6254A"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-music.sty",
+      "stageSha256": "FC74EB29741AC90B40A237589CC17BCE66CA3BFEC0ADAD8B0AC0D884F7B2B540",
+      "currentSha256": "FC74EB29741AC90B40A237589CC17BCE66CA3BFEC0ADAD8B0AC0D884F7B2B540"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-network-system.sty",
+      "stageSha256": "FFF980BAF525ABE752A200FE8C1AF704F6913A39654E641D8FAABACDF34DF42E",
+      "currentSha256": "FFF980BAF525ABE752A200FE8C1AF704F6913A39654E641D8FAABACDF34DF42E"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-optimization-operations.sty",
+      "stageSha256": "FA21308CDA81F5002915763A139ACC399D816C15FF27AC2EFC68E371F75714C8",
+      "currentSha256": "FA21308CDA81F5002915763A139ACC399D816C15FF27AC2EFC68E371F75714C8"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-part-whole.sty",
+      "stageSha256": "3FC2F5EDDE350068FE7F0E5874F8A65E86F7F8742746F0B05963C921E9775817",
+      "currentSha256": "3FC2F5EDDE350068FE7F0E5874F8A65E86F7F8742746F0B05963C921E9775817"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-physics.sty",
+      "stageSha256": "60E42829DC54A4B5FE0F24CC01D4582C88D55D96A8AC577949801F54E0B18C63",
+      "currentSha256": "60E42829DC54A4B5FE0F24CC01D4582C88D55D96A8AC577949801F54E0B18C63"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-polar-radial.sty",
+      "stageSha256": "03536310082F10BDA5C9403F958E1CD23846BE54856476866DA69BEB092D3516",
+      "currentSha256": "03536310082F10BDA5C9403F958E1CD23846BE54856476866DA69BEB092D3516"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-probability.sty",
+      "stageSha256": "D3466612B9558E415672A8627DC8EAC71673F0442D3DFC951871FCEAD4159E5B",
+      "currentSha256": "D3466612B9558E415672A8627DC8EAC71673F0442D3DFC951871FCEAD4159E5B"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-process-workflow.sty",
+      "stageSha256": "FEC43BCEBF5F7C18A9B58F227CC65F99EA16FC9CC2526B2B23E36A1555438F79",
+      "currentSha256": "FEC43BCEBF5F7C18A9B58F227CC65F99EA16FC9CC2526B2B23E36A1555438F79"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-project-management.sty",
+      "stageSha256": "BF8F3F3749E9E6F04F4D29870E476EA2A0954ADEED9978622BE476224C6EBF0F",
+      "currentSha256": "BF8F3F3749E9E6F04F4D29870E476EA2A0954ADEED9978622BE476224C6EBF0F"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-provenance-lineage.sty",
+      "stageSha256": "59D4956A6F455339B83BB32C80CC5A89781CE0CA28A8170AC61345BF5E05863B",
+      "currentSha256": "59D4956A6F455339B83BB32C80CC5A89781CE0CA28A8170AC61345BF5E05863B"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-recommended-top.sty",
+      "stageSha256": "68F2E2722E27079B912FEF2C5289C99B01541A65C6DA5BB8BB18FBBB0E6582A8",
+      "currentSha256": "68F2E2722E27079B912FEF2C5289C99B01541A65C6DA5BB8BB18FBBB0E6582A8"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-relationship-conceptual.sty",
+      "stageSha256": "32DE645EA4DB412A6BC33D8EF54EA71CEDEEFB5C8D0D256A2C0130032A895D9A",
+      "currentSha256": "32DE645EA4DB412A6BC33D8EF54EA71CEDEEFB5C8D0D256A2C0130032A895D9A"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-relationship-correlation.sty",
+      "stageSha256": "E98E1484E16C6CDA0515AE871C8B5EECE8A93FC48C79B1F706F688E1AC41CD4E",
+      "currentSha256": "E98E1484E16C6CDA0515AE871C8B5EECE8A93FC48C79B1F706F688E1AC41CD4E"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-scalar-field.sty",
+      "stageSha256": "515E539D5EBB6833A80FD21AB4C89ACAEAF477F061C5B1E2C88A7F61E82240C7",
+      "currentSha256": "515E539D5EBB6833A80FD21AB4C89ACAEAF477F061C5B1E2C88A7F61E82240C7"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-scientific-publication.sty",
+      "stageSha256": "C698209E2271EE334D09EC8FCB19C8479972A8AF4CD16CD10CF867CFE6DF43CC",
+      "currentSha256": "C698209E2271EE334D09EC8FCB19C8479972A8AF4CD16CD10CF867CFE6DF43CC"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-set-overlap.sty",
+      "stageSha256": "C7A6BD88B734676FBB88C59E4549BA6C715DBA84C1200DF7A42E22F0F6BCD563",
+      "currentSha256": "C7A6BD88B734676FBB88C59E4549BA6C715DBA84C1200DF7A42E22F0F6BCD563"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-signal-processing.sty",
+      "stageSha256": "AF9E538C57E860842E6C3D97F4118267486366A932B0978494B051CCFD075603",
+      "currentSha256": "AF9E538C57E860842E6C3D97F4118267486366A932B0978494B051CCFD075603"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-software-performance.sty",
+      "stageSha256": "A7C18117EC4EC463BDE1975FC04F61C01745697B6B8C16CF9CA6F1ABC213E09D",
+      "currentSha256": "A7C18117EC4EC463BDE1975FC04F61C01745697B6B8C16CF9CA6F1ABC213E09D"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-specialized-analytical.sty",
+      "stageSha256": "309D2E290587212B6546908E206CAAC23D0DC0E40CB6B28C52ACF0FAF35FB0C0",
+      "currentSha256": "309D2E290587212B6546908E206CAAC23D0DC0E40CB6B28C52ACF0FAF35FB0C0"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-sports.sty",
+      "stageSha256": "E4BEE5D0FF938ED57B8C4B1458BDD439FFF81CD64A12F75535C902C240DA26C0",
+      "currentSha256": "E4BEE5D0FF938ED57B8C4B1458BDD439FFF81CD64A12F75535C902C240DA26C0"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-static-equivalents.sty",
+      "stageSha256": "6F05DC02A211C67FD5A10853B0DDF6F3C0704E9876B5D706D028F2F5F4D141E7",
+      "currentSha256": "6F05DC02A211C67FD5A10853B0DDF6F3C0704E9876B5D706D028F2F5F4D141E7"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-statistical-inference.sty",
+      "stageSha256": "14625B0725D67D8B459EEAAD95848D7E701424129226BCEC9D05862F68D4F851",
+      "currentSha256": "14625B0725D67D8B459EEAAD95848D7E701424129226BCEC9D05862F68D4F851"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-storytelling-narrative.sty",
+      "stageSha256": "4B7B6FDD17FAF269865FA0360DAC6A493C5162985938FC87C9E6062D4F81881A",
+      "currentSha256": "4B7B6FDD17FAF269865FA0360DAC6A493C5162985938FC87C9E6062D4F81881A"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-survey-polling.sty",
+      "stageSha256": "E112A4A2BA8A886708CB726963B7CE585A05515B526F8DBB3ECA64FFAF5780F1",
+      "currentSha256": "E112A4A2BA8A886708CB726963B7CE585A05515B526F8DBB3ECA64FFAF5780F1"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-table-oriented.sty",
+      "stageSha256": "F2934594BDCF700CD9D0F97DCC3C348C606D593698A0009D33335208E7741605",
+      "currentSha256": "F2934594BDCF700CD9D0F97DCC3C348C606D593698A0009D33335208E7741605"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-text-language.sty",
+      "stageSha256": "7D4B69DFB45DBA4AEDBD85E8D6F6185CD0B5981B9ED57A46D23AD6D904DE971B",
+      "currentSha256": "7D4B69DFB45DBA4AEDBD85E8D6F6185CD0B5981B9ED57A46D23AD6D904DE971B"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-three-dimensional.sty",
+      "stageSha256": "A158DBE62728E5120A1B12E4B8BCEF88A9B7920046B54F37ABBE417FE84A09D5",
+      "currentSha256": "A158DBE62728E5120A1B12E4B8BCEF88A9B7920046B54F37ABBE417FE84A09D5"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-time-series.sty",
+      "stageSha256": "8F5B551DC601A577B32ECC9CC09C50F53E736F1C63853A05E52BA03D593137FB",
+      "currentSha256": "8F5B551DC601A577B32ECC9CC09C50F53E736F1C63853A05E52BA03D593137FB"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-ultimate-api.sty",
+      "stageSha256": "4A579B556D6B29C60B63BF50F01EE13DAFA8ADDBE00D9747C19A84FE658DA797",
+      "currentSha256": "4A579B556D6B29C60B63BF50F01EE13DAFA8ADDBE00D9747C19A84FE658DA797"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-uml-software.sty",
+      "stageSha256": "E01E0CF24F69ED30DFBFB40727C70D571D3F513CDE69764F079AEB53726B7468",
+      "currentSha256": "E01E0CF24F69ED30DFBFB40727C70D571D3F513CDE69764F079AEB53726B7468"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-unusual-niche.sty",
+      "stageSha256": "50D76ADCA27F5EC37920775BBB480CD139E6399C53FFA76BBF8BF0A181450589",
+      "currentSha256": "50D76ADCA27F5EC37920775BBB480CD139E6399C53FFA76BBF8BF0A181450589"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-vector-field.sty",
+      "stageSha256": "2C4D802B02133F5A976DE43908374627C5A3EDBDC27814C492D17B40AE9170C2",
+      "currentSha256": "2C4D802B02133F5A976DE43908374627C5A3EDBDC27814C492D17B40AE9170C2"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-version-control.sty",
+      "stageSha256": "0337C2ACBFB23C39FFC3BAF87D0EA250CC331819ABF7B05502D8EF59C0BE14C3",
+      "currentSha256": "0337C2ACBFB23C39FFC3BAF87D0EA250CC331819ABF7B05502D8EF59C0BE14C3"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-chart-visual-encodings.sty",
+      "stageSha256": "0A62CCD96AEA710FD1BFBC760E7F4D40A0DD58D22086CA7238D94B5E144F7190",
+      "currentSha256": "0A62CCD96AEA710FD1BFBC760E7F4D40A0DD58D22086CA7238D94B5E144F7190"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-charts-area.sty",
+      "stageSha256": "4945C6618A591E5A6E7D0969CCDF09268B5B6D1BA6193E09AC50EF7678121315",
+      "currentSha256": "4945C6618A591E5A6E7D0969CCDF09268B5B6D1BA6193E09AC50EF7678121315"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-charts-bar.sty",
+      "stageSha256": "77C2CE15B70B2C72A962B508B7817E62ECEC3F191C3CBD70C062C39655C0222C",
+      "currentSha256": "77C2CE15B70B2C72A962B508B7817E62ECEC3F191C3CBD70C062C39655C0222C"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-charts-dashboard.sty",
+      "stageSha256": "8F5B99F43ECB6EF312844466B83AD54917840D4B38E7FA8970AA490E391476E0",
+      "currentSha256": "8F5B99F43ECB6EF312844466B83AD54917840D4B38E7FA8970AA490E391476E0"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-charts-distribution.sty",
+      "stageSha256": "A588D5821EE0F9C21EE3AC2C4459EBECB811255F3440C65DE1E5F85FD246DCB9",
+      "currentSha256": "A588D5821EE0F9C21EE3AC2C4459EBECB811255F3440C65DE1E5F85FD246DCB9"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-charts-financial.sty",
+      "stageSha256": "2DDA8FC1E0715CFDCF656417A52256FF381F2489CC60D58626375992BB0FD1AB",
+      "currentSha256": "2DDA8FC1E0715CFDCF656417A52256FF381F2489CC60D58626375992BB0FD1AB"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-charts-funnel.sty",
+      "stageSha256": "90383F1167415A98CAEB06F9173BE0D300591AFA576AA62FFA2BADC296EA61A7",
+      "currentSha256": "90383F1167415A98CAEB06F9173BE0D300591AFA576AA62FFA2BADC296EA61A7"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-charts-line.sty",
+      "stageSha256": "DF0C798F99428DA7FB0896CE36EA39157E0D047B3DDD93BE872BAF6C7FA7CBD7",
+      "currentSha256": "DF0C798F99428DA7FB0896CE36EA39157E0D047B3DDD93BE872BAF6C7FA7CBD7"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-charts-polar.sty",
+      "stageSha256": "638387DD41DBE5ED3061FF5F17518D47BC9837B4A49CB803E4AECB40EAE60C65",
+      "currentSha256": "638387DD41DBE5ED3061FF5F17518D47BC9837B4A49CB803E4AECB40EAE60C65"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-charts-scatter.sty",
+      "stageSha256": "D93C27F2FE2C6023DFC91C82F588AD85655288AFE745E2EE8B0589D3558C8EE0",
+      "currentSha256": "D93C27F2FE2C6023DFC91C82F588AD85655288AFE745E2EE8B0589D3558C8EE0"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-charts-statistical.sty",
+      "stageSha256": "F64893AF051C4C93633142C90AB6858AAA5CF593F71A0BFA38297B43922F30FC",
+      "currentSha256": "F64893AF051C4C93633142C90AB6858AAA5CF593F71A0BFA38297B43922F30FC"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-charts-timeline.sty",
+      "stageSha256": "08D1BC5989F5B1D382200A4FD9A77B24FBF5EC5D73CA1DF3333C9DA3DCEAA3CA",
+      "currentSha256": "08D1BC5989F5B1D382200A4FD9A77B24FBF5EC5D73CA1DF3333C9DA3DCEAA3CA"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-charts.sty",
+      "stageSha256": "EA9FFFFD88763D00039F024C729BDD101E5CEA893FFDCEE48163E36D3FAC4DD9",
+      "currentSha256": "EA9FFFFD88763D00039F024C729BDD101E5CEA893FFDCEE48163E36D3FAC4DD9"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-composition.sty",
+      "stageSha256": "29CDC68523EF187F40D3F0D2FE561C9BED08120F88371E14451BBFD45D0584BE",
+      "currentSha256": "29CDC68523EF187F40D3F0D2FE561C9BED08120F88371E14451BBFD45D0584BE"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-coordinate.sty",
+      "stageSha256": "0DD15CDB805EF48189498DFE8803828BFFC670DE3048B9CC006FB704259F223E",
+      "currentSha256": "0DD15CDB805EF48189498DFE8803828BFFC670DE3048B9CC006FB704259F223E"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-data.sty",
+      "stageSha256": "B55592D8721622AA74175C69E49E4DDC74CAD870690C74E2308CECAD9278ADAA",
+      "currentSha256": "B55592D8721622AA74175C69E49E4DDC74CAD870690C74E2308CECAD9278ADAA"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-diagram-architecture.sty",
+      "stageSha256": "7D4F4191A32852BCEB324795206289E0932B3E345D5E25EB999A50D51DCB2BD9",
+      "currentSha256": "7D4F4191A32852BCEB324795206289E0932B3E345D5E25EB999A50D51DCB2BD9"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-diagram-concept.sty",
+      "stageSha256": "EA3FAB89FF2B5D7D135A3F9B65BFC4E6FB0BDC7BFE9CFEDD82EA895E0AA587AE",
+      "currentSha256": "EA3FAB89FF2B5D7D135A3F9B65BFC4E6FB0BDC7BFE9CFEDD82EA895E0AA587AE"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-diagram-flowchart.sty",
+      "stageSha256": "57C62803AD40E20B58E4D7609E2EB8217862ECBBC29F5AE8722C6B2471F6D6B7",
+      "currentSha256": "57C62803AD40E20B58E4D7609E2EB8217862ECBBC29F5AE8722C6B2471F6D6B7"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-diagram-process.sty",
+      "stageSha256": "E5048AF3A1E73C69D4243B391B31AD0E2E10980B1A0493A17149E026EB815D81",
+      "currentSha256": "E5048AF3A1E73C69D4243B391B31AD0E2E10980B1A0493A17149E026EB815D81"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-diagram-uml.sty",
+      "stageSha256": "2EAB88A18DD518ACD44D799D8E35DFD1600DB8793A27678D28746995B7EDAAE0",
+      "currentSha256": "2EAB88A18DD518ACD44D799D8E35DFD1600DB8793A27678D28746995B7EDAAE0"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-domain.sty",
+      "stageSha256": "1A5FF24E58E2D59926229DB43217EB29999EA766D69E002B1F8D57841AF3C478",
+      "currentSha256": "1A5FF24E58E2D59926229DB43217EB29999EA766D69E002B1F8D57841AF3C478"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-facet.sty",
+      "stageSha256": "D5FF45272EED07B444775153C07991D297762093545453A7DB6E9CCD9A31304B",
+      "currentSha256": "D5FF45272EED07B444775153C07991D297762093545453A7DB6E9CCD9A31304B"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-family.sty",
+      "stageSha256": "D7C8BAB330D4BE95008D9BFEF75E01F2D3C1CD38AA9A1536A24D465272F01F53",
+      "currentSha256": "D7C8BAB330D4BE95008D9BFEF75E01F2D3C1CD38AA9A1536A24D465272F01F53"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-flow-alluvial.sty",
+      "stageSha256": "FD26AEBF9AE306FFD64B574542168C9949801E5F0CDC1F59B38AD8D7532090F0",
+      "currentSha256": "FD26AEBF9AE306FFD64B574542168C9949801E5F0CDC1F59B38AD8D7532090F0"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-flow-parallelsets.sty",
+      "stageSha256": "06F25750E0BCDBF4369040F9F1CDB0DFD8916DD30DC62FB024C9A93FFFC656AA",
+      "currentSha256": "06F25750E0BCDBF4369040F9F1CDB0DFD8916DD30DC62FB024C9A93FFFC656AA"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-flow-sankey.sty",
+      "stageSha256": "B734B8AA5DB1165687AECAA38A7ACC236B39A579106CD7C47DE2437F9AB7D32F",
+      "currentSha256": "B734B8AA5DB1165687AECAA38A7ACC236B39A579106CD7C47DE2437F9AB7D32F"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-flow.sty",
+      "stageSha256": "0E79C84406EB9EC79E9D82628A7EBBA9F63B9351B64A8C2E1A3F96AFD32411F9",
+      "currentSha256": "0E79C84406EB9EC79E9D82628A7EBBA9F63B9351B64A8C2E1A3F96AFD32411F9"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-format.sty",
+      "stageSha256": "A9F078195E8C051382044C79D2E2489AC5CCD49D2FE8A4EC90A5D1F92B5892E6",
+      "currentSha256": "A9F078195E8C051382044C79D2E2489AC5CCD49D2FE8A4EC90A5D1F92B5892E6"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-geo-choropleth.sty",
+      "stageSha256": "B27BFFF38A8910BB0516818C09262C57B52D4C960EFED47849400933CDACE949",
+      "currentSha256": "B27BFFF38A8910BB0516818C09262C57B52D4C960EFED47849400933CDACE949"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-geo-contours.sty",
+      "stageSha256": "ED810FF0CF1A7CC3ADF2E0CDDCC8FBB479774C53DD596FA8DACB3F3C39802467",
+      "currentSha256": "ED810FF0CF1A7CC3ADF2E0CDDCC8FBB479774C53DD596FA8DACB3F3C39802467"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-geo-map.sty",
+      "stageSha256": "01BC451D6FF129FD92F89F3CC18F8E239D917CDC84210B249CF90F5DE79748BB",
+      "currentSha256": "01BC451D6FF129FD92F89F3CC18F8E239D917CDC84210B249CF90F5DE79748BB"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-geo-projection.sty",
+      "stageSha256": "A36860B72454C1CEC15AD5BE5E4919968710F65784A9883104DFA55D64FE0BF0",
+      "currentSha256": "A36860B72454C1CEC15AD5BE5E4919968710F65784A9883104DFA55D64FE0BF0"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-geo-routes.sty",
+      "stageSha256": "434E42F1AE4C623B81DD2478E98CD85C196AD99E99C8FEA8AE2F569998BBA3C9",
+      "currentSha256": "434E42F1AE4C623B81DD2478E98CD85C196AD99E99C8FEA8AE2F569998BBA3C9"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-geo-symbols.sty",
+      "stageSha256": "329A8E8E9695F2B594B35D605A94155B1A417D4823DE1A1AAE32C3C7893591AC",
+      "currentSha256": "329A8E8E9695F2B594B35D605A94155B1A417D4823DE1A1AAE32C3C7893591AC"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-geo.sty",
+      "stageSha256": "04A45F0CF3C7B9AE61FB76B805C0E8F1ADBFD5A44A3D7A78597A67F6ADF0CC66",
+      "currentSha256": "04A45F0CF3C7B9AE61FB76B805C0E8F1ADBFD5A44A3D7A78597A67F6ADF0CC66"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-guide.sty",
+      "stageSha256": "623D4F9EE92C09983F784E484978D01776EC4FF8CF4C4A55712FBE3C93A053ED",
+      "currentSha256": "623D4F9EE92C09983F784E484978D01776EC4FF8CF4C4A55712FBE3C93A053ED"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-hierarchy-dendrogram.sty",
+      "stageSha256": "97AC79953B9D2EB1B70CCBB483C92266E338214B236FBA20994EC7AB0A8FF67E",
+      "currentSha256": "97AC79953B9D2EB1B70CCBB483C92266E338214B236FBA20994EC7AB0A8FF67E"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-hierarchy-pack.sty",
+      "stageSha256": "E0B1D7C81159572BA2EB11C14BAC96792B5F7F4052D2B1BD8760D6C7B2930AF1",
+      "currentSha256": "E0B1D7C81159572BA2EB11C14BAC96792B5F7F4052D2B1BD8760D6C7B2930AF1"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-hierarchy-packing.sty",
+      "stageSha256": "6F67BC3E106174AD8051B2A80DE305D2788C7258B7EAED2ED787505C0CE8EB54",
+      "currentSha256": "6F67BC3E106174AD8051B2A80DE305D2788C7258B7EAED2ED787505C0CE8EB54"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-hierarchy-partition.sty",
+      "stageSha256": "BA1EC24EDDFE51C70AA47FE0D5597C87C3D47A342480904D425D55476C5ED5C7",
+      "currentSha256": "BA1EC24EDDFE51C70AA47FE0D5597C87C3D47A342480904D425D55476C5ED5C7"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-hierarchy-tiling.sty",
+      "stageSha256": "B0532C5779F3245601061EAF0B0ECC63E7224B7C296E652A8D7789893777736F",
+      "currentSha256": "B0532C5779F3245601061EAF0B0ECC63E7224B7C296E652A8D7789893777736F"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-hierarchy-tree.sty",
+      "stageSha256": "BE9451F30F8942822B3FF4773CA387AF92546C3C949934AA2CD064FB8C32CECA",
+      "currentSha256": "BE9451F30F8942822B3FF4773CA387AF92546C3C949934AA2CD064FB8C32CECA"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-hierarchy-treemap.sty",
+      "stageSha256": "88E428B6D798AFBE04675A7955400B0EDB2091C0FAC8F19CACAFD109174B4656",
+      "currentSha256": "88E428B6D798AFBE04675A7955400B0EDB2091C0FAC8F19CACAFD109174B4656"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-hierarchy.sty",
+      "stageSha256": "D9A893C219295791BB657810ADD0D367EFAA419FD21F7D3E1AA81352DCB43BAD",
+      "currentSha256": "D9A893C219295791BB657810ADD0D367EFAA419FD21F7D3E1AA81352DCB43BAD"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-infographic.sty",
+      "stageSha256": "304A2DECD8F327C6DE5725A75F6B4B7ECADBD011B54CED79CE7368BF6EE2ADA8",
+      "currentSha256": "304A2DECD8F327C6DE5725A75F6B4B7ECADBD011B54CED79CE7368BF6EE2ADA8"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-interactionstate.sty",
+      "stageSha256": "4AD31C86ED4101E31745679B716FEEC1F3EB98C95F25282824B9044BD51BFB87",
+      "currentSha256": "4AD31C86ED4101E31745679B716FEEC1F3EB98C95F25282824B9044BD51BFB87"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-label.sty",
+      "stageSha256": "7E2C72C66B927C5388CE45F7B517E686EEF531085FDF2A54B69ED026F44E8F63",
+      "currentSha256": "7E2C72C66B927C5388CE45F7B517E686EEF531085FDF2A54B69ED026F44E8F63"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-layout.sty",
+      "stageSha256": "859BFBE993414A5024C1F19518BD15D81684D7E46354924AE69CF756FEE0197A",
+      "currentSha256": "859BFBE993414A5024C1F19518BD15D81684D7E46354924AE69CF756FEE0197A"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-mark.sty",
+      "stageSha256": "90FF0671AE5C3CBC9581CCFD1E286FF39C5A923C74B48AAEE55BB23D125AC446",
+      "currentSha256": "90FF0671AE5C3CBC9581CCFD1E286FF39C5A923C74B48AAEE55BB23D125AC446"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-matrix-correlation.sty",
+      "stageSha256": "035E8B6E458C7C24EA57AE9178B54464FD629372DDEF2EF0A11B4DE9F8870F86",
+      "currentSha256": "035E8B6E458C7C24EA57AE9178B54464FD629372DDEF2EF0A11B4DE9F8870F86"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-matrix-heatmap.sty",
+      "stageSha256": "9C917700563E570F5FE83212630E395910FB7A1DD49ADBE76B2E59BFAEE1D397",
+      "currentSha256": "9C917700563E570F5FE83212630E395910FB7A1DD49ADBE76B2E59BFAEE1D397"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-network-arc.sty",
+      "stageSha256": "67E16AD2F93F6B009B114C7C61C1445CAF5A22487E2EEA81306ADA688CCB348E",
+      "currentSha256": "67E16AD2F93F6B009B114C7C61C1445CAF5A22487E2EEA81306ADA688CCB348E"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-network-bundling.sty",
+      "stageSha256": "E9055A5656E105EB26B8C648D0BF169D7422680723AE4E1104CE61108118967D",
+      "currentSha256": "E9055A5656E105EB26B8C648D0BF169D7422680723AE4E1104CE61108118967D"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-network-chord.sty",
+      "stageSha256": "D379FF729DCD0F9392B2AD70A320233854332D5B499154C79E871F0E08DB4137",
+      "currentSha256": "D379FF729DCD0F9392B2AD70A320233854332D5B499154C79E871F0E08DB4137"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-network-graph.sty",
+      "stageSha256": "D7F6FD2683C5C0C507595FB60B7C8B9952140F65FF4D6F2028E518703988D0B6",
+      "currentSha256": "D7F6FD2683C5C0C507595FB60B7C8B9952140F65FF4D6F2028E518703988D0B6"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-network-matrix.sty",
+      "stageSha256": "D3AD6A69C244DD0C1E33D24130FF390AC8F4E9F2F5FC2F0D2F465FD93CAA1488",
+      "currentSha256": "D3AD6A69C244DD0C1E33D24130FF390AC8F4E9F2F5FC2F0D2F465FD93CAA1488"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-network.sty",
+      "stageSha256": "75B03BE67391F39304F5AB1DEE06013B9B6C23D49F9ECECC5DA11B0E8A82697A",
+      "currentSha256": "75B03BE67391F39304F5AB1DEE06013B9B6C23D49F9ECECC5DA11B0E8A82697A"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-plot.sty",
+      "stageSha256": "34B46A9D6272E2D6471F82C15F6C713834D828E4B1A0576B2C33B1E9E90F08D1",
+      "currentSha256": "34B46A9D6272E2D6471F82C15F6C713834D828E4B1A0576B2C33B1E9E90F08D1"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-probe.sty",
+      "stageSha256": "A1B444BBB1433A629E0DB51ED05914EDC4D568275373E14D4150C06309B7CA3B",
+      "currentSha256": "A1B444BBB1433A629E0DB51ED05914EDC4D568275373E14D4150C06309B7CA3B"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-scale.sty",
+      "stageSha256": "6D7A3A1573129790321A00FE0B1CF7B1E16127FB8DF2F063AB2A0E764B51068A",
+      "currentSha256": "6D7A3A1573129790321A00FE0B1CF7B1E16127FB8DF2F063AB2A0E764B51068A"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-scientific-3d.sty",
+      "stageSha256": "DB8C99134B447B9871B4F733B80C759FD6DA58F27D3973728EDC99299B53C4D2",
+      "currentSha256": "DB8C99134B447B9871B4F733B80C759FD6DA58F27D3973728EDC99299B53C4D2"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-scientific-biology.sty",
+      "stageSha256": "5B1C85306DC1F4E4706B155464C96CF91FE599F34DA6B83F80E9F979F2242EE4",
+      "currentSha256": "6A030144A2BCCC31CA050E65529CF77B9E5B359EA5423EF2D5E5818625453B94"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-scientific-chemistry.sty",
+      "stageSha256": "CC1A6C821F34BE15A3070535DCED7523949CF5A9CBB333909A55B85138F3186A",
+      "currentSha256": "CC1A6C821F34BE15A3070535DCED7523949CF5A9CBB333909A55B85138F3186A"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-scientific-engineering.sty",
+      "stageSha256": "A9700F62866A65522E3029EA49F52BF8E73E686F3C43D3D7C52C9FA5C66C9294",
+      "currentSha256": "306972314A9B37CB9B7FB43070C201AB036E9EDF99DCF81EB96F33FB00CD1A80"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-scientific-field.sty",
+      "stageSha256": "63E76C197A48A17E07DAF81DF97426E03A9B8A9FEBE861D1ECD90A27F1F1F899",
+      "currentSha256": "9B0AC1145706C1DBC5860810709C76E246BD6976FF32EEE55892458A2FFDF419"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-scientific-geometry.sty",
+      "stageSha256": "C1728F0E9507329DF00EA1FB8BC773E3CA2A7BDECFF7063149703BC8FB15BC6B",
+      "currentSha256": "C1728F0E9507329DF00EA1FB8BC773E3CA2A7BDECFF7063149703BC8FB15BC6B"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-scientific-mathematics.sty",
+      "stageSha256": "1195B36F5BD4BB88BA98EE5C1244A168D5758E4B84A16F21746BB4AAA619CB37",
+      "currentSha256": "F9AA187955BAC959F53DBDB925F9FA3088892E3A1126250A56D56E6BC77AD4BE"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-scientific-physics.sty",
+      "stageSha256": "164C84AF065FB7B3B0057D96DD1400587F15BB40FFEB5368172C87F35F0A18DD",
+      "currentSha256": "164C84AF065FB7B3B0057D96DD1400587F15BB40FFEB5368172C87F35F0A18DD"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-scientific-signal.sty",
+      "stageSha256": "D31E8214211FAF4737FC5534E0F4D73AA02B6C5F447CEEB94CF57A7EDDD7C713",
+      "currentSha256": "D31E8214211FAF4737FC5534E0F4D73AA02B6C5F447CEEB94CF57A7EDDD7C713"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-scientific-surface.sty",
+      "stageSha256": "A04790A75B05F2FC945CA7A783A336ADC5EA29F7097A3205B0B90BEC819D3018",
+      "currentSha256": "A04790A75B05F2FC945CA7A783A336ADC5EA29F7097A3205B0B90BEC819D3018"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-shape.sty",
+      "stageSha256": "19920A1A055AAC012213AFBD54444346957D329D6FCA6892B7688015B3AD6918",
+      "currentSha256": "19920A1A055AAC012213AFBD54444346957D329D6FCA6892B7688015B3AD6918"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-showcase.sty",
+      "stageSha256": "1BB88854093FB4957BFF161CC172AE6F42B1BB13854199EF4532C5BD9ACD3532",
+      "currentSha256": "1BB88854093FB4957BFF161CC172AE6F42B1BB13854199EF4532C5BD9ACD3532"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-spatial.sty",
+      "stageSha256": "39A6AA0F9DA9E755A46D04B86A060A11C8B621191114A8BBA82DB47BA23A3B73",
+      "currentSha256": "39A6AA0F9DA9E755A46D04B86A060A11C8B621191114A8BBA82DB47BA23A3B73"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-table.sty",
+      "stageSha256": "A7AD5BB51125962D08424748D55DB3008D8825D18E3945AA4353D1D03D9FD342",
+      "currentSha256": "A7AD5BB51125962D08424748D55DB3008D8825D18E3945AA4353D1D03D9FD342"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-text.sty",
+      "stageSha256": "264764603D704381BA40C8BE5ECF14767E85108A764F5E4D6DDD461551599939",
+      "currentSha256": "264764603D704381BA40C8BE5ECF14767E85108A764F5E4D6DDD461551599939"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-theme.sty",
+      "stageSha256": "9414969ACB929ACD2F597FB984BD8C77FC30020F8339F65BE948DC2D17D6DD30",
+      "currentSha256": "9414969ACB929ACD2F597FB984BD8C77FC30020F8339F65BE948DC2D17D6DD30"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-transform.sty",
+      "stageSha256": "B810EE303DA1A44DC8C8939009FA04E24E106DFC4CA6DDFD5FB449BD482650D9",
+      "currentSha256": "B810EE303DA1A44DC8C8939009FA04E24E106DFC4CA6DDFD5FB449BD482650D9"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz.sty",
+      "stageSha256": "F2277314E69747B06F8FECE032CA71AF7CD1A3C0765BDDE6A9A52489F80C852C",
+      "currentSha256": "F2277314E69747B06F8FECE032CA71AF7CD1A3C0765BDDE6A9A52489F80C852C"
+    },
+    {
+      "theme": "dark",
+      "name": "semio-window.sty",
+      "stageSha256": "9027901E660FEDBD311E801F0E970A08954146B5EA6F2FBF3AF096D408BFDA8D",
+      "currentSha256": "9027901E660FEDBD311E801F0E970A08954146B5EA6F2FBF3AF096D408BFDA8D"
+    }
+  ],
+  "actualTerminalReceipt": {
+    "source": "Direct trusted parent collaboration message",
+    "session": 65565,
+    "exitCode": 0,
+    "scope": "Fresh focused18-mode compilation, both themes",
+    "comparedPairs": 36,
+    "d3Relations": 94,
+    "fullModeGreen": false
+  },
+  "limitations": "Reader counts inspected from published output, not independently rerendered. Current fixture/helper snapshots are audit inputs, not dispatched producer receipts. Namespace closure hashes include unexecuted copied styles."
+}

@@ -1,0 +1,2338 @@
+[
+  {
+    "family": "mark-point",
+    "key": "radius",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Arc radius in millimetres; `rx` and `ry` default to it.",
+        "de": "Bogenradius in Millimetern; `rx` und `ry` übernehmen ihn."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Arc radius in millimetres; `rx` and `ry` default to it.",
+        "de": "Bogenradius in Millimetern; `rx` und `ry` übernehmen ihn."
+      }
+    }
+  },
+  {
+    "family": "mark-point",
+    "key": "rx",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Horizontal radius of an elliptical arc; defaults to `radius`.",
+        "de": "Waagerechter Radius eines elliptischen Bogens; Vorgabe ist `radius`."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Horizontal radius of an elliptical arc; defaults to `radius`.",
+        "de": "Waagerechter Radius eines elliptischen Bogens; Vorgabe ist `radius`."
+      }
+    }
+  },
+  {
+    "family": "mark-point",
+    "key": "ry",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Vertical radius of an elliptical arc; defaults to `radius`.",
+        "de": "Senkrechter Radius eines elliptischen Bogens; Vorgabe ist `radius`."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Vertical radius of an elliptical arc; defaults to `radius`.",
+        "de": "Senkrechter Radius eines elliptischen Bogens; Vorgabe ist `radius`."
+      }
+    }
+  },
+  {
+    "family": "mark-point",
+    "key": "outerRadius",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Outer radius of an annulus, sector or wedge; defaults to `radius`.",
+        "de": "Außenradius eines Rings, Sektors oder Keils; Vorgabe ist `radius`."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Outer radius of an annulus, sector or wedge; defaults to `radius`.",
+        "de": "Außenradius eines Rings, Sektors oder Keils; Vorgabe ist `radius`."
+      }
+    }
+  },
+  {
+    "family": "mark-point",
+    "key": "targetRadius",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "default": 2,
+      "description": {
+        "en": "Radius of the far side of a ribbon.",
+        "de": "Radius der Gegenseite eines Bandflusses."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Radius of the far side of a ribbon.",
+        "de": "Radius der Gegenseite eines Bandflusses."
+      }
+    }
+  },
+  {
+    "family": "mark-point",
+    "key": "padRadius",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Radius the angular padding is measured at; empty uses the arc's own radius.",
+        "de": "Radius, an dem der Winkelabstand gemessen wird; leer nimmt den Radius des Bogens."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": [
+        "number",
+        "string"
+      ],
+      "description": {
+        "en": "Radius the angular padding is measured at; empty uses the arc's own radius.",
+        "de": "Radius, an dem der Winkelabstand gemessen wird; leer nimmt den Radius des Bogens."
+      }
+    }
+  },
+  {
+    "family": "mark-line",
+    "key": "radius",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Arc radius in millimetres; `rx` and `ry` default to it.",
+        "de": "Bogenradius in Millimetern; `rx` und `ry` übernehmen ihn."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Arc radius in millimetres; `rx` and `ry` default to it.",
+        "de": "Bogenradius in Millimetern; `rx` und `ry` übernehmen ihn."
+      }
+    }
+  },
+  {
+    "family": "mark-line",
+    "key": "rx",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Horizontal radius of an elliptical arc; defaults to `radius`.",
+        "de": "Waagerechter Radius eines elliptischen Bogens; Vorgabe ist `radius`."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Horizontal radius of an elliptical arc; defaults to `radius`.",
+        "de": "Waagerechter Radius eines elliptischen Bogens; Vorgabe ist `radius`."
+      }
+    }
+  },
+  {
+    "family": "mark-line",
+    "key": "ry",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Vertical radius of an elliptical arc; defaults to `radius`.",
+        "de": "Senkrechter Radius eines elliptischen Bogens; Vorgabe ist `radius`."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Vertical radius of an elliptical arc; defaults to `radius`.",
+        "de": "Senkrechter Radius eines elliptischen Bogens; Vorgabe ist `radius`."
+      }
+    }
+  },
+  {
+    "family": "mark-line",
+    "key": "outerRadius",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Outer radius of an annulus, sector or wedge; defaults to `radius`.",
+        "de": "Außenradius eines Rings, Sektors oder Keils; Vorgabe ist `radius`."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Outer radius of an annulus, sector or wedge; defaults to `radius`.",
+        "de": "Außenradius eines Rings, Sektors oder Keils; Vorgabe ist `radius`."
+      }
+    }
+  },
+  {
+    "family": "mark-line",
+    "key": "targetRadius",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "default": 2,
+      "description": {
+        "en": "Radius of the far side of a ribbon.",
+        "de": "Radius der Gegenseite eines Bandflusses."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Radius of the far side of a ribbon.",
+        "de": "Radius der Gegenseite eines Bandflusses."
+      }
+    }
+  },
+  {
+    "family": "mark-line",
+    "key": "padRadius",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Radius the angular padding is measured at; empty uses the arc's own radius.",
+        "de": "Radius, an dem der Winkelabstand gemessen wird; leer nimmt den Radius des Bogens."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": [
+        "number",
+        "string"
+      ],
+      "description": {
+        "en": "Radius the angular padding is measured at; empty uses the arc's own radius.",
+        "de": "Radius, an dem der Winkelabstand gemessen wird; leer nimmt den Radius des Bogens."
+      }
+    }
+  },
+  {
+    "family": "mark-area",
+    "key": "radius",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Arc radius in millimetres; `rx` and `ry` default to it.",
+        "de": "Bogenradius in Millimetern; `rx` und `ry` übernehmen ihn."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Arc radius in millimetres; `rx` and `ry` default to it.",
+        "de": "Bogenradius in Millimetern; `rx` und `ry` übernehmen ihn."
+      }
+    }
+  },
+  {
+    "family": "mark-area",
+    "key": "rx",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Horizontal radius of an elliptical arc; defaults to `radius`.",
+        "de": "Waagerechter Radius eines elliptischen Bogens; Vorgabe ist `radius`."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Horizontal radius of an elliptical arc; defaults to `radius`.",
+        "de": "Waagerechter Radius eines elliptischen Bogens; Vorgabe ist `radius`."
+      }
+    }
+  },
+  {
+    "family": "mark-area",
+    "key": "ry",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Vertical radius of an elliptical arc; defaults to `radius`.",
+        "de": "Senkrechter Radius eines elliptischen Bogens; Vorgabe ist `radius`."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Vertical radius of an elliptical arc; defaults to `radius`.",
+        "de": "Senkrechter Radius eines elliptischen Bogens; Vorgabe ist `radius`."
+      }
+    }
+  },
+  {
+    "family": "mark-area",
+    "key": "outerRadius",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Outer radius of an annulus, sector or wedge; defaults to `radius`.",
+        "de": "Außenradius eines Rings, Sektors oder Keils; Vorgabe ist `radius`."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Outer radius of an annulus, sector or wedge; defaults to `radius`.",
+        "de": "Außenradius eines Rings, Sektors oder Keils; Vorgabe ist `radius`."
+      }
+    }
+  },
+  {
+    "family": "mark-area",
+    "key": "targetRadius",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "default": 2,
+      "description": {
+        "en": "Radius of the far side of a ribbon.",
+        "de": "Radius der Gegenseite eines Bandflusses."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Radius of the far side of a ribbon.",
+        "de": "Radius der Gegenseite eines Bandflusses."
+      }
+    }
+  },
+  {
+    "family": "mark-area",
+    "key": "padRadius",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Radius the angular padding is measured at; empty uses the arc's own radius.",
+        "de": "Radius, an dem der Winkelabstand gemessen wird; leer nimmt den Radius des Bogens."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": [
+        "number",
+        "string"
+      ],
+      "description": {
+        "en": "Radius the angular padding is measured at; empty uses the arc's own radius.",
+        "de": "Radius, an dem der Winkelabstand gemessen wird; leer nimmt den Radius des Bogens."
+      }
+    }
+  },
+  {
+    "family": "mark-arc",
+    "key": "radius",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Arc radius in millimetres; `rx` and `ry` default to it.",
+        "de": "Bogenradius in Millimetern; `rx` und `ry` übernehmen ihn."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Arc radius in millimetres; `rx` and `ry` default to it.",
+        "de": "Bogenradius in Millimetern; `rx` und `ry` übernehmen ihn."
+      }
+    }
+  },
+  {
+    "family": "mark-arc",
+    "key": "rx",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Horizontal radius of an elliptical arc; defaults to `radius`.",
+        "de": "Waagerechter Radius eines elliptischen Bogens; Vorgabe ist `radius`."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Horizontal radius of an elliptical arc; defaults to `radius`.",
+        "de": "Waagerechter Radius eines elliptischen Bogens; Vorgabe ist `radius`."
+      }
+    }
+  },
+  {
+    "family": "mark-arc",
+    "key": "ry",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Vertical radius of an elliptical arc; defaults to `radius`.",
+        "de": "Senkrechter Radius eines elliptischen Bogens; Vorgabe ist `radius`."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Vertical radius of an elliptical arc; defaults to `radius`.",
+        "de": "Senkrechter Radius eines elliptischen Bogens; Vorgabe ist `radius`."
+      }
+    }
+  },
+  {
+    "family": "mark-arc",
+    "key": "outerRadius",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Outer radius of an annulus, sector or wedge; defaults to `radius`.",
+        "de": "Außenradius eines Rings, Sektors oder Keils; Vorgabe ist `radius`."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Outer radius of an annulus, sector or wedge; defaults to `radius`.",
+        "de": "Außenradius eines Rings, Sektors oder Keils; Vorgabe ist `radius`."
+      }
+    }
+  },
+  {
+    "family": "mark-arc",
+    "key": "targetRadius",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "default": 2,
+      "description": {
+        "en": "Radius of the far side of a ribbon.",
+        "de": "Radius der Gegenseite eines Bandflusses."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Radius of the far side of a ribbon.",
+        "de": "Radius der Gegenseite eines Bandflusses."
+      }
+    }
+  },
+  {
+    "family": "mark-arc",
+    "key": "padRadius",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Radius the angular padding is measured at; empty uses the arc's own radius.",
+        "de": "Radius, an dem der Winkelabstand gemessen wird; leer nimmt den Radius des Bogens."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": [
+        "number",
+        "string"
+      ],
+      "description": {
+        "en": "Radius the angular padding is measured at; empty uses the arc's own radius.",
+        "de": "Radius, an dem der Winkelabstand gemessen wird; leer nimmt den Radius des Bogens."
+      }
+    }
+  },
+  {
+    "family": "mark-connector",
+    "key": "radius",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Arc radius in millimetres; `rx` and `ry` default to it.",
+        "de": "Bogenradius in Millimetern; `rx` und `ry` übernehmen ihn."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Arc radius in millimetres; `rx` and `ry` default to it.",
+        "de": "Bogenradius in Millimetern; `rx` und `ry` übernehmen ihn."
+      }
+    }
+  },
+  {
+    "family": "mark-connector",
+    "key": "rx",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Horizontal radius of an elliptical arc; defaults to `radius`.",
+        "de": "Waagerechter Radius eines elliptischen Bogens; Vorgabe ist `radius`."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Horizontal radius of an elliptical arc; defaults to `radius`.",
+        "de": "Waagerechter Radius eines elliptischen Bogens; Vorgabe ist `radius`."
+      }
+    }
+  },
+  {
+    "family": "mark-connector",
+    "key": "ry",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Vertical radius of an elliptical arc; defaults to `radius`.",
+        "de": "Senkrechter Radius eines elliptischen Bogens; Vorgabe ist `radius`."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Vertical radius of an elliptical arc; defaults to `radius`.",
+        "de": "Senkrechter Radius eines elliptischen Bogens; Vorgabe ist `radius`."
+      }
+    }
+  },
+  {
+    "family": "mark-connector",
+    "key": "outerRadius",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Outer radius of an annulus, sector or wedge; defaults to `radius`.",
+        "de": "Außenradius eines Rings, Sektors oder Keils; Vorgabe ist `radius`."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Outer radius of an annulus, sector or wedge; defaults to `radius`.",
+        "de": "Außenradius eines Rings, Sektors oder Keils; Vorgabe ist `radius`."
+      }
+    }
+  },
+  {
+    "family": "mark-connector",
+    "key": "targetRadius",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "default": 2,
+      "description": {
+        "en": "Radius of the far side of a ribbon.",
+        "de": "Radius der Gegenseite eines Bandflusses."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Radius of the far side of a ribbon.",
+        "de": "Radius der Gegenseite eines Bandflusses."
+      }
+    }
+  },
+  {
+    "family": "mark-connector",
+    "key": "padRadius",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Radius the angular padding is measured at; empty uses the arc's own radius.",
+        "de": "Radius, an dem der Winkelabstand gemessen wird; leer nimmt den Radius des Bogens."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": [
+        "number",
+        "string"
+      ],
+      "description": {
+        "en": "Radius the angular padding is measured at; empty uses the arc's own radius.",
+        "de": "Radius, an dem der Winkelabstand gemessen wird; leer nimmt den Radius des Bogens."
+      }
+    }
+  },
+  {
+    "family": "mark-region",
+    "key": "radius",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Arc radius in millimetres; `rx` and `ry` default to it.",
+        "de": "Bogenradius in Millimetern; `rx` und `ry` übernehmen ihn."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Arc radius in millimetres; `rx` and `ry` default to it.",
+        "de": "Bogenradius in Millimetern; `rx` und `ry` übernehmen ihn."
+      }
+    }
+  },
+  {
+    "family": "mark-region",
+    "key": "rx",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Horizontal radius of an elliptical arc; defaults to `radius`.",
+        "de": "Waagerechter Radius eines elliptischen Bogens; Vorgabe ist `radius`."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Horizontal radius of an elliptical arc; defaults to `radius`.",
+        "de": "Waagerechter Radius eines elliptischen Bogens; Vorgabe ist `radius`."
+      }
+    }
+  },
+  {
+    "family": "mark-region",
+    "key": "ry",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Vertical radius of an elliptical arc; defaults to `radius`.",
+        "de": "Senkrechter Radius eines elliptischen Bogens; Vorgabe ist `radius`."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Vertical radius of an elliptical arc; defaults to `radius`.",
+        "de": "Senkrechter Radius eines elliptischen Bogens; Vorgabe ist `radius`."
+      }
+    }
+  },
+  {
+    "family": "mark-region",
+    "key": "outerRadius",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Outer radius of an annulus, sector or wedge; defaults to `radius`.",
+        "de": "Außenradius eines Rings, Sektors oder Keils; Vorgabe ist `radius`."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Outer radius of an annulus, sector or wedge; defaults to `radius`.",
+        "de": "Außenradius eines Rings, Sektors oder Keils; Vorgabe ist `radius`."
+      }
+    }
+  },
+  {
+    "family": "mark-region",
+    "key": "targetRadius",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "default": 2,
+      "description": {
+        "en": "Radius of the far side of a ribbon.",
+        "de": "Radius der Gegenseite eines Bandflusses."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Radius of the far side of a ribbon.",
+        "de": "Radius der Gegenseite eines Bandflusses."
+      }
+    }
+  },
+  {
+    "family": "mark-region",
+    "key": "padRadius",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Radius the angular padding is measured at; empty uses the arc's own radius.",
+        "de": "Radius, an dem der Winkelabstand gemessen wird; leer nimmt den Radius des Bogens."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": [
+        "number",
+        "string"
+      ],
+      "description": {
+        "en": "Radius the angular padding is measured at; empty uses the arc's own radius.",
+        "de": "Radius, an dem der Winkelabstand gemessen wird; leer nimmt den Radius des Bogens."
+      }
+    }
+  },
+  {
+    "family": "mark-annotation",
+    "key": "radius",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Arc radius in millimetres; `rx` and `ry` default to it.",
+        "de": "Bogenradius in Millimetern; `rx` und `ry` übernehmen ihn."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Arc radius in millimetres; `rx` and `ry` default to it.",
+        "de": "Bogenradius in Millimetern; `rx` und `ry` übernehmen ihn."
+      }
+    }
+  },
+  {
+    "family": "mark-annotation",
+    "key": "rx",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Horizontal radius of an elliptical arc; defaults to `radius`.",
+        "de": "Waagerechter Radius eines elliptischen Bogens; Vorgabe ist `radius`."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Horizontal radius of an elliptical arc; defaults to `radius`.",
+        "de": "Waagerechter Radius eines elliptischen Bogens; Vorgabe ist `radius`."
+      }
+    }
+  },
+  {
+    "family": "mark-annotation",
+    "key": "ry",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Vertical radius of an elliptical arc; defaults to `radius`.",
+        "de": "Senkrechter Radius eines elliptischen Bogens; Vorgabe ist `radius`."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Vertical radius of an elliptical arc; defaults to `radius`.",
+        "de": "Senkrechter Radius eines elliptischen Bogens; Vorgabe ist `radius`."
+      }
+    }
+  },
+  {
+    "family": "mark-annotation",
+    "key": "outerRadius",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Outer radius of an annulus, sector or wedge; defaults to `radius`.",
+        "de": "Außenradius eines Rings, Sektors oder Keils; Vorgabe ist `radius`."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Outer radius of an annulus, sector or wedge; defaults to `radius`.",
+        "de": "Außenradius eines Rings, Sektors oder Keils; Vorgabe ist `radius`."
+      }
+    }
+  },
+  {
+    "family": "mark-annotation",
+    "key": "targetRadius",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "default": 2,
+      "description": {
+        "en": "Radius of the far side of a ribbon.",
+        "de": "Radius der Gegenseite eines Bandflusses."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Radius of the far side of a ribbon.",
+        "de": "Radius der Gegenseite eines Bandflusses."
+      }
+    }
+  },
+  {
+    "family": "mark-annotation",
+    "key": "padRadius",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Radius the angular padding is measured at; empty uses the arc's own radius.",
+        "de": "Radius, an dem der Winkelabstand gemessen wird; leer nimmt den Radius des Bogens."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": [
+        "number",
+        "string"
+      ],
+      "description": {
+        "en": "Radius the angular padding is measured at; empty uses the arc's own radius.",
+        "de": "Radius, an dem der Winkelabstand gemessen wird; leer nimmt den Radius des Bogens."
+      }
+    }
+  },
+  {
+    "family": "geo-choropleth",
+    "key": "width",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Frame width in millimetres.",
+        "de": "Rahmenbreite in Millimetern."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Frame width in millimetres.",
+        "de": "Rahmenbreite in Millimetern."
+      }
+    }
+  },
+  {
+    "family": "geo-choropleth",
+    "key": "height",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Frame height in millimetres.",
+        "de": "Rahmenhöhe in Millimetern."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Frame height in millimetres.",
+        "de": "Rahmenhöhe in Millimetern."
+      }
+    }
+  },
+  {
+    "family": "geo-choropleth",
+    "key": "opacity",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Draw opacity of the layer.",
+        "de": "Zeichendeckkraft der Ebene."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Draw opacity of the layer.",
+        "de": "Zeichendeckkraft der Ebene."
+      }
+    }
+  },
+  {
+    "family": "geo-choropleth",
+    "key": "steps",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Number of integration or iteration steps.",
+        "de": "Anzahl der Integrations- bzw. Iterationsschritte."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "integer",
+      "description": {
+        "en": "Number of integration or iteration steps.",
+        "de": "Anzahl der Integrations- bzw. Iterationsschritte."
+      }
+    }
+  },
+  {
+    "family": "geo-cartogram",
+    "key": "width",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Frame width in millimetres.",
+        "de": "Rahmenbreite in Millimetern."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Frame width in millimetres.",
+        "de": "Rahmenbreite in Millimetern."
+      }
+    }
+  },
+  {
+    "family": "geo-cartogram",
+    "key": "height",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Frame height in millimetres.",
+        "de": "Rahmenhöhe in Millimetern."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Frame height in millimetres.",
+        "de": "Rahmenhöhe in Millimetern."
+      }
+    }
+  },
+  {
+    "family": "geo-cartogram",
+    "key": "opacity",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Draw opacity of the layer.",
+        "de": "Zeichendeckkraft der Ebene."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Draw opacity of the layer.",
+        "de": "Zeichendeckkraft der Ebene."
+      }
+    }
+  },
+  {
+    "family": "geo-cartogram",
+    "key": "steps",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Number of integration or iteration steps.",
+        "de": "Anzahl der Integrations- bzw. Iterationsschritte."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "integer",
+      "description": {
+        "en": "Number of integration or iteration steps.",
+        "de": "Anzahl der Integrations- bzw. Iterationsschritte."
+      }
+    }
+  },
+  {
+    "family": "geo-tilegrid",
+    "key": "width",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Frame width in millimetres.",
+        "de": "Rahmenbreite in Millimetern."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Frame width in millimetres.",
+        "de": "Rahmenbreite in Millimetern."
+      }
+    }
+  },
+  {
+    "family": "geo-tilegrid",
+    "key": "height",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Frame height in millimetres.",
+        "de": "Rahmenhöhe in Millimetern."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Frame height in millimetres.",
+        "de": "Rahmenhöhe in Millimetern."
+      }
+    }
+  },
+  {
+    "family": "geo-tilegrid",
+    "key": "opacity",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Draw opacity of the layer.",
+        "de": "Zeichendeckkraft der Ebene."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Draw opacity of the layer.",
+        "de": "Zeichendeckkraft der Ebene."
+      }
+    }
+  },
+  {
+    "family": "geo-tilegrid",
+    "key": "steps",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Number of integration or iteration steps.",
+        "de": "Anzahl der Integrations- bzw. Iterationsschritte."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "integer",
+      "description": {
+        "en": "Number of integration or iteration steps.",
+        "de": "Anzahl der Integrations- bzw. Iterationsschritte."
+      }
+    }
+  },
+  {
+    "family": "geo-field",
+    "key": "width",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Frame width in millimetres.",
+        "de": "Rahmenbreite in Millimetern."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Frame width in millimetres.",
+        "de": "Rahmenbreite in Millimetern."
+      }
+    }
+  },
+  {
+    "family": "geo-field",
+    "key": "height",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Frame height in millimetres.",
+        "de": "Rahmenhöhe in Millimetern."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Frame height in millimetres.",
+        "de": "Rahmenhöhe in Millimetern."
+      }
+    }
+  },
+  {
+    "family": "geo-field",
+    "key": "opacity",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Draw opacity of the layer.",
+        "de": "Zeichendeckkraft der Ebene."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Draw opacity of the layer.",
+        "de": "Zeichendeckkraft der Ebene."
+      }
+    }
+  },
+  {
+    "family": "geo-field",
+    "key": "steps",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Number of integration or iteration steps.",
+        "de": "Anzahl der Integrations- bzw. Iterationsschritte."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "integer",
+      "description": {
+        "en": "Number of integration or iteration steps.",
+        "de": "Anzahl der Integrations- bzw. Iterationsschritte."
+      }
+    }
+  },
+  {
+    "family": "geo-terrain",
+    "key": "width",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Frame width in millimetres.",
+        "de": "Rahmenbreite in Millimetern."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Frame width in millimetres.",
+        "de": "Rahmenbreite in Millimetern."
+      }
+    }
+  },
+  {
+    "family": "geo-terrain",
+    "key": "height",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Frame height in millimetres.",
+        "de": "Rahmenhöhe in Millimetern."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Frame height in millimetres.",
+        "de": "Rahmenhöhe in Millimetern."
+      }
+    }
+  },
+  {
+    "family": "geo-terrain",
+    "key": "opacity",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Draw opacity of the layer.",
+        "de": "Zeichendeckkraft der Ebene."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Draw opacity of the layer.",
+        "de": "Zeichendeckkraft der Ebene."
+      }
+    }
+  },
+  {
+    "family": "geo-terrain",
+    "key": "steps",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Number of integration or iteration steps.",
+        "de": "Anzahl der Integrations- bzw. Iterationsschritte."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "integer",
+      "description": {
+        "en": "Number of integration or iteration steps.",
+        "de": "Anzahl der Integrations- bzw. Iterationsschritte."
+      }
+    }
+  },
+  {
+    "family": "geo-weather",
+    "key": "width",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Frame width in millimetres.",
+        "de": "Rahmenbreite in Millimetern."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Frame width in millimetres.",
+        "de": "Rahmenbreite in Millimetern."
+      }
+    }
+  },
+  {
+    "family": "geo-weather",
+    "key": "height",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Frame height in millimetres.",
+        "de": "Rahmenhöhe in Millimetern."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Frame height in millimetres.",
+        "de": "Rahmenhöhe in Millimetern."
+      }
+    }
+  },
+  {
+    "family": "geo-weather",
+    "key": "opacity",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Draw opacity of the layer.",
+        "de": "Zeichendeckkraft der Ebene."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Draw opacity of the layer.",
+        "de": "Zeichendeckkraft der Ebene."
+      }
+    }
+  },
+  {
+    "family": "geo-weather",
+    "key": "steps",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Number of integration or iteration steps.",
+        "de": "Anzahl der Integrations- bzw. Iterationsschritte."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "integer",
+      "description": {
+        "en": "Number of integration or iteration steps.",
+        "de": "Anzahl der Integrations- bzw. Iterationsschritte."
+      }
+    }
+  },
+  {
+    "family": "spatial-scalar-field",
+    "key": "width",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Frame width in millimetres.",
+        "de": "Rahmenbreite in Millimetern."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Frame width in millimetres.",
+        "de": "Rahmenbreite in Millimetern."
+      }
+    }
+  },
+  {
+    "family": "spatial-scalar-field",
+    "key": "height",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Frame height in millimetres.",
+        "de": "Rahmenhöhe in Millimetern."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Frame height in millimetres.",
+        "de": "Rahmenhöhe in Millimetern."
+      }
+    }
+  },
+  {
+    "family": "spatial-scalar-field",
+    "key": "opacity",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Draw opacity of the layer.",
+        "de": "Zeichendeckkraft der Ebene."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Draw opacity of the layer.",
+        "de": "Zeichendeckkraft der Ebene."
+      }
+    }
+  },
+  {
+    "family": "spatial-scalar-field",
+    "key": "steps",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Number of integration or iteration steps.",
+        "de": "Anzahl der Integrations- bzw. Iterationsschritte."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "integer",
+      "description": {
+        "en": "Number of integration or iteration steps.",
+        "de": "Anzahl der Integrations- bzw. Iterationsschritte."
+      }
+    }
+  },
+  {
+    "family": "geo-basemap",
+    "key": "width",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Frame width in millimetres.",
+        "de": "Rahmenbreite in Millimetern."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Frame width in millimetres.",
+        "de": "Rahmenbreite in Millimetern."
+      }
+    }
+  },
+  {
+    "family": "geo-basemap",
+    "key": "height",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Frame height in millimetres.",
+        "de": "Rahmenhöhe in Millimetern."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Frame height in millimetres.",
+        "de": "Rahmenhöhe in Millimetern."
+      }
+    }
+  },
+  {
+    "family": "geo-basemap",
+    "key": "opacity",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Draw opacity of the layer.",
+        "de": "Zeichendeckkraft der Ebene."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Draw opacity of the layer.",
+        "de": "Zeichendeckkraft der Ebene."
+      }
+    }
+  },
+  {
+    "family": "geo-basemap",
+    "key": "steps",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Number of integration or iteration steps.",
+        "de": "Anzahl der Integrations- bzw. Iterationsschritte."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "integer",
+      "description": {
+        "en": "Number of integration or iteration steps.",
+        "de": "Anzahl der Integrations- bzw. Iterationsschritte."
+      }
+    }
+  },
+  {
+    "family": "geo-graticule",
+    "key": "width",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Frame width in millimetres.",
+        "de": "Rahmenbreite in Millimetern."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Frame width in millimetres.",
+        "de": "Rahmenbreite in Millimetern."
+      }
+    }
+  },
+  {
+    "family": "geo-graticule",
+    "key": "height",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Frame height in millimetres.",
+        "de": "Rahmenhöhe in Millimetern."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Frame height in millimetres.",
+        "de": "Rahmenhöhe in Millimetern."
+      }
+    }
+  },
+  {
+    "family": "geo-graticule",
+    "key": "opacity",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Draw opacity of the layer.",
+        "de": "Zeichendeckkraft der Ebene."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Draw opacity of the layer.",
+        "de": "Zeichendeckkraft der Ebene."
+      }
+    }
+  },
+  {
+    "family": "geo-graticule",
+    "key": "steps",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Number of integration or iteration steps.",
+        "de": "Anzahl der Integrations- bzw. Iterationsschritte."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "integer",
+      "description": {
+        "en": "Number of integration or iteration steps.",
+        "de": "Anzahl der Integrations- bzw. Iterationsschritte."
+      }
+    }
+  },
+  {
+    "family": "geo-geodesic",
+    "key": "width",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Frame width in millimetres.",
+        "de": "Rahmenbreite in Millimetern."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Frame width in millimetres.",
+        "de": "Rahmenbreite in Millimetern."
+      }
+    }
+  },
+  {
+    "family": "geo-geodesic",
+    "key": "height",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Frame height in millimetres.",
+        "de": "Rahmenhöhe in Millimetern."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Frame height in millimetres.",
+        "de": "Rahmenhöhe in Millimetern."
+      }
+    }
+  },
+  {
+    "family": "geo-geodesic",
+    "key": "opacity",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Draw opacity of the layer.",
+        "de": "Zeichendeckkraft der Ebene."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Draw opacity of the layer.",
+        "de": "Zeichendeckkraft der Ebene."
+      }
+    }
+  },
+  {
+    "family": "geo-geodesic",
+    "key": "steps",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Number of integration or iteration steps.",
+        "de": "Anzahl der Integrations- bzw. Iterationsschritte."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "integer",
+      "description": {
+        "en": "Number of integration or iteration steps.",
+        "de": "Anzahl der Integrations- bzw. Iterationsschritte."
+      }
+    }
+  },
+  {
+    "family": "geo-route",
+    "key": "width",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Frame width in millimetres.",
+        "de": "Rahmenbreite in Millimetern."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Frame width in millimetres.",
+        "de": "Rahmenbreite in Millimetern."
+      }
+    }
+  },
+  {
+    "family": "geo-route",
+    "key": "height",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Frame height in millimetres.",
+        "de": "Rahmenhöhe in Millimetern."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Frame height in millimetres.",
+        "de": "Rahmenhöhe in Millimetern."
+      }
+    }
+  },
+  {
+    "family": "geo-route",
+    "key": "opacity",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Draw opacity of the layer.",
+        "de": "Zeichendeckkraft der Ebene."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Draw opacity of the layer.",
+        "de": "Zeichendeckkraft der Ebene."
+      }
+    }
+  },
+  {
+    "family": "geo-route",
+    "key": "steps",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Number of integration or iteration steps.",
+        "de": "Anzahl der Integrations- bzw. Iterationsschritte."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "integer",
+      "description": {
+        "en": "Number of integration or iteration steps.",
+        "de": "Anzahl der Integrations- bzw. Iterationsschritte."
+      }
+    }
+  },
+  {
+    "family": "geo-flow",
+    "key": "width",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Frame width in millimetres.",
+        "de": "Rahmenbreite in Millimetern."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Frame width in millimetres.",
+        "de": "Rahmenbreite in Millimetern."
+      }
+    }
+  },
+  {
+    "family": "geo-flow",
+    "key": "height",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Frame height in millimetres.",
+        "de": "Rahmenhöhe in Millimetern."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Frame height in millimetres.",
+        "de": "Rahmenhöhe in Millimetern."
+      }
+    }
+  },
+  {
+    "family": "geo-flow",
+    "key": "opacity",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Draw opacity of the layer.",
+        "de": "Zeichendeckkraft der Ebene."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Draw opacity of the layer.",
+        "de": "Zeichendeckkraft der Ebene."
+      }
+    }
+  },
+  {
+    "family": "geo-flow",
+    "key": "steps",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Number of integration or iteration steps.",
+        "de": "Anzahl der Integrations- bzw. Iterationsschritte."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "integer",
+      "description": {
+        "en": "Number of integration or iteration steps.",
+        "de": "Anzahl der Integrations- bzw. Iterationsschritte."
+      }
+    }
+  },
+  {
+    "family": "spatial-vector-field",
+    "key": "width",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Frame width in millimetres.",
+        "de": "Rahmenbreite in Millimetern."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Frame width in millimetres.",
+        "de": "Rahmenbreite in Millimetern."
+      }
+    }
+  },
+  {
+    "family": "spatial-vector-field",
+    "key": "height",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Frame height in millimetres.",
+        "de": "Rahmenhöhe in Millimetern."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Frame height in millimetres.",
+        "de": "Rahmenhöhe in Millimetern."
+      }
+    }
+  },
+  {
+    "family": "spatial-vector-field",
+    "key": "opacity",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Draw opacity of the layer.",
+        "de": "Zeichendeckkraft der Ebene."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Draw opacity of the layer.",
+        "de": "Zeichendeckkraft der Ebene."
+      }
+    }
+  },
+  {
+    "family": "geo-symbol",
+    "key": "width",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Frame width in millimetres.",
+        "de": "Rahmenbreite in Millimetern."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Frame width in millimetres.",
+        "de": "Rahmenbreite in Millimetern."
+      }
+    }
+  },
+  {
+    "family": "geo-symbol",
+    "key": "height",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Frame height in millimetres.",
+        "de": "Rahmenhöhe in Millimetern."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Frame height in millimetres.",
+        "de": "Rahmenhöhe in Millimetern."
+      }
+    }
+  },
+  {
+    "family": "geo-symbol",
+    "key": "opacity",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Draw opacity of the layer.",
+        "de": "Zeichendeckkraft der Ebene."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Draw opacity of the layer.",
+        "de": "Zeichendeckkraft der Ebene."
+      }
+    }
+  },
+  {
+    "family": "geo-symbol",
+    "key": "steps",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Number of integration or iteration steps.",
+        "de": "Anzahl der Integrations- bzw. Iterationsschritte."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "integer",
+      "description": {
+        "en": "Number of integration or iteration steps.",
+        "de": "Anzahl der Integrations- bzw. Iterationsschritte."
+      }
+    }
+  },
+  {
+    "family": "geo-dotdensity",
+    "key": "width",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Frame width in millimetres.",
+        "de": "Rahmenbreite in Millimetern."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Frame width in millimetres.",
+        "de": "Rahmenbreite in Millimetern."
+      }
+    }
+  },
+  {
+    "family": "geo-dotdensity",
+    "key": "height",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Frame height in millimetres.",
+        "de": "Rahmenhöhe in Millimetern."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Frame height in millimetres.",
+        "de": "Rahmenhöhe in Millimetern."
+      }
+    }
+  },
+  {
+    "family": "geo-dotdensity",
+    "key": "opacity",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Draw opacity of the layer.",
+        "de": "Zeichendeckkraft der Ebene."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Draw opacity of the layer.",
+        "de": "Zeichendeckkraft der Ebene."
+      }
+    }
+  },
+  {
+    "family": "geo-dotdensity",
+    "key": "steps",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Number of integration or iteration steps.",
+        "de": "Anzahl der Integrations- bzw. Iterationsschritte."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "integer",
+      "description": {
+        "en": "Number of integration or iteration steps.",
+        "de": "Anzahl der Integrations- bzw. Iterationsschritte."
+      }
+    }
+  },
+  {
+    "family": "geo-hexbin",
+    "key": "width",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Frame width in millimetres.",
+        "de": "Rahmenbreite in Millimetern."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Frame width in millimetres.",
+        "de": "Rahmenbreite in Millimetern."
+      }
+    }
+  },
+  {
+    "family": "geo-hexbin",
+    "key": "height",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Frame height in millimetres.",
+        "de": "Rahmenhöhe in Millimetern."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Frame height in millimetres.",
+        "de": "Rahmenhöhe in Millimetern."
+      }
+    }
+  },
+  {
+    "family": "geo-hexbin",
+    "key": "opacity",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Draw opacity of the layer.",
+        "de": "Zeichendeckkraft der Ebene."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Draw opacity of the layer.",
+        "de": "Zeichendeckkraft der Ebene."
+      }
+    }
+  },
+  {
+    "family": "geo-hexbin",
+    "key": "steps",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Number of integration or iteration steps.",
+        "de": "Anzahl der Integrations- bzw. Iterationsschritte."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "integer",
+      "description": {
+        "en": "Number of integration or iteration steps.",
+        "de": "Anzahl der Integrations- bzw. Iterationsschritte."
+      }
+    }
+  },
+  {
+    "family": "spatial-tessellation",
+    "key": "width",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Frame width in millimetres.",
+        "de": "Rahmenbreite in Millimetern."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Frame width in millimetres.",
+        "de": "Rahmenbreite in Millimetern."
+      }
+    }
+  },
+  {
+    "family": "spatial-tessellation",
+    "key": "height",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Frame height in millimetres.",
+        "de": "Rahmenhöhe in Millimetern."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Frame height in millimetres.",
+        "de": "Rahmenhöhe in Millimetern."
+      }
+    }
+  },
+  {
+    "family": "spatial-tessellation",
+    "key": "opacity",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Draw opacity of the layer.",
+        "de": "Zeichendeckkraft der Ebene."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Draw opacity of the layer.",
+        "de": "Zeichendeckkraft der Ebene."
+      }
+    }
+  },
+  {
+    "family": "spatial-tessellation",
+    "key": "steps",
+    "before": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Number of integration or iteration steps.",
+        "de": "Anzahl der Integrations- bzw. Iterationsschritte."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "integer",
+      "description": {
+        "en": "Number of integration or iteration steps.",
+        "de": "Anzahl der Integrations- bzw. Iterationsschritte."
+      }
+    }
+  },
+  {
+    "family": "flow",
+    "key": "col-gap",
+    "before": {
+      "syntax": "expression",
+      "type": "number",
+      "default": 6,
+      "description": {
+        "en": "Millimetres between two grid columns.",
+        "de": "Millimeter zwischen zwei Rasterspalten."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "default": 4,
+      "description": {
+        "en": "Millimetres between two grid columns.",
+        "de": "Millimeter zwischen zwei Rasterspalten."
+      }
+    }
+  },
+  {
+    "family": "flow",
+    "key": "row-gap",
+    "before": {
+      "syntax": "expression",
+      "type": "number",
+      "default": 6,
+      "description": {
+        "en": "Millimetres between two grid rows.",
+        "de": "Millimeter zwischen zwei Rasterzeilen."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "default": 4,
+      "description": {
+        "en": "Millimetres between two grid rows.",
+        "de": "Millimeter zwischen zwei Rasterzeilen."
+      }
+    }
+  },
+  {
+    "family": "swimlane",
+    "key": "col-gap",
+    "before": {
+      "syntax": "expression",
+      "type": "number",
+      "default": 6,
+      "description": {
+        "en": "Millimetres between two grid columns.",
+        "de": "Millimeter zwischen zwei Rasterspalten."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "default": 4,
+      "description": {
+        "en": "Millimetres between two grid columns.",
+        "de": "Millimeter zwischen zwei Rasterspalten."
+      }
+    }
+  },
+  {
+    "family": "swimlane",
+    "key": "row-gap",
+    "before": {
+      "syntax": "expression",
+      "type": "number",
+      "default": 6,
+      "description": {
+        "en": "Millimetres between two grid rows.",
+        "de": "Millimeter zwischen zwei Rasterzeilen."
+      }
+    },
+    "after": {
+      "syntax": "expression",
+      "type": "number",
+      "default": 4,
+      "description": {
+        "en": "Millimetres between two grid rows.",
+        "de": "Millimeter zwischen zwei Rasterzeilen."
+      }
+    }
+  },
+  {
+    "family": "geo-flow",
+    "key": "routeWidth",
+    "before": {
+      "syntax": "scalar",
+      "type": "number",
+      "description": {
+        "en": "Millimetre width of a route line.",
+        "de": "Millimeterbreite einer Routenlinie."
+      }
+    },
+    "after": {
+      "syntax": "scalar",
+      "type": "number",
+      "description": {
+        "en": "Dimensionless normalized-width factor: route strokes use 0.3 + factor × normalized value points; flow half-width uses 0.4 + 2 × factor × normalized value millimetres.",
+        "de": "Dimensionsloser Faktor der normierten Breite: Routenlinien nutzen 0,3 + Faktor × normierter Wert Punkt; Flusshalbbreiten nutzen 0,4 + 2 × Faktor × normierter Wert Millimeter."
+      }
+    }
+  },
+  {
+    "family": "geo-route",
+    "key": "routeWidth",
+    "before": {
+      "syntax": "scalar",
+      "type": "number",
+      "description": {
+        "en": "Millimetre width of a route line.",
+        "de": "Millimeterbreite einer Routenlinie."
+      }
+    },
+    "after": {
+      "syntax": "scalar",
+      "type": "number",
+      "description": {
+        "en": "Dimensionless normalized-width factor: route strokes use 0.3 + factor × normalized value points; flow half-width uses 0.4 + 2 × factor × normalized value millimetres.",
+        "de": "Dimensionsloser Faktor der normierten Breite: Routenlinien nutzen 0,3 + Faktor × normierter Wert Punkt; Flusshalbbreiten nutzen 0,4 + 2 × Faktor × normierter Wert Millimeter."
+      }
+    }
+  }
+]

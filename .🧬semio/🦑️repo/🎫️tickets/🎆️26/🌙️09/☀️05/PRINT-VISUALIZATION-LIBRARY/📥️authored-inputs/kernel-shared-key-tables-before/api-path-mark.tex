@@ -1,0 +1,29 @@
+\SemioTableLong[text-size=8pt]{\ApiText{Mark options}{Markenoptionen}}{0.22,0.14,0.16,0.48}{\ApiKey & \ApiType & \ApiDefault & \ApiMeaning}{%
+  \SemioTableRow{\Key{size} & \Key{number} & \Key{6} & \ApiText{Mark area in square millimetres, with d3-symbol semantics.}{Markenfläche in Quadratmillimetern, mit der Semantik von d3-symbol.}}
+  \SemioTableRow{\Key{fill} & \Key{colour} & \Key{semio-primary} & \ApiText{Fill colour, or \Key{none} for an unfilled mark.}{Füllfarbe oder \Key{none} für eine ungefüllte Marke.}}
+  \SemioTableRow{\Key{stroke} & \Key{colour} & \Key{border-emphasized} & \ApiText{Stroke colour, or \Key{none}.}{Strichfarbe oder \Key{none}.}}
+  \SemioTableRow{\Key{strokeWidth} & \Key{dimension} & \Key{stroke default} & \ApiText{Stroke width, taken from the design tokens.}{Strichstärke, aus den Gestaltungstoken.}}
+  \SemioTableRow{\Key{opacity} & \Key{number} & \Key{1} & \ApiText{Draw opacity of the whole mark.}{Deckkraft der ganzen Marke.}}
+  \SemioTableRow{\Key{rotate} & \Key{deg} & \Key{0} & \ApiText{Rotation about the mark's own point.}{Drehung um den eigenen Punkt der Marke.}}
+  \SemioTableRow{\Key{pattern} & \Key{name} & \Key{none} & \ApiText{\Key{hatch}, \Key{crosshatch}, \Key{dots} or \Key{grid}: a grayscale-safe fill.}{\Key{hatch}, \Key{crosshatch}, \Key{dots} oder \Key{grid}: eine graustufensichere Füllung.}}
+  \SemioTableRow{\Key{points} & \Key{list} & --- & \ApiText{\Key{x,y; x,y; …} in figure millimetres.}{\Key{x,y; x,y; …} in Figurenmillimetern.}}
+  \SemioTableRow{\Key{points2} & \Key{list} & --- & \ApiText{The second boundary of a band, an envelope or a ribbon.}{Die zweite Begrenzung eines Bandes, einer Hüllkurve oder eines Zierbandes.}}
+  \SemioTableRow{\Key{curve} & \Key{name} & \Key{linear} & \ApiText{Interpolator; see the curve table below.}{Interpolator; siehe die Kurventabelle weiter unten.}}
+  \SemioTableRow{\Key{tension}, \Key{alpha}, \Key{beta} & \Key{number} & \Key{0}, \Key{0.5}, \Key{0.85} & \ApiText{Curve parameters of the cardinal, catmull-rom and bundle families.}{Kurvenparameter der Cardinal-, Catmull-Rom- und Bundle-Familien.}}
+  \SemioTableRow{\Key{closed} & \Key{boolean} & \Key{false} & \ApiText{Closes the path after the last point.}{Schließt den Pfad nach dem letzten Punkt.}}
+  \SemioTableRow{\Key{dash} & \Key{name} & \Key{none} & \ApiText{\Key{dashed}, \Key{dotted}, \Key{dash-dot} or an explicit dash pattern.}{\Key{dashed}, \Key{dotted}, \Key{dash-dot} oder ein explizites Strichmuster.}}
+  \SemioTableRow{\Key{arrow} & \Key{name} & \Key{none} & \ApiText{\Key{end}, \Key{start} or \Key{both}.}{\Key{end}, \Key{start} oder \Key{both}.}}
+  \SemioTableRow{\Key{arrowSize} & \Key{dimension} & \Key{1.6mm} & \ApiText{Arrowhead length.}{Länge der Pfeilspitze.}}
+  \SemioTableRow{\Key{radius}, \Key{rx}, \Key{ry} & \Key{mm} & --- & \ApiText{Arc radii; \Key{rx} and \Key{ry} default to \Key{radius}.}{Bogenradien; \Key{rx} und \Key{ry} haben \Key{radius} als Vorgabe.}}
+  \SemioTableRow{\Key{innerRadius}, \Key{outerRadius} & \Key{mm} & \Key{0}, \Key{radius} & \ApiText{Annulus radii.}{Radien eines Kreisrings.}}
+  \SemioTableRow{\Key{startAngle}, \Key{endAngle} & \Key{rad} & \Key{0}, \Key{pi/2} & \ApiText{Clockwise from twelve o'clock.}{Im Uhrzeigersinn ab zwölf Uhr.}}
+  \SemioTableRow{\Key{padAngle}, \Key{padRadius}, \Key{cornerRadius} & \Key{number} & \Key{0} & \ApiText{d3-arc padding and rounding.}{Abstand und Rundung nach d3-arc.}}
+  \SemioTableRow{\Key{route} & \Key{name} & \Key{hv} & \ApiText{Order of an orthogonal connector: \Key{hv} or \Key{vh}.}{Reihenfolge eines rechtwinkligen Verbinders: \Key{hv} oder \Key{vh}.}}
+  \SemioTableRow{\Key{curvature} & \Key{number} & \Key{0.4} & \ApiText{Bow of a curved connector, as a fraction of the span.}{Bauch eines gekrümmten Verbinders als Anteil der Spannweite.}}
+  \SemioTableRow{\Key{via} & \Key{list} & --- & \ApiText{Waypoints of a bundled connector.}{Wegpunkte eines gebündelten Verbinders.}}
+  \SemioTableRow{\Key{concavity} & \Key{number} & \Key{20} & \ApiText{Longest edge a concave hull will not dig into.}{Längste Kante, in die eine konkave Hülle nicht eindringt.}}
+  \SemioTableRow{\Key{aspect} & \Key{number} & \Key{2} & \ApiText{Width-to-height ratio of the rectangle mark.}{Verhältnis von Breite zu Höhe der Rechteckmarke.}}
+  \SemioTableRow{\Key{symbol} & \Key{name} & \Key{circle} & \ApiText{The d3 symbol drawn inside an icon mark.}{Das d3-Symbol, das in einer Symbolmarke gezeichnet wird.}}
+  \SemioTableRow{\Key{file} & \Key{path} & --- & \ApiText{Image file of an image mark.}{Bilddatei einer Bildmarke.}}
+  \SemioTableRow{\Key{extent} & \Key{lo,hi} & --- & \ApiText{Span of a reference band, a bracket or a brace.}{Spannweite eines Referenzbandes, einer eckigen oder geschweiften Klammer.}}
+}

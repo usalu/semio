@@ -1,0 +1,36 @@
+{
+  "at": "2026-10-05T02:07:43.2161077Z",
+  "decisions": [
+    {
+      "owner": "layer",
+      "after": "paint",
+      "before": "key-list",
+      "key": "fill"
+    },
+    {
+      "owner": "layer",
+      "after": "paint",
+      "before": "key-list",
+      "key": "stroke"
+    }
+  ],
+  "sourceBindings": [
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧬️schema/🔣️.json",
+      "sha256": "0695C9607CDB6E0FEDA18208CF641A068AA438B50C922B744F7443AE3CA416AA"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧬️schema/💡️inferences/🖼️render/🟦️.ts",
+      "sha256": "83CBCA27822DB8ECB72CF041A18D999BE560122E8D19164934D8484B5B51DCA4"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧬️schema/💡️inferences/🦀️.rs",
+      "sha256": "A54E1B435BEF38787681CA53DB2EA9F8A9681E3FECBFC7B8A820D5CBF2653182"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-plot.sty",
+      "sha256": "34B46A9D6272E2D6471F82C15F6C713834D828E4B1A0576B2C33B1E9E90F08D1"
+    }
+  ],
+  "scope": "Public canonical layer options are constant paint fallbacks; explicit encodings remain separate column/scale bindings."
+}

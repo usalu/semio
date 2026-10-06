@@ -4,6 +4,7 @@
 \RequirePackage{expl3}
 \RequirePackage{xparse}
 \RequirePackage{semio-viz-scientific-field}
+\RequirePackage{semio-viz-spatial}
 
 \ExplSyntaxOn
 
@@ -21,7 +22,10 @@
 % 🧩 Splits a `a/b/c/…` record into the scratch sequence every renderer below reads its fields from.
 \seq_new:N \l_semio_viz_math_rec_seq
 \cs_new_protected:Npn \semio_viz_math_record:n #1
-  { \seq_set_split:Nnx \l_semio_viz_math_rec_seq { / } {#1} }
+  { \seq_set_split:Nnn \l_semio_viz_math_rec_seq { / } {#1} }
+% 📋 Resolves item #2 of list #1 while preserving its caption tokens during the split.
+\cs_new_protected:Npn \semio_viz_math_record:Nn #1#2
+  { \seq_set_split:Nnx \l_semio_viz_math_rec_seq { / } { \clist_item:Nn #1 {#2} } }
 % 🔢 Returns field #1 of the record most recently split by \semio_viz_math_record:n.
 \cs_new:Npn \semio_viz_math_field:n #1
   { \seq_item:Nn \l_semio_viz_math_rec_seq {#1} }
@@ -1013,7 +1017,7 @@
 % 🔶 Binds the `sci-abstract-diagram` keys to the node and edge lists, the node decoration and the coordinate unit.
 \keys_define:nn { semio / viz / family / sci-abstract-diagram }
   {
-    mode      .tl_set:N    = \l_semio_viz_math_mode_tl ,
+    mode .code:n = { \semio_viz_sci_records_mode:Nnnn \l_semio_viz_math_mode_tl {#1} { sci-abstract-diagram } { commutative,string,tensor,hasse,cayley,dynkin,proof,rewrite } } ,
     nodes     .clist_set:N = \l_semio_viz_math_nodes_clist ,
     edges     .clist_set:N = \l_semio_viz_math_edges_clist ,
     nodeShape .tl_set:N    = \l_semio_viz_math_nodeshape_tl ,
@@ -1023,10 +1027,11 @@
 % ✒️ Maps an edge style name such as hook, double or wire to the TikZ options that draw it.
 \cs_new:Npn \semio_viz_math_edge_style:n #1
   {
-    \str_case:nnF {#1}
+    \exp_args:Ne \str_case:nnF {#1}
       {
-        { hook }   { semio~sci~arrow , dash~pattern=on~2pt~off~1pt }
+        { hook }   { semio~sci~thin , {Hooks[right,length=1.1mm,width=1.1mm]}-{Straight~Barb[length=1.1mm,width=1.1mm]} }
         { double } { semio~sci~arrow , double , double~distance=0.5pt }
+        { dynkin-double } { semio~sci~thin , double , double~distance=0.5pt }
         { dashed } { semio~sci~arrow , dash~pattern=on~1.4pt~off~1.2pt }
         { wire }   { semio~sci~thin }
         { leg }    { semio~sci~thin , draw=semio-secondary }
@@ -1046,9 +1051,12 @@
               [ \semio_viz_math_edge_style:n { \semio_viz_math_field:n { 3 } } ]
               ( \fp_eval:n { \l_semio_viz_math_unit_fp * \semio_viz_math_nodex:n { \semio_viz_math_field:n { 1 } } } ,
                 \fp_eval:n { \l_semio_viz_math_unit_fp * \semio_viz_math_nodey:n { \semio_viz_math_field:n { 1 } } } ) --
-              node [ font=\exp_not:N \c_semio_viz_theme_font_label_tl , text=semio-chrome-text-normal ,
-                     inner~sep=0.4mm , fill=semio-chrome-base , sloped ]
-                { \semio_viz_math_field:n { 4 } }
+              \tl_if_blank:eF { \semio_viz_math_field:n { 4 } }
+                {
+                  node [ font=\exp_not:N \c_semio_viz_theme_font_label_tl , text=semio-chrome-text-normal ,
+                         inner~sep=0.4mm , fill=semio-chrome-base , sloped ]
+                    { \exp_not:e { \semio_viz_math_field:n { 4 } } }
+                }
               ( \fp_eval:n { \l_semio_viz_math_unit_fp * \semio_viz_math_nodex:n { \semio_viz_math_field:n { 2 } } } ,
                 \fp_eval:n { \l_semio_viz_math_unit_fp * \semio_viz_math_nodey:n { \semio_viz_math_field:n { 2 } } } ) ;
           }
@@ -1080,11 +1088,14 @@
               }
           }
           {
-            \node [ font=\c_semio_viz_theme_font_title_tl , text=semio-chrome-foreground ,
-                    inner~sep=0.6mm , fill=semio-chrome-base ]
-              at ( \fp_eval:n { \l_semio_viz_math_unit_fp * \semio_viz_math_field:n { 2 } } ,
-                   \fp_eval:n { \l_semio_viz_math_unit_fp * \semio_viz_math_field:n { 3 } } )
-              { \semio_viz_math_field:n { 4 } } ;
+            \tl_if_blank:eF { \semio_viz_math_field:n { 4 } }
+              {
+                \node [ font=\c_semio_viz_theme_font_title_tl , text=semio-chrome-foreground ,
+                        inner~sep=0.6mm , fill=semio-chrome-base ]
+                  at ( \fp_eval:n { \l_semio_viz_math_unit_fp * \semio_viz_math_field:n { 2 } } ,
+                       \fp_eval:n { \l_semio_viz_math_unit_fp * \semio_viz_math_field:n { 3 } } )
+                  { \semio_viz_math_field:n { 4 } } ;
+              }
           }
         \semio_viz_sci_report_values:nn { diagram/node }
           { \fp_to_decimal:n { \l_semio_viz_math_unit_fp * \semio_viz_math_field:n { 2 } } ,
@@ -1093,18 +1104,88 @@
   }
 
 % 🔷 §38 node-and-arrow diagrams: commutative squares, string and tensor networks, Hasse and Cayley graphs, Dynkin marks, proof and rewrite trees.
+% 🧬️ Resolves omitted mode vectors while preserving explicit empty and partial lists.
+\clist_new:N \l_semio_viz_math_abstract_default_nodes_clist
+\clist_new:N \l_semio_viz_math_abstract_default_edges_clist
+\cs_new_protected:Npn \semio_viz_math_abstract_defaults:
+  {
+    \str_case:VnF \l_semio_viz_math_mode_tl
+      {
+        { commutative }
+          {
+            \clist_set:Nn \l_semio_viz_math_abstract_default_nodes_clist { a/0/1/A,b/1/1/B,c/0/0/C,d/1/0/D }
+            \clist_set:Nn \l_semio_viz_math_abstract_default_edges_clist { a/b/arrow/f,a/c/arrow/g,b/d/arrow/h,c/d/arrow/k }
+          }
+        { string }
+          {
+            \clist_set:Nn \l_semio_viz_math_abstract_default_nodes_clist { a/0/1/f,b/1/1/g,c/0/0/,d/1/0/ }
+            \clist_set:Nn \l_semio_viz_math_abstract_default_edges_clist { c/a/wire/,d/b/wire/,a/b/wire/ }
+          }
+        { tensor }
+          {
+            \clist_set:Nn \l_semio_viz_math_abstract_default_nodes_clist { a/0/1/A,b/1/1/B,c/0/0/C,d/1/0/D }
+            \clist_set:Nn \l_semio_viz_math_abstract_default_edges_clist { a/b/leg/,a/c/leg/,b/d/leg/,c/d/leg/ }
+          }
+        { hasse }
+          {
+            \clist_set:Nn \l_semio_viz_math_abstract_default_nodes_clist { a/0/0/0,b/-0.7/1/a,c/0.7/1/b,d/0/2/1 }
+            \clist_set:Nn \l_semio_viz_math_abstract_default_edges_clist { a/b/order/,a/c/order/,b/d/order/,c/d/order/ }
+          }
+        { cayley }
+          {
+            \clist_set:Nn \l_semio_viz_math_abstract_default_nodes_clist { a/0/0/e,b/1/0/r,c/1/1/r2,d/0/1/r3 }
+            \clist_set:Nn \l_semio_viz_math_abstract_default_edges_clist { a/b/arrow/r,b/c/arrow/r,c/d/arrow/r,d/a/arrow/r }
+          }
+        { dynkin }
+          {
+            \clist_set:Nn \l_semio_viz_math_abstract_default_nodes_clist { a/0/0/,b/1/0/,c/2/0/,d/3/0/ }
+            \clist_set:Nn \l_semio_viz_math_abstract_default_edges_clist { a/b/order/,b/c/dynkin-double/,c/d/order/ }
+          }
+        { proof }
+          {
+            \clist_set:Nn \l_semio_viz_math_abstract_default_nodes_clist { a/-0.7/1/P,b/0.7/1/Q,c/0/0/R }
+            \clist_set:Nn \l_semio_viz_math_abstract_default_edges_clist { a/c/order/,b/c/order/ }
+          }
+        { rewrite }
+          {
+            \clist_set:Nn \l_semio_viz_math_abstract_default_nodes_clist { a/0/1/s,b/1/1/t,c/0/0/u,d/1/0/v }
+            \clist_set:Nn \l_semio_viz_math_abstract_default_edges_clist { a/b/double/r,a/c/dashed/,b/d/double/r,c/d/double/r }
+          }
+      }
+      { \msg_fatal:nnxx { semio-viz-sci } { unknown-mode } { sci-abstract-diagram } { \tl_use:N \l_semio_viz_math_mode_tl } }
+    \clist_if_in:NnT \l_semio_viz_math_nodes_clist { \q_no_value }
+      { \clist_set_eq:NN \l_semio_viz_math_nodes_clist \l_semio_viz_math_abstract_default_nodes_clist }
+    \clist_if_in:NnT \l_semio_viz_math_edges_clist { \q_no_value }
+      { \clist_set_eq:NN \l_semio_viz_math_edges_clist \l_semio_viz_math_abstract_default_edges_clist }
+  }
+
+% 🛡️ Applies the native record contract before this family paints.
+\cs_new_protected:Npn \semio_viz_math_abstract_validate:
+  {
+    \semio_viz_sci_records_begin:n { sci-abstract-diagram }
+    \semio_viz_sci_records_positive:nn { \l_semio_viz_math_unit_fp } { unit }
+    \semio_viz_sci_records_choice:nnn { \l_semio_viz_math_nodeshape_tl } { none,box,circle } { nodeShape }
+    \semio_viz_sci_records_graph:NNn \l_semio_viz_math_nodes_clist \l_semio_viz_math_edges_clist { arrow,hook,double,dashed,wire,leg,order,dynkin-double }
+  }
+
 \SemioVizFamily { sci-abstract-diagram }
   {
     \semio_viz_sci_enter:nnn { sci-abstract-diagram }
       {
         mode=commutative , nodeShape=none , unit=18 , axes=false , grid=false ,
-        nodes={ a/0/1/A , b/1/1/B , c/0/0/C , d/1/0/D } ,
-        edges={ a/b/arrow/f , a/c/arrow/g , b/d/arrow/h , c/d/arrow/k }
+        nodes={ \q_no_value } , edges={ \q_no_value }
       }
       {#1}
+    \semio_viz_math_abstract_defaults:
+    \semio_viz_math_abstract_validate:
+    \bool_if:NT \l_semio_viz_sci_records_valid_bool
+      {
+    \semio_viz_sci_physical_begin:
     \semio_viz_math_nodes_read:N \l_semio_viz_math_nodes_clist
     \semio_viz_math_diagram_edges:
     \semio_viz_math_diagram_nodes:
+    \semio_viz_sci_physical_end:
+      }
   }
 
 %region 🔖️Keys
@@ -1141,9 +1222,11 @@
         cell=5 , axes=false , grid=false
       }
       {#1}
+    \semio_viz_sci_physical_begin:
     \str_if_eq:VnTF \l_semio_viz_math_mode_tl { young }
       { \semio_viz_math_young: }
       { \semio_viz_math_table: }
+    \semio_viz_sci_physical_end:
   }
 % 🧱 Draws one row of boxes per partition part, stacked downwards from the origin.
 \cs_new_protected:Npn \semio_viz_math_young:
@@ -1228,6 +1311,7 @@
         axes=false , grid=false
       }
       {#1}
+    \semio_viz_sci_physical_begin:
     \int_zero:N \l_tmpa_int
     \clist_map_inline:Nn \l_semio_viz_math_crossings_clist
       {
@@ -1237,6 +1321,7 @@
           { \semio_viz_math_field:n { 1 } } { \semio_viz_math_field:n { 2 } }
       }
     \str_if_eq:VnT \l_semio_viz_math_mode_tl { knot } { \semio_viz_math_braid_closure: }
+    \semio_viz_sci_physical_end:
   }
 % 🪡 Draws column #1 of the word: strand #2 curves over its neighbour of sign #3, the rest run straight through.
 \cs_new_protected:Npn \semio_viz_math_braid_step:nnn #1#2#3
@@ -1297,7 +1382,11 @@
 %    sets (clist of `label/size`), intersections (clist of `labels/size`).
 %    radius (fp, 11): base circle radius in millimetres; area-proportional scales it by the set sizes.
 %    labels (bool, true): draw region counts.
+%    fit (bool, true): uniformly shrink the proportional group only when needed to fit the canvas.
+%    padding (fp, 0.4): minimum canvas clearance of the proportional circle strokes in millimetres.
 \bool_new:N \l_semio_viz_math_labels_bool
+\bool_new:N \l_semio_viz_math_set_fit_bool
+\fp_new:N \l_semio_viz_math_set_padding_fp
 \fp_new:N \l_semio_viz_math_radius_fp
 \clist_new:N \l_semio_viz_math_sets_clist
 \clist_new:N \l_semio_viz_math_inter_clist
@@ -1312,25 +1401,53 @@
     intersections .clist_set:N = \l_semio_viz_math_inter_clist ,
     radius        .fp_set:N    = \l_semio_viz_math_radius_fp ,
     labels        .bool_set:N  = \l_semio_viz_math_labels_bool ,
+    fit           .bool_set:N  = \l_semio_viz_math_set_fit_bool ,
+    padding       .fp_set:N    = \l_semio_viz_math_set_padding_fp ,
   }
 
-% ⭕ Centre distance of two equal circles of radius r whose lens area is `#1`, by 60 bisection steps on the lens-area formula.
+% ⭕ Solves the unequal-circle lens with frozen radii and area, including tangent and containment boundaries.
 \fp_new:N \l_semio_viz_math_dist_fp
-\cs_new_protected:Npn \semio_viz_math_lens_distance:nn #1#2
+\fp_new:N \l_semio_viz_math_set_ra_fp
+\fp_new:N \l_semio_viz_math_set_rb_fp
+\fp_new:N \l_semio_viz_math_set_target_fp
+\fp_new:N \l_semio_viz_math_set_area_fp
+\fp_new:N \l_semio_viz_math_set_left_fp
+\fp_new:N \l_semio_viz_math_set_right_fp
+\fp_new:N \l_semio_viz_math_set_scale_fp
+\fp_new:N \l_semio_viz_math_set_margin_fp
+\fp_new:N \l_semio_viz_math_set_origin_fp
+\cs_new_protected:Npn \semio_viz_math_lens_distance:
   {
-    \fp_set:Nn \l_semio_viz_sci_q_lo_fp { 0 }
-    \fp_set:Nn \l_semio_viz_sci_q_hi_fp { 2 * (#2) }
-    \int_step_inline:nnnn { 1 } { 1 } { 60 }
+    \fp_set:Nn \l_semio_viz_sci_q_lo_fp { abs ( \l_semio_viz_math_set_ra_fp - \l_semio_viz_math_set_rb_fp ) }
+    \fp_set:Nn \l_semio_viz_sci_q_hi_fp { \l_semio_viz_math_set_ra_fp + \l_semio_viz_math_set_rb_fp }
+    \fp_compare:nNnTF { \l_semio_viz_math_set_target_fp } = { 0 }
+      { \fp_set_eq:NN \l_semio_viz_sci_q_lo_fp \l_semio_viz_sci_q_hi_fp }
       {
-        \fp_set:Nn \l_semio_viz_sci_q_mid_fp { ( \l_semio_viz_sci_q_lo_fp + \l_semio_viz_sci_q_hi_fp ) / 2 }
-        \fp_set:Nn \l_semio_viz_sci_a_fp
+        \fp_compare:nNnTF { \l_semio_viz_math_set_target_fp } = { pi * min ( \l_semio_viz_math_set_ra_fp , \l_semio_viz_math_set_rb_fp ) ^ 2 }
+          { \fp_set_eq:NN \l_semio_viz_sci_q_hi_fp \l_semio_viz_sci_q_lo_fp }
           {
-            2 * (#2) * (#2) * acos ( \l_semio_viz_sci_q_mid_fp / ( 2 * (#2) ) ) * pi / 180
-            - \l_semio_viz_sci_q_mid_fp * sqrt ( max ( 0 , (#2) * (#2) - \l_semio_viz_sci_q_mid_fp * \l_semio_viz_sci_q_mid_fp / 4 ) )
+            \int_step_inline:nnnn { 1 } { 1 } { 60 }
+              {
+                \fp_set:Nn \l_semio_viz_sci_q_mid_fp { ( \l_semio_viz_sci_q_lo_fp + \l_semio_viz_sci_q_hi_fp ) / 2 }
+                \fp_set:Nn \l_semio_viz_math_set_area_fp
+                  {
+                    \l_semio_viz_math_set_ra_fp ^ 2 * acos ( max ( -1 , min ( 1 ,
+                      ( \l_semio_viz_sci_q_mid_fp ^ 2 + \l_semio_viz_math_set_ra_fp ^ 2 - \l_semio_viz_math_set_rb_fp ^ 2 )
+                      / ( 2 * \l_semio_viz_sci_q_mid_fp * \l_semio_viz_math_set_ra_fp ) ) ) )
+                    + \l_semio_viz_math_set_rb_fp ^ 2 * acos ( max ( -1 , min ( 1 ,
+                      ( \l_semio_viz_sci_q_mid_fp ^ 2 + \l_semio_viz_math_set_rb_fp ^ 2 - \l_semio_viz_math_set_ra_fp ^ 2 )
+                      / ( 2 * \l_semio_viz_sci_q_mid_fp * \l_semio_viz_math_set_rb_fp ) ) ) )
+                    - sqrt ( max ( 0 ,
+                      ( -\l_semio_viz_sci_q_mid_fp + \l_semio_viz_math_set_ra_fp + \l_semio_viz_math_set_rb_fp )
+                      * ( \l_semio_viz_sci_q_mid_fp + \l_semio_viz_math_set_ra_fp - \l_semio_viz_math_set_rb_fp )
+                      * ( \l_semio_viz_sci_q_mid_fp - \l_semio_viz_math_set_ra_fp + \l_semio_viz_math_set_rb_fp )
+                      * ( \l_semio_viz_sci_q_mid_fp + \l_semio_viz_math_set_ra_fp + \l_semio_viz_math_set_rb_fp ) ) ) / 2
+                  }
+                \fp_compare:nNnTF { \l_semio_viz_math_set_area_fp } > { \l_semio_viz_math_set_target_fp }
+                  { \fp_set_eq:NN \l_semio_viz_sci_q_lo_fp \l_semio_viz_sci_q_mid_fp }
+                  { \fp_set_eq:NN \l_semio_viz_sci_q_hi_fp \l_semio_viz_sci_q_mid_fp }
+              }
           }
-        \fp_compare:nNnTF { \l_semio_viz_sci_a_fp } > {#1}
-          { \fp_set_eq:NN \l_semio_viz_sci_q_lo_fp \l_semio_viz_sci_q_mid_fp }
-          { \fp_set_eq:NN \l_semio_viz_sci_q_hi_fp \l_semio_viz_sci_q_mid_fp }
       }
     \fp_set:Nn \l_semio_viz_math_dist_fp { ( \l_semio_viz_sci_q_lo_fp + \l_semio_viz_sci_q_hi_fp ) / 2 }
   }
@@ -1341,15 +1458,17 @@
     \semio_viz_sci_enter:nnn { sci-set }
       {
         mode=venn , sets={ A/38 , B/26 , C/17 } , intersections={ AB/12 , AC/7 , BC/5 , ABC/3 } ,
-        radius=11 , labels=true , axes=false , grid=false
+        radius=11 , labels=true , fit=true , padding=0.4 , axes=false , grid=false
       }
       {#1}
+    \semio_viz_sci_physical_begin:
     \str_case:VnF \l_semio_viz_math_mode_tl
       {
         { area-proportional } { \semio_viz_math_set_proportional: }
         { euler }             { \semio_viz_math_set_euler: }
       }
       { \semio_viz_math_set_venn: }
+    \semio_viz_sci_physical_end:
   }
 % 🟡 Fills and outlines one set circle centred at (#1,#2) with radius #3 in the hue of index #4.
 \cs_new_protected:Npn \semio_viz_math_set_circle:nnnn #1#2#3#4
@@ -1367,7 +1486,7 @@
     \int_set:Nn \l_tmpa_int { \clist_count:N \l_semio_viz_math_sets_clist }
     \int_step_inline:nnnn { 1 } { 1 } { \l_tmpa_int }
       {
-        \semio_viz_math_record:n { \clist_item:Nn \l_semio_viz_math_sets_clist {##1} }
+        \semio_viz_math_record:Nn \l_semio_viz_math_sets_clist {##1}
         \semio_viz_math_set_circle:nnnn
           { \fp_eval:n { 0.62 * \l_semio_viz_math_radius_fp
               * cos ( 2 * pi * ##1 / \l_tmpa_int + pi / 2 ) } }
@@ -1396,7 +1515,7 @@
       }
     \int_step_inline:nnnn { 1 } { 1 } { \l_tmpa_int }
       {
-        \semio_viz_math_record:n { \clist_item:Nn \l_semio_viz_math_sets_clist {##1} }
+        \semio_viz_math_record:Nn \l_semio_viz_math_sets_clist {##1}
         \semio_viz_math_set_circle:nnnn
           { \fp_eval:n { 1.15 * \l_semio_viz_math_radius_fp * ( ##1 - ( \l_tmpa_int + 1 ) / 2 ) } }
           { 0 }
@@ -1408,24 +1527,40 @@
 % ⚖️ Solves the two-set area-proportional layout: radii from the two sizes, centre distance from the overlap.
 \cs_new_protected:Npn \semio_viz_math_set_proportional:
   {
-    \semio_viz_math_record:n { \clist_item:Nn \l_semio_viz_math_sets_clist { 1 } }
+    \semio_viz_math_record:Nn \l_semio_viz_math_sets_clist { 1 }
     \fp_set:Nn \l_semio_viz_sci_e_fp { \semio_viz_math_field:n { 2 } }
-    \semio_viz_math_record:n { \clist_item:Nn \l_semio_viz_math_sets_clist { 2 } }
+    \semio_viz_math_record:Nn \l_semio_viz_math_sets_clist { 2 }
     \fp_set:Nn \l_semio_viz_sci_f_fp { \semio_viz_math_field:n { 2 } }
-    \semio_viz_math_record:n { \clist_item:Nn \l_semio_viz_math_inter_clist { 1 } }
+    \semio_viz_math_record:Nn \l_semio_viz_math_inter_clist { 1 }
     \fp_set:Nn \l_semio_viz_sci_g_fp { \semio_viz_math_field:n { 2 } }
-    \fp_set:Nn \l_semio_viz_sci_a_fp
+    \fp_set:Nn \l_semio_viz_math_set_ra_fp
       { \l_semio_viz_math_radius_fp * sqrt ( \l_semio_viz_sci_e_fp / max ( \l_semio_viz_sci_e_fp , \l_semio_viz_sci_f_fp ) ) }
-    \fp_set:Nn \l_semio_viz_sci_b_fp
+    \fp_set:Nn \l_semio_viz_math_set_rb_fp
       { \l_semio_viz_math_radius_fp * sqrt ( \l_semio_viz_sci_f_fp / max ( \l_semio_viz_sci_e_fp , \l_semio_viz_sci_f_fp ) ) }
-    \semio_viz_math_lens_distance:nn
-      { \fp_eval:n { pi * \l_semio_viz_sci_a_fp * \l_semio_viz_sci_a_fp
-          * \l_semio_viz_sci_g_fp / \l_semio_viz_sci_e_fp } }
-      { \fp_eval:n { ( \l_semio_viz_sci_a_fp + \l_semio_viz_sci_b_fp ) / 2 } }
+    \fp_set:Nn \l_semio_viz_math_set_target_fp
+      { pi * \l_semio_viz_math_set_ra_fp ^ 2 * \l_semio_viz_sci_g_fp / \l_semio_viz_sci_e_fp }
+    \semio_viz_math_lens_distance:
+    \fp_set:Nn \l_semio_viz_math_set_left_fp { min ( -\l_semio_viz_math_set_ra_fp , \l_semio_viz_math_dist_fp - \l_semio_viz_math_set_rb_fp ) }
+    \fp_set:Nn \l_semio_viz_math_set_right_fp { max ( \l_semio_viz_math_set_ra_fp , \l_semio_viz_math_dist_fp + \l_semio_viz_math_set_rb_fp ) }
+    \fp_set:Nn \l_semio_viz_math_set_scale_fp { 1 }
+    \bool_if:NT \l_semio_viz_math_set_fit_bool
+      {
+        \fp_set:Nn \l_semio_viz_math_set_margin_fp
+          { \l_semio_viz_math_set_padding_fp + \dim_to_fp:n { \semio@stroke@hairline } / ( 2 * \dim_to_fp:n { 1mm } ) }
+        \fp_set:Nn \l_semio_viz_math_set_scale_fp
+          { min ( 1 ,
+            ( \l_semio_viz_sci_w_fp - 2 * \l_semio_viz_math_set_margin_fp ) / ( \l_semio_viz_math_set_right_fp - \l_semio_viz_math_set_left_fp ) ,
+            ( \l_semio_viz_sci_h_fp - 2 * \l_semio_viz_math_set_margin_fp ) / ( 2 * max ( \l_semio_viz_math_set_ra_fp , \l_semio_viz_math_set_rb_fp ) ) ) }
+      }
+    \fp_set:Nn \l_semio_viz_math_set_origin_fp
+      { \l_semio_viz_sci_w_fp / 2 - ( \l_semio_viz_math_set_left_fp + \l_semio_viz_math_set_right_fp ) * \l_semio_viz_math_set_scale_fp / 2 }
+    \fp_set:Nn \l_semio_viz_math_dist_fp { \l_semio_viz_math_dist_fp * \l_semio_viz_math_set_scale_fp }
+    \fp_set:Nn \l_semio_viz_math_set_ra_fp { \l_semio_viz_math_set_ra_fp * \l_semio_viz_math_set_scale_fp }
+    \fp_set:Nn \l_semio_viz_math_set_rb_fp { \l_semio_viz_math_set_rb_fp * \l_semio_viz_math_set_scale_fp }
     \semio_viz_math_set_circle:nnnn
-      { \fp_eval:n { - \l_semio_viz_math_dist_fp / 2 } } { 0 } { \fp_eval:n { \l_semio_viz_sci_a_fp } } { 1 }
+      { \fp_eval:n { \l_semio_viz_math_set_origin_fp } } { \fp_eval:n { \l_semio_viz_sci_h_fp / 2 } } { \fp_eval:n { \l_semio_viz_math_set_ra_fp } } { 1 }
     \semio_viz_math_set_circle:nnnn
-      { \fp_eval:n { \l_semio_viz_math_dist_fp / 2 } } { 0 } { \fp_eval:n { \l_semio_viz_sci_b_fp } } { 2 }
+      { \fp_eval:n { \l_semio_viz_math_set_origin_fp + \l_semio_viz_math_dist_fp } } { \fp_eval:n { \l_semio_viz_sci_h_fp / 2 } } { \fp_eval:n { \l_semio_viz_math_set_rb_fp } } { 2 }
     \semio_viz_sci_report_values:nn { set/distance } { \fp_to_decimal:N \l_semio_viz_math_dist_fp }
   }
 
@@ -1435,6 +1570,14 @@
 %    sets (clist of `label/size`), intersections (clist of `members/size`) where members are set labels joined by `+`.
 %    cell (fp, 5): matrix cell size. barHeight (fp, 20): bar panel height in millimetres.
 \fp_new:N \l_semio_viz_math_barh_fp
+\seq_new:N \l_semio_viz_math_upset_ids_seq
+\seq_new:N \l_semio_viz_math_upset_members_seq
+\seq_new:N \l_semio_viz_math_upset_pairs_seq
+\prop_new:N \l_semio_viz_math_upset_seen_prop
+\fp_new:N \l_semio_viz_math_upset_weight_fp
+\fp_new:N \l_semio_viz_math_upset_pairmax_fp
+\fp_new:N \l_semio_viz_math_upset_setmax_fp
+\msg_new:nnn { semio-viz-upset } { input } { Invalid~set~intersection~input:~#1. }
 %endregion 🔖️Keys
 
 \semio_viz_sci_keys_canvas:n { sci-upset }
@@ -1458,6 +1601,11 @@
         cell=5 , barHeight=20 , axes=false , grid=false
       }
       {#1}
+    \semio_viz_math_upset_validate:
+    \semio_viz_sci_physical_begin:
+    \str_if_eq:VnTF \l_semio_viz_math_mode_tl { overlap-network }
+      { \semio_viz_math_upset_network: }
+      {
     \fp_zero:N \l_semio_viz_sci_a_fp
     \clist_map_inline:Nn \l_semio_viz_math_inter_clist
       {
@@ -1481,24 +1629,29 @@
           at ( -1 , \fp_eval:n { - \l_tmpb_int * \l_semio_viz_math_cell_fp } )
           { \semio_viz_math_field:n { 1 } } ;
       }
+      }
+    \semio_viz_sci_physical_end:
   }
 % 🗳️ Draws intersection column #1: the size bar for #3 and a filled or hollow dot per set in the membership #2.
 \cs_new_protected:Npn \semio_viz_math_upset_column:nnn #1#2#3
   {
-    \str_if_eq:VnF \l_semio_viz_math_mode_tl { combination-matrix }
+    \str_if_eq:VnT \l_semio_viz_math_mode_tl { upset }
       {
+        \fp_compare:nNnT { \l_semio_viz_sci_a_fp } > { 0 }
+          {
         \fill [ fill=semio-primary ]
           ( \fp_eval:n { ( #1 - 0.8 ) * \l_semio_viz_math_cell_fp } , 0 ) rectangle
           ( \fp_eval:n { ( #1 - 0.2 ) * \l_semio_viz_math_cell_fp } ,
             \fp_eval:n { \l_semio_viz_math_barh_fp * (#3) / \l_semio_viz_sci_a_fp } ) ;
+          }
       }
+    \seq_set_split:Nnx \l_semio_viz_math_upset_members_seq { + } {#2}
     \int_zero:N \l_tmpb_int
     \clist_map_inline:Nn \l_semio_viz_math_sets_clist
       {
         \int_incr:N \l_tmpb_int
         \semio_viz_math_record:n {##1}
-        \seq_set_split:Nnn \l_tmpa_seq { + } {#2}
-        \seq_if_in:NxTF \l_tmpa_seq { \semio_viz_math_field:n { 1 } }
+        \seq_if_in:NxTF \l_semio_viz_math_upset_members_seq { \semio_viz_math_field:n { 1 } }
           {
             \fill [ fill=semio-primary ]
               ( \fp_eval:n { ( #1 - 0.5 ) * \l_semio_viz_math_cell_fp } ,
@@ -1511,6 +1664,106 @@
           }
       }
     \semio_viz_sci_report_values:nn { upset/column } { #1 , #3 }
+  }
+
+% 🛂 Validates the declared modes and exact-membership records before any set glyph is painted.
+\cs_new_protected:Npn \semio_viz_math_upset_validate:
+  {
+    \str_case:VnF \l_semio_viz_math_mode_tl
+      { { upset } { } { combination-matrix } { } { intersection-matrix } { } { overlap-network } { } }
+      { \msg_fatal:nnn { semio-viz-upset } { input } { unknown~mode } }
+    \fp_compare:nF { 0 < \l_semio_viz_math_cell_fp < inf && 0 <= \l_semio_viz_math_barh_fp < inf }
+      { \msg_fatal:nnn { semio-viz-upset } { input } { cell~or~barHeight } }
+    \seq_clear:N \l_semio_viz_math_upset_ids_seq
+    \fp_zero:N \l_semio_viz_math_upset_setmax_fp
+    \clist_map_inline:Nn \l_semio_viz_math_sets_clist
+      {
+        \semio_viz_math_record:n {##1}
+        \int_compare:nNnF { \seq_count:N \l_semio_viz_math_rec_seq } = { 2 }
+          { \msg_fatal:nnn { semio-viz-upset } { input } { set~arity } }
+        \tl_set:Nx \l_tmpa_tl { \semio_viz_math_field:n { 1 } }
+        \tl_if_blank:VT \l_tmpa_tl { \msg_fatal:nnn { semio-viz-upset } { input } { empty~set~ID } }
+        \seq_if_in:NVTF \l_semio_viz_math_upset_ids_seq \l_tmpa_tl
+          { \msg_fatal:nnn { semio-viz-upset } { input } { duplicate~set~ID } }
+          { \seq_put_right:NV \l_semio_viz_math_upset_ids_seq \l_tmpa_tl }
+        \fp_compare:nF { 0 <= ( \semio_viz_math_field:n { 2 } ) < inf }
+          { \msg_fatal:nnn { semio-viz-upset } { input } { set~size } }
+        \fp_set:Nn \l_semio_viz_math_upset_setmax_fp { max ( \l_semio_viz_math_upset_setmax_fp , \semio_viz_math_field:n { 2 } ) }
+      }
+    \clist_map_inline:Nn \l_semio_viz_math_inter_clist
+      {
+        \semio_viz_math_record:n {##1}
+        \int_compare:nNnF { \seq_count:N \l_semio_viz_math_rec_seq } = { 2 }
+          { \msg_fatal:nnn { semio-viz-upset } { input } { intersection~arity } }
+        \fp_compare:nF { 0 <= ( \semio_viz_math_field:n { 2 } ) < inf }
+          { \msg_fatal:nnn { semio-viz-upset } { input } { intersection~size } }
+        \seq_set_split:Nnx \l_semio_viz_math_upset_members_seq { + } { \semio_viz_math_field:n { 1 } }
+        \prop_clear:N \l_semio_viz_math_upset_seen_prop
+        \seq_map_inline:Nn \l_semio_viz_math_upset_members_seq
+          {
+            \seq_if_in:NnF \l_semio_viz_math_upset_ids_seq {####1}
+              { \msg_fatal:nnn { semio-viz-upset } { input } { unknown~set~member } }
+            \prop_if_in:NnT \l_semio_viz_math_upset_seen_prop {####1}
+              { \msg_fatal:nnn { semio-viz-upset } { input } { duplicate~set~member } }
+            \prop_put:Nnn \l_semio_viz_math_upset_seen_prop {####1} { 1 }
+          }
+      }
+  }
+
+% 🧮 Sums every exact-membership intersection containing both authored set IDs.
+\cs_new_protected:Npn \semio_viz_math_upset_pair:nnnn #1#2#3#4
+  {
+    \fp_zero:N \l_semio_viz_math_upset_weight_fp
+    \clist_map_inline:Nn \l_semio_viz_math_inter_clist
+      {
+        \semio_viz_math_record:n {##1}
+        \seq_set_split:Nnx \l_semio_viz_math_upset_members_seq { + } { \semio_viz_math_field:n { 1 } }
+        \seq_if_in:NnT \l_semio_viz_math_upset_members_seq {#2}
+          { \seq_if_in:NnT \l_semio_viz_math_upset_members_seq {#4}
+              { \fp_add:Nn \l_semio_viz_math_upset_weight_fp { \semio_viz_math_field:n { 2 } } } }
+      }
+    \fp_compare:nNnT { \l_semio_viz_math_upset_weight_fp } > { 0 }
+      {
+        \seq_put_right:Nx \l_semio_viz_math_upset_pairs_seq { {#1} {#3} { \fp_use:N \l_semio_viz_math_upset_weight_fp } }
+        \fp_set:Nn \l_semio_viz_math_upset_pairmax_fp { max ( \l_semio_viz_math_upset_pairmax_fp , \l_semio_viz_math_upset_weight_fp ) }
+      }
+  }
+
+% 📐 Projects one authored set index onto the deterministic canvas circle.
+\cs_new:Npn \semio_viz_math_upset_x:n #1
+  { \fp_eval:n { \l_semio_viz_sci_w_fp / 2 + .3 * min ( \l_semio_viz_sci_w_fp , \l_semio_viz_sci_h_fp ) * cosd ( 360 * (#1-1) / \seq_count:N \l_semio_viz_math_upset_ids_seq ) } }
+\cs_new:Npn \semio_viz_math_upset_y:n #1
+  { \fp_eval:n { \l_semio_viz_sci_h_fp / 2 + .3 * min ( \l_semio_viz_sci_w_fp , \l_semio_viz_sci_h_fp ) * sind ( 360 * (#1-1) / \seq_count:N \l_semio_viz_math_upset_ids_seq ) } }
+
+% 🖇️ Paints one positive aggregate pair before its endpoint nodes.
+\cs_new_protected:Npn \semio_viz_math_upset_edge:nnn #1#2#3
+  {
+    \draw [ semio-primary , line~width=\fp_eval:n { .2 + 1.8 * #3 / \l_semio_viz_math_upset_pairmax_fp } mm ]
+      ( \semio_viz_math_upset_x:n {#1} , \semio_viz_math_upset_y:n {#1} ) --
+      ( \semio_viz_math_upset_x:n {#2} , \semio_viz_math_upset_y:n {#2} ) ;
+    \semio_viz_sci_report_values:nn { upset/pair } { #1 , #2 , #3 }
+  }
+
+% 🕸️ Draws authored sets as size-weighted circular nodes and inclusive pairwise overlap edges.
+\cs_new_protected:Npn \semio_viz_math_upset_network:
+  {
+    \seq_clear:N \l_semio_viz_math_upset_pairs_seq
+    \fp_zero:N \l_semio_viz_math_upset_pairmax_fp
+    \seq_map_indexed_inline:Nn \l_semio_viz_math_upset_ids_seq
+      { \seq_map_indexed_inline:Nn \l_semio_viz_math_upset_ids_seq
+          { \int_compare:nNnT {####1} > {##1} { \semio_viz_math_upset_pair:nnnn {##1} {##2} {####1} {####2} } } }
+    \seq_map_inline:Nn \l_semio_viz_math_upset_pairs_seq { \semio_viz_math_upset_edge:nnn ##1 }
+    \seq_map_indexed_inline:Nn \l_semio_viz_math_upset_ids_seq
+      {
+        \semio_viz_math_record:Nn \l_semio_viz_math_sets_clist {##1}
+        \fp_zero:N \l_semio_viz_sci_b_fp
+        \fp_compare:nNnT { \l_semio_viz_math_upset_setmax_fp } > { 0 }
+          { \fp_set:Nn \l_semio_viz_sci_b_fp { .5 * \l_semio_viz_math_cell_fp * sqrt ( ( \semio_viz_math_field:n { 2 } ) / \l_semio_viz_math_upset_setmax_fp ) } }
+        \fp_compare:nNnT { \l_semio_viz_sci_b_fp } > { 0 }
+          { \fill [ semio-primary ] ( \semio_viz_math_upset_x:n {##1} , \semio_viz_math_upset_y:n {##1} ) circle [ radius=\fp_use:N \l_semio_viz_sci_b_fp ] ; }
+        \node [ font=\c_semio_viz_theme_font_label_tl , text=semio-chrome-text-normal ]
+          at ( \semio_viz_math_upset_x:n {##1} , \fp_eval:n { \semio_viz_math_upset_y:n {##1} + \l_semio_viz_sci_b_fp + 3 } ) { \semio_viz_math_field:n { 1 } } ;
+      }
   }
 
 %region 🔖️Keys
@@ -1530,7 +1783,7 @@
 % 🧗 Binds the `sci-optimization` keys to the constraints, objective, contour count, candidate points and queueing network.
 \keys_define:nn { semio / viz / family / sci-optimization }
   {
-    mode        .tl_set:N    = \l_semio_viz_math_mode_tl ,
+    mode .code:n = { \semio_viz_sci_records_mode:Nnnn \l_semio_viz_math_mode_tl {#1} { sci-optimization } { feasible-region,pareto,queueing,decision-lattice,objective-contours } } ,
     constraints .clist_set:N = \l_semio_viz_math_constraints_clist ,
     objective   .clist_set:N = \l_semio_viz_math_objective_clist ,
     levels      .int_set:N   = \l_semio_viz_math_levels_int ,
@@ -1547,10 +1800,13 @@
       {
         mode=feasible-region , constraints={ 1/2/8 , 3/1/9 , -1/0/0 , 0/-1/0 } , objective={ 2 , 3 } ,
         levels=5 , points={} , unit=18 ,
-        stations={ a/0/1/λ , b/1/1/μ , c/2/1/out } , routes={ a/b/arrow/ , b/c/arrow/ } ,
-        domain={-0.5,4} , range={-0.5,5}
+        stations={ a/0/1/\ensuremath{\lambda} , b/1/1/\ensuremath{\mu} , c/2/1/out } , routes={ a/b/arrow/ , b/c/arrow/ } ,
+        domain={} , range={}
       }
       {#1}
+    \bool_if:NT \l_semio_viz_sci_records_valid_bool
+      {
+    \semio_viz_sci_window:nnnn { -0.5 } { 4 } { -0.5 } { 5 }
     \semio_viz_sci_window_keys:
     \str_case:VnF \l_semio_viz_math_mode_tl
       {
@@ -1561,15 +1817,18 @@
           }
         { queueing }
           {
+            \semio_viz_sci_physical_begin:
             \semio_viz_math_nodes_read:N \l_semio_viz_math_nodes_clist
             \tl_set:Nn \l_semio_viz_math_nodeshape_tl { circle }
             \semio_viz_math_diagram_edges:
             \semio_viz_math_diagram_nodes:
+            \semio_viz_sci_physical_end:
           }
         { decision-lattice }
           {
-            \semio_viz_sci_frame:
+            \semio_viz_sci_physical_begin:
             \semio_viz_math_lattice:
+            \semio_viz_sci_physical_end:
           }
       }
       {
@@ -1577,6 +1836,8 @@
         \semio_viz_math_feasible:
         \str_if_eq:VnT \l_semio_viz_math_mode_tl { objective-contours } { \semio_viz_math_contours: }
         \semio_viz_math_constraint_lines:
+      }
+  
       }
   }
 % 🪟 Clips the window rectangle successively by every half-plane constraint and shades the polygon that survives.
@@ -1721,6 +1982,7 @@
         levelWidth=22 , levelGap=9 , showProbabilities=true , axes=false , grid=false
       }
       {#1}
+    \semio_viz_sci_physical_begin:
     \prop_clear:N \l_semio_viz_math_nodex_prop
     \prop_clear:N \l_semio_viz_math_nodey_prop
     \clist_map_inline:Nn \l_semio_viz_math_branches_clist
@@ -1745,6 +2007,7 @@
         \semio_viz_math_record:n {##1}
         \semio_viz_math_branch_draw:
       }
+    \semio_viz_sci_physical_end:
   }
 % 🧷 Reports 2^#1, the number of siblings a binary tree carries at depth #1.
 \cs_new:Npn \semio_viz_math_level_count:n #1
@@ -1765,7 +2028,7 @@
             \prop_item:NV \l_semio_viz_math_nodey_prop \l_tmpa_tl ) --
           node [ font=\exp_not:N \c_semio_viz_theme_font_label_tl , text=semio-chrome-text-normal ,
                  fill=semio-chrome-base , inner~sep=0.3mm , sloped ]
-            { \bool_if:NT \l_semio_viz_math_showprob_bool { \semio_viz_math_field:n { 4 } } }
+            { \bool_if:NT \l_semio_viz_math_showprob_bool { \exp_not:e { \semio_viz_math_field:n { 4 } } } }
           ( \prop_item:NV \l_semio_viz_math_nodex_prop \l_tmpb_tl ,
             \prop_item:NV \l_semio_viz_math_nodey_prop \l_tmpb_tl ) ;
       }
@@ -1775,7 +2038,7 @@
                            anchor=west , inner~sep=0.8mm ]
           at ( \prop_item:NV \l_semio_viz_math_nodex_prop \l_tmpb_tl ,
                \prop_item:NV \l_semio_viz_math_nodey_prop \l_tmpb_tl )
-          { \semio_viz_math_field:n { 5 } } ;
+          { \exp_not:e { \semio_viz_math_field:n { 5 } } } ;
       }
     \semio_viz_sci_report_values:nn { tree/branch }
       { \semio_viz_math_field:n { 1 } , \semio_viz_math_field:n { 2 } , \semio_viz_math_field:n { 4 } }
@@ -1893,6 +2156,7 @@
         axes=false , grid=false
       }
       {#1}
+    \semio_viz_sci_physical_begin:
     \draw [ semio~sci~axis ]
       ( 0 , 0 ) -- ( \fp_eval:n { \l_semio_viz_math_side_fp } , 0 ) --
       ( \fp_eval:n { \l_semio_viz_math_side_fp / 2 } , \fp_eval:n { \l_semio_viz_math_side_fp * sqrt (3) / 2 } ) -- cycle ;
@@ -1909,6 +2173,7 @@
         \semio_viz_math_record:n {##1}
         \semio_viz_math_simplex_point:
       }
+    \semio_viz_sci_physical_end:
   }
 % 🔘 Normalises the record's three weights into triangle coordinates and dots the labelled composition there.
 \cs_new_protected:Npn \semio_viz_math_simplex_point:
@@ -1963,6 +2228,7 @@
         matrix={ 0.6/0.3/0.1 , 0.2/0.5/0.3 , 0.1/0.2/0.7 }
       }
       {#1}
+    \semio_viz_sci_physical_begin:
     \str_if_eq:VnTF \l_semio_viz_math_mode_tl { matrix }
       { \semio_viz_math_matrix_grid: }
       {
@@ -1971,6 +2237,7 @@
         \semio_viz_math_diagram_edges:
         \semio_viz_math_diagram_nodes:
       }
+    \semio_viz_sci_physical_end:
   }
 % 🧊 Walks the matrix rows and their slash-separated entries, drawing one heat cell each.
 \cs_new_protected:Npn \semio_viz_math_matrix_grid:
@@ -2005,10 +2272,17 @@
 % 🔑 Keys of `sci-density` (§41 joint and conditional densities):
 %    mode (joint|marginal|conditional|copula, joint).
 %    points (clist of `x/y`): the sample. bandwidth (fp, 0.12): Gaussian kernel width.
-%    columns, rows (int, 28): estimation lattice. levels (int, 5): contour count.
+%    columns, rows (int, 28): estimation lattice. levels (nonnegative int, 5): joint contour count; zero hides contours.
 %    at (fp, 0.5): the conditioning value of x in `conditional` mode.
 \fp_new:N \l_semio_viz_math_bw_fp
 \fp_new:N \l_semio_viz_math_at_fp
+\seq_new:N \l_semio_viz_math_density_values_seq
+\seq_new:N \l_semio_viz_math_density_ring_seq
+\seq_new:N \l_semio_viz_math_density_path_seq
+\fp_new:N \l_semio_viz_math_density_min_fp
+\fp_new:N \l_semio_viz_math_density_max_fp
+\msg_new:nnn { semio-viz } { density-levels }
+  { Joint~density~contour~levels~must~be~nonnegative. }
 %endregion 🔖️Keys
 
 \semio_viz_sci_keys_canvas:n { sci-density }
@@ -2039,7 +2313,7 @@
           }
       }
     \fp_set:Nn #1
-      { #1 / ( 2 * pi * \l_semio_viz_math_bw_fp * \l_semio_viz_math_bw_fp * \clist_count:N \l_semio_viz_math_points_clist ) }
+      { #1 / ( 2 * pi * \l_semio_viz_math_bw_fp * \l_semio_viz_math_bw_fp * max ( 1 , \clist_count:N \l_semio_viz_math_points_clist ) ) }
   }
 
 % 🫧 §41 densities: the joint kernel estimate as a raster with contours, its marginals, a conditional slice and a copula scatter.
@@ -2054,6 +2328,8 @@
       }
       {#1}
     \semio_viz_sci_window_keys:
+    \int_compare:nNnT { \l_semio_viz_math_levels_int } < { 0 }
+      { \msg_fatal:nn { semio-viz } { density-levels } }
     \str_case:VnF \l_semio_viz_math_mode_tl
       {
         { copula }
@@ -2075,6 +2351,7 @@
       }
       {
         \semio_viz_math_density_raster:
+        \semio_viz_math_density_contours:
         \semio_viz_sci_frame:
         \clist_map_inline:Nn \l_semio_viz_math_points_clist
           {
@@ -2087,6 +2364,11 @@
 % 🖼️ Evaluates the kernel estimate on the columns×rows lattice and fills each cell with its ramp colour.
 \cs_new_protected:Npn \semio_viz_math_density_raster:
   {
+    \seq_clear:N \l_semio_viz_math_density_values_seq
+    \int_step_inline:nn { \l_semio_viz_math_cols_int * \l_semio_viz_math_rows_int }
+      { \seq_put_right:Nn \l_semio_viz_math_density_values_seq { 0 } }
+    \fp_set:Nn \l_semio_viz_math_density_min_fp { inf }
+    \fp_set:Nn \l_semio_viz_math_density_max_fp { -inf }
     \int_step_inline:nnnn { 0 } { 1 } { \l_semio_viz_math_cols_int - 1 }
       {
         \int_step_inline:nnnn { 0 } { 1 } { \l_semio_viz_math_rows_int - 1 }
@@ -2098,12 +2380,54 @@
               { \l_semio_viz_sci_dymin_fp + ( \l_semio_viz_sci_dymax_fp - \l_semio_viz_sci_dymin_fp )
                 * ( ####1 + 0.5 ) / \l_semio_viz_math_rows_int }
             \semio_viz_math_kde:N \l_semio_viz_sci_a_fp
+            \seq_set_item:Nnx \l_semio_viz_math_density_values_seq
+              { ####1 * \l_semio_viz_math_cols_int + ##1 + 1 } { \fp_use:N \l_semio_viz_sci_a_fp }
+            \fp_set:Nn \l_semio_viz_math_density_min_fp { min ( \l_semio_viz_math_density_min_fp , \l_semio_viz_sci_a_fp ) }
+            \fp_set:Nn \l_semio_viz_math_density_max_fp { max ( \l_semio_viz_math_density_max_fp , \l_semio_viz_sci_a_fp ) }
             \fill [ fill=\semio_viz_sci_ramp:n { \l_semio_viz_sci_a_fp / 2 } ]
               ( \fp_eval:n { \l_semio_viz_sci_w_fp * ##1 / \l_semio_viz_math_cols_int } ,
                 \fp_eval:n { \l_semio_viz_sci_h_fp * ####1 / \l_semio_viz_math_rows_int } )
               rectangle
               ( \fp_eval:n { \l_semio_viz_sci_w_fp * ( ##1 + 1 ) / \l_semio_viz_math_cols_int } ,
                 \fp_eval:n { \l_semio_viz_sci_h_fp * ( ####1 + 1 ) / \l_semio_viz_math_rows_int } ) ;
+          }
+      }
+  }
+% 🌫️ Draws exactly the interior threshold schedule on the existing KDE lattice with complete exterior and hole rings.
+\cs_new_protected:Npn \semio_viz_math_density_contours:
+  {
+    \bool_lazy_and:nnT
+      { \int_compare_p:nNn { \l_semio_viz_math_levels_int } > { 0 } }
+      { \fp_compare_p:n { \l_semio_viz_math_density_max_fp - \l_semio_viz_math_density_min_fp > 1e-12 } }
+      {
+        \use:x
+          {
+            \exp_not:N \SemioVizValueGrid { semio-density-contours }
+              { \int_use:N \l_semio_viz_math_cols_int } { \int_use:N \l_semio_viz_math_rows_int }
+              { \seq_use:Nn \l_semio_viz_math_density_values_seq { , } }
+          }
+        \int_step_inline:nn { \l_semio_viz_math_levels_int }
+          {
+            \semio_viz_spatial_contour:nn { semio-density-contours }
+              { \l_semio_viz_math_density_min_fp + ##1 * ( \l_semio_viz_math_density_max_fp - \l_semio_viz_math_density_min_fp ) / ( \l_semio_viz_math_levels_int + 1 ) }
+            \seq_map_inline:Nn \g_semio_viz_spatial_rings_seq
+              {
+                \seq_set_split:Nnn \l_semio_viz_math_density_ring_seq { ; } {####1}
+                \seq_clear:N \l_semio_viz_math_density_path_seq
+                \seq_map_inline:Nn \l_semio_viz_math_density_ring_seq
+                  {
+                    \seq_put_right:Nx \l_semio_viz_math_density_path_seq
+                      {
+                        ( \fp_eval:n { ( \clist_item:nn {########1}{1} + 0.5 ) * \l_semio_viz_sci_w_fp / \l_semio_viz_math_cols_int } ,
+                          \fp_eval:n { ( \clist_item:nn {########1}{2} + 0.5 ) * \l_semio_viz_sci_h_fp / \l_semio_viz_math_rows_int } )
+                      }
+                  }
+                \use:x
+                  {
+                    \exp_not:N \path [ draw=semio-chrome-foreground , line~width=\exp_not:N\semio@stroke@hairline , opacity=0.72 , line~join=round ]
+                      \seq_use:Nn \l_semio_viz_math_density_path_seq { -- } -- cycle ;
+                  }
+              }
           }
       }
   }

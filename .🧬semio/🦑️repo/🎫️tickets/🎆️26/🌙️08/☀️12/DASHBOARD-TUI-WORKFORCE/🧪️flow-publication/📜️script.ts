@@ -1,0 +1,7 @@
+import assert from "node:assert/strict";
+import {readFileSync,writeFileSync,renameSync} from "node:fs";
+import {join,resolve} from "node:path";
+const root=process.cwd(),generated=resolve(import.meta.dir,"../🗑️generated"),flow="🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser",mode=process.argv[2];
+function edit(path:string,transform:(text:string)=>string):void{const file=join(root,path),before=readFileSync(file,"utf8"),after=transform(before);assert.notEqual(after,before);const staged=join(generated,`flow-stage-${Date.now()}`);writeFileSync(staged,after);assert.equal(readFileSync(file,"utf8"),before);renameSync(staged,file);}
+if(mode==="test")edit(`${flow}/🏷️ownership/🧪️tests/🏷️browser-ownership/🟦️.ts`,text=>text.replace('export async function testFlowBrowserOwnership(): Promise<void> {','export async function testFlowBrowserOwnership(): Promise<void> {\n  await testColdFlowDeclaration();')+readFileSync(join(import.meta.dir,"📓️test.ts.md"),"utf8"));
+if(mode==="fix")edit(`${flow}/📝️declaration/📤️projection/🟦️.ts`,text=>text.replace('import { readFileSync, writeFileSync }','import { readFileSync, writeFileSync, mkdirSync }').replace('import { fileURLToPath } from "node:url";','import { fileURLToPath } from "node:url";\nimport { dirname } from "node:path";').replace('  writeFileSync(path, flowBrowserDeclaration(), "utf8");','  mkdirSync(dirname(path),{recursive:true});\n  writeFileSync(path, flowBrowserDeclaration(), "utf8");'));

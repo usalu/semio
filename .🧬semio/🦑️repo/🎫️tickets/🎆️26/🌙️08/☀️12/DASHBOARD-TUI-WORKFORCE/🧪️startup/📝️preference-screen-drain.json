@@ -1,0 +1,3 @@
+[
+ {"path":"dashboard/🌀️daemon/🧪️tests/🔬️unit/🦀️.rs","replace":[{"from":".ok() != Some(1) { std::thread::sleep(Duration::from_millis(10)); }","to":".ok() != Some(1) { let count = view.try_read(&mut page).unwrap_or(0); screen.feed(&page[..count]); std::thread::sleep(Duration::from_millis(10)); }"},{"from":"assert_eq!(preferences.language, \"de\");\n        }","to":"assert_eq!(preferences.language, \"de\");\n            println!(\"[DEBUG] actual settings committed German preference event revision 1\");\n        }"}]}
+]

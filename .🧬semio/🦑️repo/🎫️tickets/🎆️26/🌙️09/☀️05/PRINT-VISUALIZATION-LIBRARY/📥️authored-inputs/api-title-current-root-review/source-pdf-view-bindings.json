@@ -1,0 +1,62 @@
+{
+  "capturedAt": "2026-10-05T07:32:56.3136778Z",
+  "source": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧾️template\\📊️viz-api\\🔓️viz-api.tex",
+  "sourceSha256": "0C5A2690BCF60D465B4FD436A96375CB3ACA0EF53FF0B7D37D312B4A0B857B6B",
+  "publicationSession": 97552,
+  "publicationTerminal": 0,
+  "publicationReceipt": {
+    "version": 1,
+    "owner": "@semio-tech/print:build-viz-api",
+    "files": [
+      "🔓️viz-api-dark.pdf",
+      "🔓️viz-api.pdf"
+    ]
+  },
+  "receiptCaptureSha256": "C602D6DDE7521CAF6D6B1E2EA23DA19C8F2E652B46B914FD7EBBBEEAB61F9A63",
+  "pdfs": [
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\📦️packages\\🟦️typescript\\dist\\documents\\viz-api\\🔓️viz-api-dark.pdf",
+      "sha256": "E2E2FBDAA529D38178667CF718AA0182C60A0330FEE0B6B7FD66402733A7E732",
+      "bytes": 1469446,
+      "pages": 240
+    },
+    {
+      "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\📦️packages\\🟦️typescript\\dist\\documents\\viz-api\\🔓️viz-api.pdf",
+      "sha256": "5F89201170CDAE0CEE3240DE4C0628533BED2940A0F291ED956644697077C60F",
+      "bytes": 1471560,
+      "pages": 240
+    }
+  ],
+  "actualViewedImages": [
+    {
+      "path": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\api-title-current-view\\light-p2.png",
+      "sha256": "4BC72701AF4D2E3A5703F62DB8C50E0994EB0A1886B5109AA89485ADE6D8F2FE",
+      "bytes": 130132,
+      "actualRootView": true
+    },
+    {
+      "path": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\api-title-current-view\\light-p78.png",
+      "sha256": "38D3720BA4903C8E1A76F85C27AFDF9FE269DB5DE76532D6F4B870F1AF28AEAF",
+      "bytes": 195553,
+      "actualRootView": true
+    },
+    {
+      "path": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\api-title-current-view\\dark-p2.png",
+      "sha256": "FA9A4237B3E54A6EA3EDC04DCB8F2E80924FA5BD6D2E2B0E85752A9BE4AD4607",
+      "bytes": 128800,
+      "actualRootView": true
+    },
+    {
+      "path": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\api-title-current-view\\dark-p78.png",
+      "sha256": "926E207540003DA9D4AE4E648D8CDEEE9D786CDBD2789E9CE99B40A719666089",
+      "bytes": 195184,
+      "actualRootView": true
+    }
+  ],
+  "observations": [
+    "Both contents page2 views resolve API wrappers and German umlauts while deliberately displaying native command names.",
+    "Both page78 views preserve scalar/vector defaults and meanings, with short localized captions visibly separated from table-number badges.",
+    "Root viewed four existing Poppler renders; no independent new rasterization or all240page visual review is claimed."
+  ],
+  "fullPublicationStatus": "13588 active; selected API source/PDF bytes transferable only if final pair hashes match"
+}

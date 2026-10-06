@@ -1,0 +1,18 @@
+{
+  "type": "object", "additionalProperties": false, "required": ["version", "release", "distributions"],
+  "properties": {
+    "version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+    "release": { "type": "string", "pattern": "^https://github\\.com/oven-sh/bun/releases/download/bun-v[0-9]+\\.[0-9]+\\.[0-9]+$" },
+    "distributions": {
+      "type": "array", "minItems": 8, "maxItems": 8, "uniqueItems": true,
+      "items": {
+        "type": "object", "additionalProperties": false, "required": ["platform", "arch", "musl", "archive", "bytes", "sha256"],
+        "properties": {
+          "platform": { "enum": ["win32", "darwin", "linux"] }, "arch": { "enum": ["x64", "arm64"] }, "musl": { "type": "boolean" },
+          "archive": { "type": "string", "pattern": "^bun-(windows|darwin|linux)-(x64|aarch64)(-musl)?(-baseline)?\\.zip$" },
+          "bytes": { "type": "integer", "minimum": 1, "maximum": 67108864 }, "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+        }
+      }
+    }
+  }
+}

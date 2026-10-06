@@ -1,0 +1,7 @@
+\ApiScopeSource{api-path-column}{semio / viz / column}
+\SemioTableLong[text-size=8pt]{\Key{api-path-column} \ApiText{Column options}{Spaltenoptionen}}{0.20,0.14,0.16,0.50}{\ApiKey & \ApiType & \ApiDefault & \ApiMeaning}{%
+  \SemioTableRow{\Key{width} & \Key{mm} & \ApiText{figure width}{Figurenbreite} & \ApiText{Own column width in millimetres; begins at the active figure width, advances the section cursor, and restores the enclosing width after closing.}{Eigene Spaltenbreite in Millimetern; beginnt mit der aktiven Figurenbreite, bewegt den Abschnittscursor und stellt nach dem Schließen die umgebende Breite wieder her.}}
+  \SemioTableRow{\Key{title} & \Key{text} & --- & \ApiText{Heading above the column; empty omits it and its content gap.}{Überschrift über der Spalte; leer unterdrückt sie und ihren Inhaltsabstand.}}
+  \SemioTableRow{\Key{note} & \Key{text} & --- & \ApiText{Caption paragraph below the heading, wrapped to the active column width; empty omits it and its note gap.}{Beschriftungsabsatz unter der Überschrift, auf die aktive Spaltenbreite umbrochen; leer unterdrückt ihn und seinen Notizabstand.}}
+}
+

@@ -1,0 +1,13 @@
+# Family Effective Customization Oracle Independent Audit
+
+Read-only helper SHA256 BC588DBAAA3C1A669A4EA9186A759FF30B75B026AC4C01599AF8E8D7F014B5D7. Existing registered native grammar command invokes the new family-customization phase before other phases; the scoped environment flag returns after the same implementation. No independent executable route was introduced.
+
+Weighted expectations independently sum absolute incident authored edge weights with D3 sum and apply D3 scaleSqrt. Matrix expectations use independent D3 scaleBand and exact six-cell and split-node inventories. Diagram expectations calculate independent width and height with separate scaleBand ranges, while mark expectations use declared 120-by-60 frame and D3 scaleLinear. Every mutation requires one guarded diff edit, successful replay and unchanged authored base input; both themes compile through existing inference.
+
+Numerical geometry is asserted against actual native probe records, not PDF path extraction. PDF.js independently checks exact page inventory and actual text inclusion/exclusion for bilingual title/lane controls. Thus this helper supports compiled native geometry plus actual PDF text claims; it does not independently prove geometric rendered path bounds or visible ink containment. Root was notified before runtime claim. Actual RED and repaired GREEN remain pending at this snapshot.
+
+## Visible PDF Candidate Audit
+
+Current expanded eighteen IDs have no prefix collisions under whitespace-normalized Case marker selection; exactly one PDF page is required per case. The new private extractor tracks graphics save/restore, form and ordinary transforms and line widths. Four-cubic closed circle and three-line closed quadrilateral topology excludes text operations. A tiny-linewidth canvas rectangle supplies an independently declared coordinate transform. Shapes outside the canvas are excluded but exact expected count then fails, so the filter cannot silently admit missing or overflowing objects. Numeric expectations remain independently derived with D3; extracted shape transforms do not supply expected geometry.
+
+Actual native arc_full source exposes the concrete full-turn bug: serialized SVG records are two half arcs centered at requested (#1,#2), while appended TikZ circle uses the current arc-start coordinate (xa,ya). Thus the rendered circle is shifted by the radius vector. Comparing extracted PDF bounds center against independent mark center can detect it. Candidate visible RED and final center repair runtime evidence remain required; this is source diagnosis, not an executed success claim.

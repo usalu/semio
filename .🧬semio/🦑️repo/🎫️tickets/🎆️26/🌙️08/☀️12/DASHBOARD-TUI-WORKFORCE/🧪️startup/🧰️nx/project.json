@@ -1,0 +1,1 @@
+{"name":"dashboard-ticket-verification","targets":{"verify":{"executor":"nx:run-commands","cache":false,"options":{"command":"bun ../📜️script.ts owner","forwardAllArgs":true}}}}

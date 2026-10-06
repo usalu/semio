@@ -1,0 +1,34 @@
+[
+  {
+    "before": "",
+    "after": "\\ApiTitleDefine{api-path-geo-planar}{Planar display}{Planare Darstellung}\n"
+  },
+  {
+    "before": "",
+    "after": "\\ApiScopeSource{api-path-geo-planar}{semio / viz / geo / planar}\n\\SemioTableLong[text-size=8pt]{\\ApiTitle{api-path-geo-planar}}{0.20,0.13,0.15,0.52}{\\ApiKey & \\ApiType & \\ApiDefault & \\ApiMeaning}{%\n  \\SemioTableRow{\\Key{width} & \\Key{number} & \\Key{76} & \\ApiText{Maximum fitted display width in millimetres. Raw planar coordinates are scaled uniformly.}{Maximale angepasste Darstellungsbreite in Millimetern. Rohe planare Koordinaten werden gleichmäßig skaliert.}}\n  \\SemioTableRow{\\Key{height} & \\Key{number} & \\Key{44} & \\ApiText{Maximum fitted display height in millimetres. Raw planar coordinates are scaled uniformly.}{Maximale angepasste Darstellungshöhe in Millimetern. Rohe planare Koordinaten werden gleichmäßig skaliert.}}\n  \\SemioTableRow{\\Key{palette} & \\Key{string} & \\Key{sequential} & \\ApiText{Colour ramp used for binned values or density levels.}{Farbverlauf für gebündelte Werte oder Dichteniveaus.}}\n  \\SemioTableRow{\\Key{stroke} & \\Key{string} & \\Key{semio-chrome-border-emphasized} & \\ApiText{Hexagon outline colour as a native colour expression. Density and heat outlines use their palette colour.}{Umrissfarbe der Sechsecke als nativer Farbausdruck. Dichte- und Wärmeumrisse nutzen ihre Palettenfarbe.}}\n  \\SemioTableRow{\\Key{lineWidth} & \\Key{string} & \\Key{semio@stroke@hairline} & \\ApiText{Hexagon and density outline width as a TeX dimension from the theme hairline token.}{Umrissbreite der Sechsecke und Dichteflächen als TeX-Dimension aus dem Haarlinienwert des Themas.}}\n  \\SemioTableRow{\\Key{opacity} & \\Key{number} & \\Key{1} & \\ApiText{Drawing opacity; hex fill uses the same value, heat fill uses 0.3 times it.}{Zeichendeckkraft; Sechseckfüllungen nutzen denselben Wert, Wärmefüllungen das 0,3-Fache.}}\n  \\SemioTableRow{\\Key{paletteSteps} & \\Key{integer} & \\Key{5} & \\ApiText{Positive number of final colour-ramp levels. One level uses the palette midpoint.}{Positive Anzahl endgültiger Farbverlaufsstufen. Eine Stufe nutzt die Palettenmitte.}}\n}\n"
+  },
+  {
+    "before": "\\subsection{\\Key{geo-hexbin}}\n\\ApiKeyScope{api-path-geo-base}",
+    "after": "\\subsection{\\Key{geo-hexbin}}\n\\ApiKeyScope{api-path-geo-planar}"
+  },
+  {
+    "before": "  \\SemioTableRow{\\Key{points} & \\Key{string} & \\Key{demo-points-dense} & \\ApiText{Named geographic point collection binned into hexagonal cells.}{Benannte geografische Punktsammlung für die Aufteilung in sechseckige Zellen.}}",
+    "after": "  \\SemioTableRow{\\Key{points} & \\Key{string} & \\Key{demo-points-dense} & \\ApiText{Named planar point collection for hexagonal bins or Gaussian density estimates.}{Benannte planare Punktsammlung für sechseckige Zellen oder Gaußsche Dichteschätzungen.}}"
+  },
+  {
+    "before": "  \\SemioTableRow{\\Key{radius} & \\Key{number} & --- & \\ApiText{Radius in millimetres, or the column that drives it.}{Radius in Millimetern oder die Spalte, die ihn steuert.}}",
+    "after": "  \\SemioTableRow{\\Key{radius} & \\Key{number} & \\Key{5} & \\ApiText{Numeric binning radius in raw planar units. Uniform display fitting scales the visible hexagons.}{Numerischer Bündelungsradius in rohen planaren Einheiten. Gleichmäßige Darstellungsanpassung skaliert die sichtbaren Sechsecke.}}"
+  },
+  {
+    "before": "  \\SemioTableRow{\\Key{render} & \\Key{string} & --- & \\ApiText{How the cells or units are rendered.}{Wie die Zellen bzw. Einheiten gezeichnet werden.}}",
+    "after": "  \\SemioTableRow{\\Key{render} & \\Key{string} & \\Key{hex} & \\ApiText{Rendering mode: hex draws bins; density and heat draw Gaussian density levels.}{Darstellungsmodus: hex zeichnet Zellen; density und heat zeichnen Gaußsche Dichteniveaus.}}"
+  },
+  {
+    "before": "  \\SemioTableRow{\\Key{bandwidth} & \\Key{number} & --- & \\ApiText{Kernel bandwidth of the density estimate; '0' uses Silverman's rule.}{Bandbreite des Kerns der Dichteschätzung; '0' nutzt Silvermans Regel.}}",
+    "after": "  \\SemioTableRow{\\Key{bandwidth} & \\Key{number} & \\Key{7} & \\ApiText{Gaussian kernel standard deviation in raw planar units.}{Standardabweichung des Gaußschen Kerns in rohen planaren Einheiten.}}"
+  },
+  {
+    "before": "  \\SemioTableRow{\\Key{levels} & \\Key{integer} & --- & \\ApiText{Number of contour levels.}{Anzahl der Höhenlinienniveaus.}}",
+    "after": "  \\SemioTableRow{\\Key{levels} & \\Key{integer} & \\Key{4} & \\ApiText{Number of contour levels for density and heat rendering.}{Anzahl der Höhenlinienniveaus für Dichte- und Wärmedarstellung.}}"
+  }
+]

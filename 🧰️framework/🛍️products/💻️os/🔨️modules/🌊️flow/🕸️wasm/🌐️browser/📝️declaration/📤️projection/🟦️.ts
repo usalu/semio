@@ -1,6 +1,7 @@
 /** 📝️ Projects the owned Flow browser ABI into its public TypeScript declaration. */
-import { readFileSync, writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import { dirname } from "node:path";
 
 type Field = { name: string; type: "utf8" | "optional-utf8" | "f64" | "u64" | "u32" | "u8" | "bool" | "bytes" };
 type Contract = { operations: Record<string, number>; arguments: Record<string, Field[]> };
@@ -63,6 +64,7 @@ ${methods.join("\n")}
 /** 💾️ Writes the tracked source declaration projection and returns its exact path. */
 export function writeFlowBrowserDeclaration(): string {
   const path = fileURLToPath(declarationUrl);
+  mkdirSync(dirname(path),{recursive:true});
   writeFileSync(path, flowBrowserDeclaration(), "utf8");
   return path;
 }

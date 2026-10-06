@@ -1,0 +1,1324 @@
+{
+  "contract": {
+    "projection": "mutation-inference-nativeCompiler",
+    "oracles": [
+      "D3",
+      "PDF.js"
+    ],
+    "themes": [
+      "light",
+      "dark"
+    ]
+  },
+  "cases": [
+    {
+      "id": "weighted-strength",
+      "snapshot": {
+        "chart": {
+          "width": 80,
+          "height": 48,
+          "language": "en",
+          "layers": [],
+          "tables": [
+            {
+              "name": "control-edges",
+              "columns": [
+                "source",
+                "target",
+                "weight"
+              ],
+              "rows": [
+                {
+                  "source": "a",
+                  "target": "b",
+                  "weight": 2
+                },
+                {
+                  "source": "b",
+                  "target": "c",
+                  "weight": 6
+                },
+                {
+                  "source": "c",
+                  "target": "a",
+                  "weight": 1
+                }
+              ]
+            }
+          ],
+          "presets": [
+            {
+              "kind": "circular-graph",
+              "data": "control-edges",
+              "options": {
+                "size": 2,
+                "sizeBy": "none",
+                "labels": false
+              }
+            }
+          ]
+        }
+      },
+      "mutations": [
+        {
+          "path": [
+            "presets",
+            "0",
+            "options",
+            "sizeBy"
+          ],
+          "value": "weight"
+        }
+      ],
+      "reference": {
+        "mode": "weight",
+        "weights": [
+          3,
+          8,
+          7
+        ],
+        "size": 2
+      }
+    },
+    {
+      "id": "weighted-signed-strength",
+      "snapshot": {
+        "chart": {
+          "width": 80,
+          "height": 48,
+          "language": "de",
+          "layers": [],
+          "tables": [
+            {
+              "name": "control-edges",
+              "columns": [
+                "source",
+                "target",
+                "weight"
+              ],
+              "rows": [
+                {
+                  "source": "a",
+                  "target": "b",
+                  "weight": -2
+                },
+                {
+                  "source": "b",
+                  "target": "c",
+                  "weight": -6
+                },
+                {
+                  "source": "c",
+                  "target": "a",
+                  "weight": -1
+                }
+              ]
+            }
+          ],
+          "presets": [
+            {
+              "kind": "circular-graph",
+              "data": "control-edges",
+              "options": {
+                "size": 2,
+                "sizeBy": "none",
+                "labels": false
+              }
+            }
+          ]
+        }
+      },
+      "mutations": [
+        {
+          "path": [
+            "presets",
+            "0",
+            "options",
+            "sizeBy"
+          ],
+          "value": "weight"
+        }
+      ],
+      "reference": {
+        "mode": "weight",
+        "weights": [
+          3,
+          8,
+          7
+        ],
+        "size": 2
+      }
+    },
+    {
+      "id": "matrix-unsplit",
+      "snapshot": {
+        "chart": {
+          "width": 60,
+          "height": 80,
+          "language": "en",
+          "layers": [],
+          "tables": [
+            {
+              "name": "control-edges",
+              "columns": [
+                "source",
+                "target",
+                "weight"
+              ],
+              "rows": [
+                {
+                  "source": "a",
+                  "target": "b",
+                  "weight": 2
+                },
+                {
+                  "source": "b",
+                  "target": "c",
+                  "weight": 6
+                },
+                {
+                  "source": "c",
+                  "target": "a",
+                  "weight": 1
+                }
+              ]
+            }
+          ],
+          "presets": [
+            {
+              "kind": "node-link-matrix-hybrid",
+              "data": "control-edges",
+              "options": {
+                "split": true,
+                "order": "index",
+                "labels": false,
+                "cellGap": 0.15
+              }
+            }
+          ]
+        }
+      },
+      "mutations": [
+        {
+          "path": [
+            "presets",
+            "0",
+            "options",
+            "split"
+          ],
+          "value": false
+        }
+      ],
+      "reference": {
+        "mode": "matrix",
+        "split": false,
+        "nodeCount": 0,
+        "padding": 3,
+        "cellGap": 0.15
+      }
+    },
+    {
+      "id": "matrix-split",
+      "snapshot": {
+        "chart": {
+          "width": 60,
+          "height": 80,
+          "language": "de",
+          "layers": [],
+          "tables": [
+            {
+              "name": "control-edges",
+              "columns": [
+                "source",
+                "target",
+                "weight"
+              ],
+              "rows": [
+                {
+                  "source": "a",
+                  "target": "b",
+                  "weight": 2
+                },
+                {
+                  "source": "b",
+                  "target": "c",
+                  "weight": 6
+                },
+                {
+                  "source": "c",
+                  "target": "a",
+                  "weight": 1
+                }
+              ]
+            }
+          ],
+          "presets": [
+            {
+              "kind": "node-link-matrix-hybrid",
+              "data": "control-edges",
+              "options": {
+                "split": false,
+                "order": "index",
+                "labels": false,
+                "cellGap": 0.15
+              }
+            }
+          ]
+        }
+      },
+      "mutations": [
+        {
+          "path": [
+            "presets",
+            "0",
+            "options",
+            "split"
+          ],
+          "value": true
+        }
+      ],
+      "reference": {
+        "mode": "matrix",
+        "split": true,
+        "nodeCount": 3,
+        "padding": 3,
+        "cellGap": 0.15
+      }
+    },
+    {
+      "id": "diagram-height-only",
+      "snapshot": {
+        "chart": {
+          "width": 80,
+          "height": 48,
+          "language": "en",
+          "layers": [],
+          "tables": [
+            {
+              "name": "control-nodes",
+              "columns": [
+                "id",
+                "label",
+                "row",
+                "col",
+                "lane"
+              ],
+              "rows": [
+                {
+                  "id": "a",
+                  "label": "Alpha",
+                  "row": 1,
+                  "col": 1,
+                  "lane": "Intake"
+                },
+                {
+                  "id": "b",
+                  "label": "Beta",
+                  "row": 2,
+                  "col": 2,
+                  "lane": "Review"
+                }
+              ]
+            }
+          ],
+          "presets": [
+            {
+              "kind": "flowchart",
+              "data": "control-nodes",
+              "options": {
+                "edges": "",
+                "labels": false,
+                "node-height": "auto",
+                "node-width": "auto"
+              }
+            }
+          ]
+        }
+      },
+      "mutations": [
+        {
+          "path": [
+            "presets",
+            "0",
+            "options",
+            "node-height"
+          ],
+          "value": "8"
+        }
+      ],
+      "reference": {
+        "mode": "diagram",
+        "nodeWidth": null,
+        "nodeHeight": 8,
+        "padding": 3,
+        "gap": 4
+      }
+    },
+    {
+      "id": "diagram-width-only",
+      "snapshot": {
+        "chart": {
+          "width": 80,
+          "height": 48,
+          "language": "de",
+          "layers": [],
+          "tables": [
+            {
+              "name": "control-nodes",
+              "columns": [
+                "id",
+                "label",
+                "row",
+                "col",
+                "lane"
+              ],
+              "rows": [
+                {
+                  "id": "a",
+                  "label": "Alpha",
+                  "row": 1,
+                  "col": 1,
+                  "lane": "Intake"
+                },
+                {
+                  "id": "b",
+                  "label": "Beta",
+                  "row": 2,
+                  "col": 2,
+                  "lane": "Review"
+                }
+              ]
+            }
+          ],
+          "presets": [
+            {
+              "kind": "flowchart",
+              "data": "control-nodes",
+              "options": {
+                "edges": "",
+                "labels": false,
+                "node-height": "auto",
+                "node-width": "auto"
+              }
+            }
+          ]
+        }
+      },
+      "mutations": [
+        {
+          "path": [
+            "presets",
+            "0",
+            "options",
+            "node-width"
+          ],
+          "value": "24"
+        }
+      ],
+      "reference": {
+        "mode": "diagram",
+        "nodeWidth": 24,
+        "nodeHeight": null,
+        "padding": 3,
+        "gap": 4
+      }
+    },
+    {
+      "id": "diagram-both-height-first",
+      "snapshot": {
+        "chart": {
+          "width": 80,
+          "height": 48,
+          "language": "en",
+          "layers": [],
+          "tables": [
+            {
+              "name": "control-nodes",
+              "columns": [
+                "id",
+                "label",
+                "row",
+                "col",
+                "lane"
+              ],
+              "rows": [
+                {
+                  "id": "a",
+                  "label": "Alpha",
+                  "row": 1,
+                  "col": 1,
+                  "lane": "Intake"
+                },
+                {
+                  "id": "b",
+                  "label": "Beta",
+                  "row": 2,
+                  "col": 2,
+                  "lane": "Review"
+                }
+              ]
+            }
+          ],
+          "presets": [
+            {
+              "kind": "flowchart",
+              "data": "control-nodes",
+              "options": {
+                "edges": "",
+                "labels": false,
+                "node-height": "auto",
+                "node-width": "auto"
+              }
+            }
+          ]
+        }
+      },
+      "mutations": [
+        {
+          "path": [
+            "presets",
+            "0",
+            "options",
+            "node-height"
+          ],
+          "value": "8"
+        },
+        {
+          "path": [
+            "presets",
+            "0",
+            "options",
+            "node-width"
+          ],
+          "value": "24"
+        }
+      ],
+      "reference": {
+        "mode": "diagram",
+        "nodeWidth": 24,
+        "nodeHeight": 8,
+        "padding": 3,
+        "gap": 4
+      }
+    },
+    {
+      "id": "diagram-both-width-first",
+      "snapshot": {
+        "chart": {
+          "width": 80,
+          "height": 48,
+          "language": "de",
+          "layers": [],
+          "tables": [
+            {
+              "name": "control-nodes",
+              "columns": [
+                "id",
+                "label",
+                "row",
+                "col",
+                "lane"
+              ],
+              "rows": [
+                {
+                  "id": "a",
+                  "label": "Alpha",
+                  "row": 1,
+                  "col": 1,
+                  "lane": "Intake"
+                },
+                {
+                  "id": "b",
+                  "label": "Beta",
+                  "row": 2,
+                  "col": 2,
+                  "lane": "Review"
+                }
+              ]
+            }
+          ],
+          "presets": [
+            {
+              "kind": "flowchart",
+              "data": "control-nodes",
+              "options": {
+                "edges": "",
+                "labels": false,
+                "node-height": "auto",
+                "node-width": "auto"
+              }
+            }
+          ]
+        }
+      },
+      "mutations": [
+        {
+          "path": [
+            "presets",
+            "0",
+            "options",
+            "node-width"
+          ],
+          "value": "24"
+        },
+        {
+          "path": [
+            "presets",
+            "0",
+            "options",
+            "node-height"
+          ],
+          "value": "8"
+        }
+      ],
+      "reference": {
+        "mode": "diagram",
+        "nodeWidth": 24,
+        "nodeHeight": 8,
+        "padding": 3,
+        "gap": 4
+      }
+    },
+    {
+      "id": "diagram-lane-heading-en",
+      "snapshot": {
+        "chart": {
+          "width": 80,
+          "height": 48,
+          "language": "en",
+          "layers": [],
+          "tables": [
+            {
+              "name": "control-nodes",
+              "columns": [
+                "id",
+                "label",
+                "row",
+                "col",
+                "lane"
+              ],
+              "rows": [
+                {
+                  "id": "a",
+                  "label": "Alpha",
+                  "row": 1,
+                  "col": 1,
+                  "lane": "Intake"
+                },
+                {
+                  "id": "b",
+                  "label": "Beta",
+                  "row": 2,
+                  "col": 2,
+                  "lane": "Review"
+                }
+              ]
+            }
+          ],
+          "presets": [
+            {
+              "kind": "swimlane-flowchart",
+              "data": "control-nodes",
+              "options": {
+                "edges": "",
+                "labels": false,
+                "lane-title": ""
+              }
+            }
+          ]
+        }
+      },
+      "mutations": [
+        {
+          "path": [
+            "presets",
+            "0",
+            "options",
+            "lane-title"
+          ],
+          "value": "Control EN//Steuerung DE"
+        },
+        {
+          "path": [
+            "presets",
+            "0",
+            "options",
+            "title"
+          ],
+          "value": "Diagram Title"
+        }
+      ],
+      "reference": {
+        "mode": "text",
+        "texts": [
+          "Control EN",
+          "Diagram Title"
+        ],
+        "absent": [
+          "Steuerung DE"
+        ]
+      }
+    },
+    {
+      "id": "diagram-lane-heading-de",
+      "snapshot": {
+        "chart": {
+          "width": 80,
+          "height": 48,
+          "language": "de",
+          "layers": [],
+          "tables": [
+            {
+              "name": "control-nodes",
+              "columns": [
+                "id",
+                "label",
+                "row",
+                "col",
+                "lane"
+              ],
+              "rows": [
+                {
+                  "id": "a",
+                  "label": "Alpha",
+                  "row": 1,
+                  "col": 1,
+                  "lane": "Intake"
+                },
+                {
+                  "id": "b",
+                  "label": "Beta",
+                  "row": 2,
+                  "col": 2,
+                  "lane": "Review"
+                }
+              ]
+            }
+          ],
+          "presets": [
+            {
+              "kind": "swimlane-flowchart",
+              "data": "control-nodes",
+              "options": {
+                "edges": "",
+                "labels": false,
+                "lane-title": ""
+              }
+            }
+          ]
+        }
+      },
+      "mutations": [
+        {
+          "path": [
+            "presets",
+            "0",
+            "options",
+            "lane-title"
+          ],
+          "value": "Control EN//Steuerung DE"
+        },
+        {
+          "path": [
+            "presets",
+            "0",
+            "options",
+            "title"
+          ],
+          "value": "Diagrammtitel"
+        }
+      ],
+      "reference": {
+        "mode": "text",
+        "texts": [
+          "Steuerung DE",
+          "Diagrammtitel"
+        ],
+        "absent": [
+          "Control EN"
+        ]
+      }
+    },
+    {
+      "id": "mark-enclosing-frame",
+      "snapshot": {
+        "chart": {
+          "width": 80,
+          "height": 40,
+          "language": "en",
+          "layers": [],
+          "tables": [
+            {
+              "name": "control-marks",
+              "columns": [
+                "t",
+                "val"
+              ],
+              "rows": [
+                {
+                  "t": 0,
+                  "val": 0
+                },
+                {
+                  "t": 5,
+                  "val": 5
+                },
+                {
+                  "t": 10,
+                  "val": 10
+                }
+              ]
+            }
+          ],
+          "presets": [
+            {
+              "kind": "circle",
+              "data": "control-marks",
+              "options": {}
+            }
+          ]
+        }
+      },
+      "mutations": [
+        {
+          "path": [
+            "width"
+          ],
+          "value": 120
+        },
+        {
+          "path": [
+            "height"
+          ],
+          "value": 60
+        }
+      ],
+      "reference": {
+        "mode": "mark",
+        "padding": 8
+      }
+    },
+    {
+      "id": "weighted-zero-strength",
+      "snapshot": {
+        "chart": {
+          "width": 80,
+          "height": 48,
+          "language": "en",
+          "layers": [],
+          "tables": [
+            {
+              "name": "control-edges",
+              "columns": [
+                "source",
+                "target",
+                "weight"
+              ],
+              "rows": [
+                {
+                  "source": "a",
+                  "target": "b",
+                  "weight": 0
+                },
+                {
+                  "source": "b",
+                  "target": "c",
+                  "weight": 0
+                },
+                {
+                  "source": "c",
+                  "target": "a",
+                  "weight": 0
+                }
+              ]
+            }
+          ],
+          "presets": [
+            {
+              "kind": "circular-graph",
+              "data": "control-edges",
+              "options": {
+                "size": 2,
+                "sizeBy": "none",
+                "labels": false
+              }
+            }
+          ]
+        }
+      },
+      "mutations": [
+        {
+          "path": [
+            "presets",
+            "0",
+            "options",
+            "sizeBy"
+          ],
+          "value": "weight"
+        }
+      ],
+      "reference": {
+        "mode": "weight",
+        "weights": [
+          0,
+          0,
+          0
+        ],
+        "size": 2
+      }
+    },
+    {
+      "id": "weighted-fractional-strength",
+      "snapshot": {
+        "chart": {
+          "width": 80,
+          "height": 48,
+          "language": "en",
+          "layers": [],
+          "tables": [
+            {
+              "name": "control-edges",
+              "columns": [
+                "source",
+                "target",
+                "weight"
+              ],
+              "rows": [
+                {
+                  "source": "a",
+                  "target": "b",
+                  "weight": 0.02
+                },
+                {
+                  "source": "b",
+                  "target": "c",
+                  "weight": 0.06
+                },
+                {
+                  "source": "c",
+                  "target": "a",
+                  "weight": 0.01
+                }
+              ]
+            }
+          ],
+          "presets": [
+            {
+              "kind": "circular-graph",
+              "data": "control-edges",
+              "options": {
+                "size": 2,
+                "sizeBy": "none",
+                "labels": false
+              }
+            }
+          ]
+        }
+      },
+      "mutations": [
+        {
+          "path": [
+            "presets",
+            "0",
+            "options",
+            "sizeBy"
+          ],
+          "value": "weight"
+        }
+      ],
+      "reference": {
+        "mode": "weight",
+        "weights": [
+          0.03,
+          0.08,
+          0.07
+        ],
+        "size": 2
+      }
+    },
+    {
+      "id": "weighted-self-loop",
+      "snapshot": {
+        "chart": {
+          "width": 80,
+          "height": 48,
+          "language": "en",
+          "layers": [],
+          "tables": [
+            {
+              "name": "control-edges",
+              "columns": [
+                "source",
+                "target",
+                "weight"
+              ],
+              "rows": [
+                {
+                  "source": "a",
+                  "target": "b",
+                  "weight": 2
+                },
+                {
+                  "source": "b",
+                  "target": "c",
+                  "weight": 6
+                },
+                {
+                  "source": "c",
+                  "target": "a",
+                  "weight": 1
+                },
+                {
+                  "source": "a",
+                  "target": "a",
+                  "weight": 1
+                }
+              ]
+            }
+          ],
+          "presets": [
+            {
+              "kind": "circular-graph",
+              "data": "control-edges",
+              "options": {
+                "size": 2,
+                "sizeBy": "none",
+                "labels": false
+              }
+            }
+          ]
+        }
+      },
+      "mutations": [
+        {
+          "path": [
+            "presets",
+            "0",
+            "options",
+            "sizeBy"
+          ],
+          "value": "weight"
+        }
+      ],
+      "reference": {
+        "mode": "weight",
+        "weights": [
+          5,
+          8,
+          7
+        ],
+        "size": 2
+      }
+    },
+    {
+      "id": "adjacency-unsplit",
+      "snapshot": {
+        "chart": {
+          "width": 60,
+          "height": 80,
+          "language": "en",
+          "layers": [],
+          "tables": [
+            {
+              "name": "control-edges",
+              "columns": [
+                "source",
+                "target",
+                "weight"
+              ],
+              "rows": [
+                {
+                  "source": "a",
+                  "target": "b",
+                  "weight": 2
+                },
+                {
+                  "source": "b",
+                  "target": "c",
+                  "weight": 6
+                },
+                {
+                  "source": "c",
+                  "target": "a",
+                  "weight": 1
+                }
+              ]
+            }
+          ],
+          "presets": [
+            {
+              "kind": "adjacency-matrix",
+              "data": "control-edges",
+              "options": {
+                "split": true,
+                "order": "index",
+                "labels": false,
+                "cellGap": 0.15
+              }
+            }
+          ]
+        }
+      },
+      "mutations": [
+        {
+          "path": [
+            "presets",
+            "0",
+            "options",
+            "split"
+          ],
+          "value": false
+        }
+      ],
+      "reference": {
+        "mode": "matrix",
+        "split": false,
+        "nodeCount": 0,
+        "padding": 3,
+        "cellGap": 0.15
+      }
+    },
+    {
+      "id": "adjacency-split",
+      "snapshot": {
+        "chart": {
+          "width": 60,
+          "height": 80,
+          "language": "de",
+          "layers": [],
+          "tables": [
+            {
+              "name": "control-edges",
+              "columns": [
+                "source",
+                "target",
+                "weight"
+              ],
+              "rows": [
+                {
+                  "source": "a",
+                  "target": "b",
+                  "weight": 2
+                },
+                {
+                  "source": "b",
+                  "target": "c",
+                  "weight": 6
+                },
+                {
+                  "source": "c",
+                  "target": "a",
+                  "weight": 1
+                }
+              ]
+            }
+          ],
+          "presets": [
+            {
+              "kind": "adjacency-matrix",
+              "data": "control-edges",
+              "options": {
+                "split": false,
+                "order": "index",
+                "labels": false,
+                "cellGap": 0.15
+              }
+            }
+          ]
+        }
+      },
+      "mutations": [
+        {
+          "path": [
+            "presets",
+            "0",
+            "options",
+            "split"
+          ],
+          "value": true
+        }
+      ],
+      "reference": {
+        "mode": "matrix",
+        "split": true,
+        "nodeCount": 3,
+        "padding": 3,
+        "cellGap": 0.15
+      }
+    },
+    {
+      "id": "diagram-height-reset-auto",
+      "snapshot": {
+        "chart": {
+          "width": 80,
+          "height": 48,
+          "language": "en",
+          "layers": [],
+          "tables": [
+            {
+              "name": "control-nodes",
+              "columns": [
+                "id",
+                "label",
+                "row",
+                "col",
+                "lane"
+              ],
+              "rows": [
+                {
+                  "id": "a",
+                  "label": "Alpha",
+                  "row": 1,
+                  "col": 1,
+                  "lane": "Intake"
+                },
+                {
+                  "id": "b",
+                  "label": "Beta",
+                  "row": 2,
+                  "col": 2,
+                  "lane": "Review"
+                }
+              ]
+            }
+          ],
+          "presets": [
+            {
+              "kind": "flowchart",
+              "data": "control-nodes",
+              "options": {
+                "edges": "",
+                "labels": false,
+                "node-height": "auto",
+                "node-width": "auto"
+              }
+            }
+          ]
+        }
+      },
+      "mutations": [
+        {
+          "path": [
+            "presets",
+            "0",
+            "options",
+            "node-height"
+          ],
+          "value": "8"
+        },
+        {
+          "path": [
+            "presets",
+            "0",
+            "options",
+            "node-width"
+          ],
+          "value": "24"
+        },
+        {
+          "path": [
+            "presets",
+            "0",
+            "options",
+            "node-height"
+          ],
+          "value": "auto"
+        }
+      ],
+      "reference": {
+        "mode": "diagram",
+        "nodeWidth": 24,
+        "nodeHeight": null,
+        "padding": 3,
+        "gap": 4
+      }
+    },
+    {
+      "id": "diagram-width-reset-auto",
+      "snapshot": {
+        "chart": {
+          "width": 80,
+          "height": 48,
+          "language": "en",
+          "layers": [],
+          "tables": [
+            {
+              "name": "control-nodes",
+              "columns": [
+                "id",
+                "label",
+                "row",
+                "col",
+                "lane"
+              ],
+              "rows": [
+                {
+                  "id": "a",
+                  "label": "Alpha",
+                  "row": 1,
+                  "col": 1,
+                  "lane": "Intake"
+                },
+                {
+                  "id": "b",
+                  "label": "Beta",
+                  "row": 2,
+                  "col": 2,
+                  "lane": "Review"
+                }
+              ]
+            }
+          ],
+          "presets": [
+            {
+              "kind": "flowchart",
+              "data": "control-nodes",
+              "options": {
+                "edges": "",
+                "labels": false,
+                "node-height": "auto",
+                "node-width": "auto"
+              }
+            }
+          ]
+        }
+      },
+      "mutations": [
+        {
+          "path": [
+            "presets",
+            "0",
+            "options",
+            "node-height"
+          ],
+          "value": "8"
+        },
+        {
+          "path": [
+            "presets",
+            "0",
+            "options",
+            "node-width"
+          ],
+          "value": "24"
+        },
+        {
+          "path": [
+            "presets",
+            "0",
+            "options",
+            "node-width"
+          ],
+          "value": "auto"
+        }
+      ],
+      "reference": {
+        "mode": "diagram",
+        "nodeWidth": null,
+        "nodeHeight": 8,
+        "padding": 3,
+        "gap": 4
+      }
+    }
+  ]
+}

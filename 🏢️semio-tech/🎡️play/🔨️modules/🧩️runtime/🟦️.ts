@@ -20,6 +20,7 @@ export const PLAY_GROUPS = catalog.groups;
 export type PlayRuntimePane = {
   readonly variant: string;
   readonly label: string;
+  readonly shortLabel?: string;
   readonly tagline: string;
   readonly description: string;
   readonly icon: string;

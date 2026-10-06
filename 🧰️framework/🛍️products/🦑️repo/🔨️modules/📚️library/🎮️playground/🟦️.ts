@@ -14,13 +14,13 @@ export type PlaygroundHostKind = string;
 
 /**
  * 📚️ Loads the generated framework OS playground catalog (variant/plugin/aliases/ports rows).
- * Reads the registry owner's `🤖️generated/🎠️playgrounds.json` directly (rather than a static
+ * Reads the registry owner's `🤖️generated/🚀️playgrounds.json` directly (rather than a static
  * TS import of the gitignored generated module) so this shared kernel never fails to load on a
  * fresh clone before `bun nx run @semio-tech/plugin-registry:generate` has ever run — callers get
  * an empty catalog in that case instead of a hard module-resolution error.
  */
 export function loadFrameworkOsPlaygroundCatalog(): readonly PlaygroundVariant[] {
-  const catalogPath = join(getWorkspaceRoot(), "./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎠️playgrounds.json");
+  const catalogPath = join(getWorkspaceRoot(), "./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🚀️playgrounds.json");
   if (!existsSync(catalogPath)) return [];
   return JSON.parse(readFileSync(catalogPath, "utf8")) as readonly PlaygroundVariant[];
 }

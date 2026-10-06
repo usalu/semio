@@ -1,0 +1,88 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/🖱️ui/⌨️tui/🦀️.rs",
+    "replace": [
+      {
+        "from": "                0x00..=0x1a if b != 0x1b => {",
+        "to": "                0x00 => out.push(Event::Key(KeyEvent { key: Key::Char(' '), mods: mods::CTRL })),\n                0x01..=0x1a => {"
+      },
+      {
+        "from": "        pub fn new(options: Vec<String>) -> Self {\n            Self { steps: Vec::new(), options, selected: 0, offset: 0, filter: String::new() }\n        }\n    }",
+        "to": "        pub fn new(options: Vec<String>) -> Self {\n            Self { steps: Vec::new(), options, selected: 0, offset: 0, filter: String::new() }\n        }\n\n        /// 🔎️ Visible option identities under a Unicode-aware all-words filter.\n        pub fn visible_indices(&self) -> Vec<usize> {\n            let filter = self.filter.to_lowercase();\n            let tokens: Vec<_> = filter.split_whitespace().collect();\n            self.options.iter().enumerate().filter(|(_, option)| { let text = option.to_lowercase(); tokens.iter().all(|token| text.contains(token)) }).map(|(index, _)| index).collect()\n        }\n    }"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🧙️Wizard/🎯️targets/⌨️tui/🦀️.rs",
+    "replace": [
+      {
+        "from": "    if w.filter.is_empty() {\n        return (0..w.options.len()).collect();\n    }\n    let filter = w.filter.to_lowercase();\n    let tokens: Vec<_> = filter.split_whitespace().collect();\n    w.options.iter().enumerate().filter(|(_, option)| { let text = option.to_lowercase(); tokens.iter().all(|token| text.contains(token)) }).map(|(index, _)| index).collect()",
+        "to": "    w.visible_indices()"
+      }
+    ]
+  },
+  {
+    "path": "dashboard/🖥️terminal/🦀️.rs",
+    "replace": [
+      {
+        "from": "let selected = state.options.get(state.selected).cloned();",
+        "to": "let selected = state.visible_indices().get(state.selected).and_then(|index| state.options.get(*index)).cloned();"
+      },
+      {
+        "from": "state.selected = selected.and_then(|label| state.options.iter().position(|option| *option == label)).unwrap_or(0);",
+        "to": "state.selected = selected.and_then(|label| state.visible_indices().iter().position(|index| state.options[*index] == label)).unwrap_or(0);"
+      },
+      {
+        "from": "shared_preferences: false, layout, shell",
+        "to": "shared_preferences: parsed.has_flag(\"workspace\"), layout, shell"
+      },
+      {
+        "from": "    let started = std::time::Instant::now();\n    if parsed.has_flag(\"help\")",
+        "to": "    let started = std::time::Instant::now();\n    if !parsed.segments.is_empty() { eprintln!(\"[dashboard] unexpected arguments: {}\", parsed.segments.join(\" \")); return 2; }\n    if parsed.has_flag(\"help\")"
+      },
+      {
+        "from": "refresh_wizard_for",
+        "to": "refresh_view_for",
+        "all": true
+      },
+      {
+        "from": "handle_wizard_signal",
+        "to": "handle_view_signal",
+        "all": true
+      },
+      {
+        "from": "attach_wizard",
+        "to": "attach_launcher",
+        "all": true
+      },
+      {
+        "from": "add_wizard_window",
+        "to": "add_launcher_window",
+        "all": true
+      },
+      {
+        "from": "//! 🖥️ The interactive terminal dashboard: wizard-built commands in tiled pseudo-terminal windows.",
+        "to": "//! 🖥️ Native developer task controls, a searchable launcher and managed terminal views."
+      }
+    ]
+  },
+  {
+    "path": "dashboard/🖥️terminal/🧪️tests/🔬️unit/🦀️.rs",
+    "replace": [
+      {
+        "from": "handle_wizard_signal",
+        "to": "handle_view_signal",
+        "all": true
+      }
+    ]
+  },
+  {
+    "path": "dashboard/⚙️preferences/🦀️.rs",
+    "replace": [
+      {
+        "from": "        if [\"root\", \"config\", \"help\", \"workspace\", \"dump\"].contains(&key.as_str()) { continue; }",
+        "to": "        if [\"root\", \"config\"].contains(&key.as_str()) { if value.as_ref().is_none_or(String::is_empty) { return Err(invalid(format!(\"--{key} requires a path\"))); } continue; }\n        if [\"help\", \"workspace\"].contains(&key.as_str()) { if value.is_some() { return Err(invalid(format!(\"--{key} does not accept a value\"))); } continue; }"
+      }
+    ]
+  }
+]

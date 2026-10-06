@@ -1,0 +1,5 @@
+{
+  "inserted": "    {\n      \"name\": \"⚖️test📓️print🎛️family-customization\",\n      \"type\": \"node-terminal\",\n      \"request\": \"launch\",\n      \"command\": \"bun nx run @semio-tech/print:test-native-grammar\",\n      \"cwd\": \"${workspaceFolder}\",\n      \"env\": {\n        \"NX_DAEMON\": \"false\",\n        \"PRINT_NATIVE_GRAMMAR_PHASE\": \"family-customization\"\n      },\n      \"presentation\": {\n        \"group\": \"4_gate\",\n        \"order\": 900.037125\n      }\n    },",
+  "anchor": "native-grammar",
+  "position": 966624
+}

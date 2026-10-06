@@ -1,0 +1,67 @@
+/** 🎨️ Checks independent palette and integration mutations through actual full native colors and D3 ramps. */
+export async function compileNativeGeoPaletteGrammar(workDir:string):Promise<void>{
+  const control=fixture.nativeGeoPalette,body:{raw:string}[]=[],phase=process.env.PRINT_NATIVE_GEO_PALETTE_PHASE;
+  if(phase==="legend")return compileNativeGeoPaletteLegend(join(workDir,"legend"));
+  const before=JSON.stringify(control.snapshot);
+  for(const entry of control.cases){
+    let snapshot=control.snapshot as VizChartSnapshot;
+    const mutations:{path:string[];value:number|string}[]=[{path:["presets","0","options","seeds"],value:1}];
+    if(entry.paletteSteps!==undefined)mutations.push({path:["presets","0","options","paletteSteps"],value:entry.paletteSteps});
+    if(entry.steps!==undefined)mutations.push({path:["presets","0","options","steps"],value:entry.steps});
+    if(entry.palette!==undefined)mutations.push({path:["presets","0","options","palette"],value:entry.palette});
+    if(entry.language!==snapshot.chart.language)mutations.push({path:["language"],value:entry.language});
+    for(const mutation of mutations){
+      const outcome=changeVizChartValue(snapshot,mutation);
+      if(outcome.messages.length||outcome.diff.edits.length!==1)throw Error(entry.id+" palette mutation rejected: "+JSON.stringify(outcome.messages));
+      const replay=applyVizChartDiff(snapshot,outcome.diff);
+      if(replay.messages.length)throw Error(entry.id+" palette replay rejected");
+      snapshot=replay.snapshot;
+    }
+    const result=await inferVizChart(snapshot);
+    if(!result.complete)throw Error(entry.id+" palette inference failed: "+JSON.stringify(result.diagnostics));
+    body.push({raw:"\\SemioVizProbeBegin{geo-palette}{"+entry.id+"}\n"+result.tikz});
+  }
+  if(JSON.stringify(control.snapshot)!==before)throw Error("Palette mutation changed authored base");
+  const rampProbes=control.inputs.map((value,index)=>"\\semio_viz_probe_values:nx{geo/palette/pct/"+index+"}{\\semio_viz_geo_ramp_pct:n{"+value+"}}\\tl_set:Nx\\l_tmpa_tl{\\semio_viz_geo_ramp:n{"+value+"}}\\semio_viz_probe_values:nV{geo/palette/full/"+index+"}\\l_tmpa_tl\\convertcolorspec{named}{\\l_tmpa_tl}{rgb}\\l_tmpb_tl\\semio_viz_probe_values:nV{geo/palette/rgb/"+index+"}\\l_tmpb_tl").join("");
+  const themeProbes=[0,1].map(slot=>"\\tl_set:Nx\\l_tmpa_tl{\\semio_viz_theme_color:n{"+slot+"}}\\semio_viz_probe_values:nV{geo/palette/theme/"+slot+"}\\l_tmpa_tl\\convertcolorspec{named}{\\l_tmpa_tl}{rgb}\\l_tmpb_tl\\semio_viz_probe_values:nV{geo/palette/theme-rgb/"+slot+"}\\l_tmpb_tl").join("")+"\\convertcolorspec{named}{semio-chrome-canvas}{rgb}\\l_tmpb_tl\\semio_viz_probe_values:nV{geo/palette/canvas}\\l_tmpb_tl";
+  const hook="\\ExplSyntaxOn\\cs_new_eq:NN\\semio_viz_control_palette_streamline:nn\\semio_viz_georte_streamline:nn\\cs_set_protected:Npn\\semio_viz_georte_streamline:nn#1#2{\\semio_viz_control_palette_streamline:nn{#1}{#2}\\semio_viz_probe_values:nx{geo/palette/points}{\\seq_count:N\\l_tmpa_seq}"+rampProbes+themeProbes+"}\\ExplSyntaxOff";
+  const records=await compileVizProbeDocument({case:"geo-palette",scenario:"controls",documentClass:"semio",documentClassOptions:"type=paper,language=en",packages:["semio-viz"],preamble:["\\title{Geographic Palette Controls}","\\author{Semio}","\\date{}",hook],body},{workDir,scenario:undefined,keepWorkDir:true});
+  const failures:string[]=[];
+  for(const entry of control.cases){
+    const count=entry.expectedPaletteSteps,position=scaleThreshold<number,number>().domain(Array.from({length:count-1},(_,index)=>(index+.5)/(count-1))).range(count===1?[.5]:Array.from({length:count},(_,index)=>index/(count-1)));
+    const own=records.filter(record=>record.scenario===entry.id&&record.key.startsWith("geo/palette/")),one=(key:string)=>{const matches=own.filter(record=>record.key===key);if(matches.length!==1)throw Error(entry.id+" palette probe inventory "+key);return matches[0]!.values;};
+    const theme=[0,1].map(slot=>one("geo/palette/theme/"+slot).join(",").replace(/\s/g,""));
+    const colors=new Set<string>();
+    try{
+      equal(one("geo/palette/points").map(Number),[entry.expectedSteps],entry.id+" integrated native path points");
+      equal(one("geo/palette/canvas").map(Number),[1,1,1],entry.id+" explicit light canvas");
+      for(const slot of [0,1]){const color=rgb(control.snapshot.chart.theme.palette[slot]!);equal(one("geo/palette/theme-rgb/"+slot).map(Number),[color.r,color.g,color.b].map(value=>value/255),entry.id+" authored palette slot "+slot);}
+    }catch(error){failures.push(String(error));}
+    for(const[index,value]of control.inputs.entries()){
+      const q=position(value),diverging=entry.palette==="diverging",hue=diverging&&q<.5?1:0,mix=Math.round(scaleLinear([0,1],[18,100])(diverging?Math.abs(2*q-1):q));
+      const full=one("geo/palette/full/"+index).join(",").replace(/\s/g,"");colors.add(full);
+      const expected=rgb(interpolateRgb("white",control.snapshot.chart.theme.palette[hue]!)(mix/100));
+      try{equal(one("geo/palette/pct/"+index).map(Number),[mix],entry.id+" D3 whole-position mix "+index);if(full!==theme[hue]+"!"+mix+"!semio-chrome-canvas")throw Error(entry.id+" full ramp "+index+": "+full+" expected hue"+hue+" mix"+mix);equal(one("geo/palette/rgb/"+index).map(Number),[expected.r,expected.g,expected.b].map(value=>value/255),entry.id+" D3 full ramp RGB "+index,3e-3);}catch(error){failures.push(String(error));}
+    }
+    if(colors.size!==count)failures.push(entry.id+" full palette class count "+colors.size+" expected "+count);
+  }
+  if(failures.length)throw Error(failures.length+" whole palette failures:\n"+failures.join("\n"));
+  console.log("[geo-palette] "+control.cases.length+" mutation/inference controls, "+control.cases.length*control.inputs.length+" D3 full hue/mix/RGB checks, exact palette classes and native integration counts");
+  if(phase!=="ramp")await compileNativeGeoPaletteLegend(join(workDir,"legend"));
+}
+
+/** 🏷️ Compiles the actual one-level diverging choropleth legend in each authored language. */
+async function compileNativeGeoPaletteLegend(workDir:string):Promise<void>{
+  const control=fixture.nativeGeoPalette,body:{raw:string}[]=[];
+  for(const entry of control.legendCases){
+    const before=JSON.stringify(control.snapshot);let snapshot=control.snapshot as VizChartSnapshot;
+    for(const mutation of [{path:["presets"],value:[entry.preset]},{path:["language"],value:entry.language}]){
+      const outcome=changeVizChartValue(snapshot,mutation);if(outcome.messages.length)throw Error(entry.id+" legend mutation "+JSON.stringify(outcome.messages));const replay=applyVizChartDiff(snapshot,outcome.diff);if(replay.messages.length)throw Error(entry.id+" legend replay "+JSON.stringify(replay.messages));snapshot=replay.snapshot;
+    }
+    const result=await inferVizChart(snapshot);if(!result.complete)throw Error(entry.id+" legend inference "+JSON.stringify(result.diagnostics));if(JSON.stringify(control.snapshot)!==before)throw Error(entry.id+" mutated palette snapshot");body.push({raw:"\\SemioVizProbeBegin{geo-palette-legend}{"+entry.id+"}\n"+result.tikz});
+  }
+  const hook="\\ExplSyntaxOn\\cs_new_eq:NN\\semio_viz_control_palette_legend:\\semio_viz_chor_legend:\\cs_set_protected:Npn\\semio_viz_chor_legend:{\\semio_viz_control_palette_legend:\\semio_viz_probe_values:nx{geo/palette/legend-count}{\\int_use:N\\l_semio_viz_geo_f_palette_steps_int}}\\ExplSyntaxOff";
+  const records=await compileVizProbeDocument({case:"geo-palette-legend",scenario:"controls",documentClass:"semio",documentClassOptions:"type=paper,language=en",packages:["semio-viz"],preamble:["\\title{One-Level Diverging Legend}","\\author{Semio}","\\date{}",hook],body},{workDir,scenario:undefined,keepWorkDir:true});
+  for(const entry of control.legendCases){const own=records.filter(record=>record.scenario===entry.id&&record.key==="geo/palette/legend-count");if(own.length!==1)throw Error(entry.id+" one-level legend missing");equal(own[0]!.values.map(Number),[1],entry.id+" one-level legend");}
+  console.log("[geo-palette] "+control.legendCases.length+" actual one-level diverging legends compiled in en/de");
+}

@@ -1,0 +1,7 @@
+# Current API Root Visual Review — 2026-10-05
+
+Root actually viewed the current light and dark API pages 2 and 78 returned from the paired publication 97552, which ended at terminal 0. Both contents pages resolve the API wrappers and the authored German umlauts. Native command names remain deliberately displayed as reference syntax. Both shared-table pages show readable scalar, vector and composition-block captions separated from their numeric badges; types, defaults and meanings remain visible.
+
+The exact current API source is 0C5A2690BCF60D465B4FD436A96375CB3ACA0EF53FF0B7D37D312B4A0B857B6B. Both actual published PDFs were independently rehashed after these views: light 5F89201170CDAE0CEE3240DE4C0628533BED2940A0F291ED956644697077C60F and dark E2E2FBDAA529D38178667CF718AA0182C60A0330FEE0B6B7FD66402733A7E732, each 240 pages. The retained authored-inputs/api-title-current-root-review/source-pdf-view-bindings.json binds actual paths, byte lengths, source/receipt/PDF and all four image hashes.
+
+Root viewed the existing Poppler renders; this is not a claim of separate rasterization or visual inspection of all pages. The independent every-page glyph, reference and measured-caption consumer is a separate gate. Fresh full publication 13588 remains active, and these selected views transfer to its API only when complete final pair bytes match exactly. Historical ADE4F API views and failed title candidates are bounded before evidence.

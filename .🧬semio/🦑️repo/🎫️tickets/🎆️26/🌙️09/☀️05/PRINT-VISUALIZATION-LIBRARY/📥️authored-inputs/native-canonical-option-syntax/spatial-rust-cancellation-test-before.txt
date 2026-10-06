@@ -1,0 +1,207 @@
+//! 🧪️ Language-neutral chart replay vectors and real inference registry dispatch.
+use crate::*;
+use semio_framework_value::{DslValue, FromValue, ToValue};
+use protocol::{Mutation, MutationDiff, DiffAlgebra, Inference};
+
+fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../../🧫️fixtures/🧬️chart-mutations/🔣️.json")).unwrap() }
+fn snapshot() -> ChartSnapshot { ChartSnapshot::from_value(DslValue::from(fixture()["snapshot"].clone())).unwrap() }
+
+#[test]
+fn mutations_replay_inverse_and_reject_atomically() {
+    let source = fixture();
+    let base = snapshot();
+    let mut current = base.clone();
+    let mut combined = ChartDiff::default();
+    for value in source["mutations"].as_array().unwrap() {
+        let mutation = ChangeChartValue::from_value(DslValue::from(value.clone())).unwrap();
+        let outcome = mutation.diff(&current);
+        assert!(outcome.messages().is_empty());
+        current = outcome.diff().apply(&current).unwrap();
+        combined.absorb(outcome.diff().clone());
+    }
+    assert_eq!(current.chart["width"].as_u64(), Some(120));
+    assert_eq!(current.chart["language"].as_str(), Some("de"));
+    assert_eq!(combined.apply(&base).unwrap(), current);
+    assert_eq!(combined.inverse(&base).apply(&current).unwrap(), base);
+    for value in source["rejections"].as_array().unwrap() {
+        let mutation = ChangeChartValue::from_value(DslValue::from(value.clone())).unwrap();
+        let outcome = mutation.diff(&base);
+        assert!(!outcome.messages().is_empty());
+        assert!(outcome.diff().is_empty());
+        assert_eq!(outcome.diff().apply(&base).unwrap(), base);
+    }
+    assert!(ChangeChartValue::DESCRIPTORS[0].validate().is_ok());
+}
+
+#[test]
+fn array_removal_inverse_restores_shifted_elements() {
+    let mut base = snapshot();
+    if let DslValue::Object(entries) = &mut base.chart {
+        let layers = entries.iter_mut().find(|(name,_)|name=="layers").unwrap();
+        if let DslValue::Array(items) = &mut layers.1 { items.extend([items[0].clone(),items[0].clone()]); }
+    }
+    let mutation = ChangeChartValue { path: vec!["layers".into(), "0".into()], value: None };
+    let diff = mutation.diff(&base).diff().clone();
+    let next = diff.apply(&base).unwrap();
+    assert_eq!(diff.inverse(&base).apply(&next).unwrap(), base);
+    assert_eq!(mutation.inverse(&base).unwrap()[0].diff(&next).diff().apply(&next).unwrap(), base);
+}
+
+#[test]
+fn native_registry_dispatch_is_deterministic_and_controlled() {
+    use semio_framework_plugin::*;
+    let base = snapshot();
+    let payload = protocol::pack_rt::encode_wire_value(&base.to_value());
+    let budgets = WireArtifactInferenceBudget { work_units: 100, allocation_bytes: 1_000_000, recursion_depth: 64 };
+    let request = ArtifactInferenceExecutionRequest { policy: &[], budgets: &budgets, cancellation_id: "chart-test", previous_state: None, requested_cache_mode: WireArtifactInferenceCacheMode::Bypass, canonical_payload: &payload, dependencies: &[] };
+    let mut registry = ArtifactInferenceServiceRegistry::new();
+    registry.register(chart_inference_service()).unwrap();
+    register_chart_artifact().unwrap();
+    register_chart_artifact().unwrap();
+    let published=semio_framework_plugin::app::artifact_inference_service(CHART_ARTIFACT_KIND,"framework.print.chart.inference").unwrap().unwrap();
+    assert_eq!(published.infer(&request).unwrap().canonical_payload,registry.infer(CHART_ARTIFACT_KIND,"framework.print.chart.inference",&request).unwrap().canonical_payload);
+    let first = registry.infer(CHART_ARTIFACT_KIND, "framework.print.chart.inference", &request).unwrap();
+    let second = registry.infer(CHART_ARTIFACT_KIND, "framework.print.chart.inference", &request).unwrap();
+    assert_eq!(first.canonical_payload, second.canonical_payload);
+    let decoded = ChartInference::from_value(protocol::pack_rt::decode_wire_value(&first.canonical_payload).unwrap()).unwrap();
+    assert_eq!(decoded, ChartInference::infer(&base).unwrap());
+    assert!(decoded.tikz.contains("\\SemioVizPlot[data=semio-print-layer-0,mark=point"));
+    let mut progress = Vec::new();
+    assert!(execute_chart_inference_controlled(&request, &mut |work| { progress.push(work); Ok(()) }).is_ok());
+    assert!(progress.windows(2).all(|pair| pair[0] <= pair[1]));
+    assert!(execute_chart_inference_controlled(&request, &mut |work| { if work >= 1 { Err(ArtifactInferenceExecutionError::new("test.cancelled", "cancelled")) } else { Ok(()) } }).is_err());
+    let invalid_payload=protocol::pack_rt::encode_wire_value(&ChartSnapshot::default().to_value());
+    let invalid_request=ArtifactInferenceExecutionRequest{canonical_payload:&invalid_payload,..request};
+    let invalid=published.infer(&invalid_request).unwrap();
+    let decoded=ChartInference::from_value(protocol::pack_rt::decode_wire_value(&invalid.canonical_payload).unwrap()).unwrap();
+    assert!(!invalid.complete);assert!(!decoded.complete);assert!(decoded.tikz.is_empty());assert_eq!(decoded.diagnostics[0].path,"chart");
+}
+
+#[test]
+fn missing_language_is_diagnostic_data() {
+    let inferred = ChartInference::infer(&ChartSnapshot::default()).unwrap();
+    assert!(inferred.tikz.is_empty());
+    assert_eq!(inferred.diagnostics.len(), 1);
+    assert!(!inferred.complete);
+}
+
+#[test]
+fn shared_result_schema_accepts_valid_and_invalid_native_outputs(){
+    let validator=semio_framework_schema_validator::OwnedJsonSchemaValidator::compile_with_documents(include_str!("../../🧬️schema/💡️inferences/🔣️.json"),&[]).unwrap();
+    for base in [snapshot(),ChartSnapshot::default()]{let result=ChartInference::infer(&base).unwrap();validator.validate_json(&semio_framework_pack_json::to_json_string(&result)).unwrap();assert_eq!(ChartInference::from_value(result.to_value()).unwrap(),result);}
+}
+
+#[test]
+fn css_paints_preserve_named_rgb_hsl_and_fractional_alpha(){
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧬️chart-mutations/🎨️paint.json")).unwrap();
+    for case in fixture["cases"].as_array().unwrap(){let paint=inferences::paint::parse(case["input"].as_str().unwrap()).unwrap();assert_eq!(paint.hex,case["hex"].as_str().unwrap());assert!((paint.alpha-case["alpha"].as_f64().unwrap()).abs()<1e-12);if paint.alpha<1.0{assert!(paint.declaration().contains("\\SemioVizPaintAlpha"));}}
+    for input in fixture["invalid"].as_array().unwrap(){assert!(inferences::paint::parse(input.as_str().unwrap()).is_err());}
+    let contract:serde_json::Value=serde_json::from_str(include_str!("../../🧬️schema/📸️snapshot/📊️chart/🎨️color/🔣️.json")).unwrap();
+    for (name,hex) in contract["x-semio-named-colors"].as_object().unwrap(){assert_eq!(inferences::paint::parse(name).unwrap().hex,hex.as_str().unwrap());}
+    let mut authored=crate::tests::fixture()["snapshot"].clone();
+    authored["chart"]["layers"][0]["encodings"]["fill"]=serde_json::json!({"value":"rgba(255,0,0,0.125)"});
+    authored["chart"]["annotations"]=serde_json::json!([{"kind":"text","x":1,"y":2,"text":{"en":"green","de":"grün"},"options":{"fill":"rgba(255,0,0,0.125)","opacity":0.5}}]);
+    let inferred=ChartInference::infer(&ChartSnapshot::from_value(DslValue::from(authored)).unwrap()).unwrap();
+    assert!(inferred.complete,"{:?}",inferred.diagnostics);
+    assert!(inferred.tikz.contains("\\SemioVizPaintAlpha{semio-print-color-FF0000-A0p125}{0.125}"));
+    assert!(inferred.tikz.contains("text opacity=0.0625"));
+}
+
+#[test]
+fn explicit_null_is_distinct_from_omitted_value_in_wire_mutations(){
+    let null=ChangeChartValue{path:vec!["layers".into(),"0".into(),"encodings".into(),"fill".into(),"value".into()],value:Some(DslValue::Null)};
+    let deleted=ChangeChartValue{path:null.path.clone(),value:None};
+    assert_eq!(ChangeChartValue::from_value(null.to_value()).unwrap(),null);
+    assert_eq!(ChangeChartValue::from_value(deleted.to_value()).unwrap(),deleted);
+    assert_ne!(null.to_value(),deleted.to_value());
+    assert_eq!(ChartInference::default(),ChartInference::infer(&ChartSnapshot::default()).unwrap());
+}
+
+#[test]
+fn derived_names_do_not_overwrite_authored_tables_columns_or_text(){
+    let source=fixture();
+    let snapshot=ChartSnapshot::from_value(DslValue::from(source["collision"]["snapshot"].clone())).unwrap();
+    let inference=ChartInference::infer(&snapshot).unwrap();
+    assert!(inference.diagnostics.is_empty(),"{:?}",inference.diagnostics);
+    let table=source["collision"]["preparedTable"].as_str().unwrap();
+    let column=source["collision"]["constantColumn"].as_str().unwrap();
+    assert!(inference.tikz.contains(&format!("\\SemioVizTable{{{table}}}")));
+    assert!(inference.tikz.contains(&format!("fill={{column={column}}}")));
+    assert!(inference.tikz.contains("text={column=semio-constant-fill}"));
+    assert!(inference.tikz.contains("{\\#00ff00}"));
+    assert!(inference.tikz.contains("{semio-print-color-FF00AA}"));
+}
+
+#[test]
+fn every_catalogue_kind_is_reachable_through_snapshot_inference() {
+    let kinds = inferences::catalog().unwrap()["kinds"].as_array().unwrap();
+    assert!(kinds.len() > 1700);
+    let chart = DslValue::object([("width".into(),DslValue::uint(80)),("height".into(),DslValue::uint(40)),("language".into(),DslValue::String("en".into())),("layers".into(),DslValue::Array(vec![])),("presets".into(),DslValue::Array(kinds.iter().map(|entry|DslValue::object([("kind".into(),entry["slug"].clone())])).collect()))]);
+    let inferred = ChartInference::infer(&ChartSnapshot{chart}).unwrap();
+    assert!(inferred.diagnostics.is_empty(),"{:?}",inferred.diagnostics);
+    assert_eq!(inferred.tikz.matches("\\SemioVizChart{").count(), kinds.len());
+}
+
+#[test]
+fn native_chart_source_can_be_compiled_by_the_print_toolchain(){
+    let Some(path)=std::env::var_os("PRINT_NATIVE_CHART_TIKZ") else{return;};
+    let authored=include_str!("../../🧫️fixtures/🧬️chart-mutations/📊️native-grammar.json");
+    let snapshot=semio_framework_pack_json::from_json_str::<ChartSnapshot>(authored,semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let inference=ChartInference::infer(&snapshot).unwrap();
+    assert!(inference.diagnostics.is_empty(),"{:?}",inference.diagnostics);
+    std::fs::write(path,inference.tikz).unwrap();
+}
+
+/// 🪡️ Neutral authored option mutations emit actual canonical Rust grammar for native compilation.
+#[test]
+fn canonical_customization_emits_neutral_mutation_vectors(){
+ let source=fixture();for(case,valid)in source["optionSyntax"]["cases"].as_array().unwrap().iter().map(|case|(case,true)).chain(source["optionSyntax"]["rejections"].as_array().unwrap().iter().map(|case|(case,false))){
+  let before=ChartSnapshot::from_value(DslValue::from(case["snapshot"].clone())).unwrap();let mut current=before.clone();
+  for value in case["mutations"].as_array().unwrap(){let mutation=ChangeChartValue::from_value(DslValue::from(value.clone())).unwrap();let outcome=mutation.diff(&current);assert!(outcome.messages().is_empty(),"{:?}",outcome.messages());let next=outcome.diff().apply(&current).unwrap();assert_eq!(outcome.diff().inverse(&current).apply(&next).unwrap(),current);current=next;}
+  let inference=ChartInference::infer(&current).unwrap();assert_eq!(inference.complete,valid,"{}: {:?}",case["id"],inference.diagnostics);if !valid{assert!(!inference.diagnostics.is_empty());continue;}assert!(inference.diagnostics.is_empty(),"{:?}",inference.diagnostics);
+  if let Some(root)=std::env::var_os("PRINT_NATIVE_OPTION_TIKZ"){std::fs::create_dir_all(&root).unwrap();std::fs::write(std::path::Path::new(&root).join(format!("{}.tex",case["id"].as_str().unwrap())),inference.tikz).unwrap();}
+  assert_eq!(before,ChartSnapshot::from_value(DslValue::from(case["snapshot"].clone())).unwrap());
+ }
+ eprintln!("[DEBUG] Canonical Rust authored option mutations inferred; emitted source awaits actual native compiler adjudication");
+}
+#[test]
+fn typed_rows_preserve_null_strings_booleans_and_color_fallback_alpha(){
+    let snapshot=semio_framework_pack_json::from_json_str::<ChartSnapshot>(include_str!("../../🧫️fixtures/🧬️chart-mutations/📊️native-grammar.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let inference=ChartInference::infer(&snapshot).unwrap();
+    assert!(inference.diagnostics.is_empty(),"{:?}",inference.diagnostics);
+    assert!(inference.tikz.contains("{\\SemioVizNull{}}"));
+    assert!(inference.tikz.contains("{\\SemioVizBoolean{true}}"));
+    assert!(inference.tikz.contains("{\\SemioVizBoolean{false}}"));
+    assert!(inference.tikz.contains("\\SemioVizRow{native-typed}{{\\SemioVizString{}},{1}}"));
+    assert!(inference.tikz.contains("unknown={semio-print-color-0080FF-A0p35}"));
+    assert!(inference.tikz.contains("\\SemioVizPaintAlpha{semio-print-color-0080FF-A0p35}{0.35}"));
+}
+#[path = "../../🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_snapshot_tests;
+
+/// 🛃️ Neutral descriptor primitives and grammar alternatives survive actual mutation replay before native compilation.
+#[test]
+fn canonical_option_descriptor_admission(){
+ let source=fixture();let mut failures=Vec::new();
+ for case in source["optionSyntax"]["admission"].as_array().unwrap(){let before=ChartSnapshot::from_value(DslValue::from(case["snapshot"].clone())).unwrap();let mut current=before.clone();
+  for value in case["mutations"].as_array().unwrap(){let mutation=ChangeChartValue::from_value(DslValue::from(value.clone())).unwrap();let outcome=mutation.diff(&current);assert!(outcome.messages().is_empty(),"{:?}",outcome.messages());let next=outcome.diff().apply(&current).unwrap();assert_eq!(outcome.diff().inverse(&current).apply(&next).unwrap(),current);current=next;}
+  let result=ChartInference::infer(&current).unwrap();let valid=case["valid"].as_bool().unwrap();if result.complete!=valid{failures.push(format!("{}: actual {}, expected {}, {:?}",case["id"],result.complete,valid,result.diagnostics));}
+  if valid&&result.complete{if let Some(root)=std::env::var_os("PRINT_NATIVE_OPTION_TIKZ"){let root=std::path::Path::new(&root).join("admission");std::fs::create_dir_all(&root).unwrap();std::fs::write(root.join(format!("{}.tex",case["id"].as_str().unwrap())),result.tikz).unwrap();}}
+  assert_eq!(before,ChartSnapshot::from_value(DslValue::from(case["snapshot"].clone())).unwrap());
+ }
+ assert!(failures.is_empty(),"{}",failures.join("\n"));eprintln!("[DEBUG] Rust declared option admission: 58 neutral en/de actual mutation/replay/inference controls PASS; valid emission requires actual native compiler");
+}
+/// 🗺️ Authored structured spatial carriers require valid replay and native geometry emission in both languages.
+#[test]
+fn canonical_spatial_data_mutation_vectors(){
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧬️native-chart-grammar/🔣️.json")).unwrap();let source=&fixture["nativeSpatialData"];let mut failures=Vec::new();
+ for language in ["en","de"]{for(case,bad)in source["cases"].as_array().unwrap().iter().map(|case|(case,None)).chain(source["badCases"].as_array().unwrap().iter().map(|bad|(source["cases"].as_array().unwrap().iter().find(|case|case["id"]==bad["caseId"]).unwrap(),Some(bad)))){
+  let id=format!("spatial-{}-{language}",bad.unwrap_or(case)["id"].as_str().unwrap());let mut authored=source["snapshot"].clone();authored["chart"]["language"]=serde_json::Value::String(language.into());let before=ChartSnapshot::from_value(DslValue::from(authored)).unwrap();let mut current=before.clone();let mut setup=true;
+  let mutations=[serde_json::json!({"path":["tables"],"value":[case["table"].clone()]}),serde_json::json!({"path":["presets"],"value":[case["preset"].clone()]})];
+  for value in mutations.iter().chain(bad.map(|bad|&bad["mutation"])) {let mutation=ChangeChartValue::from_value(DslValue::from(value.clone())).unwrap();let outcome=mutation.diff(&current);if !outcome.messages().is_empty(){failures.push(format!("{id}: structured mutation refused {:?}",outcome.messages()));setup=false;break;}let next=outcome.diff().apply(&current).unwrap();assert_eq!(outcome.diff().inverse(&current).apply(&next).unwrap(),current);current=next;}
+  if !setup{continue;}let result=ChartInference::infer(&current).unwrap();let valid=bad.is_none();if result.complete!=valid{failures.push(format!("{id}: inferred {}, expected {valid}, {:?}",result.complete,result.diagnostics));}
+  if valid&&result.complete{if let Some(root)=std::env::var_os("PRINT_NATIVE_SPATIAL_TIKZ"){std::fs::create_dir_all(&root).unwrap();std::fs::write(std::path::Path::new(&root).join(format!("{id}.tex")),result.tikz).unwrap();}}
+  assert_eq!(before.chart.get("tables"),None);
+ }}
+ assert!(failures.is_empty(),"{}",failures.join("\n"));eprintln!("[DEBUG] Native spatial Rust: 6 valid and11 invalid carriers in en/de passed canonical mutation/inverse/inference; emitted valid source awaits native D3/PDF adjudication");
+}

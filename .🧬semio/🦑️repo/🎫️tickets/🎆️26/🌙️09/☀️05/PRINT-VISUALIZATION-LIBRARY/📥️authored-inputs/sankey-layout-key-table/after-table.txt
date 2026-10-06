@@ -1,0 +1,14 @@
+\ApiScopeSource{api-path-sankey}{semio / viz / layout / sankey}
+\ApiText{The native Sankey defaults apply before the alluvial or parallel-sets presets and then the authored options. The frame uses layout units.}{Die nativen Sankey-Vorgaben gelten vor den Vorgaben von Alluvial oder Parallelmengen und anschließend den Aufruferoptionen. Der Rahmen verwendet Layouteinheiten.}
+\SemioTableLong[text-size=8pt]{\Key{api-path-sankey} \ApiText{Sankey, alluvial and parallel-sets options}{Optionen von Sankey, Alluvial und Parallelmengen}}{0.19,0.12,0.16,0.53}{\ApiKey & \ApiType & \ApiDefault & \ApiMeaning}{%
+  \SemioTableRow{\Key{node-width} & \Key{number} & \Key{24} & \ApiText{Width of each node rectangle in layout units.}{Breite jedes Knotenrechtecks in Layouteinheiten.}}
+  \SemioTableRow{\Key{node-padding} & \Key{number} & \Key{8} & \ApiText{Vertical gap between nodes in a column. Parallel sets presets zero before authored options.}{Senkrechter Abstand zwischen Knoten einer Spalte. Parallelmengen setzen vor den Aufruferoptionen null als Vorgabe.}}
+  \SemioTableRow{\Key{node-align} & \Key{string} & \Key{justify} & \ApiText{Column assignment: left, right, center or justify. Alluvial and parallel sets preset left before authored options.}{Spaltenzuweisung: left, right, center oder justify. Alluvial und Parallelmengen setzen vor den Aufruferoptionen left als Vorgabe.}}
+  \SemioTableRow{\Key{node-sort} & \Key{string} & \Key{auto} & \ApiText{auto reorders each column by node position; none preserves input order. Alluvial and parallel sets preset none.}{auto ordnet jede Spalte nach der Knotenposition; none erhält die Eingabereihenfolge. Alluvial und Parallelmengen verwenden none als Vorgabe.}}
+  \SemioTableRow{\Key{link-sort} & \Key{string} & \Key{auto} & \ApiText{auto orders incident links by their partner node positions; none preserves input link order.}{auto ordnet anliegende Kanten nach den Positionen ihrer Partnerknoten; none erhält die Eingabereihenfolge der Kanten.}}
+  \SemioTableRow{\Key{iterations} & \Key{integer} & \Key{6} & \ApiText{Number of vertical relaxation passes.}{Anzahl senkrechter Relaxationsdurchläufe.}}
+  \SemioTableRow{\Key{x0} & \Key{number} & \Key{0} & \ApiText{Left boundary of the layout extent.}{Linke Grenze der Layoutausdehnung.}}
+  \SemioTableRow{\Key{y0} & \Key{number} & \Key{0} & \ApiText{Lower numeric vertical boundary of the layout extent.}{Untere numerische Vertikalgrenze der Layoutausdehnung.}}
+  \SemioTableRow{\Key{x1} & \Key{number} & \Key{1} & \ApiText{Right boundary of the layout extent.}{Rechte Grenze der Layoutausdehnung.}}
+  \SemioTableRow{\Key{y1} & \Key{number} & \Key{1} & \ApiText{Upper numeric vertical boundary of the layout extent.}{Obere numerische Vertikalgrenze der Layoutausdehnung.}}
+}

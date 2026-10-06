@@ -1,0 +1,1136 @@
+{
+  "trustedParentTerminal": {
+    "session": 64887,
+    "exitCode": 0
+  },
+  "scope": "92mode predicates plus16 actual hard compiler rejections for8 scientific families",
+  "logSha256": "E0F0F8F88C7E3D56095FAA76706A7149924A519AF00FAF0D139F28F48352B7D2",
+  "documents": [
+    {
+      "case": "predicates",
+      "theme": "light",
+      "texSha256": "B7EB1DE99165F329189CF96F1C2028E83F300AC88BBA2C4C6F090C287477E53F"
+    },
+    {
+      "case": "predicates",
+      "theme": "dark",
+      "texSha256": "23728D3A08949E66A54C90BF13149F3509F93A370737183E44DAABE19C475A6D"
+    },
+    {
+      "case": "sci-abstract-diagram-unknown",
+      "theme": "light",
+      "texSha256": "95FDBBD4FD03830AA498D55FA34114FC96E2189A2346517CF487F6710235B5D8"
+    },
+    {
+      "case": "sci-abstract-diagram-unknown",
+      "theme": "dark",
+      "texSha256": "5700D11449A198A7AEDEA4B84EE78C6B62867E8A24875939A0427EFF4CB9FCA8"
+    },
+    {
+      "case": "sci-circuit-unknown",
+      "theme": "light",
+      "texSha256": "7C6670B520E199554464B9A01E88D50306EDDF5A59F9F78217B40C0984CAB3AD"
+    },
+    {
+      "case": "sci-circuit-unknown",
+      "theme": "dark",
+      "texSha256": "B466BF36480A66521E97B275E01C39E6839CD05F60BA5FD50461711E394028F0"
+    },
+    {
+      "case": "sci-electrochem-unknown",
+      "theme": "light",
+      "texSha256": "E76879D280BE53265931F423AC094D6B915B6942585C48313ECE0D5B1A47F6F3"
+    },
+    {
+      "case": "sci-electrochem-unknown",
+      "theme": "dark",
+      "texSha256": "01180935BED8DFB5A59E578C5265EDD15EB72F319D39C9A9E01183664F91688C"
+    },
+    {
+      "case": "sci-optimization-unknown",
+      "theme": "light",
+      "texSha256": "3F929A4A351820C22D1628DD9F55361D7AEC8581A96F70690A8850CAD05BAC87"
+    },
+    {
+      "case": "sci-optimization-unknown",
+      "theme": "dark",
+      "texSha256": "F86601772E5F78CD0FDFA7627C5115B54DF9D9EFCB26B22C4C614DE5025E7CEF"
+    },
+    {
+      "case": "sci-orbital-unknown",
+      "theme": "light",
+      "texSha256": "4E74C495435555F5B3C8659A9650DFABD79387812654942A66BC9CA7BC9F809E"
+    },
+    {
+      "case": "sci-orbital-unknown",
+      "theme": "dark",
+      "texSha256": "80BA4564F299149A911E92758C496B40D50D686DB71DD9889E41BC2C2B78963E"
+    },
+    {
+      "case": "sci-pathway-unknown",
+      "theme": "light",
+      "texSha256": "D786A284F61D34533F3A7091255FE71D68C88A91AE51B14F8144DB5E72F50DE5"
+    },
+    {
+      "case": "sci-pathway-unknown",
+      "theme": "dark",
+      "texSha256": "F6EEB399B45CCB92FEBF513ED685DC9D6D4BF8B0AA420CEADC4DA76C2D1F32DC"
+    },
+    {
+      "case": "sci-phase-diagram-unknown",
+      "theme": "light",
+      "texSha256": "C26B6928DCB4C4FA0401A34F40DD19C001C1A7A5A3DDA0DEAB7410B94033D0CD"
+    },
+    {
+      "case": "sci-phase-diagram-unknown",
+      "theme": "dark",
+      "texSha256": "51EDAC72CB2DC740CB28EF0D0C38E0CD9BCFAC4A9F5AF9083052276442F5395E"
+    },
+    {
+      "case": "sci-pitch-unknown",
+      "theme": "light",
+      "texSha256": "A7E0C2C85C588F19D27D9E9D48E82A2C331D33B3B47DAEE8CF515D8E577A17BE"
+    },
+    {
+      "case": "sci-pitch-unknown",
+      "theme": "dark",
+      "texSha256": "B21A915397F30EDD86EB9E19D1134C2B5E1DE590F2B6F1997D7F65D2EF31C719"
+    }
+  ],
+  "ownerStageBindings": [
+    {
+      "case": "predicates",
+      "theme": "light",
+      "owner": "semio-viz-scientific-field.sty",
+      "stageSha256": "745CF1244ECDE64A3DA82D5D653A4A1D042029A817B7E785B1258B69E0A07EE8",
+      "currentSha256": "745CF1244ECDE64A3DA82D5D653A4A1D042029A817B7E785B1258B69E0A07EE8"
+    },
+    {
+      "case": "predicates",
+      "theme": "light",
+      "owner": "semio-viz-scientific-biology.sty",
+      "stageSha256": "062FB347E807995BB16B434813AD101AA42DFDF6F3E64B25A047D6D711075230",
+      "currentSha256": "062FB347E807995BB16B434813AD101AA42DFDF6F3E64B25A047D6D711075230"
+    },
+    {
+      "case": "predicates",
+      "theme": "light",
+      "owner": "semio-viz-scientific-engineering.sty",
+      "stageSha256": "79B73803B88F17521968055266E47C514DBCC858775F14E4F5A2E57B1B50409E",
+      "currentSha256": "79B73803B88F17521968055266E47C514DBCC858775F14E4F5A2E57B1B50409E"
+    },
+    {
+      "case": "predicates",
+      "theme": "light",
+      "owner": "semio-viz-scientific-mathematics.sty",
+      "stageSha256": "4D00F2DD0392B3AD28A026FA83C500EF534E6CA92832466268D194558B868736",
+      "currentSha256": "4D00F2DD0392B3AD28A026FA83C500EF534E6CA92832466268D194558B868736"
+    },
+    {
+      "case": "predicates",
+      "theme": "light",
+      "owner": "semio-viz-scientific-chemistry.sty",
+      "stageSha256": "EE25293DAAE6143643F50C6CF48B65876EBC255D79829110CFF45B99507C424E",
+      "currentSha256": "EE25293DAAE6143643F50C6CF48B65876EBC255D79829110CFF45B99507C424E"
+    },
+    {
+      "case": "predicates",
+      "theme": "light",
+      "owner": "semio-viz-scientific-geometry.sty",
+      "stageSha256": "67DCCE96106106ED197E872D48AE37AA59B4D35972E07F006656BFC8A47896C9",
+      "currentSha256": "67DCCE96106106ED197E872D48AE37AA59B4D35972E07F006656BFC8A47896C9"
+    },
+    {
+      "case": "predicates",
+      "theme": "dark",
+      "owner": "semio-viz-scientific-field.sty",
+      "stageSha256": "745CF1244ECDE64A3DA82D5D653A4A1D042029A817B7E785B1258B69E0A07EE8",
+      "currentSha256": "745CF1244ECDE64A3DA82D5D653A4A1D042029A817B7E785B1258B69E0A07EE8"
+    },
+    {
+      "case": "predicates",
+      "theme": "dark",
+      "owner": "semio-viz-scientific-biology.sty",
+      "stageSha256": "062FB347E807995BB16B434813AD101AA42DFDF6F3E64B25A047D6D711075230",
+      "currentSha256": "062FB347E807995BB16B434813AD101AA42DFDF6F3E64B25A047D6D711075230"
+    },
+    {
+      "case": "predicates",
+      "theme": "dark",
+      "owner": "semio-viz-scientific-engineering.sty",
+      "stageSha256": "79B73803B88F17521968055266E47C514DBCC858775F14E4F5A2E57B1B50409E",
+      "currentSha256": "79B73803B88F17521968055266E47C514DBCC858775F14E4F5A2E57B1B50409E"
+    },
+    {
+      "case": "predicates",
+      "theme": "dark",
+      "owner": "semio-viz-scientific-mathematics.sty",
+      "stageSha256": "4D00F2DD0392B3AD28A026FA83C500EF534E6CA92832466268D194558B868736",
+      "currentSha256": "4D00F2DD0392B3AD28A026FA83C500EF534E6CA92832466268D194558B868736"
+    },
+    {
+      "case": "predicates",
+      "theme": "dark",
+      "owner": "semio-viz-scientific-chemistry.sty",
+      "stageSha256": "EE25293DAAE6143643F50C6CF48B65876EBC255D79829110CFF45B99507C424E",
+      "currentSha256": "EE25293DAAE6143643F50C6CF48B65876EBC255D79829110CFF45B99507C424E"
+    },
+    {
+      "case": "predicates",
+      "theme": "dark",
+      "owner": "semio-viz-scientific-geometry.sty",
+      "stageSha256": "67DCCE96106106ED197E872D48AE37AA59B4D35972E07F006656BFC8A47896C9",
+      "currentSha256": "67DCCE96106106ED197E872D48AE37AA59B4D35972E07F006656BFC8A47896C9"
+    },
+    {
+      "case": "sci-abstract-diagram-unknown",
+      "theme": "light",
+      "owner": "semio-viz-scientific-field.sty",
+      "stageSha256": "745CF1244ECDE64A3DA82D5D653A4A1D042029A817B7E785B1258B69E0A07EE8",
+      "currentSha256": "745CF1244ECDE64A3DA82D5D653A4A1D042029A817B7E785B1258B69E0A07EE8"
+    },
+    {
+      "case": "sci-abstract-diagram-unknown",
+      "theme": "light",
+      "owner": "semio-viz-scientific-biology.sty",
+      "stageSha256": "062FB347E807995BB16B434813AD101AA42DFDF6F3E64B25A047D6D711075230",
+      "currentSha256": "062FB347E807995BB16B434813AD101AA42DFDF6F3E64B25A047D6D711075230"
+    },
+    {
+      "case": "sci-abstract-diagram-unknown",
+      "theme": "light",
+      "owner": "semio-viz-scientific-engineering.sty",
+      "stageSha256": "79B73803B88F17521968055266E47C514DBCC858775F14E4F5A2E57B1B50409E",
+      "currentSha256": "79B73803B88F17521968055266E47C514DBCC858775F14E4F5A2E57B1B50409E"
+    },
+    {
+      "case": "sci-abstract-diagram-unknown",
+      "theme": "light",
+      "owner": "semio-viz-scientific-mathematics.sty",
+      "stageSha256": "4D00F2DD0392B3AD28A026FA83C500EF534E6CA92832466268D194558B868736",
+      "currentSha256": "4D00F2DD0392B3AD28A026FA83C500EF534E6CA92832466268D194558B868736"
+    },
+    {
+      "case": "sci-abstract-diagram-unknown",
+      "theme": "light",
+      "owner": "semio-viz-scientific-chemistry.sty",
+      "stageSha256": "EE25293DAAE6143643F50C6CF48B65876EBC255D79829110CFF45B99507C424E",
+      "currentSha256": "EE25293DAAE6143643F50C6CF48B65876EBC255D79829110CFF45B99507C424E"
+    },
+    {
+      "case": "sci-abstract-diagram-unknown",
+      "theme": "light",
+      "owner": "semio-viz-scientific-geometry.sty",
+      "stageSha256": "67DCCE96106106ED197E872D48AE37AA59B4D35972E07F006656BFC8A47896C9",
+      "currentSha256": "67DCCE96106106ED197E872D48AE37AA59B4D35972E07F006656BFC8A47896C9"
+    },
+    {
+      "case": "sci-abstract-diagram-unknown",
+      "theme": "dark",
+      "owner": "semio-viz-scientific-field.sty",
+      "stageSha256": "745CF1244ECDE64A3DA82D5D653A4A1D042029A817B7E785B1258B69E0A07EE8",
+      "currentSha256": "745CF1244ECDE64A3DA82D5D653A4A1D042029A817B7E785B1258B69E0A07EE8"
+    },
+    {
+      "case": "sci-abstract-diagram-unknown",
+      "theme": "dark",
+      "owner": "semio-viz-scientific-biology.sty",
+      "stageSha256": "062FB347E807995BB16B434813AD101AA42DFDF6F3E64B25A047D6D711075230",
+      "currentSha256": "062FB347E807995BB16B434813AD101AA42DFDF6F3E64B25A047D6D711075230"
+    },
+    {
+      "case": "sci-abstract-diagram-unknown",
+      "theme": "dark",
+      "owner": "semio-viz-scientific-engineering.sty",
+      "stageSha256": "79B73803B88F17521968055266E47C514DBCC858775F14E4F5A2E57B1B50409E",
+      "currentSha256": "79B73803B88F17521968055266E47C514DBCC858775F14E4F5A2E57B1B50409E"
+    },
+    {
+      "case": "sci-abstract-diagram-unknown",
+      "theme": "dark",
+      "owner": "semio-viz-scientific-mathematics.sty",
+      "stageSha256": "4D00F2DD0392B3AD28A026FA83C500EF534E6CA92832466268D194558B868736",
+      "currentSha256": "4D00F2DD0392B3AD28A026FA83C500EF534E6CA92832466268D194558B868736"
+    },
+    {
+      "case": "sci-abstract-diagram-unknown",
+      "theme": "dark",
+      "owner": "semio-viz-scientific-chemistry.sty",
+      "stageSha256": "EE25293DAAE6143643F50C6CF48B65876EBC255D79829110CFF45B99507C424E",
+      "currentSha256": "EE25293DAAE6143643F50C6CF48B65876EBC255D79829110CFF45B99507C424E"
+    },
+    {
+      "case": "sci-abstract-diagram-unknown",
+      "theme": "dark",
+      "owner": "semio-viz-scientific-geometry.sty",
+      "stageSha256": "67DCCE96106106ED197E872D48AE37AA59B4D35972E07F006656BFC8A47896C9",
+      "currentSha256": "67DCCE96106106ED197E872D48AE37AA59B4D35972E07F006656BFC8A47896C9"
+    },
+    {
+      "case": "sci-circuit-unknown",
+      "theme": "light",
+      "owner": "semio-viz-scientific-field.sty",
+      "stageSha256": "745CF1244ECDE64A3DA82D5D653A4A1D042029A817B7E785B1258B69E0A07EE8",
+      "currentSha256": "745CF1244ECDE64A3DA82D5D653A4A1D042029A817B7E785B1258B69E0A07EE8"
+    },
+    {
+      "case": "sci-circuit-unknown",
+      "theme": "light",
+      "owner": "semio-viz-scientific-biology.sty",
+      "stageSha256": "062FB347E807995BB16B434813AD101AA42DFDF6F3E64B25A047D6D711075230",
+      "currentSha256": "062FB347E807995BB16B434813AD101AA42DFDF6F3E64B25A047D6D711075230"
+    },
+    {
+      "case": "sci-circuit-unknown",
+      "theme": "light",
+      "owner": "semio-viz-scientific-engineering.sty",
+      "stageSha256": "79B73803B88F17521968055266E47C514DBCC858775F14E4F5A2E57B1B50409E",
+      "currentSha256": "79B73803B88F17521968055266E47C514DBCC858775F14E4F5A2E57B1B50409E"
+    },
+    {
+      "case": "sci-circuit-unknown",
+      "theme": "light",
+      "owner": "semio-viz-scientific-mathematics.sty",
+      "stageSha256": "4D00F2DD0392B3AD28A026FA83C500EF534E6CA92832466268D194558B868736",
+      "currentSha256": "4D00F2DD0392B3AD28A026FA83C500EF534E6CA92832466268D194558B868736"
+    },
+    {
+      "case": "sci-circuit-unknown",
+      "theme": "light",
+      "owner": "semio-viz-scientific-chemistry.sty",
+      "stageSha256": "EE25293DAAE6143643F50C6CF48B65876EBC255D79829110CFF45B99507C424E",
+      "currentSha256": "EE25293DAAE6143643F50C6CF48B65876EBC255D79829110CFF45B99507C424E"
+    },
+    {
+      "case": "sci-circuit-unknown",
+      "theme": "light",
+      "owner": "semio-viz-scientific-geometry.sty",
+      "stageSha256": "67DCCE96106106ED197E872D48AE37AA59B4D35972E07F006656BFC8A47896C9",
+      "currentSha256": "67DCCE96106106ED197E872D48AE37AA59B4D35972E07F006656BFC8A47896C9"
+    },
+    {
+      "case": "sci-circuit-unknown",
+      "theme": "dark",
+      "owner": "semio-viz-scientific-field.sty",
+      "stageSha256": "745CF1244ECDE64A3DA82D5D653A4A1D042029A817B7E785B1258B69E0A07EE8",
+      "currentSha256": "745CF1244ECDE64A3DA82D5D653A4A1D042029A817B7E785B1258B69E0A07EE8"
+    },
+    {
+      "case": "sci-circuit-unknown",
+      "theme": "dark",
+      "owner": "semio-viz-scientific-biology.sty",
+      "stageSha256": "062FB347E807995BB16B434813AD101AA42DFDF6F3E64B25A047D6D711075230",
+      "currentSha256": "062FB347E807995BB16B434813AD101AA42DFDF6F3E64B25A047D6D711075230"
+    },
+    {
+      "case": "sci-circuit-unknown",
+      "theme": "dark",
+      "owner": "semio-viz-scientific-engineering.sty",
+      "stageSha256": "79B73803B88F17521968055266E47C514DBCC858775F14E4F5A2E57B1B50409E",
+      "currentSha256": "79B73803B88F17521968055266E47C514DBCC858775F14E4F5A2E57B1B50409E"
+    },
+    {
+      "case": "sci-circuit-unknown",
+      "theme": "dark",
+      "owner": "semio-viz-scientific-mathematics.sty",
+      "stageSha256": "4D00F2DD0392B3AD28A026FA83C500EF534E6CA92832466268D194558B868736",
+      "currentSha256": "4D00F2DD0392B3AD28A026FA83C500EF534E6CA92832466268D194558B868736"
+    },
+    {
+      "case": "sci-circuit-unknown",
+      "theme": "dark",
+      "owner": "semio-viz-scientific-chemistry.sty",
+      "stageSha256": "EE25293DAAE6143643F50C6CF48B65876EBC255D79829110CFF45B99507C424E",
+      "currentSha256": "EE25293DAAE6143643F50C6CF48B65876EBC255D79829110CFF45B99507C424E"
+    },
+    {
+      "case": "sci-circuit-unknown",
+      "theme": "dark",
+      "owner": "semio-viz-scientific-geometry.sty",
+      "stageSha256": "67DCCE96106106ED197E872D48AE37AA59B4D35972E07F006656BFC8A47896C9",
+      "currentSha256": "67DCCE96106106ED197E872D48AE37AA59B4D35972E07F006656BFC8A47896C9"
+    },
+    {
+      "case": "sci-electrochem-unknown",
+      "theme": "light",
+      "owner": "semio-viz-scientific-field.sty",
+      "stageSha256": "745CF1244ECDE64A3DA82D5D653A4A1D042029A817B7E785B1258B69E0A07EE8",
+      "currentSha256": "745CF1244ECDE64A3DA82D5D653A4A1D042029A817B7E785B1258B69E0A07EE8"
+    },
+    {
+      "case": "sci-electrochem-unknown",
+      "theme": "light",
+      "owner": "semio-viz-scientific-biology.sty",
+      "stageSha256": "062FB347E807995BB16B434813AD101AA42DFDF6F3E64B25A047D6D711075230",
+      "currentSha256": "062FB347E807995BB16B434813AD101AA42DFDF6F3E64B25A047D6D711075230"
+    },
+    {
+      "case": "sci-electrochem-unknown",
+      "theme": "light",
+      "owner": "semio-viz-scientific-engineering.sty",
+      "stageSha256": "79B73803B88F17521968055266E47C514DBCC858775F14E4F5A2E57B1B50409E",
+      "currentSha256": "79B73803B88F17521968055266E47C514DBCC858775F14E4F5A2E57B1B50409E"
+    },
+    {
+      "case": "sci-electrochem-unknown",
+      "theme": "light",
+      "owner": "semio-viz-scientific-mathematics.sty",
+      "stageSha256": "4D00F2DD0392B3AD28A026FA83C500EF534E6CA92832466268D194558B868736",
+      "currentSha256": "4D00F2DD0392B3AD28A026FA83C500EF534E6CA92832466268D194558B868736"
+    },
+    {
+      "case": "sci-electrochem-unknown",
+      "theme": "light",
+      "owner": "semio-viz-scientific-chemistry.sty",
+      "stageSha256": "EE25293DAAE6143643F50C6CF48B65876EBC255D79829110CFF45B99507C424E",
+      "currentSha256": "EE25293DAAE6143643F50C6CF48B65876EBC255D79829110CFF45B99507C424E"
+    },
+    {
+      "case": "sci-electrochem-unknown",
+      "theme": "light",
+      "owner": "semio-viz-scientific-geometry.sty",
+      "stageSha256": "67DCCE96106106ED197E872D48AE37AA59B4D35972E07F006656BFC8A47896C9",
+      "currentSha256": "67DCCE96106106ED197E872D48AE37AA59B4D35972E07F006656BFC8A47896C9"
+    },
+    {
+      "case": "sci-electrochem-unknown",
+      "theme": "dark",
+      "owner": "semio-viz-scientific-field.sty",
+      "stageSha256": "745CF1244ECDE64A3DA82D5D653A4A1D042029A817B7E785B1258B69E0A07EE8",
+      "currentSha256": "745CF1244ECDE64A3DA82D5D653A4A1D042029A817B7E785B1258B69E0A07EE8"
+    },
+    {
+      "case": "sci-electrochem-unknown",
+      "theme": "dark",
+      "owner": "semio-viz-scientific-biology.sty",
+      "stageSha256": "062FB347E807995BB16B434813AD101AA42DFDF6F3E64B25A047D6D711075230",
+      "currentSha256": "062FB347E807995BB16B434813AD101AA42DFDF6F3E64B25A047D6D711075230"
+    },
+    {
+      "case": "sci-electrochem-unknown",
+      "theme": "dark",
+      "owner": "semio-viz-scientific-engineering.sty",
+      "stageSha256": "79B73803B88F17521968055266E47C514DBCC858775F14E4F5A2E57B1B50409E",
+      "currentSha256": "79B73803B88F17521968055266E47C514DBCC858775F14E4F5A2E57B1B50409E"
+    },
+    {
+      "case": "sci-electrochem-unknown",
+      "theme": "dark",
+      "owner": "semio-viz-scientific-mathematics.sty",
+      "stageSha256": "4D00F2DD0392B3AD28A026FA83C500EF534E6CA92832466268D194558B868736",
+      "currentSha256": "4D00F2DD0392B3AD28A026FA83C500EF534E6CA92832466268D194558B868736"
+    },
+    {
+      "case": "sci-electrochem-unknown",
+      "theme": "dark",
+      "owner": "semio-viz-scientific-chemistry.sty",
+      "stageSha256": "EE25293DAAE6143643F50C6CF48B65876EBC255D79829110CFF45B99507C424E",
+      "currentSha256": "EE25293DAAE6143643F50C6CF48B65876EBC255D79829110CFF45B99507C424E"
+    },
+    {
+      "case": "sci-electrochem-unknown",
+      "theme": "dark",
+      "owner": "semio-viz-scientific-geometry.sty",
+      "stageSha256": "67DCCE96106106ED197E872D48AE37AA59B4D35972E07F006656BFC8A47896C9",
+      "currentSha256": "67DCCE96106106ED197E872D48AE37AA59B4D35972E07F006656BFC8A47896C9"
+    },
+    {
+      "case": "sci-optimization-unknown",
+      "theme": "light",
+      "owner": "semio-viz-scientific-field.sty",
+      "stageSha256": "745CF1244ECDE64A3DA82D5D653A4A1D042029A817B7E785B1258B69E0A07EE8",
+      "currentSha256": "745CF1244ECDE64A3DA82D5D653A4A1D042029A817B7E785B1258B69E0A07EE8"
+    },
+    {
+      "case": "sci-optimization-unknown",
+      "theme": "light",
+      "owner": "semio-viz-scientific-biology.sty",
+      "stageSha256": "062FB347E807995BB16B434813AD101AA42DFDF6F3E64B25A047D6D711075230",
+      "currentSha256": "062FB347E807995BB16B434813AD101AA42DFDF6F3E64B25A047D6D711075230"
+    },
+    {
+      "case": "sci-optimization-unknown",
+      "theme": "light",
+      "owner": "semio-viz-scientific-engineering.sty",
+      "stageSha256": "79B73803B88F17521968055266E47C514DBCC858775F14E4F5A2E57B1B50409E",
+      "currentSha256": "79B73803B88F17521968055266E47C514DBCC858775F14E4F5A2E57B1B50409E"
+    },
+    {
+      "case": "sci-optimization-unknown",
+      "theme": "light",
+      "owner": "semio-viz-scientific-mathematics.sty",
+      "stageSha256": "4D00F2DD0392B3AD28A026FA83C500EF534E6CA92832466268D194558B868736",
+      "currentSha256": "4D00F2DD0392B3AD28A026FA83C500EF534E6CA92832466268D194558B868736"
+    },
+    {
+      "case": "sci-optimization-unknown",
+      "theme": "light",
+      "owner": "semio-viz-scientific-chemistry.sty",
+      "stageSha256": "EE25293DAAE6143643F50C6CF48B65876EBC255D79829110CFF45B99507C424E",
+      "currentSha256": "EE25293DAAE6143643F50C6CF48B65876EBC255D79829110CFF45B99507C424E"
+    },
+    {
+      "case": "sci-optimization-unknown",
+      "theme": "light",
+      "owner": "semio-viz-scientific-geometry.sty",
+      "stageSha256": "67DCCE96106106ED197E872D48AE37AA59B4D35972E07F006656BFC8A47896C9",
+      "currentSha256": "67DCCE96106106ED197E872D48AE37AA59B4D35972E07F006656BFC8A47896C9"
+    },
+    {
+      "case": "sci-optimization-unknown",
+      "theme": "dark",
+      "owner": "semio-viz-scientific-field.sty",
+      "stageSha256": "745CF1244ECDE64A3DA82D5D653A4A1D042029A817B7E785B1258B69E0A07EE8",
+      "currentSha256": "745CF1244ECDE64A3DA82D5D653A4A1D042029A817B7E785B1258B69E0A07EE8"
+    },
+    {
+      "case": "sci-optimization-unknown",
+      "theme": "dark",
+      "owner": "semio-viz-scientific-biology.sty",
+      "stageSha256": "062FB347E807995BB16B434813AD101AA42DFDF6F3E64B25A047D6D711075230",
+      "currentSha256": "062FB347E807995BB16B434813AD101AA42DFDF6F3E64B25A047D6D711075230"
+    },
+    {
+      "case": "sci-optimization-unknown",
+      "theme": "dark",
+      "owner": "semio-viz-scientific-engineering.sty",
+      "stageSha256": "79B73803B88F17521968055266E47C514DBCC858775F14E4F5A2E57B1B50409E",
+      "currentSha256": "79B73803B88F17521968055266E47C514DBCC858775F14E4F5A2E57B1B50409E"
+    },
+    {
+      "case": "sci-optimization-unknown",
+      "theme": "dark",
+      "owner": "semio-viz-scientific-mathematics.sty",
+      "stageSha256": "4D00F2DD0392B3AD28A026FA83C500EF534E6CA92832466268D194558B868736",
+      "currentSha256": "4D00F2DD0392B3AD28A026FA83C500EF534E6CA92832466268D194558B868736"
+    },
+    {
+      "case": "sci-optimization-unknown",
+      "theme": "dark",
+      "owner": "semio-viz-scientific-chemistry.sty",
+      "stageSha256": "EE25293DAAE6143643F50C6CF48B65876EBC255D79829110CFF45B99507C424E",
+      "currentSha256": "EE25293DAAE6143643F50C6CF48B65876EBC255D79829110CFF45B99507C424E"
+    },
+    {
+      "case": "sci-optimization-unknown",
+      "theme": "dark",
+      "owner": "semio-viz-scientific-geometry.sty",
+      "stageSha256": "67DCCE96106106ED197E872D48AE37AA59B4D35972E07F006656BFC8A47896C9",
+      "currentSha256": "67DCCE96106106ED197E872D48AE37AA59B4D35972E07F006656BFC8A47896C9"
+    },
+    {
+      "case": "sci-orbital-unknown",
+      "theme": "light",
+      "owner": "semio-viz-scientific-field.sty",
+      "stageSha256": "745CF1244ECDE64A3DA82D5D653A4A1D042029A817B7E785B1258B69E0A07EE8",
+      "currentSha256": "745CF1244ECDE64A3DA82D5D653A4A1D042029A817B7E785B1258B69E0A07EE8"
+    },
+    {
+      "case": "sci-orbital-unknown",
+      "theme": "light",
+      "owner": "semio-viz-scientific-biology.sty",
+      "stageSha256": "062FB347E807995BB16B434813AD101AA42DFDF6F3E64B25A047D6D711075230",
+      "currentSha256": "062FB347E807995BB16B434813AD101AA42DFDF6F3E64B25A047D6D711075230"
+    },
+    {
+      "case": "sci-orbital-unknown",
+      "theme": "light",
+      "owner": "semio-viz-scientific-engineering.sty",
+      "stageSha256": "79B73803B88F17521968055266E47C514DBCC858775F14E4F5A2E57B1B50409E",
+      "currentSha256": "79B73803B88F17521968055266E47C514DBCC858775F14E4F5A2E57B1B50409E"
+    },
+    {
+      "case": "sci-orbital-unknown",
+      "theme": "light",
+      "owner": "semio-viz-scientific-mathematics.sty",
+      "stageSha256": "4D00F2DD0392B3AD28A026FA83C500EF534E6CA92832466268D194558B868736",
+      "currentSha256": "4D00F2DD0392B3AD28A026FA83C500EF534E6CA92832466268D194558B868736"
+    },
+    {
+      "case": "sci-orbital-unknown",
+      "theme": "light",
+      "owner": "semio-viz-scientific-chemistry.sty",
+      "stageSha256": "EE25293DAAE6143643F50C6CF48B65876EBC255D79829110CFF45B99507C424E",
+      "currentSha256": "EE25293DAAE6143643F50C6CF48B65876EBC255D79829110CFF45B99507C424E"
+    },
+    {
+      "case": "sci-orbital-unknown",
+      "theme": "light",
+      "owner": "semio-viz-scientific-geometry.sty",
+      "stageSha256": "67DCCE96106106ED197E872D48AE37AA59B4D35972E07F006656BFC8A47896C9",
+      "currentSha256": "67DCCE96106106ED197E872D48AE37AA59B4D35972E07F006656BFC8A47896C9"
+    },
+    {
+      "case": "sci-orbital-unknown",
+      "theme": "dark",
+      "owner": "semio-viz-scientific-field.sty",
+      "stageSha256": "745CF1244ECDE64A3DA82D5D653A4A1D042029A817B7E785B1258B69E0A07EE8",
+      "currentSha256": "745CF1244ECDE64A3DA82D5D653A4A1D042029A817B7E785B1258B69E0A07EE8"
+    },
+    {
+      "case": "sci-orbital-unknown",
+      "theme": "dark",
+      "owner": "semio-viz-scientific-biology.sty",
+      "stageSha256": "062FB347E807995BB16B434813AD101AA42DFDF6F3E64B25A047D6D711075230",
+      "currentSha256": "062FB347E807995BB16B434813AD101AA42DFDF6F3E64B25A047D6D711075230"
+    },
+    {
+      "case": "sci-orbital-unknown",
+      "theme": "dark",
+      "owner": "semio-viz-scientific-engineering.sty",
+      "stageSha256": "79B73803B88F17521968055266E47C514DBCC858775F14E4F5A2E57B1B50409E",
+      "currentSha256": "79B73803B88F17521968055266E47C514DBCC858775F14E4F5A2E57B1B50409E"
+    },
+    {
+      "case": "sci-orbital-unknown",
+      "theme": "dark",
+      "owner": "semio-viz-scientific-mathematics.sty",
+      "stageSha256": "4D00F2DD0392B3AD28A026FA83C500EF534E6CA92832466268D194558B868736",
+      "currentSha256": "4D00F2DD0392B3AD28A026FA83C500EF534E6CA92832466268D194558B868736"
+    },
+    {
+      "case": "sci-orbital-unknown",
+      "theme": "dark",
+      "owner": "semio-viz-scientific-chemistry.sty",
+      "stageSha256": "EE25293DAAE6143643F50C6CF48B65876EBC255D79829110CFF45B99507C424E",
+      "currentSha256": "EE25293DAAE6143643F50C6CF48B65876EBC255D79829110CFF45B99507C424E"
+    },
+    {
+      "case": "sci-orbital-unknown",
+      "theme": "dark",
+      "owner": "semio-viz-scientific-geometry.sty",
+      "stageSha256": "67DCCE96106106ED197E872D48AE37AA59B4D35972E07F006656BFC8A47896C9",
+      "currentSha256": "67DCCE96106106ED197E872D48AE37AA59B4D35972E07F006656BFC8A47896C9"
+    },
+    {
+      "case": "sci-pathway-unknown",
+      "theme": "light",
+      "owner": "semio-viz-scientific-field.sty",
+      "stageSha256": "745CF1244ECDE64A3DA82D5D653A4A1D042029A817B7E785B1258B69E0A07EE8",
+      "currentSha256": "745CF1244ECDE64A3DA82D5D653A4A1D042029A817B7E785B1258B69E0A07EE8"
+    },
+    {
+      "case": "sci-pathway-unknown",
+      "theme": "light",
+      "owner": "semio-viz-scientific-biology.sty",
+      "stageSha256": "062FB347E807995BB16B434813AD101AA42DFDF6F3E64B25A047D6D711075230",
+      "currentSha256": "062FB347E807995BB16B434813AD101AA42DFDF6F3E64B25A047D6D711075230"
+    },
+    {
+      "case": "sci-pathway-unknown",
+      "theme": "light",
+      "owner": "semio-viz-scientific-engineering.sty",
+      "stageSha256": "79B73803B88F17521968055266E47C514DBCC858775F14E4F5A2E57B1B50409E",
+      "currentSha256": "79B73803B88F17521968055266E47C514DBCC858775F14E4F5A2E57B1B50409E"
+    },
+    {
+      "case": "sci-pathway-unknown",
+      "theme": "light",
+      "owner": "semio-viz-scientific-mathematics.sty",
+      "stageSha256": "4D00F2DD0392B3AD28A026FA83C500EF534E6CA92832466268D194558B868736",
+      "currentSha256": "4D00F2DD0392B3AD28A026FA83C500EF534E6CA92832466268D194558B868736"
+    },
+    {
+      "case": "sci-pathway-unknown",
+      "theme": "light",
+      "owner": "semio-viz-scientific-chemistry.sty",
+      "stageSha256": "EE25293DAAE6143643F50C6CF48B65876EBC255D79829110CFF45B99507C424E",
+      "currentSha256": "EE25293DAAE6143643F50C6CF48B65876EBC255D79829110CFF45B99507C424E"
+    },
+    {
+      "case": "sci-pathway-unknown",
+      "theme": "light",
+      "owner": "semio-viz-scientific-geometry.sty",
+      "stageSha256": "67DCCE96106106ED197E872D48AE37AA59B4D35972E07F006656BFC8A47896C9",
+      "currentSha256": "67DCCE96106106ED197E872D48AE37AA59B4D35972E07F006656BFC8A47896C9"
+    },
+    {
+      "case": "sci-pathway-unknown",
+      "theme": "dark",
+      "owner": "semio-viz-scientific-field.sty",
+      "stageSha256": "745CF1244ECDE64A3DA82D5D653A4A1D042029A817B7E785B1258B69E0A07EE8",
+      "currentSha256": "745CF1244ECDE64A3DA82D5D653A4A1D042029A817B7E785B1258B69E0A07EE8"
+    },
+    {
+      "case": "sci-pathway-unknown",
+      "theme": "dark",
+      "owner": "semio-viz-scientific-biology.sty",
+      "stageSha256": "062FB347E807995BB16B434813AD101AA42DFDF6F3E64B25A047D6D711075230",
+      "currentSha256": "062FB347E807995BB16B434813AD101AA42DFDF6F3E64B25A047D6D711075230"
+    },
+    {
+      "case": "sci-pathway-unknown",
+      "theme": "dark",
+      "owner": "semio-viz-scientific-engineering.sty",
+      "stageSha256": "79B73803B88F17521968055266E47C514DBCC858775F14E4F5A2E57B1B50409E",
+      "currentSha256": "79B73803B88F17521968055266E47C514DBCC858775F14E4F5A2E57B1B50409E"
+    },
+    {
+      "case": "sci-pathway-unknown",
+      "theme": "dark",
+      "owner": "semio-viz-scientific-mathematics.sty",
+      "stageSha256": "4D00F2DD0392B3AD28A026FA83C500EF534E6CA92832466268D194558B868736",
+      "currentSha256": "4D00F2DD0392B3AD28A026FA83C500EF534E6CA92832466268D194558B868736"
+    },
+    {
+      "case": "sci-pathway-unknown",
+      "theme": "dark",
+      "owner": "semio-viz-scientific-chemistry.sty",
+      "stageSha256": "EE25293DAAE6143643F50C6CF48B65876EBC255D79829110CFF45B99507C424E",
+      "currentSha256": "EE25293DAAE6143643F50C6CF48B65876EBC255D79829110CFF45B99507C424E"
+    },
+    {
+      "case": "sci-pathway-unknown",
+      "theme": "dark",
+      "owner": "semio-viz-scientific-geometry.sty",
+      "stageSha256": "67DCCE96106106ED197E872D48AE37AA59B4D35972E07F006656BFC8A47896C9",
+      "currentSha256": "67DCCE96106106ED197E872D48AE37AA59B4D35972E07F006656BFC8A47896C9"
+    },
+    {
+      "case": "sci-phase-diagram-unknown",
+      "theme": "light",
+      "owner": "semio-viz-scientific-field.sty",
+      "stageSha256": "745CF1244ECDE64A3DA82D5D653A4A1D042029A817B7E785B1258B69E0A07EE8",
+      "currentSha256": "745CF1244ECDE64A3DA82D5D653A4A1D042029A817B7E785B1258B69E0A07EE8"
+    },
+    {
+      "case": "sci-phase-diagram-unknown",
+      "theme": "light",
+      "owner": "semio-viz-scientific-biology.sty",
+      "stageSha256": "062FB347E807995BB16B434813AD101AA42DFDF6F3E64B25A047D6D711075230",
+      "currentSha256": "062FB347E807995BB16B434813AD101AA42DFDF6F3E64B25A047D6D711075230"
+    },
+    {
+      "case": "sci-phase-diagram-unknown",
+      "theme": "light",
+      "owner": "semio-viz-scientific-engineering.sty",
+      "stageSha256": "79B73803B88F17521968055266E47C514DBCC858775F14E4F5A2E57B1B50409E",
+      "currentSha256": "79B73803B88F17521968055266E47C514DBCC858775F14E4F5A2E57B1B50409E"
+    },
+    {
+      "case": "sci-phase-diagram-unknown",
+      "theme": "light",
+      "owner": "semio-viz-scientific-mathematics.sty",
+      "stageSha256": "4D00F2DD0392B3AD28A026FA83C500EF534E6CA92832466268D194558B868736",
+      "currentSha256": "4D00F2DD0392B3AD28A026FA83C500EF534E6CA92832466268D194558B868736"
+    },
+    {
+      "case": "sci-phase-diagram-unknown",
+      "theme": "light",
+      "owner": "semio-viz-scientific-chemistry.sty",
+      "stageSha256": "EE25293DAAE6143643F50C6CF48B65876EBC255D79829110CFF45B99507C424E",
+      "currentSha256": "EE25293DAAE6143643F50C6CF48B65876EBC255D79829110CFF45B99507C424E"
+    },
+    {
+      "case": "sci-phase-diagram-unknown",
+      "theme": "light",
+      "owner": "semio-viz-scientific-geometry.sty",
+      "stageSha256": "67DCCE96106106ED197E872D48AE37AA59B4D35972E07F006656BFC8A47896C9",
+      "currentSha256": "67DCCE96106106ED197E872D48AE37AA59B4D35972E07F006656BFC8A47896C9"
+    },
+    {
+      "case": "sci-phase-diagram-unknown",
+      "theme": "dark",
+      "owner": "semio-viz-scientific-field.sty",
+      "stageSha256": "745CF1244ECDE64A3DA82D5D653A4A1D042029A817B7E785B1258B69E0A07EE8",
+      "currentSha256": "745CF1244ECDE64A3DA82D5D653A4A1D042029A817B7E785B1258B69E0A07EE8"
+    },
+    {
+      "case": "sci-phase-diagram-unknown",
+      "theme": "dark",
+      "owner": "semio-viz-scientific-biology.sty",
+      "stageSha256": "062FB347E807995BB16B434813AD101AA42DFDF6F3E64B25A047D6D711075230",
+      "currentSha256": "062FB347E807995BB16B434813AD101AA42DFDF6F3E64B25A047D6D711075230"
+    },
+    {
+      "case": "sci-phase-diagram-unknown",
+      "theme": "dark",
+      "owner": "semio-viz-scientific-engineering.sty",
+      "stageSha256": "79B73803B88F17521968055266E47C514DBCC858775F14E4F5A2E57B1B50409E",
+      "currentSha256": "79B73803B88F17521968055266E47C514DBCC858775F14E4F5A2E57B1B50409E"
+    },
+    {
+      "case": "sci-phase-diagram-unknown",
+      "theme": "dark",
+      "owner": "semio-viz-scientific-mathematics.sty",
+      "stageSha256": "4D00F2DD0392B3AD28A026FA83C500EF534E6CA92832466268D194558B868736",
+      "currentSha256": "4D00F2DD0392B3AD28A026FA83C500EF534E6CA92832466268D194558B868736"
+    },
+    {
+      "case": "sci-phase-diagram-unknown",
+      "theme": "dark",
+      "owner": "semio-viz-scientific-chemistry.sty",
+      "stageSha256": "EE25293DAAE6143643F50C6CF48B65876EBC255D79829110CFF45B99507C424E",
+      "currentSha256": "EE25293DAAE6143643F50C6CF48B65876EBC255D79829110CFF45B99507C424E"
+    },
+    {
+      "case": "sci-phase-diagram-unknown",
+      "theme": "dark",
+      "owner": "semio-viz-scientific-geometry.sty",
+      "stageSha256": "67DCCE96106106ED197E872D48AE37AA59B4D35972E07F006656BFC8A47896C9",
+      "currentSha256": "67DCCE96106106ED197E872D48AE37AA59B4D35972E07F006656BFC8A47896C9"
+    },
+    {
+      "case": "sci-pitch-unknown",
+      "theme": "light",
+      "owner": "semio-viz-scientific-field.sty",
+      "stageSha256": "745CF1244ECDE64A3DA82D5D653A4A1D042029A817B7E785B1258B69E0A07EE8",
+      "currentSha256": "745CF1244ECDE64A3DA82D5D653A4A1D042029A817B7E785B1258B69E0A07EE8"
+    },
+    {
+      "case": "sci-pitch-unknown",
+      "theme": "light",
+      "owner": "semio-viz-scientific-biology.sty",
+      "stageSha256": "062FB347E807995BB16B434813AD101AA42DFDF6F3E64B25A047D6D711075230",
+      "currentSha256": "062FB347E807995BB16B434813AD101AA42DFDF6F3E64B25A047D6D711075230"
+    },
+    {
+      "case": "sci-pitch-unknown",
+      "theme": "light",
+      "owner": "semio-viz-scientific-engineering.sty",
+      "stageSha256": "79B73803B88F17521968055266E47C514DBCC858775F14E4F5A2E57B1B50409E",
+      "currentSha256": "79B73803B88F17521968055266E47C514DBCC858775F14E4F5A2E57B1B50409E"
+    },
+    {
+      "case": "sci-pitch-unknown",
+      "theme": "light",
+      "owner": "semio-viz-scientific-mathematics.sty",
+      "stageSha256": "4D00F2DD0392B3AD28A026FA83C500EF534E6CA92832466268D194558B868736",
+      "currentSha256": "4D00F2DD0392B3AD28A026FA83C500EF534E6CA92832466268D194558B868736"
+    },
+    {
+      "case": "sci-pitch-unknown",
+      "theme": "light",
+      "owner": "semio-viz-scientific-chemistry.sty",
+      "stageSha256": "EE25293DAAE6143643F50C6CF48B65876EBC255D79829110CFF45B99507C424E",
+      "currentSha256": "EE25293DAAE6143643F50C6CF48B65876EBC255D79829110CFF45B99507C424E"
+    },
+    {
+      "case": "sci-pitch-unknown",
+      "theme": "light",
+      "owner": "semio-viz-scientific-geometry.sty",
+      "stageSha256": "67DCCE96106106ED197E872D48AE37AA59B4D35972E07F006656BFC8A47896C9",
+      "currentSha256": "67DCCE96106106ED197E872D48AE37AA59B4D35972E07F006656BFC8A47896C9"
+    },
+    {
+      "case": "sci-pitch-unknown",
+      "theme": "dark",
+      "owner": "semio-viz-scientific-field.sty",
+      "stageSha256": "745CF1244ECDE64A3DA82D5D653A4A1D042029A817B7E785B1258B69E0A07EE8",
+      "currentSha256": "745CF1244ECDE64A3DA82D5D653A4A1D042029A817B7E785B1258B69E0A07EE8"
+    },
+    {
+      "case": "sci-pitch-unknown",
+      "theme": "dark",
+      "owner": "semio-viz-scientific-biology.sty",
+      "stageSha256": "062FB347E807995BB16B434813AD101AA42DFDF6F3E64B25A047D6D711075230",
+      "currentSha256": "062FB347E807995BB16B434813AD101AA42DFDF6F3E64B25A047D6D711075230"
+    },
+    {
+      "case": "sci-pitch-unknown",
+      "theme": "dark",
+      "owner": "semio-viz-scientific-engineering.sty",
+      "stageSha256": "79B73803B88F17521968055266E47C514DBCC858775F14E4F5A2E57B1B50409E",
+      "currentSha256": "79B73803B88F17521968055266E47C514DBCC858775F14E4F5A2E57B1B50409E"
+    },
+    {
+      "case": "sci-pitch-unknown",
+      "theme": "dark",
+      "owner": "semio-viz-scientific-mathematics.sty",
+      "stageSha256": "4D00F2DD0392B3AD28A026FA83C500EF534E6CA92832466268D194558B868736",
+      "currentSha256": "4D00F2DD0392B3AD28A026FA83C500EF534E6CA92832466268D194558B868736"
+    },
+    {
+      "case": "sci-pitch-unknown",
+      "theme": "dark",
+      "owner": "semio-viz-scientific-chemistry.sty",
+      "stageSha256": "EE25293DAAE6143643F50C6CF48B65876EBC255D79829110CFF45B99507C424E",
+      "currentSha256": "EE25293DAAE6143643F50C6CF48B65876EBC255D79829110CFF45B99507C424E"
+    },
+    {
+      "case": "sci-pitch-unknown",
+      "theme": "dark",
+      "owner": "semio-viz-scientific-geometry.sty",
+      "stageSha256": "67DCCE96106106ED197E872D48AE37AA59B4D35972E07F006656BFC8A47896C9",
+      "currentSha256": "67DCCE96106106ED197E872D48AE37AA59B4D35972E07F006656BFC8A47896C9"
+    }
+  ],
+  "outputHashesOnly": [
+    {
+      "case": "predicates",
+      "theme": "light",
+      "name": "light.log",
+      "sha256": "1C7022F3B8F140AB1507389D5AA459CD129B0B36AEEE07AAEDA4274957648F6C",
+      "bytes": 84199
+    },
+    {
+      "case": "predicates",
+      "theme": "light",
+      "name": "light.pdf",
+      "sha256": "3DA2E146E1666572E2436D1D01B18A4BAD3C1E38CEE703948E9D8F7B46736C5F",
+      "bytes": 11467
+    },
+    {
+      "case": "predicates",
+      "theme": "light",
+      "name": "light.probe.jsonl",
+      "sha256": "A8363F25DDBEB191145A8683A57C1923466BE38D5E144FDC7B0103D0EBEB46C1",
+      "bytes": 4841
+    },
+    {
+      "case": "predicates",
+      "theme": "dark",
+      "name": "dark.log",
+      "sha256": "E1611B81D76B5EAF8EBC2ECAEEE4E712D6186856CB485B87A47C1B3B840C16C1",
+      "bytes": 84175
+    },
+    {
+      "case": "predicates",
+      "theme": "dark",
+      "name": "dark.pdf",
+      "sha256": "C27B82A19039931979B544803CE96A3776739ED649C5433A623F1E3D11BA6574",
+      "bytes": 11375
+    },
+    {
+      "case": "predicates",
+      "theme": "dark",
+      "name": "dark.probe.jsonl",
+      "sha256": "A8363F25DDBEB191145A8683A57C1923466BE38D5E144FDC7B0103D0EBEB46C1",
+      "bytes": 4841
+    },
+    {
+      "case": "sci-abstract-diagram-unknown",
+      "theme": "light",
+      "name": "light.log",
+      "sha256": "B84F59EA9307710996D6B7542A61D7CE4ACEF388869D3753B10D4CE34D0F2B6A",
+      "bytes": 82988
+    },
+    {
+      "case": "sci-abstract-diagram-unknown",
+      "theme": "dark",
+      "name": "dark.log",
+      "sha256": "0DC7B6A1F22B0A7F31B6CAECF1A9CB714F286622F0EE1FCFF3640F926702146F",
+      "bytes": 82971
+    },
+    {
+      "case": "sci-circuit-unknown",
+      "theme": "light",
+      "name": "light.log",
+      "sha256": "A0F5495AB422B86C5E2474AB4222B39BEA5EB70AA8F3EEAA0026E2548DA62329",
+      "bytes": 82948
+    },
+    {
+      "case": "sci-circuit-unknown",
+      "theme": "dark",
+      "name": "dark.log",
+      "sha256": "14A797A6F2D0FA76087C047362E9F283A87289F96F9D6278A173421298EC95FE",
+      "bytes": 82931
+    },
+    {
+      "case": "sci-electrochem-unknown",
+      "theme": "light",
+      "name": "light.log",
+      "sha256": "B1DCCEAA6F1120EDBFBF0EBBA341AF49F0FDD23CCF4AFA0824C5029787A9DF7D",
+      "bytes": 82952
+    },
+    {
+      "case": "sci-electrochem-unknown",
+      "theme": "dark",
+      "name": "dark.log",
+      "sha256": "F6553A22B05DCEF4ED086E909E48A5883890C795131E541DEC38DCF3E35977F0",
+      "bytes": 82935
+    },
+    {
+      "case": "sci-optimization-unknown",
+      "theme": "light",
+      "name": "light.log",
+      "sha256": "0EE08A939A61932FA3EAD6068F4490A279CE15E84AD87344DE9830C825B23488",
+      "bytes": 82953
+    },
+    {
+      "case": "sci-optimization-unknown",
+      "theme": "dark",
+      "name": "dark.log",
+      "sha256": "2255242F8522F855793752D995A64B436427998AA5B8FB2543D89479DDE680C8",
+      "bytes": 82936
+    },
+    {
+      "case": "sci-orbital-unknown",
+      "theme": "light",
+      "name": "light.log",
+      "sha256": "C67952DAA3FE8C762C62E5944038101DDF6F8958AB6C88E059983006B567DFA4",
+      "bytes": 82948
+    },
+    {
+      "case": "sci-orbital-unknown",
+      "theme": "dark",
+      "name": "dark.log",
+      "sha256": "39016A64EDBD312FD1E5A9CABDCAA9695EEC3A86AB87CCBEBE1E71763CD0B192",
+      "bytes": 82931
+    },
+    {
+      "case": "sci-pathway-unknown",
+      "theme": "light",
+      "name": "light.log",
+      "sha256": "C9025F4454EB0C481E3BF4D3F848FBC570C37908BFD0EBF65FF927805EB0A07B",
+      "bytes": 82948
+    },
+    {
+      "case": "sci-pathway-unknown",
+      "theme": "dark",
+      "name": "dark.log",
+      "sha256": "47FE9DCA5A9A4057866DDE79F0D06331DFAE36403DA4A5E273AD66B10E703012",
+      "bytes": 82931
+    },
+    {
+      "case": "sci-phase-diagram-unknown",
+      "theme": "light",
+      "name": "light.log",
+      "sha256": "943B0B1F475CD1B58DC69BF8A2EA27D5FBA96B37851539B73CA600FA63C8EEB9",
+      "bytes": 82954
+    },
+    {
+      "case": "sci-phase-diagram-unknown",
+      "theme": "dark",
+      "name": "dark.log",
+      "sha256": "128AFE402B01D36707AAC4C1232F5FCF0144182FAF2593E95A76831BB3623BD6",
+      "bytes": 82937
+    },
+    {
+      "case": "sci-pitch-unknown",
+      "theme": "light",
+      "name": "light.log",
+      "sha256": "6E00E17975D2F15BEFEE89D47F4CE0618DD79E336A30A3EF858072A50D7DFE0D",
+      "bytes": 82946
+    },
+    {
+      "case": "sci-pitch-unknown",
+      "theme": "dark",
+      "name": "dark.log",
+      "sha256": "F40C36D7838B3E88EAE4DE83990BA132ED48844F8B1F521D743EBC7CC37C273D",
+      "bytes": 82929
+    }
+  ],
+  "retainedInputHashes": [
+    {
+      "name": "biology-062FB347E807995BB16B434813AD101AA42DFDF6F3E64B25A047D6D711075230.sty",
+      "sha256": "062FB347E807995BB16B434813AD101AA42DFDF6F3E64B25A047D6D711075230",
+      "bytes": 98859
+    },
+    {
+      "name": "chemistry-EE25293DAAE6143643F50C6CF48B65876EBC255D79829110CFF45B99507C424E.sty",
+      "sha256": "EE25293DAAE6143643F50C6CF48B65876EBC255D79829110CFF45B99507C424E",
+      "bytes": 42167
+    },
+    {
+      "name": "engineering-79B73803B88F17521968055266E47C514DBCC858775F14E4F5A2E57B1B50409E.sty",
+      "sha256": "79B73803B88F17521968055266E47C514DBCC858775F14E4F5A2E57B1B50409E",
+      "bytes": 60623
+    },
+    {
+      "name": "field-745CF1244ECDE64A3DA82D5D653A4A1D042029A817B7E785B1258B69E0A07EE8.sty",
+      "sha256": "745CF1244ECDE64A3DA82D5D653A4A1D042029A817B7E785B1258B69E0A07EE8",
+      "bytes": 52766
+    },
+    {
+      "name": "geometry-67DCCE96106106ED197E872D48AE37AA59B4D35972E07F006656BFC8A47896C9.sty",
+      "sha256": "67DCCE96106106ED197E872D48AE37AA59B4D35972E07F006656BFC8A47896C9",
+      "bytes": 69025
+    },
+    {
+      "name": "mathematics-4D00F2DD0392B3AD28A026FA83C500EF534E6CA92832466268D194558B868736.sty",
+      "sha256": "4D00F2DD0392B3AD28A026FA83C500EF534E6CA92832466268D194558B868736",
+      "bytes": 122938
+    },
+    {
+      "name": "predicates-dark-emitted.tex",
+      "sha256": "23728D3A08949E66A54C90BF13149F3509F93A370737183E44DAABE19C475A6D",
+      "bytes": 14286
+    },
+    {
+      "name": "predicates-light-emitted.tex",
+      "sha256": "B7EB1DE99165F329189CF96F1C2028E83F300AC88BBA2C4C6F090C287477E53F",
+      "bytes": 14288
+    },
+    {
+      "name": "sci-abstract-diagram-unknown-dark-emitted.tex",
+      "sha256": "5700D11449A198A7AEDEA4B84EE78C6B62867E8A24875939A0427EFF4CB9FCA8",
+      "bytes": 419
+    },
+    {
+      "name": "sci-abstract-diagram-unknown-light-emitted.tex",
+      "sha256": "95FDBBD4FD03830AA498D55FA34114FC96E2189A2346517CF487F6710235B5D8",
+      "bytes": 421
+    },
+    {
+      "name": "sci-circuit-unknown-dark-emitted.tex",
+      "sha256": "B466BF36480A66521E97B275E01C39E6839CD05F60BA5FD50461711E394028F0",
+      "bytes": 410
+    },
+    {
+      "name": "sci-circuit-unknown-light-emitted.tex",
+      "sha256": "7C6670B520E199554464B9A01E88D50306EDDF5A59F9F78217B40C0984CAB3AD",
+      "bytes": 412
+    },
+    {
+      "name": "sci-electrochem-unknown-dark-emitted.tex",
+      "sha256": "01180935BED8DFB5A59E578C5265EDD15EB72F319D39C9A9E01183664F91688C",
+      "bytes": 414
+    },
+    {
+      "name": "sci-electrochem-unknown-light-emitted.tex",
+      "sha256": "E76879D280BE53265931F423AC094D6B915B6942585C48313ECE0D5B1A47F6F3",
+      "bytes": 416
+    },
+    {
+      "name": "sci-optimization-unknown-dark-emitted.tex",
+      "sha256": "F86601772E5F78CD0FDFA7627C5115B54DF9D9EFCB26B22C4C614DE5025E7CEF",
+      "bytes": 415
+    },
+    {
+      "name": "sci-optimization-unknown-light-emitted.tex",
+      "sha256": "3F929A4A351820C22D1628DD9F55361D7AEC8581A96F70690A8850CAD05BAC87",
+      "bytes": 417
+    },
+    {
+      "name": "sci-orbital-unknown-dark-emitted.tex",
+      "sha256": "80BA4564F299149A911E92758C496B40D50D686DB71DD9889E41BC2C2B78963E",
+      "bytes": 410
+    },
+    {
+      "name": "sci-orbital-unknown-light-emitted.tex",
+      "sha256": "4E74C495435555F5B3C8659A9650DFABD79387812654942A66BC9CA7BC9F809E",
+      "bytes": 412
+    },
+    {
+      "name": "sci-pathway-unknown-dark-emitted.tex",
+      "sha256": "F6EEB399B45CCB92FEBF513ED685DC9D6D4BF8B0AA420CEADC4DA76C2D1F32DC",
+      "bytes": 410
+    },
+    {
+      "name": "sci-pathway-unknown-light-emitted.tex",
+      "sha256": "D786A284F61D34533F3A7091255FE71D68C88A91AE51B14F8144DB5E72F50DE5",
+      "bytes": 412
+    },
+    {
+      "name": "sci-phase-diagram-unknown-dark-emitted.tex",
+      "sha256": "51EDAC72CB2DC740CB28EF0D0C38E0CD9BCFAC4A9F5AF9083052276442F5395E",
+      "bytes": 416
+    },
+    {
+      "name": "sci-phase-diagram-unknown-light-emitted.tex",
+      "sha256": "C26B6928DCB4C4FA0401A34F40DD19C001C1A7A5A3DDA0DEAB7410B94033D0CD",
+      "bytes": 418
+    },
+    {
+      "name": "sci-pitch-unknown-dark-emitted.tex",
+      "sha256": "B21A915397F30EDD86EB9E19D1134C2B5E1DE590F2B6F1997D7F65D2EF31C719",
+      "bytes": 408
+    },
+    {
+      "name": "sci-pitch-unknown-light-emitted.tex",
+      "sha256": "A7E0C2C85C588F19D27D9E9D48E82A2C331D33B3B47DAEE8CF515D8E577A17BE",
+      "bytes": 410
+    }
+  ]
+}

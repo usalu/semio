@@ -1,0 +1,16 @@
+{
+  "file": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-scale.sty",
+  "before": "75C284E210C00419C61ABF8961D76CB31321B843E9BD05C379C8B89A1F3C274D",
+  "after": "6D7A3A1573129790321A00FE0B1CF7B1E16127FB8DF2F063AB2A0E764B51068A",
+  "old": "\\int_compare:nNnT { 0 \\l_semio_viz_scale_opt_tl } > { 0 }",
+  "replacement": "\\fp_compare:nNnT { \\l_semio_viz_scale_opt_tl } > { 0 }",
+  "red": {
+    "session": 11053,
+    "exit": 1,
+    "elapsedSeconds": 40.5,
+    "log": "🗑️generated/native-scale-nice-fractional-red.log",
+    "error": "controls.tex:138: Missing = inserted for \\ifnum"
+  },
+  "cases": 10,
+  "guard": "Positive fractional counts already accepted by ChartScaleOptions.nice."
+}

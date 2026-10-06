@@ -12,8 +12,9 @@ export async function testNativeRuntime(workspace: string, output: string): Prom
   const put = (path: string, value: string) => { mkdirSync(dirname(join(root, path)), { recursive: true }); writeFileSync(join(root, path), value); };
   for (const [path, name] of [["🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust", "surface"], ["🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust", "editor"], ["🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust", "flow"], ["🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript", "renderer"]]) put(join(path!, "📋️project.json"), JSON.stringify({ name, targets: { wasm: {}, "wasm-release": {} } }));
   put(join(owner, "package.json"), '{"name":"native-owner","private":true}');
-  put("component/Cargo.toml", '[package]\nname = "sample"\nversion = "0.1.0"\n[package.metadata.component]\npackage = "semio:sample"\n[package.metadata.semio]\nrole = "plugin"\n[[package.metadata.semio.playground]]\nvariant = "fixture"\n'.replaceAll("\\n", "\n"));
-  const { cacheInternals } = await import("../../../🟨️.mjs");
+  put("component/Cargo.toml", '[package]\nname = "sample"\nversion = "0.1.0"\n[package.metadata.component]\npackage = "semio:sample"\n[package.metadata.semio]\ncomponent-kind = "plugin"\n[[package.metadata.semio.playground]]\nvariant = "fixture"\n'.replaceAll("\\n", "\n"));
+  const { cacheInternals, libraryBootstrap } = await import("../../../🟨️.mjs");
+  await libraryBootstrap;
   const targets = cacheInternals.playgroundPreparationTargets(["component/Cargo.toml"], root, owner);
   for (const profile of fixture.profiles) {
     const prepare = targets[`prepare-${fixture.variant}-native-${profile}`];
@@ -24,7 +25,7 @@ export async function testNativeRuntime(workspace: string, output: string): Prom
     for (const operation of ["run", "smoke"]) {
       const target = targets[`${operation}-${fixture.variant}-native-${profile}`];
       assert.equal(target.cache, false);
-      assert.equal(target.continuous, operation === "run");
+      assert.equal(target.continuous, false);
       assert.deepEqual(target.dependsOn, [`prepare-${fixture.variant}-native-${profile}`, `renderer:native-build${profile === "release" ? "-release" : ""}`]);
     }
   }
@@ -86,6 +87,7 @@ if (operation === "consumer" || operation === "waiting") {
     const bytes = readFileSync(join(directory, module.wasmPath)), descriptor = JSON.parse(readFileSync(join(directory, module.descriptorPath), "utf8"));
     assert.equal(bytes.subarray(0, 8).toString("hex"), fixture.componentHex);
     assert.equal(createHash("sha256").update(bytes).digest("hex"), descriptor.hashes.wasmSha256);
+    console.log("[DEBUG] Native consumer fetched its live asset");
   }
 } else {
   const { publishNativeRuntime } = await import(${JSON.stringify(join(native, "📦️modules/🟦️.ts"))});

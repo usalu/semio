@@ -1,0 +1,162 @@
+[
+  {
+    "case": "native-cjk-same-caption",
+    "scenario": "en",
+    "key": "en/8/pure-cjk",
+    "values": [
+      8.435035
+    ]
+  },
+  {
+    "case": "native-cjk-same-caption",
+    "scenario": "en",
+    "key": "en/8/mixed",
+    "values": [
+      23.08377
+    ]
+  },
+  {
+    "case": "native-cjk-same-caption",
+    "scenario": "en",
+    "key": "en/8/spaces",
+    "values": [
+      26.378706
+    ]
+  },
+  {
+    "case": "native-cjk-same-caption",
+    "scenario": "en",
+    "key": "en/8/mono-mixed",
+    "values": [
+      25.361351
+    ]
+  },
+  {
+    "case": "native-cjk-same-caption",
+    "scenario": "en",
+    "key": "en/8/latin-control",
+    "values": [
+      39.057344
+    ]
+  },
+  {
+    "case": "native-cjk-same-caption",
+    "scenario": "en",
+    "key": "en/12/pure-cjk",
+    "values": [
+      12.652553
+    ]
+  },
+  {
+    "case": "native-cjk-same-caption",
+    "scenario": "en",
+    "key": "en/12/mixed",
+    "values": [
+      34.625655
+    ]
+  },
+  {
+    "case": "native-cjk-same-caption",
+    "scenario": "en",
+    "key": "en/12/spaces",
+    "values": [
+      39.568059
+    ]
+  },
+  {
+    "case": "native-cjk-same-caption",
+    "scenario": "en",
+    "key": "en/12/mono-mixed",
+    "values": [
+      38.042
+    ]
+  },
+  {
+    "case": "native-cjk-same-caption",
+    "scenario": "en",
+    "key": "en/12/latin-control",
+    "values": [
+      58.586015
+    ]
+  },
+  {
+    "case": "native-cjk-same-caption",
+    "scenario": "de",
+    "key": "de/8/pure-cjk",
+    "values": [
+      8.435035
+    ]
+  },
+  {
+    "case": "native-cjk-same-caption",
+    "scenario": "de",
+    "key": "de/8/mixed",
+    "values": [
+      23.08377
+    ]
+  },
+  {
+    "case": "native-cjk-same-caption",
+    "scenario": "de",
+    "key": "de/8/spaces",
+    "values": [
+      26.378706
+    ]
+  },
+  {
+    "case": "native-cjk-same-caption",
+    "scenario": "de",
+    "key": "de/8/mono-mixed",
+    "values": [
+      25.361351
+    ]
+  },
+  {
+    "case": "native-cjk-same-caption",
+    "scenario": "de",
+    "key": "de/8/latin-control",
+    "values": [
+      39.057344
+    ]
+  },
+  {
+    "case": "native-cjk-same-caption",
+    "scenario": "de",
+    "key": "de/12/pure-cjk",
+    "values": [
+      12.652553
+    ]
+  },
+  {
+    "case": "native-cjk-same-caption",
+    "scenario": "de",
+    "key": "de/12/mixed",
+    "values": [
+      34.625655
+    ]
+  },
+  {
+    "case": "native-cjk-same-caption",
+    "scenario": "de",
+    "key": "de/12/spaces",
+    "values": [
+      39.568059
+    ]
+  },
+  {
+    "case": "native-cjk-same-caption",
+    "scenario": "de",
+    "key": "de/12/mono-mixed",
+    "values": [
+      38.042
+    ]
+  },
+  {
+    "case": "native-cjk-same-caption",
+    "scenario": "de",
+    "key": "de/12/latin-control",
+    "values": [
+      58.586015
+    ]
+  }
+]

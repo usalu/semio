@@ -1,0 +1,28 @@
+{
+  "receipt": {
+    "phase": "domain-reference-controls",
+    "completedUtc": "2026-10-05T23:34:41.5357203Z",
+    "exitCode": 0
+  },
+  "bodies": 24,
+  "frames": 60,
+  "hardRejections": 14,
+  "records": [
+    {
+      "source": "🖋️latex/semio-viz-data.sty",
+      "sha256": "6551eae29d19c287a975073a638d8c0047c3dff97f831b8b03fa3ba066fbba3a"
+    },
+    {
+      "source": "🖋️latex/semio-viz-domain.sty",
+      "sha256": "dbc878e5309b94d463d33349582a0863e6baf5bc3d818ee910603ebf7a6d6cbf"
+    },
+    {
+      "source": "🧪️tests/🧬️native-chart-grammar/🟦️.ts",
+      "sha256": "fe5962a01d492deecc3928a9c8dfcce57145023b694f65ba495e73890504da05"
+    },
+    {
+      "source": "🧪️tests/🧬️native-chart-grammar/🔣️.json",
+      "sha256": "0846c5a084c0c4f34a653ab69ac04c5d33c3af586f54b7803abb30b18e9f7611"
+    }
+  ]
+}

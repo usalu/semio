@@ -6,6 +6,17 @@
     "subset": "any"
   },
   "envelope": "print.chart",
+  "nativeNumbers": [
+    {"name":"wide","kind":"uint","literal":"18446744073709551615"},
+    {"name":"signed","kind":"int","literal":"-9223372036854775808"},
+    {"name":"positive_signed","kind":"int","literal":"7"},
+    {"name":"negative_zero","kind":"float","literal":"-0"},
+    {"name":"float_integer","kind":"float","literal":"7.0"},
+    {"name":"subnormal","kind":"float","literal":"5e-324"},
+    {"name":"minimum_normal","kind":"float","literal":"2.2250738585072014e-308"},
+    {"name":"maximum_finite","kind":"float","literal":"1.7976931348623157e308"},
+    {"name":"negative_finite","kind":"float","literal":"-1.7976931348623157e308"}
+  ],
   "cases": [
     {
       "id": "full-domain",

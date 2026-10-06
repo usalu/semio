@@ -1,0 +1,5 @@
+# Native Scale Nice Neutral Independent Audit
+
+Eight authored controls cover false, zero, true and positive count4 in both English and German. D3 scaleLinear starts from authored domain[0.13,0.87]/range[0,10]; false and zero omit nice, true invokes nice10, count invokes nice4. Actual native domain endpoints and three mapped values per case must exactly match independently derived D3 values. Each mutation requires one guarded diff edit and replay, and the authored base remains unchanged.
+
+The hyphenated nice-control name is safe in clist_item:cn dynamic control-sequence construction; the entire g_semio_viz_scale_nice-control_domain_clist name is braced as the c argument. Probe inventory demands exactly four nice records per case. Current helper compiles one document with eight EN/de cases and no explicit palette loop; claims should remain scoped to that configured document until broader execution demonstrates both palettes. Actual source remains intentionally unchanged before the focused RED, so no nice false success is claimed by this audit.

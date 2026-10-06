@@ -9,7 +9,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { Icon, LayeredOverview, OverviewCard, OverviewCardAction, type IconName, type LayeredCardState, type LayeredPane } from "@semio-tech/ui-react";
+import { Icon, LayeredOverview, OverviewCard, OverviewCardAction, type IconName, type LayeredCardState, type LayeredDirection, type LayeredPane } from "@semio-tech/ui-react";
 import type { ComponentProps } from "react";
 import type { Meta, StoryObj } from "../../../🧪️tests/📚️storybook-types/🟦️.ts";
 // #endregion 🔌️Adapters
@@ -41,7 +41,7 @@ const PANES: readonly LayeredPane[] = SECTIONS.map(([id, label, icon, text], ind
 
 const CELLS = Object.fromEntries(SECTIONS.map(([id], index) => [id, { column: index % 3, row: Math.floor(index / 3) }]));
 
-const LABELS = { grid: "Quizzes", overview: "Overview", waiting: (pane: LayeredPane) => `${pane.label} is waiting to start`, failed: (pane: LayeredPane) => `${pane.label} could not be loaded.` };
+const LABELS = { grid: "Quizzes", overview: "Overview", waiting: (pane: LayeredPane) => `${pane.label} is waiting to start`, failed: (pane: LayeredPane) => `${pane.label} could not be loaded.`, neighbour: (pane: LayeredPane, direction: LayeredDirection) => `Go ${direction} to ${pane.label}` };
 
 function card(pane: LayeredPane, state: LayeredCardState) {
   return (
@@ -50,7 +50,7 @@ function card(pane: LayeredPane, state: LayeredCardState) {
       slot="story-layered-card"
       headingId={`story-layered-${pane.id}`}
       headingLevel={3}
-      className={state.mode === "list" ? "pointer-events-auto w-full max-w-sm" : "pointer-events-auto w-full max-w-xs"}
+      className={state.mode === "swipe" ? "pointer-events-auto w-full max-w-sm" : "pointer-events-auto w-full max-w-xs"}
       icon={pane.icon ? <Icon icon={pane.icon} size="small" className="shrink-0 text-muted-foreground" /> : null}
       title={pane.label}
       footerRight={
@@ -84,8 +84,8 @@ type Story = StoryObj<typeof meta>;
 /** 🥞️ Nine pages behind one glass; hover or focus a card to see its page clear, open it with its button. */
 export const Strip: Story = {};
 
-/** 📱️ Touch phones: one snap section per page, each under its own glass. */
-export const List: Story = { args: { mode: "list" } };
+/** 📱️ Touch phones: one cell of the same grid at a time, each card on its page; swipe along either axis (or use the wheel) to the next. */
+export const Swipe: Story = { args: { mode: "swipe" } };
 
 /** 🔓️ A page opened full size, with the Overview button. */
 export const Opened: Story = { args: { openedId: "board" } };

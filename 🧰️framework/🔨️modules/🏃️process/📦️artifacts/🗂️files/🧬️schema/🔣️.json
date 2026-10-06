@@ -1,0 +1,12 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.framework.process.artifact-files/v1",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema", "writes", "collections", "refusals"],
+  "properties": {
+    "schema": { "const": "semio.framework.process.artifact-files/v1" },
+    "writes": { "type": "array", "minItems": 4, "items": { "type": "object", "additionalProperties": false, "required": ["name", "initial", "next", "rewritten"], "properties": { "name": { "type": "string", "minLength": 1 }, "initial": { "type": "string" }, "initialBase64": { "type": "string", "contentEncoding": "base64" }, "next": { "type": "string" }, "rewritten": { "type": "boolean" } } } },
+    "collections": { "type": "array", "minItems": 2, "items": { "type": "object", "additionalProperties": false, "required": ["name", "files", "ordered"], "properties": { "name": { "type": "string", "minLength": 1 }, "files": { "type": "object", "additionalProperties": { "type": "string" }, "propertyNames": { "pattern": "^[^\\\\]+$" } }, "ordered": { "type": "array", "uniqueItems": true, "items": { "type": "string" } } } } },
+    "refusals": { "type": "array", "uniqueItems": true, "items": { "enum": ["generated-directory", "generated-link", "artifact-file-root", "artifact-link-root", "artifact-link-child", "cancelled-before-walk"] }, "minItems": 6, "maxItems": 6 }
+  }
+}

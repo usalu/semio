@@ -1,0 +1,5 @@
+# Final Independent API Receipt Crosscheck — 2026-10-06
+
+Read complete/api-publication/measurements.json and final Core retained report after append. Observations agree exactly: ENlight/dark each244pages/435captions; DElight/dark each248pages/453captions. Everyvariant has91actualdefaults,0missing and0failures. Independently hashing each actual observed PDF matches its measurement SHA256. All4retained producer/target pairs independently match their SHA256 copy receipt; format headers are not used as provenance hashes.
+
+Every current source-binding entry was independently rehashed with0drift (complete map includes5explicit API/schema/metadata/fixture owners plus native sty/cls library). Current helper2F5B32C5BD8B40D57F9C5830B4AF47DF33F8044DA45E3905E39FEB8C7B3CC4D9 is separately bound to Nativefinal60159 and Core final loaded observer. Core report records actual64084 completion and visualreview, and allownedpublication sessions ended. No tests rerun. This establishes the4current fullAPI consumer observation gate; whole-goal cleanup/lifecycle remains rootowned, not implied by these measurements.

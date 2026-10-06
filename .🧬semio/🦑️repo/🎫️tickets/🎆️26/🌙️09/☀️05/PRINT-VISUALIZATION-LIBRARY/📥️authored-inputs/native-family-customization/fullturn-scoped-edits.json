@@ -1,0 +1,12 @@
+[
+  {
+    "file": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-mark.sty",
+    "from": "  \\tl_put_right:Nx \\l_semio_viz_path_tikz_tl {\n    ~circle~ [ radius= \\semio_viz_num:n {#3} mm ]\n    ~ ( \\semio_viz_path_tx:n { \\l_semio_viz_arc_xa_fp } mm , \\semio_viz_path_ty:n { \\l_semio_viz_arc_ya_fp } mm )\n  }",
+    "to": "  \\tl_put_right:Nx \\l_semio_viz_path_tikz_tl {\n    ~arc~ [\n      start~angle= \\semio_viz_path_ta:n { atand( \\l_semio_viz_arc_ya_fp - (#2) , \\l_semio_viz_arc_xa_fp - (#1) ) * pi / 180 } ,\n      delta~angle= \\semio_viz_path_ta:n { ( 2 * \\l_semio_viz_arc_cw_fp - 1 ) * 2 * pi } ,\n      radius= \\semio_viz_num:n {#3} mm\n    ]\n  }"
+  },
+  {
+    "file": "🧰️framework/🛍️products/📓️print/🧪️tests/🧬️native-chart-grammar/🟦️.ts",
+    "from": "const kind=closed===1&&curves===4&&lines===0?\"circle\":closed===1&&curves===0&&lines===3?\"rect\":undefined;",
+    "to": "const kind=closed<=1&&curves===4&&lines===0?\"circle\":closed===1&&curves===0&&lines===3?\"rect\":undefined;"
+  }
+]

@@ -1,0 +1,29 @@
+{
+  "owners": [
+    {
+      "sha256": "FEE58E88C13E15758D536A15E919BBF6F465D2AC7C4EE4FBF67B4DD01C259F6D",
+      "path": "C:/git/semio/🧰️framework/🛍️products/📓️print/🧬️schema/🔣️.json"
+    },
+    {
+      "sha256": "6AE5BB1238BBF8934FE0BF2CB7BD22FE81CACA2E106F6E307CC14BC125B64513",
+      "path": "C:/git/semio/🧰️framework/🛍️products/📓️print/🧬️schema/🟦️.ts"
+    },
+    {
+      "sha256": "288EDE3CA03B5C7A4F2A0EABD409D5AC5A2503E5EC7E7AD324EA75BE4E5D9F0E",
+      "path": "C:/git/semio/🧰️framework/🛍️products/📓️print/🧪️tests/🧬️native-chart-grammar/🟦️.ts"
+    },
+    {
+      "sha256": "CA842F1EF4C76995957C1E0CA029D16E2640100F044C8C6E473BAA37209E1D79",
+      "path": "C:/git/semio/.vscode/🧩️launch.seed.jsonc"
+    },
+    {
+      "sha256": "89369439A38DB76FE508876B1D1BF73F3A6E8203E7CFFEC8FE3ADF72F39A2E93",
+      "path": "C:/git/semio/.vscode/launch.json"
+    },
+    {
+      "sha256": "67C3C8EFDA57462AC3F81FD687AE5043B23C96596F97B61DEE5BE2FB1BDEB639",
+      "path": "C:/git/semio/🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/📋️project.json"
+    }
+  ],
+  "capturedAt": "2026-10-06T03:27:14.9684296+02:00"
+}

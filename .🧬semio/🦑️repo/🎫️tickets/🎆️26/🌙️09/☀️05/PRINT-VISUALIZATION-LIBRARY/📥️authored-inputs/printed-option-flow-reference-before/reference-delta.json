@@ -1,0 +1,278 @@
+[
+  {
+    "family": "axis",
+    "table": "api-path-axis",
+    "before": "\\ApiKeyScope{api-path-axis}",
+    "after": "\\ApiSeeScope{api-path-axis}"
+  },
+  {
+    "family": "axis",
+    "table": "api-path-scale",
+    "before": "\\ApiKeyScope{api-path-scale}",
+    "after": "\\ApiSeeScope{api-path-scale}"
+  },
+  {
+    "family": "axisplot",
+    "table": "api-path-scale",
+    "before": "\\ApiKeyScope{api-path-scale}",
+    "after": "\\ApiSeeScope{api-path-scale}"
+  },
+  {
+    "family": "bar",
+    "table": "api-path-scale",
+    "before": "\\ApiKeyScope{api-path-scale}",
+    "after": "\\ApiSeeScope{api-path-scale}"
+  },
+  {
+    "family": "composition-bar",
+    "table": "api-helper-cart-family-keys",
+    "before": "\\ApiKeyScope{api-helper-cart-family-keys}",
+    "after": "\\ApiSeeScope{api-helper-cart-family-keys}"
+  },
+  {
+    "family": "composition-bar",
+    "table": "api-path-scale",
+    "before": "\\ApiKeyScope{api-path-scale}",
+    "after": "\\ApiSeeScope{api-path-scale}"
+  },
+  {
+    "family": "composition-bar",
+    "table": "area",
+    "before": "\\ApiKeyScope{area}",
+    "after": "\\ApiSeeScope{area}"
+  },
+  {
+    "family": "composition-bar",
+    "table": "bar",
+    "before": "\\ApiKeyScope{bar}",
+    "after": "\\ApiSeeScope{bar}"
+  },
+  {
+    "family": "composition",
+    "table": "api-path-annotation",
+    "before": "\\ApiKeyScope{api-path-annotation}",
+    "after": "\\ApiSeeScope{api-path-annotation}"
+  },
+  {
+    "family": "composition",
+    "table": "api-path-axis",
+    "before": "\\ApiKeyScope{api-path-axis}",
+    "after": "\\ApiSeeScope{api-path-axis}"
+  },
+  {
+    "family": "composition",
+    "table": "api-path-concat",
+    "before": "\\ApiKeyScope{api-path-concat}",
+    "after": "\\ApiSeeScope{api-path-concat}"
+  },
+  {
+    "family": "composition",
+    "table": "api-path-concat-item",
+    "before": "\\ApiKeyScope{api-path-concat-item}",
+    "after": "\\ApiSeeScope{api-path-concat-item}"
+  },
+  {
+    "family": "composition",
+    "table": "api-path-dashboard",
+    "before": "\\ApiKeyScope{api-path-dashboard}",
+    "after": "\\ApiSeeScope{api-path-dashboard}"
+  },
+  {
+    "family": "composition",
+    "table": "api-path-dashboard-cell",
+    "before": "\\ApiKeyScope{api-path-dashboard-cell}",
+    "after": "\\ApiSeeScope{api-path-dashboard-cell}"
+  },
+  {
+    "family": "composition",
+    "table": "api-path-facet",
+    "before": "\\ApiKeyScope{api-path-facet}",
+    "after": "\\ApiSeeScope{api-path-facet}"
+  },
+  {
+    "family": "composition",
+    "table": "api-path-inset",
+    "before": "\\ApiKeyScope{api-path-inset}",
+    "after": "\\ApiSeeScope{api-path-inset}"
+  },
+  {
+    "family": "composition",
+    "table": "api-path-layer",
+    "before": "\\ApiKeyScope{api-path-layer}",
+    "after": "\\ApiSeeScope{api-path-layer}"
+  },
+  {
+    "family": "composition",
+    "table": "api-path-legend",
+    "before": "\\ApiKeyScope{api-path-legend}",
+    "after": "\\ApiSeeScope{api-path-legend}"
+  },
+  {
+    "family": "composition",
+    "table": "api-path-scale",
+    "before": "\\ApiKeyScope{api-path-scale}",
+    "after": "\\ApiSeeScope{api-path-scale}"
+  },
+  {
+    "family": "dot",
+    "table": "api-path-scale",
+    "before": "\\ApiKeyScope{api-path-scale}",
+    "after": "\\ApiSeeScope{api-path-scale}"
+  },
+  {
+    "family": "encoding",
+    "table": "api-path-mark",
+    "before": "\\ApiKeyScope{api-path-mark}",
+    "after": "\\ApiSeeScope{api-path-mark}"
+  },
+  {
+    "family": "encoding",
+    "table": "api-path-text",
+    "before": "\\ApiKeyScope{api-path-text}",
+    "after": "\\ApiSeeScope{api-path-text}"
+  },
+  {
+    "family": "figure",
+    "table": "api-path-mark",
+    "before": "\\ApiKeyScope{api-path-mark}",
+    "after": "\\ApiSeeScope{api-path-mark}"
+  },
+  {
+    "family": "figure",
+    "table": "api-path-text",
+    "before": "\\ApiKeyScope{api-path-text}",
+    "after": "\\ApiSeeScope{api-path-text}"
+  },
+  {
+    "family": "grammar",
+    "table": "api-path-mark",
+    "before": "\\ApiKeyScope{api-path-mark}",
+    "after": "\\ApiSeeScope{api-path-mark}"
+  },
+  {
+    "family": "grammar",
+    "table": "api-path-text",
+    "before": "\\ApiKeyScope{api-path-text}",
+    "after": "\\ApiSeeScope{api-path-text}"
+  },
+  {
+    "family": "grammar",
+    "table": "api-path-transform",
+    "before": "\\ApiKeyScope{api-path-transform}",
+    "after": "\\ApiSeeScope{api-path-transform}"
+  },
+  {
+    "family": "layout-algorithm",
+    "table": "api-path-mark",
+    "before": "\\ApiKeyScope{api-path-mark}",
+    "after": "\\ApiSeeScope{api-path-mark}"
+  },
+  {
+    "family": "layout-algorithm",
+    "table": "api-path-text",
+    "before": "\\ApiKeyScope{api-path-text}",
+    "after": "\\ApiSeeScope{api-path-text}"
+  },
+  {
+    "family": "namespace",
+    "table": "api-path-mark",
+    "before": "\\ApiKeyScope{api-path-mark}",
+    "after": "\\ApiSeeScope{api-path-mark}"
+  },
+  {
+    "family": "namespace",
+    "table": "api-path-text",
+    "before": "\\ApiKeyScope{api-path-text}",
+    "after": "\\ApiSeeScope{api-path-text}"
+  },
+  {
+    "family": "narrative",
+    "table": "api-path-scale",
+    "before": "\\ApiKeyScope{api-path-scale}",
+    "after": "\\ApiSeeScope{api-path-scale}"
+  },
+  {
+    "family": "rank",
+    "table": "api-path-scale",
+    "before": "\\ApiKeyScope{api-path-scale}",
+    "after": "\\ApiSeeScope{api-path-scale}"
+  },
+  {
+    "family": "scale",
+    "table": "api-path-axis",
+    "before": "\\ApiKeyScope{api-path-axis}",
+    "after": "\\ApiSeeScope{api-path-axis}"
+  },
+  {
+    "family": "scale",
+    "table": "api-path-legend",
+    "before": "\\ApiKeyScope{api-path-legend}",
+    "after": "\\ApiSeeScope{api-path-legend}"
+  },
+  {
+    "family": "scale",
+    "table": "api-path-scale",
+    "before": "\\ApiKeyScope{api-path-scale}",
+    "after": "\\ApiSeeScope{api-path-scale}"
+  },
+  {
+    "family": "scale",
+    "table": "api-path-text",
+    "before": "\\ApiKeyScope{api-path-text}",
+    "after": "\\ApiSeeScope{api-path-text}"
+  },
+  {
+    "family": "shape",
+    "table": "api-path-text",
+    "before": "\\ApiKeyScope{api-path-text}",
+    "after": "\\ApiSeeScope{api-path-text}"
+  },
+  {
+    "family": "timeline",
+    "table": "api-path-scale",
+    "before": "\\ApiKeyScope{api-path-scale}",
+    "after": "\\ApiSeeScope{api-path-scale}"
+  },
+  {
+    "family": "transform-data",
+    "table": "api-path-mark",
+    "before": "\\ApiKeyScope{api-path-mark}",
+    "after": "\\ApiSeeScope{api-path-mark}"
+  },
+  {
+    "family": "transform-data",
+    "table": "api-path-text",
+    "before": "\\ApiKeyScope{api-path-text}",
+    "after": "\\ApiSeeScope{api-path-text}"
+  },
+  {
+    "family": "transform-data",
+    "table": "api-path-transform",
+    "before": "\\ApiKeyScope{api-path-transform}",
+    "after": "\\ApiSeeScope{api-path-transform}"
+  },
+  {
+    "family": "transform-statistical",
+    "table": "api-path-mark",
+    "before": "\\ApiKeyScope{api-path-mark}",
+    "after": "\\ApiSeeScope{api-path-mark}"
+  },
+  {
+    "family": "transform-statistical",
+    "table": "api-path-text",
+    "before": "\\ApiKeyScope{api-path-text}",
+    "after": "\\ApiSeeScope{api-path-text}"
+  },
+  {
+    "family": "transform-statistical",
+    "table": "api-path-transform",
+    "before": "\\ApiKeyScope{api-path-transform}",
+    "after": "\\ApiSeeScope{api-path-transform}"
+  },
+  {
+    "family": "waterfall",
+    "table": "api-path-scale",
+    "before": "\\ApiKeyScope{api-path-scale}",
+    "after": "\\ApiSeeScope{api-path-scale}"
+  }
+]

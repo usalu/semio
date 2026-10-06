@@ -1,0 +1,567 @@
+{
+  "adjacency-matrix": {
+    "identifier": "label"
+  },
+  "alluvial": {
+    "identifier": "label"
+  },
+  "analytical": {
+    "identifier": "category cause data",
+    "text": "effect"
+  },
+  "annotated": {
+    "identifier": "mode",
+    "text": "note"
+  },
+  "arc-diagram": {
+    "identifier": "label"
+  },
+  "arch-axonometric": {
+    "identifier": "data label tone",
+    "expression": "scale-z"
+  },
+  "arch-bubble": {
+    "identifier": "arrow data edges id label routing tone value"
+  },
+  "arch-layer": {
+    "identifier": "arrow data edges id label routing shape tier tone",
+    "records": "tiers",
+    "scalar": "tier-title"
+  },
+  "arch-plan": {
+    "identifier": "data hatch id label points tone",
+    "number-list": "domain"
+  },
+  "arch-profile": {
+    "identifier": "base data height label offset span tone",
+    "number-list": "domain"
+  },
+  "arch-schematic": {
+    "identifier": "arrow col data edges id label routing row symbol",
+    "expression": "col-gap row-gap"
+  },
+  "arch-sunpath": {
+    "identifier": "date mode data",
+    "number-list": "hours"
+  },
+  "area": {
+    "identifier": "hi lo offset stack"
+  },
+  "axis": {
+    "identifier": "data x y y2"
+  },
+  "axisplot": {
+    "identifier": "mode scale"
+  },
+  "bar": {
+    "identifier": "mode orient"
+  },
+  "biofabric": {
+    "identifier": "label"
+  },
+  "biology": {
+    "identifier": "data group label mode scheme value x y"
+  },
+  "box": {
+    "identifier": "data group label orient value"
+  },
+  "chord": {
+    "identifier": "label"
+  },
+  "commit-graph": {
+    "identifier": "label"
+  },
+  "composite": {
+    "identifier": "data group label layout main side value",
+    "key-list": "mainopts sideopts"
+  },
+  "composition": {
+    "identifier": "data",
+    "records": "groups"
+  },
+  "composition-bar": {
+    "identifier": "curve data grid group hi label labels lo mode offset orient series sort stack x y y2",
+    "expression": "yMax yMin"
+  },
+  "concept-map": {
+    "identifier": "arrow data id label layout link node parent tone"
+  },
+  "concept-shape": {
+    "identifier": "data label shape tone value"
+  },
+  "control": {
+    "identifier": "chart data group label sizecol value valuecol"
+  },
+  "coordplot": {
+    "identifier": "coordinate"
+  },
+  "correlation": {
+    "identifier": "cell data group label triangle value",
+    "records": "columns"
+  },
+  "coxcomb": {
+    "identifier": "data group label radiusv second value"
+  },
+  "curve": {
+    "identifier": "mode"
+  },
+  "cycle": {
+    "identifier": "data hub label shape sign"
+  },
+  "data-structure": {
+    "identifier": "idColumn mode parentColumn valueColumn"
+  },
+  "decision-table": {
+    "identifier": "data label",
+    "records": "columns headers"
+  },
+  "dendrogram": {
+    "identifier": "heightColumn",
+    "expression": "scale"
+  },
+  "density": {
+    "identifier": "data group kernel label value"
+  },
+  "dependency-wheel": {
+    "identifier": "label"
+  },
+  "dot": {
+    "identifier": "connect mode orient"
+  },
+  "ecdf": {
+    "identifier": "data group label value"
+  },
+  "edge-bundled": {
+    "identifier": "label"
+  },
+  "election": {
+    "identifier": "data delta label mode scheme size value x y"
+  },
+  "embedding": {
+    "identifier": "cluster data ex ey group label loading value"
+  },
+  "encoding": {
+    "identifier": "column column2 data text",
+    "records": "arrows dashes fonts patterns symbols weights"
+  },
+  "engineering-diagram": {
+    "identifier": "class data id label link mode size teeth x y"
+  },
+  "evaluation": {
+    "identifier": "curve data group label score truth value"
+  },
+  "facet": {
+    "identifier": "by data group label mode panel value",
+    "key-list": "opts"
+  },
+  "figure": {
+    "identifier": "category data label x y",
+    "records": "patterns textKinds"
+  },
+  "financial": {
+    "identifier": "close high indicator low mode open overlay volume"
+  },
+  "fishbone": {
+    "identifier": "data group label",
+    "text": "effect"
+  },
+  "funnel": {
+    "identifier": "mode stage value"
+  },
+  "gauge": {
+    "identifier": "max min mode target value"
+  },
+  "geo-basemap": {
+    "identifier": "water",
+    "scalar": "places"
+  },
+  "geo-choropleth": {
+    "number-list": "breaks"
+  },
+  "geo-field": {
+    "scalar": "grid"
+  },
+  "geo-flow": {
+    "identifier": "flow mode routes"
+  },
+  "geo-geodesic": {
+    "records": "arcs"
+  },
+  "geo-graticule": {
+    "expression": "step stepMajor"
+  },
+  "geo-hexbin": {
+    "identifier": "render",
+    "scalar": "points"
+  },
+  "geo-route": {
+    "identifier": "mode routes"
+  },
+  "geo-symbol": {
+    "identifier": "shape sizing",
+    "records": "symbols"
+  },
+  "geo-terrain": {
+    "identifier": "cell mode surface",
+    "scalar": "grid labels",
+    "expression": "levels zScale"
+  },
+  "geo-tilegrid": {
+    "identifier": "tile"
+  },
+  "geo-weather": {
+    "identifier": "cell",
+    "scalar": "filled grid labels raster",
+    "expression": "levels"
+  },
+  "glyph": {
+    "identifier": "data group kind label value",
+    "records": "axes"
+  },
+  "grammar": {
+    "identifier": "category data label x y y2",
+    "records": "marks"
+  },
+  "graph": {
+    "identifier": "label"
+  },
+  "heatmap": {
+    "identifier": "cell colcol data dendrogram group label rowcol scheme value valuecol"
+  },
+  "hexbin": {
+    "identifier": "data group label mark value xcol ycol"
+  },
+  "histogram": {
+    "identifier": "coordinate data group label mode value",
+    "records": "thresholds"
+  },
+  "hive-plot": {
+    "identifier": "label"
+  },
+  "infographic-icon": {
+    "identifier": "data glyph label tone value",
+    "expression": "unit-value"
+  },
+  "infographic-illustration": {
+    "identifier": "data label side tone",
+    "records": "outline"
+  },
+  "infographic-list": {
+    "identifier": "badge data detail label tone"
+  },
+  "infographic-number": {
+    "identifier": "align data label tone unit value"
+  },
+  "kpi": {
+    "identifier": "delta mode target value",
+    "text": "unit"
+  },
+  "layout-algorithm": {
+    "identifier": "binColumn data order pieColumn series value x"
+  },
+  "line": {
+    "identifier": "hi lo mode",
+    "records": "highlight"
+  },
+  "logic-tree": {
+    "identifier": "data default-shape gate id label orientation parent routing shape"
+  },
+  "logistics": {
+    "identifier": "data destination mode origin scheme value"
+  },
+  "marimekko": {
+    "identifier": "amount column data group label mode value"
+  },
+  "matrix-grid": {
+    "identifier": "col data label row tone",
+    "records": "columns rows",
+    "text": "axis-x axis-y"
+  },
+  "monitoring": {
+    "identifier": "column data edges errors id label mode scheme source target tier value weight"
+  },
+  "namespace": {
+    "identifier": "data",
+    "key-list": "options",
+    "records": "order"
+  },
+  "narrative": {
+    "identifier": "mode"
+  },
+  "neural": {
+    "identifier": "channel column data mode row scheme value"
+  },
+  "neural-network": {
+    "identifier": "connections kindColumn label layerColumn mode render unitsColumn"
+  },
+  "niche": {
+    "identifier": "data label mode parent scheme source target value"
+  },
+  "node-link-matrix": {
+    "identifier": "label"
+  },
+  "notation": {
+    "identifier": "class data id label link mode order x y"
+  },
+  "notation-board": {
+    "identifier": "data"
+  },
+  "notation-petri": {
+    "identifier": "col data edges id kind label routing row tokens"
+  },
+  "notation-railroad": {
+    "identifier": "branch data kind label"
+  },
+  "optimization": {
+    "identifier": "capacity column data id label mode pred row scheme start value"
+  },
+  "parallel": {
+    "identifier": "data group label value",
+    "records": "axes"
+  },
+  "parallel-sets": {
+    "identifier": "label"
+  },
+  "parliament": {
+    "identifier": "data group label seats value"
+  },
+  "performance": {
+    "identifier": "data id label mode order orientation parent source target value",
+    "number-list": "percentiles"
+  },
+  "phylogram": {
+    "identifier": "lengthColumn",
+    "expression": "scale"
+  },
+  "pie": {
+    "identifier": "data group label sort value"
+  },
+  "pm-board": {
+    "identifier": "data label size status tone",
+    "records": "columns wip"
+  },
+  "pm-gantt": {
+    "identifier": "data deps duration id label lane milestone schedule start tone",
+    "number-list": "domain"
+  },
+  "pm-network": {
+    "identifier": "col data deps duration id label routing row"
+  },
+  "polar": {
+    "identifier": "angle data group label mark radiusv value"
+  },
+  "quadrant": {
+    "identifier": "data group itemlabel label preset sizecol value xcol ycol"
+  },
+  "quantile": {
+    "identifier": "data group kind label value"
+  },
+  "radar": {
+    "identifier": "axis data group label series shape value"
+  },
+  "radial-partition": {
+    "identifier": "amount data depth group label value"
+  },
+  "rank": {
+    "identifier": "mode"
+  },
+  "residual": {
+    "identifier": "data fitted group kind label resid value weight"
+  },
+  "sankey": {
+    "identifier": "label"
+  },
+  "scale": {
+    "identifier": "category column data date timeData",
+    "number-list": "divergingDomain logDomain range thresholds",
+    "records": "timeDomain"
+  },
+  "scatter": {
+    "identifier": "color shape size trend"
+  },
+  "scatter-matrix": {
+    "identifier": "data diagonal group label value",
+    "records": "columns"
+  },
+  "schedule": {
+    "identifier": "data mode time",
+    "records": "series"
+  },
+  "schedule-calendar": {
+    "identifier": "data end label orientation resource start tone",
+    "records": "lanes",
+    "number-list": "domain"
+  },
+  "schedule-timedistance": {
+    "identifier": "data distance service stops time",
+    "number-list": "domain-x domain-y"
+  },
+  "schema-graph": {
+    "identifier": "label mode"
+  },
+  "seating": {
+    "identifier": "count data label shape tone"
+  },
+  "shape": {
+    "identifier": "data y",
+    "records": "curves"
+  },
+  "slope": {
+    "identifier": "mode"
+  },
+  "spark": {
+    "identifier": "mode"
+  },
+  "spatial-layout": {
+    "identifier": "algorithm data group label size x y"
+  },
+  "spatial-scalar-field": {
+    "identifier": "cell mode row surface",
+    "scalar": "grid labels",
+    "expression": "levels"
+  },
+  "spatial-tessellation": {
+    "identifier": "kind",
+    "number-list": "extent",
+    "records": "points"
+  },
+  "spatial-vector-field": {
+    "identifier": "field render"
+  },
+  "stage": {
+    "identifier": "data label orientation shape value"
+  },
+  "state-machine": {
+    "identifier": "label mode role"
+  },
+  "state-overview": {
+    "identifier": "arrangement data",
+    "number-list": "brush domain",
+    "text": "caption-detail caption-overview",
+    "expression": "detail-share"
+  },
+  "state-selection": {
+    "identifier": "col data edges id label mode nodes routing row selected",
+    "text": "callout"
+  },
+  "state-sequence": {
+    "identifier": "data depiction label tone"
+  },
+  "statepanel": {
+    "identifier": "mode"
+  },
+  "stem-leaf": {
+    "identifier": "data group label value"
+  },
+  "strip": {
+    "identifier": "data group label layout value"
+  },
+  "survey": {
+    "identifier": "data group mark question scheme value"
+  },
+  "table": {
+    "identifier": "cells data group label preset sortby value",
+    "records": "columns headers"
+  },
+  "ternary": {
+    "identifier": "data group label mark pa pb pc value"
+  },
+  "text-viz": {
+    "identifier": "baseline count data document layout marker position series sort term time value"
+  },
+  "timeline": {
+    "identifier": "end lane mode start state"
+  },
+  "transform-data": {
+    "identifier": "data key second sortBy value windowKind",
+    "expression": "predicate"
+  },
+  "transform-statistical": {
+    "identifier": "data fit fitData value x y"
+  },
+  "uml-class": {
+    "identifier": "col data edges group id label members owner routing row section shape stereotype text title-style tone",
+    "expression": "col-gap",
+    "records": "sections"
+  },
+  "uml-sequence": {
+    "identifier": "activate data fragments id kind label messages shape"
+  },
+  "uml-timing": {
+    "identifier": "data segments",
+    "number-list": "domain",
+    "records": "states"
+  },
+  "uml-usecase": {
+    "identifier": "actors data edges id label side",
+    "text": "system"
+  },
+  "uncertainty": {
+    "identifier": "data estimate group itemlabel label lower mark upper value weight"
+  },
+  "unit": {
+    "identifier": "glyph mode"
+  },
+  "version-control": {
+    "identifier": "data mode time",
+    "records": "series"
+  },
+  "violin": {
+    "identifier": "data group label value"
+  },
+  "waffle": {
+    "identifier": "amount data group label shape value"
+  },
+  "waterfall": {
+    "identifier": "mode"
+  },
+  "mark-annotation": {
+    "identifier": "arrow curve data file pattern route symbol x y",
+    "style": "arrowSize dash strokeWidth",
+    "paint": "fill stroke",
+    "records": "extent points points2 via",
+    "expression": "outerRadius padRadius radius rx ry targetRadius"
+  },
+  "mark-arc": {
+    "identifier": "arrow curve data file pattern route symbol x y",
+    "style": "arrowSize dash strokeWidth",
+    "paint": "fill stroke",
+    "records": "extent points points2 via",
+    "expression": "outerRadius padRadius radius rx ry targetRadius"
+  },
+  "mark-area": {
+    "identifier": "arrow curve data file pattern route symbol x y",
+    "style": "arrowSize dash strokeWidth",
+    "paint": "fill stroke",
+    "records": "extent points points2 via",
+    "expression": "outerRadius padRadius radius rx ry targetRadius"
+  },
+  "mark-connector": {
+    "identifier": "arrow curve data file pattern route symbol x y",
+    "style": "arrowSize dash strokeWidth",
+    "paint": "fill stroke",
+    "records": "extent points points2 via",
+    "expression": "outerRadius padRadius radius rx ry targetRadius"
+  },
+  "mark-line": {
+    "identifier": "arrow curve data file pattern route symbol x y",
+    "style": "arrowSize dash strokeWidth",
+    "paint": "fill stroke",
+    "records": "extent points points2 via",
+    "expression": "outerRadius padRadius radius rx ry targetRadius"
+  },
+  "mark-point": {
+    "identifier": "arrow curve data file pattern route symbol x y",
+    "style": "arrowSize dash strokeWidth",
+    "paint": "fill stroke",
+    "records": "extent points points2 via",
+    "expression": "outerRadius padRadius radius rx ry targetRadius"
+  },
+  "mark-region": {
+    "identifier": "arrow curve data file pattern route symbol x y",
+    "style": "arrowSize dash strokeWidth",
+    "paint": "fill stroke",
+    "records": "extent points points2 via",
+    "expression": "outerRadius padRadius radius rx ry targetRadius"
+  }
+}

@@ -5,7 +5,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { spawnSync } from "node:child_process";
 
-type Corpus = { schema: string; writes: readonly { name: string; initial: string; next: string; rewritten: boolean }[]; collections: readonly { name: string; files: Readonly<Record<string, string>>; ordered: readonly string[] }[]; refusals: readonly string[] };
+type Corpus = { schema: string; writes: readonly { name: string; initial: string; initialBase64?: string; next: string; rewritten: boolean }[]; collections: readonly { name: string; files: Readonly<Record<string, string>>; ordered: readonly string[] }[]; refusals: readonly string[] };
 
 /** 🧰️ Checks neutral file publication and traversal against portable vectors and independent tools. */
 export async function testArtifactFiles(outputDirectory: string): Promise<void> {
@@ -18,11 +18,13 @@ export async function testArtifactFiles(outputDirectory: string): Promise<void> 
   try {
     for (const row of corpus.writes) {
       const target = join(temporary, `${row.name}.txt`);
-      writeFileSync(target, row.initial); utimesSync(target, 946684800, 946684800);
-      const before = lstatSync(target).mtimeMs;
+      const initial=row.initialBase64===undefined?Buffer.from(row.initial):Buffer.from(row.initialBase64,"base64"),next=Buffer.from(row.next);
+      assert.equal(!initial.equals(next),row.rewritten,row.name+" independent byte oracle");
+      writeFileSync(target, initial); utimesSync(target, 946684800, 946684800);
+      const before = lstatSync(target,{bigint:true});
       assert.equal(writeGeneratedFileIfChanged(target, row.next), row.rewritten, row.name);
       assert.deepEqual(readFileSync(target), Buffer.from(row.next), row.name);
-      assert.equal(lstatSync(target).mtimeMs === before, !row.rewritten, row.name);
+      const after=lstatSync(target,{bigint:true});assert.equal(after.mtimeNs === before.mtimeNs, !row.rewritten, row.name);if(!row.rewritten)assert.deepEqual([after.dev,after.ino,after.size,after.ctimeNs],[before.dev,before.ino,before.size,before.ctimeNs],row.name+" no-op file identity");
     }
     for (const row of corpus.collections) {
       const root = join(temporary, row.name); mkdirSync(root);
@@ -35,7 +37,8 @@ export async function testArtifactFiles(outputDirectory: string): Promise<void> 
     const root = join(temporary, "regular"); mkdirSync(root);
     const file = join(root, "file.txt"); writeFileSync(file, "bytes");
     const rootLink = join(temporary, "root-link"); symlinkSync(root, rootLink, process.platform === "win32" ? "junction" : "dir");
-    const fileLink = join(root, "file-link"); symlinkSync(file, fileLink, "file");
+    const fileLink = join(root, "linked-entry"),linkTarget=process.platform==="win32"?join(temporary,"link-target"):file;
+    if(process.platform==="win32")mkdirSync(linkTarget);symlinkSync(linkTarget,fileLink,process.platform==="win32"?"junction":"file");assert.equal(lstatSync(fileLink).isSymbolicLink(),true);
     for (const refusal of corpus.refusals) {
       switch (refusal) {
         case "generated-directory": assert.throws(() => writeGeneratedFileIfChanged(root, "x"), /Invalid generated file/); break;
@@ -49,7 +52,7 @@ export async function testArtifactFiles(outputDirectory: string): Promise<void> 
     }
     const bundled = join(temporary, "artifact-files.mjs");
     const result = await require("esbuild").build({ entryPoints: [source], outfile: bundled, bundle: true, platform: "node", format: "esm", metafile: true });
-    assert.deepEqual(Object.keys(result.metafile.inputs).map((path: string) => path.replaceAll("\\", "/")), [source.substring(process.cwd().length + 1)]);
+    assert.deepEqual(Object.keys(result.metafile.inputs).map((path: string) => path.replaceAll("\\", "/")), [source.substring(process.cwd().length + 1).replaceAll("\\","/")]);
     const program = `const api = await import(${JSON.stringify(pathToFileURL(bundled).href)}); const rows = JSON.parse(${JSON.stringify(JSON.stringify(corpus.collections))}); const output=[]; for(const row of rows)output.push([...await api.collectArtifactFiles(${JSON.stringify(temporary)}+'/'+row.name)].map(([key])=>key)); console.log(JSON.stringify(output));`;
     for (const runtime of ["bun", "node"]) {
       const child = spawnSync(runtime, ["--input-type=module", "-e", program], { encoding: "utf8", timeout: 15000 });

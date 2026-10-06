@@ -1,0 +1,18 @@
+{
+  "🧪️tests/🧬️native-chart-grammar/🔣️.json": {
+    "sha256": "888f88235b237ea0b6e27526bfd11324903264b90bd9614d9ed91b4158192564",
+    "bytes": 559465
+  },
+  "🧪️tests/🧬️native-chart-grammar/🟦️.ts": {
+    "sha256": "23555391d822850b6c7410440665df1a568ae651ccb2a31bcb826136be96497d",
+    "bytes": 447853
+  },
+  "🖋️latex/semio-viz-domain.sty": {
+    "sha256": "3df7e0aaacc2420b0652cccb4c3ac1d5a9d47b8a3a8b4acd0a4e3939b5cd070a",
+    "bytes": 220904
+  },
+  "🖋️latex/semio-viz-data.sty": {
+    "sha256": "6551eae29d19c287a975073a638d8c0047c3dff97f831b8b03fa3ba066fbba3a",
+    "bytes": 55391
+  }
+}

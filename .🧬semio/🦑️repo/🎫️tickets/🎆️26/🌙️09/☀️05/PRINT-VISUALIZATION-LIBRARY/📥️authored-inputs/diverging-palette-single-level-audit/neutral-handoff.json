@@ -1,0 +1,52 @@
+{
+  "scope": "source handoff only, root owns registered fixture/helper/RED",
+  "inputs": [
+    0,
+    0.125,
+    0.25,
+    0.375,
+    0.5,
+    0.625,
+    0.75,
+    0.875,
+    1
+  ],
+  "cases": [
+    {
+      "legend": true,
+      "id": "diverging-one-en",
+      "paletteSteps": 1,
+      "palette": "diverging",
+      "language": "en"
+    },
+    {
+      "legend": true,
+      "id": "diverging-one-de",
+      "paletteSteps": 1,
+      "palette": "diverging",
+      "language": "de"
+    }
+  ],
+  "oracle": {
+    "scope": "One-level collapse preserves existing59 convention. It does not establish multilevel diverging semantics.",
+    "checks": "All input samples must yield identical hue and mix; actual one-swatch legend must compile without 0/0; probe complete ramp and quantizer separately",
+    "mixPercent": 59,
+    "thirdParty": "D3 scaleQuantize([0,1],[0.5]) yields one effective midpoint position; scaleLinear([0,1],[18,100])(.5)=59",
+    "hueIndex": 0,
+    "fullRamp": "theme color0 !59! semio-chrome-canvas",
+    "effectivePosition": 0.5
+  },
+  "sourceEvidence": {
+    "hue": "2464 raw input comparison",
+    "quant": "2494 guard;2503 floor;one-level59",
+    "file": "semio-viz-geo.sty",
+    "legend": "semio-viz-geo-choropleth.sty278–285 raw0/0 at one step",
+    "percent": "2481–2487 abs divergence"
+  },
+  "multilevel": {
+    "qualification": "Actual resolved colors may coincide for specially equal theme colors; count describes native palette positions, not universal distinct RGB guarantee",
+    "reason": "n quantized percentages on each side; minimum18 is nonzero, so opposite midpoint hues do not merge",
+    "example": "n5 produces10 hue/percentage pairs",
+    "count": "generally2n distinct hue/mix pairs"
+  }
+}

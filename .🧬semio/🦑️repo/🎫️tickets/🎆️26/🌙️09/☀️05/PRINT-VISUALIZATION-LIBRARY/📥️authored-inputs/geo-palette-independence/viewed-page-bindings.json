@@ -1,0 +1,35 @@
+{
+  "pdf": {
+    "file": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\geo-palette-ten-green\\geo-palette\\🧪️probe-out\\controls.pdf",
+    "sha256": "D52361D54E447CEB220AF6D253B2E8BD124D675AE97AC82CB5CCF5423B7A69B7"
+  },
+  "renderer": "Actual Poppler pdftoppm,90dpi PNG",
+  "images": [
+    {
+      "page": 1,
+      "file": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\geo-palette-ten-green\\📸️viewed-pages\\palette-1.png",
+      "sha256": "A7A418589777C27988E68C0F1E3F4F267173DED4D60A102DE1E0BE9FF3153EDA",
+      "actuallyViewed": true
+    },
+    {
+      "page": 2,
+      "file": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\geo-palette-ten-green\\📸️viewed-pages\\palette-2.png",
+      "sha256": "C89A8C1DA57B4C762F144664926D128AFF165D889887B7F8D25B5B522562A317",
+      "actuallyViewed": true
+    },
+    {
+      "page": 3,
+      "file": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\geo-palette-ten-green\\📸️viewed-pages\\palette-3.png",
+      "sha256": "DE81D5363E3D5C030D28523FCA341B70834061DA9D511F3FEE0F1FB78EA68988",
+      "actuallyViewed": true
+    },
+    {
+      "page": 4,
+      "file": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\geo-palette-ten-green\\📸️viewed-pages\\palette-4.png",
+      "sha256": "DE81D5363E3D5C030D28523FCA341B70834061DA9D511F3FEE0F1FB78EA68988",
+      "actuallyViewed": true
+    }
+  ],
+  "observations": "Contentpages1/2 display all ten English/German framed streamlines; palette-only/default/single retain full24-point path, integration6/both8 show shorter arcs. All figures remain inside frames with localized Figure/Abbildung labels. Pages3/4 are blank template trailer pages. Numerical ramps/path counts are certified separately by actual110 JSONL records.",
+  "failureAndRetry": "Absolute Unicode output prefix failed to write image; retry in the same generated view directory with relative ASCII prefix succeeded. All outputs stay within the ticket."
+}

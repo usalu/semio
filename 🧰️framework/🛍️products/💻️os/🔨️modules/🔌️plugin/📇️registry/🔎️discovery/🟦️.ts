@@ -327,6 +327,12 @@ export function parseCompiledComponentOwnerV1(manifestPath: string, repoRoot: st
 
 
 
+/** 🚀️ Reads authored component identities and deployment names without compiled admission. */
+export function generateComponentSourceRegistry(repoRoot = getWorkspaceRoot(), options: GeneratePluginRegistryOptions = {}): ComponentSourceOwnerV1[] {
+  const paths = findPluginCargoFiles(repoRoot, options.packages, options.view);
+  return paths.map(path => parseComponentSourceOwnerV1(path, repoRoot, options.view)).sort((a,b) => a.pluginId.localeCompare(b.pluginId));
+}
+
 /** 📇️ The deployed catalog rows; refuses every stale-channel descriptor unless `staleChannel: "exclude"` withholds it. */
 export function generatePluginRegistry(repoRoot = getWorkspaceRoot(), options: GeneratePluginRegistryOptions = {}): DeployedRegistryEntryV1[] {
   return generatePluginRegistryReport(repoRoot, options).entries;

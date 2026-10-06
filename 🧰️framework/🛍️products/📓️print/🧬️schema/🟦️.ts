@@ -39,10 +39,18 @@ export type VizCatalogEntry = {
 /** 📚️ The catalogue document as stored in `🖼️assets/🔣️viz-catalog.json`. */
 export type VizCatalog = { readonly schemaVersion: 1; readonly kinds: readonly VizCatalogEntry[] };
 
+/** 🧿️ Source-owned lexical contracts for canonical native option projection. */
+export const VIZ_OPTION_SYNTAX = ["text", "identifier", "expression", "records", "key-list", "style", "paint", "number-list", "scalar", "value"] as const;
+export type VizOptionSyntax = (typeof VIZ_OPTION_SYNTAX)[number];
+/** 🪢️ Ordered record fields keep authored IDs open while declaring finite vocabularies and cross-option references. */
+export type VizOptionRecordField = { readonly syntax: "identifier" | "expression" | "text"; readonly nonempty?: boolean; readonly enum?: readonly string[]; readonly unique?: boolean; readonly reference?: { readonly option: string; readonly field: number } };
+export type VizOptionSyntaxDescriptor = { readonly syntax: VizOptionSyntax; readonly items?: "text" | "identifier"; readonly type?: "string" | "number" | "integer" | "boolean" | "null" | readonly ("string" | "number" | "integer" | "boolean" | "null")[]; readonly minimum?: number; readonly exclusiveMinimum?: number; readonly maximum?: number; readonly itemCount?: number; readonly enum?: readonly string[]; readonly recordFields?: readonly VizOptionRecordField[]; readonly defaultsByMode?: Readonly<Record<string,string>> };
+
 /** 🎚️ One declared option of a family. */
-export type VizFamilyOption = {
-  readonly type?: "string" | "number" | "integer" | "boolean";
-  readonly default?: VizOptionValue;
+export type VizFamilyOption = VizOptionSyntaxDescriptor & {
+  readonly type?: "string" | "number" | "integer" | "boolean" | "null" | readonly ("string" | "number" | "integer" | "boolean" | "null")[];
+  readonly default?: VizOptionValue | null;
+  readonly minimum?: number; readonly exclusiveMinimum?: number; readonly maximum?: number; readonly itemCount?: number;
   readonly enum?: readonly string[];
   readonly description: LocalizedText;
 };
@@ -51,7 +59,7 @@ export type VizFamilyOption = {
 export type VizFamilyOptions = { readonly owner: string; readonly options: Readonly<Record<string, VizFamilyOption>> };
 
 /** 🧫 A named demo table every catalogue entry may point at through its `data` key. */
-export type VizDemoTable = { readonly name: string; readonly columns: readonly string[]; readonly description: LocalizedText };
+export type VizDemoTable = { readonly name: string; readonly columns: readonly string[]; readonly description: LocalizedText; readonly rows?: readonly Readonly<Record<string,VizOptionValue|null>>[] };
 
 /** 🔬 One line of `\jobname.probe.jsonl` written by `semio-viz-probe.sty`. */
 export type VizProbeRecord = { readonly case: string; readonly scenario: string; readonly key: string; readonly values: readonly (number | string)[] };
@@ -65,6 +73,7 @@ export type VizSchemaDocument = {
   readonly $id: string;
   readonly "x-semio-family-options": Readonly<Record<string, VizFamilyOptions>>;
   readonly "x-semio-demo-tables": readonly VizDemoTable[];
+  readonly "x-semio-option-syntax": Readonly<Record<string, Readonly<Record<string, VizOptionSyntaxDescriptor>>>>;
 };
 
 /** 🍃 One terminal entry of the handcrafted taxonomy, mirrored into `🖼️assets/🔣️viz-taxonomy.json`. */

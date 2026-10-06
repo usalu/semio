@@ -1,0 +1,704 @@
+[
+  {
+    "family": "adjacency-matrix",
+    "key": "root",
+    "current": {
+      "syntax": "identifier",
+      "type": "integer",
+      "description": {
+        "en": "Node the layout starts from.",
+        "de": "Knoten, bei dem das Layout beginnt."
+      }
+    },
+    "desiredType": "integer",
+    "desiredSyntax": "expression",
+    "desiredDefault": 1,
+    "source": "semio-viz-network.sty",
+    "evidence": "1126 integer setter;1342 integer modulo/BFS; graph facade445/493/553 integer setter/reset/forward"
+  },
+  {
+    "family": "alluvial",
+    "key": "root",
+    "current": {
+      "syntax": "identifier",
+      "type": "integer",
+      "description": {
+        "en": "Node the layout starts from.",
+        "de": "Knoten, bei dem das Layout beginnt."
+      }
+    },
+    "desiredType": "integer",
+    "desiredSyntax": "expression",
+    "desiredDefault": 1,
+    "source": "semio-viz-network.sty",
+    "evidence": "1126 integer setter;1342 integer modulo/BFS; graph facade445/493/553 integer setter/reset/forward"
+  },
+  {
+    "family": "arc-diagram",
+    "key": "root",
+    "current": {
+      "syntax": "identifier",
+      "type": "integer",
+      "description": {
+        "en": "Node the layout starts from.",
+        "de": "Knoten, bei dem das Layout beginnt."
+      }
+    },
+    "desiredType": "integer",
+    "desiredSyntax": "expression",
+    "desiredDefault": 1,
+    "source": "semio-viz-network.sty",
+    "evidence": "1126 integer setter;1342 integer modulo/BFS; graph facade445/493/553 integer setter/reset/forward"
+  },
+  {
+    "family": "biofabric",
+    "key": "root",
+    "current": {
+      "syntax": "identifier",
+      "type": "integer",
+      "description": {
+        "en": "Node the layout starts from.",
+        "de": "Knoten, bei dem das Layout beginnt."
+      }
+    },
+    "desiredType": "integer",
+    "desiredSyntax": "expression",
+    "desiredDefault": 1,
+    "source": "semio-viz-network.sty",
+    "evidence": "1126 integer setter;1342 integer modulo/BFS; graph facade445/493/553 integer setter/reset/forward"
+  },
+  {
+    "family": "chord",
+    "key": "root",
+    "current": {
+      "syntax": "identifier",
+      "type": "integer",
+      "description": {
+        "en": "Node the layout starts from.",
+        "de": "Knoten, bei dem das Layout beginnt."
+      }
+    },
+    "desiredType": "integer",
+    "desiredSyntax": "expression",
+    "desiredDefault": 1,
+    "source": "semio-viz-network.sty",
+    "evidence": "1126 integer setter;1342 integer modulo/BFS; graph facade445/493/553 integer setter/reset/forward"
+  },
+  {
+    "family": "dependency-wheel",
+    "key": "root",
+    "current": {
+      "syntax": "identifier",
+      "type": "integer",
+      "description": {
+        "en": "Node the layout starts from.",
+        "de": "Knoten, bei dem das Layout beginnt."
+      }
+    },
+    "desiredType": "integer",
+    "desiredSyntax": "expression",
+    "desiredDefault": 1,
+    "source": "semio-viz-network.sty",
+    "evidence": "1126 integer setter;1342 integer modulo/BFS; graph facade445/493/553 integer setter/reset/forward"
+  },
+  {
+    "family": "edge-bundled",
+    "key": "root",
+    "current": {
+      "syntax": "identifier",
+      "type": "integer",
+      "description": {
+        "en": "Node the layout starts from.",
+        "de": "Knoten, bei dem das Layout beginnt."
+      }
+    },
+    "desiredType": "integer",
+    "desiredSyntax": "expression",
+    "desiredDefault": 1,
+    "source": "semio-viz-network.sty",
+    "evidence": "1126 integer setter;1342 integer modulo/BFS; graph facade445/493/553 integer setter/reset/forward"
+  },
+  {
+    "family": "hive-plot",
+    "key": "root",
+    "current": {
+      "syntax": "identifier",
+      "type": "integer",
+      "description": {
+        "en": "Node the layout starts from.",
+        "de": "Knoten, bei dem das Layout beginnt."
+      }
+    },
+    "desiredType": "integer",
+    "desiredSyntax": "expression",
+    "desiredDefault": 1,
+    "source": "semio-viz-network.sty",
+    "evidence": "1126 integer setter;1342 integer modulo/BFS; graph facade445/493/553 integer setter/reset/forward"
+  },
+  {
+    "family": "node-link-matrix",
+    "key": "root",
+    "current": {
+      "syntax": "identifier",
+      "type": "integer",
+      "description": {
+        "en": "Node the layout starts from.",
+        "de": "Knoten, bei dem das Layout beginnt."
+      }
+    },
+    "desiredType": "integer",
+    "desiredSyntax": "expression",
+    "desiredDefault": 1,
+    "source": "semio-viz-network.sty",
+    "evidence": "1126 integer setter;1342 integer modulo/BFS; graph facade445/493/553 integer setter/reset/forward"
+  },
+  {
+    "family": "parallel-sets",
+    "key": "root",
+    "current": {
+      "syntax": "identifier",
+      "type": "integer",
+      "description": {
+        "en": "Node the layout starts from.",
+        "de": "Knoten, bei dem das Layout beginnt."
+      }
+    },
+    "desiredType": "integer",
+    "desiredSyntax": "expression",
+    "desiredDefault": 1,
+    "source": "semio-viz-network.sty",
+    "evidence": "1126 integer setter;1342 integer modulo/BFS; graph facade445/493/553 integer setter/reset/forward"
+  },
+  {
+    "family": "sankey",
+    "key": "root",
+    "current": {
+      "syntax": "identifier",
+      "type": "integer",
+      "description": {
+        "en": "Node the layout starts from.",
+        "de": "Knoten, bei dem das Layout beginnt."
+      }
+    },
+    "desiredType": "integer",
+    "desiredSyntax": "expression",
+    "desiredDefault": 1,
+    "source": "semio-viz-network.sty",
+    "evidence": "1126 integer setter;1342 integer modulo/BFS; graph facade445/493/553 integer setter/reset/forward"
+  },
+  {
+    "family": "arch-layer",
+    "key": "tier-title",
+    "current": {
+      "syntax": "scalar",
+      "type": "string",
+      "default": "true",
+      "description": {
+        "en": "Draw the tier caption on the left.",
+        "de": "Die Ebenenbeschriftung links zeichnen."
+      }
+    },
+    "desiredType": "boolean",
+    "desiredSyntax": "scalar",
+    "desiredDefault": true,
+    "source": "semio-viz-diagram-architecture.sty",
+    "evidence": "44 bool setter;60 true reset;102 bool caption branch"
+  },
+  {
+    "family": "graph",
+    "key": "padding",
+    "current": {
+      "syntax": "scalar",
+      "type": "string",
+      "default": "3",
+      "description": {
+        "en": "Same inset on all four sides.",
+        "de": "Gleiche Einrückung auf allen vier Seiten."
+      }
+    },
+    "desiredType": "number",
+    "desiredSyntax": "expression",
+    "desiredDefault": 3,
+    "source": "semio-viz-network-graph.sty",
+    "evidence": "465–469 four fp assignments;506–509 reset3; frame inset dimensions consume fp"
+  },
+  {
+    "family": "commit-graph",
+    "key": "padding",
+    "current": {
+      "syntax": "scalar",
+      "type": "string",
+      "description": {
+        "en": "Same inset on all four sides.",
+        "de": "Gleiche Einrückung auf allen vier Seiten."
+      }
+    },
+    "desiredType": "number",
+    "desiredSyntax": "expression",
+    "desiredDefault": 3,
+    "source": "semio-viz-network-graph.sty",
+    "evidence": "465–469 four fp assignments;506–509 reset3; frame inset dimensions consume fp"
+  },
+  {
+    "family": "data-structure",
+    "key": "padding",
+    "current": {
+      "syntax": "scalar",
+      "type": "string",
+      "description": {
+        "en": "Same inset on all four sides.",
+        "de": "Gleiche Einrückung auf allen vier Seiten."
+      }
+    },
+    "desiredType": "number",
+    "desiredSyntax": "expression",
+    "desiredDefault": 3,
+    "source": "semio-viz-network-graph.sty",
+    "evidence": "465–469 four fp assignments;506–509 reset3; frame inset dimensions consume fp"
+  },
+  {
+    "family": "neural-network",
+    "key": "padding",
+    "current": {
+      "syntax": "scalar",
+      "type": "string",
+      "description": {
+        "en": "Same inset on all four sides.",
+        "de": "Gleiche Einrückung auf allen vier Seiten."
+      }
+    },
+    "desiredType": "number",
+    "desiredSyntax": "expression",
+    "desiredDefault": 3,
+    "source": "semio-viz-network-graph.sty",
+    "evidence": "465–469 four fp assignments;506–509 reset3; frame inset dimensions consume fp"
+  },
+  {
+    "family": "schema-graph",
+    "key": "padding",
+    "current": {
+      "syntax": "scalar",
+      "type": "string",
+      "description": {
+        "en": "Same inset on all four sides.",
+        "de": "Gleiche Einrückung auf allen vier Seiten."
+      }
+    },
+    "desiredType": "number",
+    "desiredSyntax": "expression",
+    "desiredDefault": 3,
+    "source": "semio-viz-network-graph.sty",
+    "evidence": "465–469 four fp assignments;506–509 reset3; frame inset dimensions consume fp"
+  },
+  {
+    "family": "state-machine",
+    "key": "padding",
+    "current": {
+      "syntax": "scalar",
+      "type": "string",
+      "description": {
+        "en": "Same inset on all four sides.",
+        "de": "Gleiche Einrückung auf allen vier Seiten."
+      }
+    },
+    "desiredType": "number",
+    "desiredSyntax": "expression",
+    "desiredDefault": 3,
+    "source": "semio-viz-network-graph.sty",
+    "evidence": "465–469 four fp assignments;506–509 reset3; frame inset dimensions consume fp"
+  },
+  {
+    "family": "geo-basemap",
+    "key": "places",
+    "current": {
+      "syntax": "scalar",
+      "type": "string",
+      "description": {
+        "en": "Draw the place labels.",
+        "de": "Die Ortsbeschriftungen zeichnen."
+      }
+    },
+    "desiredType": "string",
+    "desiredSyntax": "identifier",
+    "desiredDefault": "demo-geo-cities",
+    "source": "semio-viz-geo-map.sty",
+    "evidence": "37 TL named geometry setter;53 reset;91 geometry callback"
+  },
+  {
+    "family": "geo-field",
+    "key": "grid",
+    "current": {
+      "syntax": "scalar",
+      "type": "string",
+      "description": {
+        "en": "Grid lines drawn behind the marks.",
+        "de": "Gitterlinien hinter den Marken."
+      }
+    },
+    "desiredType": "string",
+    "desiredSyntax": "identifier",
+    "desiredDefault": "demo-grid",
+    "source": "semio-viz-geo-contours.sty",
+    "evidence": "32 TL setter;102 reset;127 grid_require lookup"
+  },
+  {
+    "family": "geo-terrain",
+    "key": "grid",
+    "current": {
+      "syntax": "scalar",
+      "type": "string",
+      "description": {
+        "en": "Grid lines drawn behind the marks.",
+        "de": "Gitterlinien hinter den Marken."
+      }
+    },
+    "desiredType": "string",
+    "desiredSyntax": "identifier",
+    "desiredDefault": "demo-grid",
+    "source": "semio-viz-geo-contours.sty",
+    "evidence": "32 TL setter;102 reset;127 grid_require lookup"
+  },
+  {
+    "family": "geo-weather",
+    "key": "grid",
+    "current": {
+      "syntax": "scalar",
+      "type": "string",
+      "description": {
+        "en": "Grid lines drawn behind the marks.",
+        "de": "Gitterlinien hinter den Marken."
+      }
+    },
+    "desiredType": "string",
+    "desiredSyntax": "identifier",
+    "desiredDefault": "demo-grid",
+    "source": "semio-viz-geo-contours.sty",
+    "evidence": "32 TL setter;102 reset;127 grid_require lookup"
+  },
+  {
+    "family": "spatial-scalar-field",
+    "key": "grid",
+    "current": {
+      "syntax": "scalar",
+      "type": "string",
+      "description": {
+        "en": "Grid lines drawn behind the marks.",
+        "de": "Gitterlinien hinter den Marken."
+      }
+    },
+    "desiredType": "string",
+    "desiredSyntax": "identifier",
+    "desiredDefault": "demo-grid",
+    "source": "semio-viz-geo-contours.sty",
+    "evidence": "32 TL setter;102 reset;127 grid_require lookup"
+  },
+  {
+    "family": "geo-hexbin",
+    "key": "points",
+    "current": {
+      "syntax": "scalar",
+      "type": "string",
+      "description": {
+        "en": "Draw the individual data points.",
+        "de": "Die einzelnen Datenpunkte zeichnen."
+      }
+    },
+    "desiredType": "string",
+    "desiredSyntax": "identifier",
+    "desiredDefault": "demo-points-dense",
+    "source": "semio-viz-geo-symbols.sty",
+    "evidence": "69 TL point-set setter;110 reset;282 hexbin named-set argument"
+  },
+  {
+    "family": "geo-terrain",
+    "key": "labels",
+    "current": {
+      "syntax": "scalar",
+      "type": "string",
+      "description": {
+        "en": "Draw the captions.",
+        "de": "Die Beschriftungen zeichnen."
+      }
+    },
+    "desiredType": "boolean",
+    "desiredSyntax": "scalar",
+    "desiredDefault": false,
+    "source": "semio-viz-geo-contours.sty",
+    "evidence": "36 bool setter;106 reset false;258 bool caption branch"
+  },
+  {
+    "family": "geo-weather",
+    "key": "labels",
+    "current": {
+      "syntax": "scalar",
+      "type": "string",
+      "description": {
+        "en": "Draw the captions.",
+        "de": "Die Beschriftungen zeichnen."
+      }
+    },
+    "desiredType": "boolean",
+    "desiredSyntax": "scalar",
+    "desiredDefault": false,
+    "source": "semio-viz-geo-contours.sty",
+    "evidence": "36 bool setter;106 reset false;258 bool caption branch"
+  },
+  {
+    "family": "spatial-scalar-field",
+    "key": "labels",
+    "current": {
+      "syntax": "scalar",
+      "type": "string",
+      "description": {
+        "en": "Draw the captions.",
+        "de": "Die Beschriftungen zeichnen."
+      }
+    },
+    "desiredType": "boolean",
+    "desiredSyntax": "scalar",
+    "desiredDefault": false,
+    "source": "semio-viz-geo-contours.sty",
+    "evidence": "36 bool setter;106 reset false;258 bool caption branch"
+  },
+  {
+    "family": "geo-weather",
+    "key": "filled",
+    "current": {
+      "syntax": "scalar",
+      "type": "string",
+      "description": {
+        "en": "Fill the bands between contour levels.",
+        "de": "Die Bänder zwischen den Höhenlinien füllen."
+      }
+    },
+    "desiredType": "boolean",
+    "desiredSyntax": "scalar",
+    "desiredDefault": false,
+    "source": "semio-viz-geo-contours.sty",
+    "evidence": "35 bool setter;105 false reset;242 bool fill branch; mode overrides apply after parsing"
+  },
+  {
+    "family": "geo-weather",
+    "key": "raster",
+    "current": {
+      "syntax": "scalar",
+      "type": "string",
+      "description": {
+        "en": "Draw the field as a filled raster.",
+        "de": "Das Feld als gefülltes Raster zeichnen."
+      }
+    },
+    "desiredType": "boolean",
+    "desiredSyntax": "scalar",
+    "desiredDefault": false,
+    "source": "semio-viz-geo-contours.sty",
+    "evidence": "37 bool setter;107 false reset;431 bool raster branch"
+  },
+  {
+    "family": "geo-terrain",
+    "key": "cell",
+    "current": {
+      "syntax": "identifier",
+      "type": "string",
+      "description": {
+        "en": "Cell size in millimetres, or the column that carries it.",
+        "de": "Zellgröße in Millimetern oder die Spalte, die sie trägt."
+      }
+    },
+    "desiredType": "number",
+    "desiredSyntax": "expression",
+    "desiredDefault": 12,
+    "source": "semio-viz-geo-contours.sty",
+    "evidence": "33 fp setter;103 reset12;cell spacing actual coordinates; terrain and scalar parser inherit field"
+  },
+  {
+    "family": "spatial-scalar-field",
+    "key": "cell",
+    "current": {
+      "syntax": "identifier",
+      "type": "string",
+      "description": {
+        "en": "Cell size in millimetres, or the column that carries it.",
+        "de": "Zellgröße in Millimetern oder die Spalte, die sie trägt."
+      }
+    },
+    "desiredType": "number",
+    "desiredSyntax": "expression",
+    "desiredDefault": 12,
+    "source": "semio-viz-geo-contours.sty",
+    "evidence": "33 fp setter;103 reset12;cell spacing actual coordinates; terrain and scalar parser inherit field"
+  },
+  {
+    "family": "geo-terrain",
+    "key": "levels",
+    "current": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Number of contour levels.",
+        "de": "Anzahl der Höhenlinienniveaus."
+      }
+    },
+    "desiredType": "integer",
+    "desiredSyntax": "expression",
+    "desiredDefault": 5,
+    "source": "semio-viz-geo-contours.sty",
+    "evidence": "34 int setter;104 reset5; contour levels integer loop; all three parse field"
+  },
+  {
+    "family": "geo-weather",
+    "key": "levels",
+    "current": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Number of contour levels.",
+        "de": "Anzahl der Höhenlinienniveaus."
+      }
+    },
+    "desiredType": "integer",
+    "desiredSyntax": "expression",
+    "desiredDefault": 5,
+    "source": "semio-viz-geo-contours.sty",
+    "evidence": "34 int setter;104 reset5; contour levels integer loop; all three parse field"
+  },
+  {
+    "family": "spatial-scalar-field",
+    "key": "levels",
+    "current": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Number of contour levels.",
+        "de": "Anzahl der Höhenlinienniveaus."
+      }
+    },
+    "desiredType": "integer",
+    "desiredSyntax": "expression",
+    "desiredDefault": 5,
+    "source": "semio-viz-geo-contours.sty",
+    "evidence": "34 int setter;104 reset5; contour levels integer loop; all three parse field"
+  },
+  {
+    "family": "spatial-scalar-field",
+    "key": "row",
+    "current": {
+      "syntax": "identifier",
+      "type": "string",
+      "description": {
+        "en": "Row index on the layout grid.",
+        "de": "Zeilenindex im Anordnungsgitter."
+      }
+    },
+    "desiredType": "integer",
+    "desiredSyntax": "expression",
+    "desiredDefault": 3,
+    "source": "semio-viz-geo-contours.sty",
+    "evidence": "56 int setter;shared reset row3;scalar parser505 terrain inheritance; profile row index"
+  },
+  {
+    "family": "arch-axonometric",
+    "key": "scale-z",
+    "current": {
+      "syntax": "expression",
+      "type": "string",
+      "default": "1",
+      "description": {
+        "en": "Vertical foreshortening.",
+        "de": "Senkrechte Verkürzung."
+      }
+    },
+    "desiredType": "number",
+    "desiredSyntax": "expression",
+    "desiredDefault": 1.0,
+    "source": "semio-viz-diagram-architecture.sty",
+    "evidence": "429 fp setter;456 reset1;444 projected z coefficient"
+  },
+  {
+    "family": "arch-schematic",
+    "key": "col-gap",
+    "current": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Millimetre gap between grid columns.",
+        "de": "Millimeterabstand zwischen den Gitterspalten."
+      }
+    },
+    "desiredType": "number",
+    "desiredSyntax": "expression",
+    "desiredDefault": 4.0,
+    "source": "semio-viz-diagram-architecture.sty",
+    "evidence": "900 fp setter;909 dg_reset;916 layout;flowchart223 reset4"
+  },
+  {
+    "family": "arch-schematic",
+    "key": "row-gap",
+    "current": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Millimetre gap between grid rows.",
+        "de": "Millimeterabstand zwischen den Gitterzeilen."
+      }
+    },
+    "desiredType": "number",
+    "desiredSyntax": "expression",
+    "desiredDefault": 4.0,
+    "source": "semio-viz-diagram-architecture.sty",
+    "evidence": "901 fp setter;dg_reset/layout;flowchart224 reset4"
+  },
+  {
+    "family": "uml-class",
+    "key": "col-gap",
+    "current": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Millimetre gap between grid columns.",
+        "de": "Millimeterabstand zwischen den Gitterspalten."
+      }
+    },
+    "desiredType": "number",
+    "desiredSyntax": "expression",
+    "desiredDefault": 4.0,
+    "source": "semio-viz-diagram-uml.sty",
+    "evidence": "74 fp setter;85 dg_reset;98 dg_layout;flowchart223 reset4"
+  },
+  {
+    "family": "infographic-icon",
+    "key": "unit-value",
+    "current": {
+      "syntax": "expression",
+      "type": "string",
+      "default": "1",
+      "description": {
+        "en": "Units represented by one glyph.",
+        "de": "Einheiten, die ein Glyph darstellt."
+      }
+    },
+    "desiredType": "number",
+    "desiredSyntax": "expression",
+    "desiredDefault": 1.0,
+    "source": "semio-viz-infographic.sty",
+    "evidence": "211 fp setter;225 reset1;241/267 icon count division"
+  },
+  {
+    "family": "state-overview",
+    "key": "detail-share",
+    "current": {
+      "syntax": "expression",
+      "type": "string",
+      "default": "0.5",
+      "description": {
+        "en": "Fraction of the frame taken by the detail panel.",
+        "de": "Anteil des Rahmens, den das Detailfeld einnimmt."
+      }
+    },
+    "desiredType": "number",
+    "desiredSyntax": "expression",
+    "desiredDefault": 0.5,
+    "source": "semio-viz-interactionstate.sty",
+    "evidence": "66 fp setter;84 reset.5;133/142/152/160 pane size"
+  }
+]

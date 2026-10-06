@@ -1,0 +1,42 @@
+[
+  {
+    "file": "C:/git/semio/.vscode/launch.json",
+    "before": "69B496D1FB60620E823D27BDFBA28DC3518C1A1AEBAA532F643695379AF009F5",
+    "after": "6460B3805054AFFC16F242D57150EF1F39A74ABF4E5D6D4A2F5399EC40F953F8",
+    "configuration": {
+      "name": "⚖️test📓️print🎨️geo-palette",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "geo-palette"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.037127
+      }
+    }
+  },
+  {
+    "file": "C:/git/semio/.vscode/🧩️launch.seed.jsonc",
+    "before": "7663F61936BDF8CB09B538C7084B92419193F890BA7681B9A963ABF3C0C1D5CA",
+    "after": "6220D8AE4A7225F888D11132D08CCA56A694BAB5DCCC769E295602A8A4DFDF26",
+    "configuration": {
+      "name": "⚖️test📓️print🎨️geo-palette",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "geo-palette"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.037127
+      }
+    }
+  }
+]

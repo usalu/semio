@@ -103,3 +103,62 @@ test("JSON-schema equality preserves array order and ignores object member order
     expect(validateJsonSchemaSubset(schema, [row.left, row.right]).length === 0).toBe(ajv.compile(schema)([row.left, row.right]));
   }
 });
+
+
+test("source launch catalogs retain example membership while compiled channels are withheld", async () => {
+  const { generateWithheldPlaygroundRegistry } = await import("../../🎮️playground/🔎️discovery/🟦️.ts");
+  const { registryCatalogInputView } = await import("../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
+  const output = process.env.SEMIO_TEST_ARTIFACT_DIR!;
+  const root = mkdtempSync(join(output, "source-launch-")), cratePath = "owner/📦️packages/🦀️rust";
+  const cargo = '[package]\nname="owner"\n[[package.metadata.semio.playground]]\nvariant="owner"\napp="owner.drawing@1/*#editor"\nports={react=6000,wgpu=6100}\nengines=["engine/📦️packages/🦀️rust"]\n[package.metadata.semio.sources]\nartifacts=["../../🗿️artifacts"]\n';
+  mkdirSync(join(root,cratePath),{recursive:true});writeFileSync(join(root,cratePath,"Cargo.toml"),cargo);
+  const examples = ["🎬️demo","🎬️demo-session"];
+  for(const example of examples){const folder=join(root,"owner/🗿️artifacts/🖍️drawing/📚️examples",example);mkdirSync(folder,{recursive:true});writeFileSync(join(folder,"🦀️.rs"),"");}
+  const [row]=generateWithheldPlaygroundRegistry(root,[{code:"stale-channel",pluginId:"owner",cratePath,descriptorChannel:REGISTRY_HOST_APP_CHANNEL_VERSION-1,hostChannel:REGISTRY_HOST_APP_CHANNEL_VERSION}],registryCatalogInputView(root,(await import("../🟦️.ts")).TAXONOMY));
+  const parsed = parseToml(cargo) as { package: { metadata: { semio: { playground: { engines: string[]; ports: {react:number;wgpu:number} }[] } } } };
+  expect(row!.examples).toEqual(examples);expect(row!.engines).toEqual(parsed.package.metadata.semio.playground[0].engines);expect(row!.ports).toEqual(parsed.package.metadata.semio.playground[0].ports);
+});
+
+
+test("staged sessions carry their compiled catalog independently of the global projection", async () => {
+  const { stagePlaygroundSession } = await import("../../🎮️playground/🧭️session/🟦️.ts");
+  const { readGeneratedCatalogProjection } = await import("../../📖️catalog-view/🟦️.ts");
+  const root = mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR!, "session-catalog-"));
+  const entry = corpus.cases.find(row => row.stage === "deployed" && row.valid)!.value;
+  const projection = { entries: [entry], playgrounds: [{ variant: "portable", pluginId: entry.pluginId, aliases: [], app: "portable.drawing@1/*#editor", ports: { react: 6000, wgpu: 6100 }, examples: [], assets: [], engines: [], cratePath: entry.cratePath }] } as never;
+  const result = await stagePlaygroundSession("portable", root, projection);
+  const parsed = readGeneratedCatalogProjection(join(root,"portable"));
+  const oracle = new Ajv({ strict: false }).addSchema(identity).addSchema(contract).compile({ $ref: contract.$id + "#/$defs/DeployedRegistryEntryV1" });
+  expect(oracle(parsed.entries[0])).toBe(true);
+  expect(parsed).toEqual(projection);
+  expect(result.session.plugins.map(row => row.pluginId)).toEqual([entry.pluginId]);
+});
+
+test("descriptor emission consumes the published Nx prerequisite without starting Cargo", async () => {
+  const { publishedDescriptorEmitter } = await import("../../../🖨️describe/🏗️component-build/🟦️.ts");
+  const root = mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR!, "descriptor-prerequisite-"));
+  const relative = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust/dist/build/semio-framework-plugin-describe" + (process.platform === "win32" ? ".exe" : "");
+  expect(() => publishedDescriptorEmitter(root)).toThrow(/Nx prerequisite/);
+  mkdirSync(dirname(join(root,relative)), {recursive:true});writeFileSync(join(root,relative),"published");
+  expect(publishedDescriptorEmitter(root)).toBe(join(root,relative));
+});
+
+
+test("source deployment names remain available before compiled catalog admission", async () => {
+  const {generateComponentSourceRegistry} = await import("../🟦️.ts");
+  const {emitTypeScript} = await import("../../📽️projection/🟦️.ts");
+  const {registryModuleDirectories} = await import("../../📖️catalog-view/🟦️.ts");
+  const root = mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR!,"source-directories-")), manifestPath="owner/📦️packages/🦀️rust/Cargo.toml";
+  mkdirSync(dirname(join(root,manifestPath)),{recursive:true});
+  const cargo=corpus.source.cargo+'deployment-directory='+JSON.stringify(corpus.source.directoryName)+'\n';
+  writeFileSync(join(root,manifestPath),cargo);
+  const rows=generateComponentSourceRegistry(root,{packages:[{lang:"🦀️rust",manifestPath}] as never});
+  const inventory=registryModuleDirectories(rows.flatMap(row => row.directoryName === undefined ? [] : [{pluginId:row.pluginId,directoryName:row.directoryName}]));
+  const source=emitTypeScript([],inventory);
+  const bundle=buildSync({stdin:{contents:source,loader:"ts",resolveDir:resolve(import.meta.dir,"../../🤖️generated/🧩️plugins")},bundle:true,platform:"node",format:"esm",write:false});
+  const node=spawnSync("node",["--input-type=module"],{input:bundle.outputFiles[0]!.text+'\nconsole.log(JSON.stringify({modules:COMPONENT_MODULE_DIRECTORIES,plugins:PLUGIN_BUILD_TARGETS}))',encoding:"utf8"});
+  expect(node.status,node.stderr).toBe(0);
+  const result=JSON.parse(node.stdout), parsed=parseToml(cargo) as any;
+  expect(result.modules).toEqual([{pluginId:"portable",directoryName:parsed.package.metadata.semio["deployment-directory"]}]);
+  expect(result.plugins).toEqual([]);
+});

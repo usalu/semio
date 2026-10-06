@@ -1,0 +1,28 @@
+{
+  "file": "C:/git/semio/🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-api/🔓️viz-api.tex",
+  "before": "8FFB47574FA9B3FA5BC565D7ADB32C49B4CCB1E258DB2F8FF2998FE80925789A",
+  "after": "C5B2163CDBE74E42E29EF4D6CCE8F463BE76FA8CA741B8388A53CE79E5837B1C",
+  "sources": [
+    {
+      "file": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-geo-routes.sty",
+      "hash": "D02E1EBAEC78E7960CE03BFDB6D18CB662E739B0D8EC0E807FD503F5115D6E86"
+    },
+    {
+      "file": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-geo-contours.sty",
+      "hash": "ED810FF0CF1A7CC3ADF2E0CDDCC8FBB479774C53DD596FA8DACB3F3C39802467"
+    }
+  ],
+  "rows": 10,
+  "anchor": "%endregion 🔖️GeoSpatialSharedKeyTables",
+  "scopes": [
+    {
+      "id": "api-path-family-geo-route",
+      "scope": "semio / viz / family / geo-route"
+    },
+    {
+      "id": "api-path-family-spatial-scalar-field",
+      "scope": "semio / viz / family / spatial-scalar-field"
+    }
+  ],
+  "boundary": "Direct native keys only; geo/base and geo-field remain separately referenced rather than included in these tables."
+}

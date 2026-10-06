@@ -1,0 +1,25 @@
+{
+  "receipts": [
+    {
+      "name": "token-artifact-files-complete-green-2026-10-06",
+      "phase": "artifact-files",
+      "exitCode": 0,
+      "completedUtc": "2026-10-05T23:59:54.3099681Z"
+    },
+    {
+      "name": "token-entrypoints-green-2026-10-06",
+      "phase": "token-entrypoints-green-2026-10-06",
+      "completedUtc": "2026-10-05T23:52:14.4146395Z",
+      "exitCode": 0
+    }
+  ],
+  "hashes": {
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🗂️files/🟦️.ts": "6364b9ef7ac45fed824f785f5b70b995f9fb739e52af30f597da267eaa8633d0",
+    "🧰️framework/🛍️products/📓️print/🔨️modules/🎨print-design-token-paints/🟦️.ts": "b5673af41beb6e4ef0d536819f49a1b327b95a1c25149d4654db17a8db1e0935",
+    "🧰️framework/🛍️products/📓️print/🔨️modules/🎨print-design-token-paints/📜️script.ts": "2cd497412750da0230fdfa0be7c5586813fcba34ed764f9494b514d3a5bdf6ed"
+  },
+  "observations": {
+    "generic": "Exact byte changes including malformed UTF8, CRLF and final newline; supported link refusals; existing artifact publication suite",
+    "entrypoints": "Four actual no-op exported writer/generate command invocations preserved UTF8 bytes/dev/ino/size/mtimeNs/ctimeNs"
+  }
+}

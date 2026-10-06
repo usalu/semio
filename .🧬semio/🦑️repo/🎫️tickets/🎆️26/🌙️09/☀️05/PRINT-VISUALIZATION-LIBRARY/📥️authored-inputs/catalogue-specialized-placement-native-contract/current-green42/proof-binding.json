@@ -1,0 +1,26 @@
+[
+  {
+    "family": "biofabric",
+    "session": 35573,
+    "exitCode": 0,
+    "actualCases": 14,
+    "log": "\ud83d\uddd1\ufe0fgenerated\\catalogue-final-biofabric-guard.log",
+    "sha256": "9e3c8080e095e54689f446cc95614e89f243bddbf8dde44ec17e939d5038828d"
+  },
+  {
+    "family": "data-structure",
+    "session": 83127,
+    "exitCode": 0,
+    "actualCases": 14,
+    "log": "\ud83d\uddd1\ufe0fgenerated\\catalogue-final-data-structure-guard.log",
+    "sha256": "81fd6afe681ff11a07e9eef04450c97cab33f63213a5d844ecf2dc98cc3f8b49"
+  },
+  {
+    "family": "commit-graph",
+    "session": 97406,
+    "exitCode": 0,
+    "actualCases": 14,
+    "log": "\ud83d\uddd1\ufe0fgenerated\\catalogue-final-commit-graph-guard.log",
+    "sha256": "7a8825db9c8cbbd7ce5e9c5d2998f5f5741e8a20fd93993c146c08f57dc1ff16"
+  }
+]

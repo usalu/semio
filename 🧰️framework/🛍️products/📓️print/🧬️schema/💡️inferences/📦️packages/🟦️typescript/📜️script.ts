@@ -89,7 +89,7 @@ class TestScript extends BundleScript {
 /** 🏗️ Type-checks the complete visualization inference surface. */
 class BuildScript extends BundleScript {
   async run(): Promise<void> {
-    await runOwnedCommand(process.execPath, ["x", "tsc", "--noEmit", "--skipLibCheck", "--strict", "--target", "ES2022", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--types", "bun", "./🟦️.ts", "../../🧵️worker/🟦️.ts"], this.root, "print-viz-inference-typecheck", buildBudgetMs(), { env: process.env });
+    await runOwnedCommand(process.execPath, ["x", "tsc", "--noEmit", "--skipLibCheck", "--strict", "--target", "ES2022", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--types", "bun", "./🟦️.ts", "../../../../🔨️modules/🏠️host/💡️inferences/🧵️worker/🟦️.ts"], this.root, "print-viz-inference-typecheck", buildBudgetMs(), { env: process.env });
     await runOwnedCommand(process.execPath, ["x", "tsc", "--noEmit", "--skipLibCheck", "--strict", "--target", "ES2022", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--types", "bun", "../../../../🧪️tests/🧬️native-chart-grammar/🟦️.ts"], this.root, "print-viz-native-grammar-typecheck", buildBudgetMs(), { env: process.env });
     const barrel = (await import("./🟦️.ts")) as Record<string, unknown>;
     console.log(`[viz-inference] barrel exports ${Object.keys(barrel).length} symbols`);

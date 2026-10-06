@@ -1,0 +1,56 @@
+{
+  "sources": [
+    {
+      "length": 17553,
+      "path": "C:/git/semio/🧰️framework/🛍️products/📓️print/🧬️schema/💡️inferences/📚️catalogue/🟦️.ts",
+      "sha256": "2E50D9286442F706B3EA3D47596F4D8BDAD29DE2DBF3877FC52B78A4273DE597"
+    },
+    {
+      "length": 45544,
+      "path": "C:/git/semio/🧰️framework/🛍️products/📓️print/🧬️schema/💡️inferences/🦀️.rs",
+      "sha256": "ED0B37EB3CC27BE411CC7CCF4E9CCF0BD2E3825D04BA09B2EA8A1CFD20E4BB39"
+    },
+    {
+      "length": 7753,
+      "path": "C:/git/semio/🧰️framework/🛍️products/📓️print/🧬️schema/🟦️.ts",
+      "sha256": "DEB05AF73946F1FDC09A267409A2D3006975A1F476A739C9349BD6FE24FC0AF9"
+    },
+    {
+      "length": 1604613,
+      "path": "C:/git/semio/🧰️framework/🛍️products/📓️print/🧬️schema/🔣️.json",
+      "sha256": "DA2C25CA2DCA27C564952CC4CCC0F2F99DF30FD11980A11D4D7BF9A9B9CC4B15"
+    },
+    {
+      "length": 274513,
+      "path": "C:/git/semio/🧰️framework/🛍️products/📓️print/🧪️tests/🧬️native-chart-grammar/🟦️.ts",
+      "sha256": "75AAD4128379FAD7696A6833D90983DC8831F8517DCF26E1A626910CEA11C313"
+    },
+    {
+      "length": 365504,
+      "path": "C:/git/semio/🧰️framework/🛍️products/📓️print/🧪️tests/🧬️native-chart-grammar/🔣️.json",
+      "sha256": "299499085827893845F0F983D21A7A72819A895282DDDE6E5A8439EFF598C30D"
+    },
+    {
+      "length": 24545,
+      "path": "C:/git/semio/🧰️framework/🛍️products/📓️print/🧪️tests/🧬️chart-mutations/🦀️.rs",
+      "sha256": "F045BE38C0F34F0F17A9E5504D46A46324F8266D69FABC6792F8AC0D8212AD09"
+    }
+  ],
+  "Rust": {
+    "status": "TERMINAL_FAILED_STOCK_ONLY",
+    "session": 84414,
+    "exit": 1,
+    "seconds": 50.7,
+    "testsPassed": 23,
+    "testsTotal": 24,
+    "scientificAdmission": "142 cases passed",
+    "reason": "Old stock proof/inference graph dangling edges; fixed by Root before expanded full GREEN"
+  },
+  "TS": {
+    "cases": 142,
+    "exit": 0,
+    "seconds": 13.3,
+    "session": 15807
+  },
+  "historical": true
+}

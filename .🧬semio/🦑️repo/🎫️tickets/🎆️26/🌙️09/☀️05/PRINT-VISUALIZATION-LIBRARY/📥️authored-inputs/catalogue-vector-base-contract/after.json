@@ -1,0 +1,127 @@
+{
+  "owner": "GEO-SPATIAL",
+  "options": {
+    "arrow": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Arrow length in millimetres at unit vector magnitude.",
+        "de": "Pfeillänge in Millimetern bei Einheitsbetrag des Vektors."
+      }
+    },
+    "cell": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Distance between neighbouring plane-lattice samples in millimetres.",
+        "de": "Abstand benachbarter Abtastpunkte des ebenen Gitters in Millimetern."
+      }
+    },
+    "columns": {
+      "syntax": "expression",
+      "type": "integer",
+      "description": {
+        "en": "Number of sampled columns in the plane lattice.",
+        "de": "Anzahl abgetasteter Spalten im ebenen Gitter."
+      }
+    },
+    "dt": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Time increment of each RK4 integration step.",
+        "de": "Zeitinkrement jedes RK4-Integrationsschritts."
+      }
+    },
+    "field": {
+      "syntax": "identifier",
+      "type": "string",
+      "description": {
+        "en": "Analytic field selector or named rectangular vector-field collection; named fields use bilinear interpolation over their declared domain.",
+        "de": "Auswahl eines analytischen Felds oder Name einer rechteckigen Vektorfeldsammlung; benannte Felder verwenden bilineare Interpolation über ihrem deklarierten Bereich."
+      }
+    },
+    "lineWidth": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "Vector path width as a TeX dimension; the hairline token by default.",
+        "de": "Breite der Vektorpfade als TeX-Dimension; standardmäßig das Haarlinien-Token."
+      }
+    },
+    "opacity": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Layer opacity multiplied by the rendering opacity (0.55 for LIC, 0.7 for particles).",
+        "de": "Ebenendeckkraft multipliziert mit der Darstellungsdeckkraft (0,55 für LIC, 0,7 für Partikel)."
+      }
+    },
+    "palette": {
+      "syntax": "identifier",
+      "type": "string",
+      "description": {
+        "en": "Named colour palette resolved by semio-viz-theme.",
+        "de": "Benannte Farbpalette, die semio-viz-theme auflöst."
+      }
+    },
+    "paletteSteps": {
+      "syntax": "expression",
+      "type": "integer",
+      "minimum": 1,
+      "default": 5,
+      "description": {
+        "en": "Number of geographic palette levels, independently of vector integration steps; one level uses the palette midpoint.",
+        "de": "Anzahl der geografischen Palettenstufen unabhängig von den Vektorintegrationsschritten; eine Stufe nutzt die Palettenmitte."
+      }
+    },
+    "render": {
+      "syntax": "identifier",
+      "type": "string",
+      "description": {
+        "en": "Rendering mode: quiver, streamline, streakline, particle or lic.",
+        "de": "Darstellungsmodus: quiver, streamline, streakline, particle oder lic."
+      }
+    },
+    "rows": {
+      "syntax": "expression",
+      "type": "integer",
+      "description": {
+        "en": "Number of sampled rows in the plane lattice.",
+        "de": "Anzahl abgetasteter Zeilen im ebenen Gitter."
+      }
+    },
+    "seeds": {
+      "syntax": "expression",
+      "type": "integer",
+      "description": {
+        "en": "Number of initial streamline seeds.",
+        "de": "Anzahl anfänglicher Stromlinienstartpunkte."
+      }
+    },
+    "steps": {
+      "syntax": "expression",
+      "type": "integer",
+      "description": {
+        "en": "Number of RK4 integration steps per streamline.",
+        "de": "Anzahl der RK4-Integrationsschritte je Stromlinie."
+      }
+    },
+    "stroke": {
+      "syntax": "paint",
+      "type": "string",
+      "description": {
+        "en": "Explicit vector path or particle colour; the palette is used when omitted.",
+        "de": "Explizite Farbe der Vektorpfade oder Partikel; ohne Angabe wird die Palette verwendet."
+      }
+    },
+    "variant": {
+      "syntax": "identifier",
+      "type": "string",
+      "description": {
+        "en": "Sub-kind the family renders; the catalogue slug of the chart kind. The family must draw a different geometry for every variant it declares.",
+        "de": "Untertyp, den die Familie zeichnet; der Katalog-Slug der Diagrammart. Die Familie muss für jede deklarierte Variante eine andere Geometrie zeichnen."
+      }
+    }
+  }
+}

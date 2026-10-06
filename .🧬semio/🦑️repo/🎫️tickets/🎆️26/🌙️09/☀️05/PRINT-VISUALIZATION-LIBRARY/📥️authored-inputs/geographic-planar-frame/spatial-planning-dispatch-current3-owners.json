@@ -1,0 +1,26 @@
+[
+  {
+    "hash": "55B8CEA3C7946B8B8A8C12F11922E676F762E3B7AB3C1F765CE055064E75DBE1",
+    "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧪️tests\\🧬️native-chart-grammar\\🟦️.ts"
+  },
+  {
+    "hash": "0286316D592A96114D3CDA738448844B1E9C280C5311F50266C821FE016E3245",
+    "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧪️tests\\🧬️native-chart-grammar\\🔣️.json"
+  },
+  {
+    "hash": "33D2313AEBBCE455B6BA153AF5505A6E16CF4BF33BCDF78FDD8513EB55E3A5DE",
+    "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🧬️schema\\🔣️.json"
+  },
+  {
+    "hash": "1A5FF24E58E2D59926229DB43217EB29999EA766D69E002B1F8D57841AF3C478",
+    "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🖋️latex\\semio-viz-domain.sty"
+  },
+  {
+    "hash": "B7EDC5544C7117C1C5933E8BD866CA3D412FF97F04EE465D1DAC259BE0B4E6A0",
+    "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🖋️latex\\semio-viz-diagram-process.sty"
+  },
+  {
+    "hash": "25A2117FC2CBA1265B44E7F84745DF9DEEE01BB39DCEAC2AA8EF515223CEA2D1",
+    "path": "C:\\git\\semio\\🧰️framework\\🛍️products\\📓️print\\🖋️latex\\semio-viz-network-graph.sty"
+  }
+]

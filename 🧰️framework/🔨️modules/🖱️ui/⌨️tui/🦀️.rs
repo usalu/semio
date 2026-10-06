@@ -1037,7 +1037,8 @@ pub mod ansi {
                 0x0d | 0x0a => out.push(Event::Key(KeyEvent { key: Key::Enter, mods: 0 })),
                 0x09 => out.push(Event::Key(KeyEvent { key: Key::Tab, mods: 0 })),
                 0x7f | 0x08 => out.push(Event::Key(KeyEvent { key: Key::Backspace, mods: 0 })),
-                0x00..=0x1a if b != 0x1b => {
+                0x00 => out.push(Event::Key(KeyEvent { key: Key::Char(' '), mods: mods::CTRL })),
+                0x01..=0x1a => {
                     let c = (b'a' + b - 1) as char;
                     out.push(Event::Key(KeyEvent { key: Key::Char(c), mods: mods::CTRL }));
                 }
@@ -2527,7 +2528,10 @@ pub mod layout {
     fn layout_node(scene: &mut Scene, id: NodeId, rect: Rect) {
         scene.node_raw_mut(id).rect = rect;
         let constraint = scene.node(id).constraint;
-        let [top, right, bottom, left] = constraint.padding;
+        let [top, right, bottom, left] = match &scene.node(id).content {
+            NodeContent::Chrome(crate::tui::chrome::ChromeState::Window(window)) => crate::tui::chrome::window_content_padding(window, rect),
+            _ => constraint.padding,
+        };
         let inner = rect.inset_sides(top, right, bottom, left);
         let children: Vec<NodeId> = scene.node(id).children().to_vec();
         if children.is_empty() {
@@ -3101,6 +3105,13 @@ pub mod widget {
         pub fn new(options: Vec<String>) -> Self {
             Self { steps: Vec::new(), options, selected: 0, offset: 0, filter: String::new() }
         }
+
+        /// 🔎️ Visible option identities under a Unicode-aware all-words filter.
+        pub fn visible_indices(&self) -> Vec<usize> {
+            let filter = self.filter.to_lowercase();
+            let tokens: Vec<_> = filter.split_whitespace().collect();
+            self.options.iter().enumerate().filter(|(_, option)| { let text = option.to_lowercase(); tokens.iter().all(|token| text.contains(token)) }).map(|(index, _)| index).collect()
+        }
     }
 
     //#region ???Table
@@ -3592,9 +3603,13 @@ pub mod chrome {
         pub(crate) groups: Vec<WindowCornerChipGroup>,
         pub(crate) top_body_y: u16,
         pub(crate) bottom_body_y: Option<u16>,
+        #[allow(dead_code)]
         pub(crate) top_left_end_x: u16,
+        #[allow(dead_code)]
         pub(crate) top_right_start_x: u16,
+        #[allow(dead_code)]
         pub(crate) bottom_left_end_x: u16,
+        #[allow(dead_code)]
         pub(crate) bottom_right_start_x: u16,
     }
 
@@ -3822,6 +3837,24 @@ pub mod chrome {
         }
     }
 
+    /// 🚪 Content inset that keeps children inside the closed outline, under the hairline a chip bends into.
+    pub(crate) fn window_content_padding(w: &WindowState, rect: Rect) -> [u16; 4] {
+        let layout = window_chip_layout(w, rect);
+        if !layout.has_tabs {
+            return [1, 1, 1, 1];
+        }
+        let has_top = layout.groups.iter().any(|group| group.corner.is_top());
+        let has_bottom = layout.groups.iter().any(|group| !group.corner.is_top());
+        let top = if has_top { layout.top_body_y.saturating_sub(rect.y).saturating_add(1) } else { 1 };
+        let bottom = if has_bottom {
+            let bottom_y = rect.y + rect.height - 1;
+            bottom_y.saturating_sub(layout.bottom_body_y.unwrap_or(bottom_y)).saturating_add(1)
+        } else {
+            1
+        };
+        [top, 1, bottom, 1]
+    }
+
     /// ??? The three fixed shell regions plus one Window node per resolved `WindowMeasure`.
     pub struct Shell {
         pub navbar: NodeId,
@@ -3865,6 +3898,9 @@ pub mod chrome {
         use crate::tui::layout::{Dimension, Direction, WindowLayoutChild, WindowLayoutRoot};
 
         if let Some(old) = *mount_root {
+            for (_, window) in windows {
+                scene.reparent(*window, canvas);
+            }
             scene.remove(old);
             *mount_root = None;
         }
@@ -4068,6 +4104,12 @@ pub mod engine {
                             }
                             if focusable(&self.scene, focus_target) {
                                 self.focus = Some(focus_target);
+                            }
+                            if matches!(m.kind, crate::tui::event::MouseKind::Down(0)) {
+                                let rect = self.scene.node(id).rect;
+                                if let Some(crate::tui::widget::WidgetState::Wizard(state)) = self.scene.node_mut(id).widget() {
+                                    if let Some(signal) = crate::tui::wizard::wizard_hit(state, rect, m.pos) { signals.push((id, signal)); }
+                                }
                             }
                             let mut chrome_probe = id;
                             loop {
@@ -4419,6 +4461,7 @@ pub mod backend {
         /// ??? Raw-mode terminal backend for unix (macOS/Linux), driven by `libc` alone.
         pub struct NativeTerminal {
             fd: RawFd,
+            terminal: std::fs::File,
             original: libc::termios,
             parser: AnsiParser,
             entered: bool,
@@ -4428,7 +4471,15 @@ pub mod backend {
 
         impl NativeTerminal {
             pub fn new() -> Result<Self, BackendError> {
-                let fd = libc::STDIN_FILENO;
+                use std::os::fd::AsRawFd;
+                let terminal = std::fs::OpenOptions::new().read(true).write(true).open("/dev/tty").or_else(|original| {
+                    use std::os::unix::ffi::OsStrExt;
+                    let mut device = [0 as libc::c_char; 4096];
+                    if unsafe { libc::ttyname_r(libc::STDIN_FILENO, device.as_mut_ptr(), device.len()) } != 0 { return Err(original); }
+                    let name = unsafe { std::ffi::CStr::from_ptr(device.as_ptr()) };
+                    std::fs::OpenOptions::new().read(true).write(true).open(std::ffi::OsStr::from_bytes(name.to_bytes()))
+                }).map_err(|error| err(error.to_string()))?;
+                let fd = terminal.as_raw_fd();
                 let original = unsafe {
                     let mut t: libc::termios = std::mem::zeroed();
                     if libc::tcgetattr(fd, &mut t) != 0 {
@@ -4436,7 +4487,7 @@ pub mod backend {
                     }
                     t
                 };
-                Ok(Self { fd, original, parser: AnsiParser::new(), entered: false, ansi_setup_owned: false, raw_mode_entered: false })
+                Ok(Self { fd, terminal, original, parser: AnsiParser::new(), entered: false, ansi_setup_owned: false, raw_mode_entered: false })
             }
         }
 
@@ -4468,7 +4519,7 @@ pub mod backend {
                 }
                 self.raw_mode_entered = true;
                 self.ansi_setup_owned = true;
-                if let Err(error) = std::io::stdout().write_all(setup_sequence().as_bytes()).and_then(|()| std::io::stdout().flush()).map_err(|e| err(e.to_string())) {
+                if let Err(error) = self.terminal.write_all(setup_sequence().as_bytes()).and_then(|()| self.terminal.flush()).map_err(|e| err(e.to_string())) {
                     let teardown = self.teardown_ansi();
                     let restoration = self.restore_mode();
                     self.entered = false;
@@ -4492,8 +4543,8 @@ pub mod backend {
             }
 
             fn present(&mut self, patch: &AnsiPatch) -> Result<(), BackendError> {
-                std::io::stdout().write_all(patch.0.as_bytes()).map_err(|e| err(e.to_string()))?;
-                std::io::stdout().flush().map_err(|e| err(e.to_string()))
+                self.terminal.write_all(patch.0.as_bytes()).map_err(|e| err(e.to_string()))?;
+                self.terminal.flush().map_err(|e| err(e.to_string()))
             }
 
             fn poll(&mut self, timeout: Duration) -> Result<Vec<Event>, BackendError> {
@@ -4518,7 +4569,7 @@ pub mod backend {
                 if !self.ansi_setup_owned {
                     return Ok(());
                 }
-                let result = std::io::stdout().write_all(teardown_sequence().as_bytes()).and_then(|()| std::io::stdout().flush()).map_err(|e| err(e.to_string()));
+                let result = self.terminal.write_all(teardown_sequence().as_bytes()).and_then(|()| self.terminal.flush()).map_err(|e| err(e.to_string()));
                 release_owned_terminal_cleanup(&mut self.ansi_setup_owned, result.is_ok());
                 result
             }
@@ -4551,8 +4602,8 @@ pub mod backend {
         use super::*;
         use crate::tui::ansi::{setup_sequence, teardown_sequence, AnsiParser};
         use crate::tui::component::windows_abi::{
-            GetConsoleMode, GetConsoleScreenBufferInfo, GetStdHandle, ReadFile, SetConsoleMode, WaitForSingleObject, WriteFile, CONSOLE_SCREEN_BUFFER_INFO, DISABLE_NEWLINE_AUTO_RETURN, ENABLE_ECHO_INPUT, ENABLE_LINE_INPUT, ENABLE_PROCESSED_INPUT,
-            ENABLE_VIRTUAL_TERMINAL_INPUT, ENABLE_VIRTUAL_TERMINAL_PROCESSING, HANDLE, STD_INPUT_HANDLE, STD_OUTPUT_HANDLE, WAIT_OBJECT_0,
+            GetConsoleMode, GetConsoleCP, GetConsoleOutputCP, SetConsoleCP, SetConsoleOutputCP, GetConsoleScreenBufferInfo, ReadFile, SetConsoleMode, WaitForSingleObject, WriteFile, CONSOLE_SCREEN_BUFFER_INFO, DISABLE_NEWLINE_AUTO_RETURN, ENABLE_ECHO_INPUT, ENABLE_LINE_INPUT, ENABLE_PROCESSED_INPUT,
+            ENABLE_VIRTUAL_TERMINAL_INPUT, ENABLE_VIRTUAL_TERMINAL_PROCESSING, HANDLE, WAIT_OBJECT_0,
         };
 
         fn err(message: impl Into<String>) -> BackendError {
@@ -4566,8 +4617,12 @@ pub mod backend {
         pub struct NativeTerminal {
             stdin: HANDLE,
             stdout: HANDLE,
+            _console_input: std::fs::File,
+            _console_output: std::fs::File,
             original_in: u32,
             original_out: u32,
+            original_input_cp: u32,
+            original_output_cp: u32,
             parser: AnsiParser,
             entered: bool,
             ansi_setup_owned: bool,
@@ -4578,6 +4633,8 @@ pub mod backend {
         struct ConsoleModeOwnership {
             stdin_changed: bool,
             stdout_changed: bool,
+            input_cp_changed: bool,
+            output_cp_changed: bool,
         }
 
         impl ConsoleModeOwnership {
@@ -4596,22 +4653,32 @@ pub mod backend {
                 restored
             }
 
+            fn restore_code_pages_with(&mut self, mut input: impl FnMut(u32) -> bool, mut output: impl FnMut(u32) -> bool, original_input: u32, original_output: u32) {
+                if self.input_cp_changed && input(original_input) { self.input_cp_changed = false; }
+                if self.output_cp_changed && output(original_output) { self.output_cp_changed = false; }
+            }
+
             fn is_empty(&self) -> bool {
-                !self.stdin_changed && !self.stdout_changed
+                !self.stdin_changed && !self.stdout_changed && !self.input_cp_changed && !self.output_cp_changed
             }
         }
 
         impl NativeTerminal {
             pub fn new() -> Result<Self, BackendError> {
                 unsafe {
-                    let stdin = GetStdHandle(STD_INPUT_HANDLE);
-                    let stdout = GetStdHandle(STD_OUTPUT_HANDLE);
+                    use std::os::windows::io::AsRawHandle;
+                    let console_input = std::fs::OpenOptions::new().read(true).write(true).open("CONIN$").map_err(|error| err(error.to_string()))?;
+                    let console_output = std::fs::OpenOptions::new().read(true).write(true).open("CONOUT$").map_err(|error| err(error.to_string()))?;
+                    let stdin = console_input.as_raw_handle();
+                    let stdout = console_output.as_raw_handle();
                     let mut original_in = 0u32;
                     let mut original_out = 0u32;
                     if GetConsoleMode(stdin, &mut original_in) == 0 || GetConsoleMode(stdout, &mut original_out) == 0 {
                         return Err(err("GetConsoleMode failed"));
                     }
-                    Ok(Self { stdin, stdout, original_in, original_out, parser: AnsiParser::new(), entered: false, ansi_setup_owned: false, modes: ConsoleModeOwnership::default() })
+                    let original_input_cp = GetConsoleCP(); let original_output_cp = GetConsoleOutputCP();
+                    if original_input_cp == 0 || original_output_cp == 0 { return Err(err("GetConsoleCP failed")); }
+                    Ok(Self { stdin, stdout, original_input_cp, original_output_cp, _console_input: console_input, _console_output: console_output, original_in, original_out, parser: AnsiParser::new(), entered: false, ansi_setup_owned: false, modes: ConsoleModeOwnership::default() })
                 }
             }
         }
@@ -4634,9 +4701,14 @@ pub mod backend {
                     return Err(err("Terminal entry or cleanup is already active"));
                 }
                 unsafe {
+                    if SetConsoleOutputCP(65001) == 0 { return Err(err("SetConsoleOutputCP failed")); }
+                    self.modes.output_cp_changed = true;
+                    if SetConsoleCP(65001) == 0 { let _ = self.restore_modes(); return Err(err("SetConsoleCP failed")); }
+                    self.modes.input_cp_changed = true;
                     let out_mode = self.original_out | ENABLE_VIRTUAL_TERMINAL_PROCESSING | DISABLE_NEWLINE_AUTO_RETURN;
                     let in_mode = (self.original_in | ENABLE_VIRTUAL_TERMINAL_INPUT) & !(ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_PROCESSED_INPUT);
                     if SetConsoleMode(self.stdout, out_mode) == 0 {
+                        let _ = self.restore_modes();
                         return Err(err("SetConsoleMode failed"));
                     }
                     self.modes.stdout_changed = true;
@@ -4706,7 +4778,9 @@ pub mod backend {
 
             fn restore_modes(&mut self) -> Result<(), BackendError> {
                 unsafe {
-                    if self.modes.restore_with(|handle, mode| SetConsoleMode(handle, mode) != 0, self.stdin, self.original_in, self.stdout, self.original_out) {
+                    let restored = self.modes.restore_with(|handle, mode| SetConsoleMode(handle, mode) != 0, self.stdin, self.original_in, self.stdout, self.original_out);
+                    self.modes.restore_code_pages_with(|page| SetConsoleCP(page) != 0, |page| SetConsoleOutputCP(page) != 0, self.original_input_cp, self.original_output_cp);
+                    if restored && self.modes.is_empty() {
                         Ok(())
                     } else {
                         Err(err("SetConsoleMode restore failed"))
@@ -4773,6 +4847,16 @@ pub mod pty {
         PtyError { message: message.into() }
     }
 
+    /// 🌀️ Starts an independent process without retaining the caller's terminal or output pipes.
+    #[cfg(all(unix, not(target_arch = "wasm32")))]
+    pub fn spawn_detached(cmd: &str, args: &[&str], remove_env: &[&str], cwd: &Path) -> Result<u32, PtyError> {
+        use std::os::unix::process::CommandExt;
+        let mut command = std::process::Command::new(cmd);
+        command.args(args).current_dir(cwd).process_group(0).stdin(std::process::Stdio::null()).stdout(std::process::Stdio::null()).stderr(std::process::Stdio::null());
+        for key in remove_env { command.env_remove(key); }
+        command.spawn().map(|child| child.id()).map_err(|error| err(error.to_string()))
+    }
+
     #[cfg(all(unix, not(target_arch = "wasm32")))]
     mod unix_impl {
         use super::*;
@@ -4788,7 +4872,7 @@ pub mod pty {
         }
 
         impl Pty {
-            pub fn spawn(cmd: &str, args: &[&str], env: &[(&str, &str)], cwd: Option<&Path>, size: PtySize) -> Result<Self, PtyError> {
+            pub fn spawn(cmd: &str, args: &[&str], env: &[(&str, &str)], remove_env: &[&str], cwd: Option<&Path>, size: PtySize) -> Result<Self, PtyError> {
                 let mut master: RawFd = -1;
                 let mut slave: RawFd = -1;
                 let mut ws: libc::winsize = unsafe { std::mem::zeroed() };
@@ -4811,6 +4895,7 @@ pub mod pty {
 
                 let mut command = system_process::Command::new(cmd);
                 command.args(args);
+                for key in remove_env { command.env_remove(key); }
                 for (k, v) in env {
                     command.env(k, v);
                 }
@@ -4902,24 +4987,49 @@ pub mod pty {
                 self.child.id()
             }
 
-            pub fn kill(&mut self) -> Result<(), PtyError> {
-                let pid = self.child.id() as libc::pid_t;
-                unsafe {
-                    if libc::killpg(pid, libc::SIGTERM) != 0 {
-                        let _ = self.child.kill();
-                    }
+            /// 🛑 Terminates the owned process tree, including descendant-created groups.
+            pub fn terminate(&mut self) -> Result<(), PtyError> {
+                if self.child.try_wait().map_err(|error| err(error.to_string()))?.is_none() {
+                    terminate_descendants(self.child.id() as libc::pid_t);
                 }
-                for _ in 0..30 {
-                    if let Ok(Some(_)) = self.child.try_wait() {
-                        return Ok(());
-                    }
-                    std::thread::sleep(std::time::Duration::from_millis(50));
+                let result = unsafe { libc::killpg(self.child.id() as libc::pid_t, libc::SIGKILL) };
+                if result != 0 && self.child.try_wait().ok().flatten().is_none() {
+                    self.child.kill().map_err(|e| err(e.to_string()))?;
                 }
-                unsafe {
-                    let _ = libc::killpg(pid, libc::SIGKILL);
-                }
-                let _ = self.child.wait();
                 Ok(())
+            }
+
+            pub fn kill(&mut self) -> Result<(), PtyError> {
+                self.terminate()?;
+                self.child.wait().map_err(|error| err(error.to_string()))?;
+                Ok(())
+            }
+        }
+
+        fn terminate_descendants(root: libc::pid_t) {
+            let Ok(snapshot) = system_process::Command::new("ps").args(["-axo", "pid=,ppid=,pgid="]).output() else { return };
+            if !snapshot.status.success() { return; }
+            let rows: Vec<_> = String::from_utf8_lossy(&snapshot.stdout).lines().filter_map(|line| {
+                let fields: Vec<libc::pid_t> = line.split_whitespace().filter_map(|field| field.parse().ok()).collect();
+                (fields.len() == 3 && fields.iter().all(|field| *field > 0)).then(|| (fields[0], fields[1], fields[2]))
+            }).collect();
+            let mut depth = std::collections::HashMap::from([(root, 0usize)]);
+            loop {
+                let before = depth.len();
+                for (pid, parent, _) in &rows {
+                    if !depth.contains_key(pid) {
+                        if let Some(parent_depth) = depth.get(parent).copied() { depth.insert(*pid, parent_depth + 1); }
+                    }
+                }
+                if before == depth.len() { break; }
+            }
+            let mut owned: Vec<_> = rows.into_iter().filter_map(|(pid, _, group)| depth.get(&pid).map(|depth| (*depth, pid, group))).collect();
+            owned.sort_by_key(|(depth, _, _)| std::cmp::Reverse(*depth));
+            for (_, pid, group) in owned {
+                unsafe {
+                    if pid == group { libc::killpg(group, libc::SIGKILL); }
+                    libc::kill(pid, libc::SIGKILL);
+                }
             }
         }
 
@@ -4940,7 +5050,7 @@ pub mod pty {
 
         impl Drop for Pty {
             fn drop(&mut self) {
-                let _ = self.child.kill();
+                let _ = self.terminate();
                 let _ = self.child.wait();
             }
         }
@@ -4953,6 +5063,7 @@ pub mod pty {
     mod windows_impl {
         use super::*;
         use crate::tui::component::windows_abi::{
+            AssignProcessToJobObject, CreateJobObjectW, JOBOBJECT_EXTENDED_LIMIT_INFORMATION, ResumeThread, SetInformationJobObject, TerminateJobObject,
             CreatePipe, CreateProcessW, CreatePseudoConsole, GetExitCodeProcess, GetProcessId, OwnedHandle, OwnedPseudoConsole, PeekNamedPipe, ProcThreadAttributeList, ReadFile, ResizePseudoConsole, SetHandleInformation, TerminateProcess,
             WaitForSingleObject, WriteFile, COORD, CREATE_UNICODE_ENVIRONMENT, EXTENDED_STARTUPINFO_PRESENT, HANDLE_FLAG_INHERIT, INVALID_HANDLE_VALUE, PROCESS_INFORMATION, SECURITY_ATTRIBUTES, STARTUPINFOEXW, STILL_ACTIVE, WAIT_OBJECT_0,
             WAIT_TIMEOUT,
@@ -4961,17 +5072,33 @@ pub mod pty {
         use std::mem::size_of;
         use std::os::windows::ffi::OsStrExt;
 
+        /// 🪟️ Starts a detached process with handle inheritance disabled at the native boundary.
+        pub fn spawn_detached(cmd: &str, args: &[&str], remove_env: &[&str], cwd: &Path) -> Result<u32, PtyError> {
+            use crate::tui::component::windows_abi::STARTUPINFOW;
+            let application = to_wide(cmd); let mut command = build_cmdline(cmd, args);
+            let directory = to_wide(&cwd.to_string_lossy()); let environment = build_env_block(&[], remove_env).unwrap();
+            let mut startup = STARTUPINFOW::default(); startup.cb = size_of::<STARTUPINFOW>() as u32;
+            let mut process = PROCESS_INFORMATION::default();
+            if unsafe { CreateProcessW(application.as_ptr(), command.as_mut_ptr(), std::ptr::null(), std::ptr::null(), 0, CREATE_UNICODE_ENVIRONMENT | 0x0000_0008 | 0x0100_0000, environment.as_ptr().cast(), directory.as_ptr(), &startup, &mut process) } == 0 {
+                return Err(err(format!("CreateProcessW detached failed: {}", std::io::Error::last_os_error())));
+            }
+            let _process = unsafe { OwnedHandle::from_raw(process.hProcess) };
+            let _thread = unsafe { OwnedHandle::from_raw(process.hThread) };
+            Ok(process.dwProcessId)
+        }
+
         /// 🧵 Windows ConPTY master pipes plus child process.
         ///
         /// Spawn runs only at the dashboard's explicit command-activation boundary. Steady-state
         /// reads admit one caller-sized page, status/resize perform one syscall, and termination
         /// has a 1.5 second upper wait bound before RAII closes every owned kernel object.
         pub struct Pty {
-            hpcon: OwnedPseudoConsole,
             input_write: OwnedHandle,
             output_read: OwnedHandle,
+            hpcon: OwnedPseudoConsole,
             process: OwnedHandle,
             _thread: OwnedHandle,
+            job: OwnedHandle,
         }
 
         fn to_wide(s: &str) -> Vec<u16> {
@@ -4980,31 +5107,37 @@ pub mod pty {
 
         fn build_cmdline(cmd: &str, args: &[&str]) -> Vec<u16> {
             let mut line = String::new();
-            line.push('"');
-            line.push_str(cmd);
-            line.push('"');
-            for arg in args {
-                line.push(' ');
-                if arg.chars().any(|c| c.is_whitespace()) {
-                    line.push('"');
-                    line.push_str(arg);
-                    line.push('"');
-                } else {
-                    line.push_str(arg);
+            for arg in std::iter::once(cmd).chain(args.iter().copied()) {
+                if !line.is_empty() { line.push(' '); }
+                line.push('"');
+                let mut slashes = 0;
+                for ch in arg.chars() {
+                    if ch == '\\' { slashes += 1; continue; }
+                    line.extend(std::iter::repeat_n('\\', if ch == '"' { slashes * 2 + 1 } else { slashes }));
+                    line.push(ch);
+                    slashes = 0;
                 }
+                line.extend(std::iter::repeat_n('\\', slashes * 2));
+                line.push('"');
             }
             to_wide(&line)
         }
 
-        fn build_env_block(env: &[(&str, &str)]) -> Option<Vec<u16>> {
-            if env.is_empty() {
-                return None;
-            }
+        fn build_env_block(env: &[(&str, &str)], remove_env: &[&str]) -> Option<Vec<u16>> {
             let mut block = Vec::new();
-            for (k, v) in env {
-                block.extend(OsStr::new(k).encode_wide());
+            let mut merged: std::collections::BTreeMap<String, (std::ffi::OsString, std::ffi::OsString)> = std::env::vars_os().map(|(key, value)| (key.to_string_lossy().to_uppercase(), (key.clone(), std::env::var_os(&key).unwrap_or(value)))).collect();
+            if let Some(path) = std::env::var_os("PATH") { merged.insert("PATH".into(), ("PATH".into(), path)); }
+            for key in remove_env { merged.remove(&key.to_uppercase()); }
+            for (key, value) in env { merged.insert(key.to_uppercase(), (key.into(), value.into())); }
+            if let Some((_, value)) = merged.get_mut("PATH") {
+                let mut seen = std::collections::HashSet::new();
+                let paths: Vec<_> = std::env::split_paths(value).filter(|path| seen.insert(path.to_string_lossy().to_uppercase())).collect();
+                if let Ok(path) = std::env::join_paths(paths) { *value = path; }
+            }
+            for (k, v) in merged.values() {
+                block.extend(k.encode_wide());
                 block.push(b'=' as u16);
-                block.extend(OsStr::new(v).encode_wide());
+                block.extend(v.encode_wide());
                 block.push(0);
             }
             block.push(0);
@@ -5012,7 +5145,7 @@ pub mod pty {
         }
 
         impl Pty {
-            pub fn spawn(cmd: &str, args: &[&str], env: &[(&str, &str)], cwd: Option<&Path>, size: PtySize) -> Result<Self, PtyError> {
+            pub fn spawn(cmd: &str, args: &[&str], env: &[(&str, &str)], remove_env: &[&str], cwd: Option<&Path>, size: PtySize) -> Result<Self, PtyError> {
                 unsafe {
                     let mut sa: SECURITY_ATTRIBUTES = std::mem::zeroed();
                     sa.nLength = size_of::<SECURITY_ATTRIBUTES>() as u32;
@@ -5055,13 +5188,23 @@ pub mod pty {
 
                     let mut si: STARTUPINFOEXW = std::mem::zeroed();
                     si.StartupInfo.cb = size_of::<STARTUPINFOEXW>() as u32;
+                    si.StartupInfo.dwFlags = 0x100;
+                    si.StartupInfo.hStdInput = INVALID_HANDLE_VALUE;
+                    si.StartupInfo.hStdOutput = INVALID_HANDLE_VALUE;
+                    si.StartupInfo.hStdError = INVALID_HANDLE_VALUE;
                     si.lpAttributeList = attr_list.as_mut_ptr();
 
                     let mut cmdline = build_cmdline(cmd, args);
                     let cwd_wide = cwd.map(|p| to_wide(&p.to_string_lossy()));
-                    let env_block = build_env_block(env);
+                    let env_block = build_env_block(env, remove_env);
                     let mut pi: PROCESS_INFORMATION = std::mem::zeroed();
-                    let mut flags = EXTENDED_STARTUPINFO_PRESENT;
+                    let job = OwnedHandle::from_raw(CreateJobObjectW(std::ptr::null(), std::ptr::null())).ok_or_else(|| err("CreateJobObjectW failed"))?;
+                    let mut limits = JOBOBJECT_EXTENDED_LIMIT_INFORMATION::default();
+                    limits.BasicLimitInformation.LimitFlags = 0x2000 | 0x0800;
+                    if SetInformationJobObject(job.as_raw(), 9, (&limits as *const JOBOBJECT_EXTENDED_LIMIT_INFORMATION).cast(), size_of::<JOBOBJECT_EXTENDED_LIMIT_INFORMATION>() as u32) == 0 {
+                        return Err(err(format!("SetInformationJobObject failed: {}", std::io::Error::last_os_error())));
+                    }
+                    let mut flags = EXTENDED_STARTUPINFO_PRESENT | 0x0000_0004;
                     if env_block.is_some() {
                         flags |= CREATE_UNICODE_ENVIRONMENT;
                     }
@@ -5084,8 +5227,16 @@ pub mod pty {
                     let thread = OwnedHandle::from_raw(pi.hThread);
                     let process = process.ok_or_else(|| err("CreateProcessW returned an invalid process handle"))?;
                     let thread = thread.ok_or_else(|| err("CreateProcessW returned an invalid thread handle"))?;
-
-                    Ok(Self { hpcon, input_write, output_read, process, _thread: thread })
+                    if AssignProcessToJobObject(job.as_raw(), process.as_raw()) == 0 {
+                        let failure = std::io::Error::last_os_error();
+                        TerminateProcess(process.as_raw(), 1);
+                        return Err(err(format!("AssignProcessToJobObject failed: {failure}")));
+                    }
+                    if ResumeThread(thread.as_raw()) == u32::MAX {
+                        TerminateJobObject(job.as_raw(), 1);
+                        return Err(err(format!("ResumeThread failed: {}", std::io::Error::last_os_error())));
+                    }
+                    Ok(Self { hpcon, input_write, output_read, process, _thread: thread, job })
                 }
             }
 
@@ -5148,11 +5299,17 @@ pub mod pty {
                 unsafe { GetProcessId(self.process.as_raw()) }
             }
 
+            /// 🌳 Terminates every descendant in the session's kernel-owned job.
+            pub fn terminate(&mut self) -> Result<(), PtyError> {
+                if unsafe { TerminateJobObject(self.job.as_raw(), 1) } == 0 {
+                    return Err(err(format!("TerminateJobObject failed: {}", std::io::Error::last_os_error())));
+                }
+                Ok(())
+            }
+
             pub fn kill(&mut self) -> Result<(), PtyError> {
+                self.terminate()?;
                 unsafe {
-                    if TerminateProcess(self.process.as_raw(), 1) == 0 {
-                        return Err(err(format!("TerminateProcess failed: {}", std::io::Error::last_os_error())));
-                    }
                     WaitForSingleObject(self.process.as_raw(), 1500);
                 }
                 Ok(())
@@ -5184,6 +5341,9 @@ pub mod pty {
 
     #[cfg(windows)]
     pub use windows_impl::Pty;
+
+    #[cfg(windows)]
+    pub use windows_impl::spawn_detached;
 }
 // #endregion ???Pty
 

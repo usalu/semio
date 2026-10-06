@@ -1,0 +1,22 @@
+[
+  {
+    "path": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-mark.sty",
+    "before": "591091BAAD350F1782C00E2824E740CC42712F910E45C7AD5F845D3BA5DF0ADB",
+    "after": "5736881919461E54311E18F4F68B29DA713C2AA66E16888CEAE562B241E7112B"
+  },
+  {
+    "path": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-network.sty",
+    "before": "2131298AC89CFDCDCB2D697E1DBBEEEE67BAE3895F7AE808850B5EE3F1370B5C",
+    "after": "75B03BE67391F39304F5AB1DEE06013B9B6C23D49F9ECECC5DA11B0E8A82697A"
+  },
+  {
+    "path": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-network-graph.sty",
+    "before": "340CA330453BBAA460A0694003A6BB8BED2791999E5BAAF5ADD28C67E320BA9F",
+    "after": "E7E70BD06B1FA0C720423C58EFEE3537867394BF9FDC2B28545246C46016F4E7"
+  },
+  {
+    "path": "C:/git/semio/🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-api/🔓️viz-api.tex",
+    "before": "033836D4223A51F3EA02BB5431AA7F8E164B88853A97783F935C36698DD06620",
+    "after": "733F5B15D1F2F65F18B0C80EFBA32F4584B8E32AD846B920DCA017FC2AAA78EF"
+  }
+]

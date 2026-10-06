@@ -1,0 +1,7 @@
+# Superseded Native Consumer Cleanup — 2026-10-06
+
+The remaining catalogue-domain-scalar-native-green run is the prior ticket phase documented as session64228 in the permanent Domain scalar contract report. Its exact native compiler48464 started at2026-10-06T01:44:41UTC; it remains on the numeric-ID refusal fixture more than two hours later. The staged Domain owner is268455FE5D3CB89BC49150B7859F055229397BF51FAE3067E017566330BFF6F2, different from final C45A4D255FBD2F6DB919DD14496C7E43347E936AD10787AAD97C87184FD575B7. It is superseded by actual final13-case registered79441 exit0, including all six native/D3 positives and seven intended hard diagnostics. This old run supplies no current passing receipt.
+
+Root will cancel only this exact stale ticket compiler after checking its executable, creation instant, parent46484 and isolated output path. This allows its owning parent command to fail and exit. No other contributor process or shared cache is selected. The separately created read-only MCP preflight94171 is ended before final non-PTY transport; no lifecycle mutation occurred in it.
+
+Actual guarded cancellation completed. A fresh Win32 process query confirms the complete old49164→47044→38252→36172→49816→46484→48464 chain and read-only selected MCP26488 have exited. The original process exit code is unavailable because historical session64228 is no longer attached; no exit0 is inferred. Current registered79441 remains the authentic passing Domain receipt.

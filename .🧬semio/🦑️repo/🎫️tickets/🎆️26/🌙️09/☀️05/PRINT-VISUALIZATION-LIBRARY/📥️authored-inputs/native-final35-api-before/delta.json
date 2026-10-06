@@ -1,0 +1,236 @@
+[
+  {
+    "key": "root",
+    "after": "  \\SemioTableRow{\\Key{root} & \\Key{integer} & \\Key{1} & \\ApiText{Node the layout starts from.}{Knoten, bei dem das Layout beginnt.}}",
+    "family": "adjacency-matrix",
+    "before": "  \\SemioTableRow{\\Key{root} & \\Key{integer} & --- & \\ApiText{Node the layout starts from.}{Knoten, bei dem das Layout beginnt.}}"
+  },
+  {
+    "key": "root",
+    "after": "  \\SemioTableRow{\\Key{root} & \\Key{integer} & \\Key{1} & \\ApiText{Node the layout starts from.}{Knoten, bei dem das Layout beginnt.}}",
+    "family": "alluvial",
+    "before": "  \\SemioTableRow{\\Key{root} & \\Key{integer} & --- & \\ApiText{Node the layout starts from.}{Knoten, bei dem das Layout beginnt.}}"
+  },
+  {
+    "key": "root",
+    "after": "  \\SemioTableRow{\\Key{root} & \\Key{integer} & \\Key{1} & \\ApiText{Node the layout starts from.}{Knoten, bei dem das Layout beginnt.}}",
+    "family": "arc-diagram",
+    "before": "  \\SemioTableRow{\\Key{root} & \\Key{integer} & --- & \\ApiText{Node the layout starts from.}{Knoten, bei dem das Layout beginnt.}}"
+  },
+  {
+    "key": "root",
+    "after": "  \\SemioTableRow{\\Key{root} & \\Key{integer} & \\Key{1} & \\ApiText{Node the layout starts from.}{Knoten, bei dem das Layout beginnt.}}",
+    "family": "biofabric",
+    "before": "  \\SemioTableRow{\\Key{root} & \\Key{integer} & --- & \\ApiText{Node the layout starts from.}{Knoten, bei dem das Layout beginnt.}}"
+  },
+  {
+    "key": "root",
+    "after": "  \\SemioTableRow{\\Key{root} & \\Key{integer} & \\Key{1} & \\ApiText{Node the layout starts from.}{Knoten, bei dem das Layout beginnt.}}",
+    "family": "chord",
+    "before": "  \\SemioTableRow{\\Key{root} & \\Key{integer} & --- & \\ApiText{Node the layout starts from.}{Knoten, bei dem das Layout beginnt.}}"
+  },
+  {
+    "key": "root",
+    "after": "  \\SemioTableRow{\\Key{root} & \\Key{integer} & \\Key{1} & \\ApiText{Node the layout starts from.}{Knoten, bei dem das Layout beginnt.}}",
+    "family": "dependency-wheel",
+    "before": "  \\SemioTableRow{\\Key{root} & \\Key{integer} & --- & \\ApiText{Node the layout starts from.}{Knoten, bei dem das Layout beginnt.}}"
+  },
+  {
+    "key": "root",
+    "after": "  \\SemioTableRow{\\Key{root} & \\Key{integer} & \\Key{1} & \\ApiText{Node the layout starts from.}{Knoten, bei dem das Layout beginnt.}}",
+    "family": "edge-bundled",
+    "before": "  \\SemioTableRow{\\Key{root} & \\Key{integer} & --- & \\ApiText{Node the layout starts from.}{Knoten, bei dem das Layout beginnt.}}"
+  },
+  {
+    "key": "root",
+    "after": "  \\SemioTableRow{\\Key{root} & \\Key{integer} & \\Key{1} & \\ApiText{Node the layout starts from.}{Knoten, bei dem das Layout beginnt.}}",
+    "family": "hive-plot",
+    "before": "  \\SemioTableRow{\\Key{root} & \\Key{integer} & --- & \\ApiText{Node the layout starts from.}{Knoten, bei dem das Layout beginnt.}}"
+  },
+  {
+    "key": "root",
+    "after": "  \\SemioTableRow{\\Key{root} & \\Key{integer} & \\Key{1} & \\ApiText{Node the layout starts from.}{Knoten, bei dem das Layout beginnt.}}",
+    "family": "node-link-matrix",
+    "before": "  \\SemioTableRow{\\Key{root} & \\Key{integer} & --- & \\ApiText{Node the layout starts from.}{Knoten, bei dem das Layout beginnt.}}"
+  },
+  {
+    "key": "root",
+    "after": "  \\SemioTableRow{\\Key{root} & \\Key{integer} & \\Key{1} & \\ApiText{Node the layout starts from.}{Knoten, bei dem das Layout beginnt.}}",
+    "family": "parallel-sets",
+    "before": "  \\SemioTableRow{\\Key{root} & \\Key{integer} & --- & \\ApiText{Node the layout starts from.}{Knoten, bei dem das Layout beginnt.}}"
+  },
+  {
+    "key": "root",
+    "after": "  \\SemioTableRow{\\Key{root} & \\Key{integer} & \\Key{1} & \\ApiText{Node the layout starts from.}{Knoten, bei dem das Layout beginnt.}}",
+    "family": "sankey",
+    "before": "  \\SemioTableRow{\\Key{root} & \\Key{integer} & --- & \\ApiText{Node the layout starts from.}{Knoten, bei dem das Layout beginnt.}}"
+  },
+  {
+    "key": "tier-title",
+    "after": "  \\SemioTableRow{\\Key{tier-title} & \\Key{boolean} & \\Key{true} & \\ApiText{Draw the tier caption on the left.}{Die Ebenenbeschriftung links zeichnen.}}",
+    "family": "arch-layer",
+    "before": "  \\SemioTableRow{\\Key{tier-title} & \\Key{string} & \\Key{true} & \\ApiText{Draw the tier caption on the left.}{Die Ebenenbeschriftung links zeichnen.}}"
+  },
+  {
+    "key": "padding",
+    "after": "  \\SemioTableRow{\\Key{padding} & \\Key{number} & \\Key{3} & \\ApiText{Same inset on all four sides.}{Gleiche Einrückung auf allen vier Seiten.}}",
+    "family": "graph",
+    "before": "  \\SemioTableRow{\\Key{padding} & \\Key{string} & \\Key{3} & \\ApiText{Same inset on all four sides.}{Gleiche Einrückung auf allen vier Seiten.}}"
+  },
+  {
+    "key": "padding",
+    "after": "  \\SemioTableRow{\\Key{padding} & \\Key{number} & \\Key{3} & \\ApiText{Same inset on all four sides.}{Gleiche Einrückung auf allen vier Seiten.}}",
+    "family": "commit-graph",
+    "before": "  \\SemioTableRow{\\Key{padding} & \\Key{string} & --- & \\ApiText{Same inset on all four sides.}{Gleiche Einrückung auf allen vier Seiten.}}"
+  },
+  {
+    "key": "padding",
+    "after": "  \\SemioTableRow{\\Key{padding} & \\Key{number} & \\Key{3} & \\ApiText{Same inset on all four sides.}{Gleiche Einrückung auf allen vier Seiten.}}",
+    "family": "data-structure",
+    "before": "  \\SemioTableRow{\\Key{padding} & \\Key{string} & --- & \\ApiText{Same inset on all four sides.}{Gleiche Einrückung auf allen vier Seiten.}}"
+  },
+  {
+    "key": "padding",
+    "after": "  \\SemioTableRow{\\Key{padding} & \\Key{number} & \\Key{3} & \\ApiText{Same inset on all four sides.}{Gleiche Einrückung auf allen vier Seiten.}}",
+    "family": "neural-network",
+    "before": "  \\SemioTableRow{\\Key{padding} & \\Key{string} & --- & \\ApiText{Same inset on all four sides.}{Gleiche Einrückung auf allen vier Seiten.}}"
+  },
+  {
+    "key": "padding",
+    "after": "  \\SemioTableRow{\\Key{padding} & \\Key{number} & \\Key{3} & \\ApiText{Same inset on all four sides.}{Gleiche Einrückung auf allen vier Seiten.}}",
+    "family": "schema-graph",
+    "before": "  \\SemioTableRow{\\Key{padding} & \\Key{string} & --- & \\ApiText{Same inset on all four sides.}{Gleiche Einrückung auf allen vier Seiten.}}"
+  },
+  {
+    "key": "padding",
+    "after": "  \\SemioTableRow{\\Key{padding} & \\Key{number} & \\Key{3} & \\ApiText{Same inset on all four sides.}{Gleiche Einrückung auf allen vier Seiten.}}",
+    "family": "state-machine",
+    "before": "  \\SemioTableRow{\\Key{padding} & \\Key{string} & --- & \\ApiText{Same inset on all four sides.}{Gleiche Einrückung auf allen vier Seiten.}}"
+  },
+  {
+    "key": "grid",
+    "after": "  \\SemioTableRow{\\Key{grid} & \\Key{string} & \\Key{demo-grid} & \\ApiText{Named raster grid collection used by the field.}{Benannte Rastergittersammlung für das Feld.}}",
+    "family": "geo-field",
+    "before": "  \\SemioTableRow{\\Key{grid} & \\Key{string} & --- & \\ApiText{Grid lines drawn behind the marks.}{Gitterlinien hinter den Marken.}}"
+  },
+  {
+    "key": "grid",
+    "after": "  \\SemioTableRow{\\Key{grid} & \\Key{string} & \\Key{demo-grid} & \\ApiText{Named raster grid collection used by the field.}{Benannte Rastergittersammlung für das Feld.}}",
+    "family": "geo-terrain",
+    "before": "  \\SemioTableRow{\\Key{grid} & \\Key{string} & --- & \\ApiText{Grid lines drawn behind the marks.}{Gitterlinien hinter den Marken.}}"
+  },
+  {
+    "key": "grid",
+    "after": "  \\SemioTableRow{\\Key{grid} & \\Key{string} & \\Key{demo-grid} & \\ApiText{Named raster grid collection used by the field.}{Benannte Rastergittersammlung für das Feld.}}",
+    "family": "geo-weather",
+    "before": "  \\SemioTableRow{\\Key{grid} & \\Key{string} & --- & \\ApiText{Grid lines drawn behind the marks.}{Gitterlinien hinter den Marken.}}"
+  },
+  {
+    "key": "grid",
+    "after": "  \\SemioTableRow{\\Key{grid} & \\Key{string} & \\Key{demo-grid} & \\ApiText{Named raster grid collection used by the field.}{Benannte Rastergittersammlung für das Feld.}}",
+    "family": "spatial-scalar-field",
+    "before": "  \\SemioTableRow{\\Key{grid} & \\Key{string} & --- & \\ApiText{Grid lines drawn behind the marks.}{Gitterlinien hinter den Marken.}}"
+  },
+  {
+    "key": "points",
+    "after": "  \\SemioTableRow{\\Key{points} & \\Key{string} & \\Key{demo-points-dense} & \\ApiText{Named geographic point collection binned into hexagonal cells.}{Benannte geografische Punktsammlung für die Aufteilung in sechseckige Zellen.}}",
+    "family": "geo-hexbin",
+    "before": "  \\SemioTableRow{\\Key{points} & \\Key{string} & --- & \\ApiText{Draw the individual data points.}{Die einzelnen Datenpunkte zeichnen.}}"
+  },
+  {
+    "key": "labels",
+    "after": "  \\SemioTableRow{\\Key{labels} & \\Key{boolean} & \\Key{false} & \\ApiText{Draw the captions.}{Die Beschriftungen zeichnen.}}",
+    "family": "geo-weather",
+    "before": "  \\SemioTableRow{\\Key{labels} & \\Key{string} & --- & \\ApiText{Draw the captions.}{Die Beschriftungen zeichnen.}}"
+  },
+  {
+    "key": "labels",
+    "after": "  \\SemioTableRow{\\Key{labels} & \\Key{boolean} & \\Key{false} & \\ApiText{Draw the captions.}{Die Beschriftungen zeichnen.}}",
+    "family": "spatial-scalar-field",
+    "before": "  \\SemioTableRow{\\Key{labels} & \\Key{string} & --- & \\ApiText{Draw the captions.}{Die Beschriftungen zeichnen.}}"
+  },
+  {
+    "key": "filled",
+    "after": "  \\SemioTableRow{\\Key{filled} & \\Key{boolean} & \\Key{false} & \\ApiText{Fill the bands between contour levels.}{Die Bänder zwischen den Höhenlinien füllen.}}",
+    "family": "geo-weather",
+    "before": "  \\SemioTableRow{\\Key{filled} & \\Key{string} & --- & \\ApiText{Fill the bands between contour levels.}{Die Bänder zwischen den Höhenlinien füllen.}}"
+  },
+  {
+    "key": "raster",
+    "after": "  \\SemioTableRow{\\Key{raster} & \\Key{boolean} & \\Key{false} & \\ApiText{Draw the field as a filled raster.}{Das Feld als gefülltes Raster zeichnen.}}",
+    "family": "geo-weather",
+    "before": "  \\SemioTableRow{\\Key{raster} & \\Key{string} & --- & \\ApiText{Draw the field as a filled raster.}{Das Feld als gefülltes Raster zeichnen.}}"
+  },
+  {
+    "key": "cell",
+    "after": "  \\SemioTableRow{\\Key{cell} & \\Key{number} & \\Key{12} & \\ApiText{Raster cell size in millimetres.}{Rasterzellgröße in Millimetern.}}",
+    "family": "geo-terrain",
+    "before": "  \\SemioTableRow{\\Key{cell} & \\Key{string} & --- & \\ApiText{Cell size in millimetres, or the column that carries it.}{Zellgröße in Millimetern oder die Spalte, die sie trägt.}}"
+  },
+  {
+    "key": "cell",
+    "after": "  \\SemioTableRow{\\Key{cell} & \\Key{number} & \\Key{12} & \\ApiText{Raster cell size in millimetres.}{Rasterzellgröße in Millimetern.}}",
+    "family": "spatial-scalar-field",
+    "before": "  \\SemioTableRow{\\Key{cell} & \\Key{string} & --- & \\ApiText{Cell size in millimetres, or the column that carries it.}{Zellgröße in Millimetern oder die Spalte, die sie trägt.}}"
+  },
+  {
+    "key": "levels",
+    "after": "  \\SemioTableRow{\\Key{levels} & \\Key{integer} & \\Key{5} & \\ApiText{Number of contour levels.}{Anzahl der Höhenlinienniveaus.}}",
+    "family": "geo-terrain",
+    "before": "  \\SemioTableRow{\\Key{levels} & \\Key{string} & --- & \\ApiText{Number of contour levels.}{Anzahl der Höhenlinienniveaus.}}"
+  },
+  {
+    "key": "levels",
+    "after": "  \\SemioTableRow{\\Key{levels} & \\Key{integer} & \\Key{5} & \\ApiText{Number of contour levels.}{Anzahl der Höhenlinienniveaus.}}",
+    "family": "geo-weather",
+    "before": "  \\SemioTableRow{\\Key{levels} & \\Key{string} & --- & \\ApiText{Number of contour levels.}{Anzahl der Höhenlinienniveaus.}}"
+  },
+  {
+    "key": "levels",
+    "after": "  \\SemioTableRow{\\Key{levels} & \\Key{integer} & \\Key{5} & \\ApiText{Number of contour levels.}{Anzahl der Höhenlinienniveaus.}}",
+    "family": "spatial-scalar-field",
+    "before": "  \\SemioTableRow{\\Key{levels} & \\Key{string} & --- & \\ApiText{Number of contour levels.}{Anzahl der Höhenlinienniveaus.}}"
+  },
+  {
+    "key": "row",
+    "after": "  \\SemioTableRow{\\Key{row} & \\Key{integer} & \\Key{3} & \\ApiText{Row index on the layout grid.}{Zeilenindex im Anordnungsgitter.}}",
+    "family": "spatial-scalar-field",
+    "before": "  \\SemioTableRow{\\Key{row} & \\Key{string} & --- & \\ApiText{Row index on the layout grid.}{Zeilenindex im Anordnungsgitter.}}"
+  },
+  {
+    "key": "scale-z",
+    "after": "  \\SemioTableRow{\\Key{scale-z} & \\Key{number} & \\Key{1} & \\ApiText{Vertical foreshortening.}{Senkrechte Verkürzung.}}",
+    "family": "arch-axonometric",
+    "before": "  \\SemioTableRow{\\Key{scale-z} & \\Key{string} & \\Key{1} & \\ApiText{Vertical foreshortening.}{Senkrechte Verkürzung.}}"
+  },
+  {
+    "key": "col-gap",
+    "after": "  \\SemioTableRow{\\Key{col-gap} & \\Key{number} & \\Key{4} & \\ApiText{Millimetre gap between grid columns.}{Millimeterabstand zwischen den Gitterspalten.}}",
+    "family": "arch-schematic",
+    "before": "  \\SemioTableRow{\\Key{col-gap} & \\Key{string} & --- & \\ApiText{Millimetre gap between grid columns.}{Millimeterabstand zwischen den Gitterspalten.}}"
+  },
+  {
+    "key": "row-gap",
+    "after": "  \\SemioTableRow{\\Key{row-gap} & \\Key{number} & \\Key{4} & \\ApiText{Millimetre gap between grid rows.}{Millimeterabstand zwischen den Gitterzeilen.}}",
+    "family": "arch-schematic",
+    "before": "  \\SemioTableRow{\\Key{row-gap} & \\Key{string} & --- & \\ApiText{Millimetre gap between grid rows.}{Millimeterabstand zwischen den Gitterzeilen.}}"
+  },
+  {
+    "key": "col-gap",
+    "after": "  \\SemioTableRow{\\Key{col-gap} & \\Key{number} & \\Key{4} & \\ApiText{Millimetre gap between grid columns.}{Millimeterabstand zwischen den Gitterspalten.}}",
+    "family": "uml-class",
+    "before": "  \\SemioTableRow{\\Key{col-gap} & \\Key{string} & --- & \\ApiText{Millimetre gap between grid columns.}{Millimeterabstand zwischen den Gitterspalten.}}"
+  },
+  {
+    "key": "unit-value",
+    "after": "  \\SemioTableRow{\\Key{unit-value} & \\Key{number} & \\Key{1} & \\ApiText{Units represented by one glyph.}{Einheiten, die ein Glyph darstellt.}}",
+    "family": "infographic-icon",
+    "before": "  \\SemioTableRow{\\Key{unit-value} & \\Key{string} & \\Key{1} & \\ApiText{Units represented by one glyph.}{Einheiten, die ein Glyph darstellt.}}"
+  },
+  {
+    "key": "detail-share",
+    "after": "  \\SemioTableRow{\\Key{detail-share} & \\Key{number} & \\Key{0.5} & \\ApiText{Fraction of the frame taken by the detail panel.}{Anteil des Rahmens, den das Detailfeld einnimmt.}}",
+    "family": "state-overview",
+    "before": "  \\SemioTableRow{\\Key{detail-share} & \\Key{string} & \\Key{0.5} & \\ApiText{Fraction of the frame taken by the detail panel.}{Anteil des Rahmens, den das Detailfeld einnimmt.}}"
+  }
+]

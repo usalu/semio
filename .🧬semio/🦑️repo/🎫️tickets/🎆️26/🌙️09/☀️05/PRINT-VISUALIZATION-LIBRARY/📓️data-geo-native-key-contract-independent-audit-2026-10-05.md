@@ -1,0 +1,13 @@
+# Data and Geographic Native Key Contracts
+
+The retained authored-inputs/data-geo-native-key-contracts/source-contracts.json maps all46 direct controls: data20, geometry-part2, projection9, layout6, graticule7 and geographic-solver2. It includes native source hashes, declaration/reset/consumer references and concise English/German meanings. This is source research for handwritten API tables, not runtime gate evidence.
+
+Projection center/scale/parallels/clipAngle vary by kind and must not receive an invented universal default. Translation480,250, rotation0,0,0 and precision sqrt(0.5) are common defaults before kind-specific overrides. The kind entry defaults to equirectangular. Graticule aliases step and extent set both independent component controls, whose initial defaults differ; no single alias default should be printed. Geographic solver counts are initialized12/48 and are not reset by every projection declaration.
+
+Data role names are strings identifying columns or tables, not numeric values. Domain is a two-entry arithmetic list; columns is an ordered name list. Geometry part value is stored as a token string with default0, while downstream numeric consumers may evaluate it. FP/int setters accept arithmetic expressions; their primitive numerical type must not imply literal-only input grammar.
+## Root Public Table Application
+
+After actual comprehensive native-declaration RED `93323`, Root inserted six explicitly source-bound API tables containing all46 native controls. Kind-dependent projection defaults and separate graticule alias defaults remain bilingual semantic values; solver counts are described as persistent initial settings rather than per-projection resets. The CSV columns type is printed as `column list`, matching its ordered identifier list instead of the research shorthand `records`. Exact full before/after and inserted table fragment are retained in this input directory. Native sources were hash-checked before application and unchanged. Registered metadata/declaration replay remains pending.
+
+Released public API table snapshot independently reverses exactly: its public-tables.tex occurs once, and removing that literal reconstructs before207895C04164B7DD2B3A8096AD8E45F6E7FC6B3187D7D699E96551838FF2A0FD from afterA35B753781BDEBC5CF6CF8FCEDFD170ED3FA12B2981ADAEDA3FABA1FCD31A963. All46 rows and6 explicit scope bindings present. Kind-dependent projection defaults, separate graticule component defaults and persistent initialized solver counts are explicitly stated bilingually. This proves the retained release slice, not unchanged later concurrent API bytes.
+

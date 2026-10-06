@@ -1,0 +1,27 @@
+# Remaining Scientific Window Public Fixture Proposals
+
+Read-only proposal; no compiler or runtime claim. These inputs use existing public family keys and tuple carriers, with no private injection. The prior numeric-window audit identifies the current accepted-but-unapplied branches.
+
+| Family | Public fixture | Actual body assertion using independent D3 scaleLinear |
+|---|---|---|
+| sci-genome-track | modes gene-structure,domain,variant,pileup,transcript,synteny; span={0,1000}; features={100/220/+/exon/e1,220/430/+/intron/,430/560/+/exon/e2,300/305/+/variant/rs1}; compare omitted vs domain={0,2000},range={0,2} | Feature x positions halve at fixed canvas width; mapped nonzero y values halve at fixed canvas height. Assert each mode-specific native primitive, not caption signature. Coverage and multi need a separate post-coverage override case because coverage recalculates extents. Preserve omitted span defaults. |
+| sci-pianoroll | modes piano-roll,midi,rhythm; notes={0/1/60/80,2/0.5/67/100,4/2/64/75}; domain={0,7}; lowPitch=48,highPitch=84; compare range={48,84} versus {36,108} for pitch modes, range={0,1} versus {0,2} for rhythm | Roll lower/upper semitone rectangle corners map from pitch,pitch+1; MIDI onset glyph and dropline endpoint map from pitch while baseline uses low; rhythm lane y=.3,.7 maps to independent affine positions. Confirm true body vertices and every chosen branch. Existing source signal599–641 reads domain already; range must be applied after default y window. Native source551–583 confirms family sci-pianoroll, mode piano-roll and keys lowPitch/highPitch. |
+| sci-climate-series | mode=meteogram (the actual native small-multiple branch); panels={Temperature/0:10+1:20+2:15,Rain/0:2+1:8+2:4}; compare height=40 vs80, and domain={0,4},range={0,40} | Two panels must share the authored parent height budget with 3mm gap; each h=(H−3)/2, not a mutated global H reused on later panels. Assert panel curve vertices with independent scales and panel shifts. Authored domain/range should apply equally to each panel when given; omitted ranges retain per-series auto extent. Store parent dimensions before per-panel mutation and group local state. |
+| sci-construction | mode=coordinate; points={A/0/0,B/44/0,C/13/30}; marks=false,labels=true; compare axes/grid omitted, explicit false and true; explicit domain={0,88},range={0,60} | This branch currently draws raw-mm outline vertices while numeric chrome assumes −5..55/−5..40. Select a truthful existing physical-boundary contract first: omitted identity preserves actual body; authored numeric windows affine-map body and chrome together. Assert B and C outline vertices, glyph positions and axis/grid toggle paint. Never count changed tick strings alone. Branch-local forced true currently defeats explicit false. |
+
+Source owners: semio-viz-scientific-biology.sty1283–1320; semio-viz-scientific-signal.sty599–641; semio-viz-scientific-surface.sty315–348; semio-viz-scientific-geometry.sty119–140. Numbers denote the read source and may move with concurrent edits. These are proposals for a neutral baseline RED before minimal existing-owner repairs. Empty lists, duplicate labels and zero spans require admitted/diagnosed boundaries rather than fabricated data; they do not replace the nondegenerate effect cases above.
+
+Parent reported actual scoped results: native-record session25229 exit0 (60 predicates+6 hard rejects); stock session58275 exit0 (18 pairs+38 D3 relations, nine stocks, two themes); scalar session75565 exit0 (32 cases), after baseline16196 exit1. These are trusted parent terminal observations, not independently stage-bound compiler receipts here. Scientific field diagnostic text changed after the guard result, and style hook session73265 was still pending when reported. No full-catalogue or full-native completion follows.
+
+
+Schema-first follow-up: direct current schema read confirms all proposed public keys exist. Two precise metadata truth defects also remain: `sci-genome-track.features` is described as a differential-expression table although native records are start/end/strand/kind/label; `sci-climate-series.mode` is described as coordinate skew although native cases are stripes/anomaly/meteogram. These descriptions should be corrected in English and German by the existing schema owner as part of the relevant TDD change; they are not evidence that the accepted controls can be omitted.
+
+Independent log-byte observation after those trusted terminal reports:
+
+| Scoped job | Current generated log SHA-256 | Observed terminal evidence |
+|---|---|---|
+| record guard25229 |7F910A19037826E92A21BC505F4ED230E6488A267E2741D3BCBFED9ADFA74715| Final DEBUG confirms60 evaluated predicates and6 actual compiler rejections matched AJV/D3. Error blocks are intentional hard-rejection fixtures. |
+| stock58275 |CCF3C5413119D2DCFA905911455B7713DB9404982D21BF5137D7820701F7775C| Final DEBUG confirms18 default bodies,38 independent projected D3 relations,9 authored contracts. |
+| scalar75565 |C81E7D095575CE6713748F8528744BA852660CCE8C2A37813F5461DEA692BB1F| Final DEBUG confirms32 bilingual scalar mutations matched AJV closed shapes and positive scale contracts. |
+
+Hashes bind observed log bytes only. They do not bind every current style or establish a terminal exit code independently of the parent receipt. Scalar job is grammar-only, and its scale assertions do not constitute a new native PDF rendering run.

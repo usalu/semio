@@ -1,0 +1,703 @@
+{
+  "schema": {
+    "type": "object",
+    "required": [
+      "kind",
+      "family",
+      "options",
+      "cases",
+      "rendering",
+      "tiePolicy"
+    ],
+    "additionalProperties": false,
+    "properties": {
+      "kind": {
+        "const": "critical-path-network"
+      },
+      "family": {
+        "const": "optimization"
+      },
+      "options": {
+        "type": "object",
+        "required": [
+          "mode",
+          "id",
+          "pred",
+          "value",
+          "label"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "mode": {
+            "const": "critical-path"
+          },
+          "id": {
+            "const": "id"
+          },
+          "pred": {
+            "const": "pred"
+          },
+          "value": {
+            "const": "duration"
+          },
+          "label": {
+            "const": "label"
+          }
+        }
+      },
+      "cases": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": [
+            "id",
+            "valid",
+            "rows"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "valid": {
+              "type": "boolean"
+            },
+            "rows": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "pred",
+                  "duration",
+                  "label"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "pred": {
+                    "type": "string"
+                  },
+                  "duration": {
+                    "type": [
+                      "number",
+                      "string"
+                    ]
+                  },
+                  "label": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "expected": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "object",
+                "required": [
+                  "start",
+                  "finish",
+                  "depth"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "start": {
+                    "type": "number"
+                  },
+                  "finish": {
+                    "type": "number"
+                  },
+                  "depth": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                }
+              }
+            },
+            "makespan": {
+              "type": "number",
+              "minimum": 0
+            },
+            "node": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "arrow": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "padding": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "valid": {
+                    "const": true
+                  }
+                },
+                "required": [
+                  "valid"
+                ]
+              },
+              "then": {
+                "required": [
+                  "expected",
+                  "makespan"
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "tiePolicy": {
+        "const": "first-input-longest-finish-chain"
+      },
+      "rendering": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "frame",
+          "padding",
+          "node",
+          "arrow",
+          "palette",
+          "border"
+        ],
+        "properties": {
+          "frame": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          },
+          "padding": {
+            "type": "number",
+            "minimum": 0
+          },
+          "node": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "arrow": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "palette": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$"
+            }
+          },
+          "border": {
+            "type": "string",
+            "pattern": "^#[0-9a-fA-F]{6}$"
+          }
+        }
+      }
+    }
+  },
+  "vectors": {
+    "kind": "critical-path-network",
+    "family": "optimization",
+    "options": {
+      "mode": "critical-path",
+      "id": "id",
+      "pred": "pred",
+      "value": "duration",
+      "label": "label"
+    },
+    "cases": [
+      {
+        "id": "ordered",
+        "rows": [
+          {
+            "id": "R",
+            "pred": "",
+            "duration": 5,
+            "label": "Root"
+          },
+          {
+            "id": "P",
+            "pred": "R",
+            "duration": 3,
+            "label": "First Child"
+          },
+          {
+            "id": "G",
+            "pred": "P",
+            "duration": 2,
+            "label": "  Grandchild  "
+          }
+        ],
+        "valid": true,
+        "expected": {
+          "R": {
+            "start": 0,
+            "finish": 5,
+            "depth": 1
+          },
+          "P": {
+            "start": 5,
+            "finish": 8,
+            "depth": 2
+          },
+          "G": {
+            "start": 8,
+            "finish": 10,
+            "depth": 3
+          }
+        },
+        "makespan": 10
+      },
+      {
+        "id": "reversed",
+        "rows": [
+          {
+            "id": "G",
+            "pred": "P",
+            "duration": 2,
+            "label": "  Grandchild  "
+          },
+          {
+            "id": "P",
+            "pred": "R",
+            "duration": 3,
+            "label": "First Child"
+          },
+          {
+            "id": "R",
+            "pred": "",
+            "duration": 5,
+            "label": "Root"
+          }
+        ],
+        "valid": true,
+        "expected": {
+          "R": {
+            "start": 0,
+            "finish": 5,
+            "depth": 1
+          },
+          "P": {
+            "start": 5,
+            "finish": 8,
+            "depth": 2
+          },
+          "G": {
+            "start": 8,
+            "finish": 10,
+            "depth": 3
+          }
+        },
+        "makespan": 10
+      },
+      {
+        "id": "unicode",
+        "rows": [
+          {
+            "id": "根",
+            "pred": "",
+            "duration": 5,
+            "label": "根"
+          },
+          {
+            "id": "子",
+            "pred": "根",
+            "duration": 3,
+            "label": "子"
+          },
+          {
+            "id": "葉",
+            "pred": "子",
+            "duration": 2,
+            "label": "葉"
+          }
+        ],
+        "valid": true,
+        "expected": {
+          "根": {
+            "start": 0,
+            "finish": 5,
+            "depth": 1
+          },
+          "子": {
+            "start": 5,
+            "finish": 8,
+            "depth": 2
+          },
+          "葉": {
+            "start": 8,
+            "finish": 10,
+            "depth": 3
+          }
+        },
+        "makespan": 10
+      },
+      {
+        "id": "unicode-reversed",
+        "rows": [
+          {
+            "id": "葉",
+            "pred": "子",
+            "duration": 2,
+            "label": "葉"
+          },
+          {
+            "id": "子",
+            "pred": "根",
+            "duration": 3,
+            "label": "子"
+          },
+          {
+            "id": "根",
+            "pred": "",
+            "duration": 5,
+            "label": "根"
+          }
+        ],
+        "valid": true,
+        "expected": {
+          "根": {
+            "start": 0,
+            "finish": 5,
+            "depth": 1
+          },
+          "子": {
+            "start": 5,
+            "finish": 8,
+            "depth": 2
+          },
+          "葉": {
+            "start": 8,
+            "finish": 10,
+            "depth": 3
+          }
+        },
+        "makespan": 10
+      },
+      {
+        "id": "forest",
+        "rows": [
+          {
+            "id": "B",
+            "pred": "",
+            "duration": 2,
+            "label": "B"
+          },
+          {
+            "id": "L",
+            "pred": "A",
+            "duration": 3,
+            "label": "L"
+          },
+          {
+            "id": "A",
+            "pred": "",
+            "duration": 4,
+            "label": "A"
+          }
+        ],
+        "valid": true,
+        "expected": {
+          "B": {
+            "start": 0,
+            "finish": 2,
+            "depth": 1
+          },
+          "A": {
+            "start": 0,
+            "finish": 4,
+            "depth": 1
+          },
+          "L": {
+            "start": 4,
+            "finish": 7,
+            "depth": 2
+          }
+        },
+        "makespan": 7
+      },
+      {
+        "id": "empty",
+        "rows": [],
+        "valid": true,
+        "expected": {},
+        "makespan": 0
+      },
+      {
+        "id": "zero",
+        "rows": [
+          {
+            "id": "A",
+            "pred": "",
+            "duration": 0,
+            "label": "A"
+          },
+          {
+            "id": "B",
+            "pred": "A",
+            "duration": 0,
+            "label": "B"
+          }
+        ],
+        "valid": true,
+        "expected": {
+          "A": {
+            "start": 0,
+            "finish": 0,
+            "depth": 1
+          },
+          "B": {
+            "start": 0,
+            "finish": 0,
+            "depth": 2
+          }
+        },
+        "makespan": 0
+      },
+      {
+        "id": "missing-pred",
+        "rows": [
+          {
+            "id": "A",
+            "pred": "Z",
+            "duration": 2,
+            "label": "A"
+          }
+        ],
+        "valid": false
+      },
+      {
+        "id": "cycle",
+        "rows": [
+          {
+            "id": "A",
+            "pred": "B",
+            "duration": 2,
+            "label": "A"
+          },
+          {
+            "id": "B",
+            "pred": "A",
+            "duration": 3,
+            "label": "B"
+          }
+        ],
+        "valid": false
+      },
+      {
+        "id": "disconnected-cycle",
+        "rows": [
+          {
+            "id": "R",
+            "pred": "",
+            "duration": 1,
+            "label": "R"
+          },
+          {
+            "id": "A",
+            "pred": "B",
+            "duration": 2,
+            "label": "A"
+          },
+          {
+            "id": "B",
+            "pred": "A",
+            "duration": 3,
+            "label": "B"
+          }
+        ],
+        "valid": false
+      },
+      {
+        "id": "self-cycle",
+        "rows": [
+          {
+            "id": "A",
+            "pred": "A",
+            "duration": 2,
+            "label": "A"
+          }
+        ],
+        "valid": false
+      },
+      {
+        "id": "duplicate",
+        "rows": [
+          {
+            "id": "A",
+            "pred": "",
+            "duration": 2,
+            "label": "A"
+          },
+          {
+            "id": "A",
+            "pred": "",
+            "duration": 3,
+            "label": "A"
+          }
+        ],
+        "valid": false
+      },
+      {
+        "id": "blank-id",
+        "rows": [
+          {
+            "id": "",
+            "pred": "",
+            "duration": 2,
+            "label": ""
+          }
+        ],
+        "valid": false
+      },
+      {
+        "id": "negative",
+        "rows": [
+          {
+            "id": "A",
+            "pred": "",
+            "duration": -1,
+            "label": "A"
+          }
+        ],
+        "valid": false
+      },
+      {
+        "id": "nonfinite",
+        "rows": [
+          {
+            "id": "A",
+            "pred": "",
+            "duration": "inf",
+            "label": "A"
+          }
+        ],
+        "valid": false
+      },
+      {
+        "id": "styled-wide",
+        "rows": [
+          {
+            "id": "B",
+            "pred": "",
+            "duration": 2,
+            "label": "B"
+          },
+          {
+            "id": "L",
+            "pred": "A",
+            "duration": 3,
+            "label": "L"
+          },
+          {
+            "id": "A",
+            "pred": "",
+            "duration": 4,
+            "label": "A"
+          }
+        ],
+        "valid": true,
+        "expected": {
+          "B": {
+            "start": 0,
+            "finish": 2,
+            "depth": 1
+          },
+          "A": {
+            "start": 0,
+            "finish": 4,
+            "depth": 1
+          },
+          "L": {
+            "start": 4,
+            "finish": 7,
+            "depth": 2
+          }
+        },
+        "makespan": 7,
+        "node": 3,
+        "arrow": 2,
+        "padding": 5
+      },
+      {
+        "id": "styled-small",
+        "rows": [
+          {
+            "id": "B",
+            "pred": "",
+            "duration": 2,
+            "label": "B"
+          },
+          {
+            "id": "L",
+            "pred": "A",
+            "duration": 3,
+            "label": "L"
+          },
+          {
+            "id": "A",
+            "pred": "",
+            "duration": 4,
+            "label": "A"
+          }
+        ],
+        "valid": true,
+        "expected": {
+          "B": {
+            "start": 0,
+            "finish": 2,
+            "depth": 1
+          },
+          "A": {
+            "start": 0,
+            "finish": 4,
+            "depth": 1
+          },
+          "L": {
+            "start": 4,
+            "finish": 7,
+            "depth": 2
+          }
+        },
+        "makespan": 7,
+        "node": 1,
+        "arrow": 0.8,
+        "padding": 1
+      }
+    ],
+    "tiePolicy": "first-input-longest-finish-chain",
+    "rendering": {
+      "frame": [
+        80,
+        48
+      ],
+      "padding": 3,
+      "node": 2,
+      "arrow": 1.4,
+      "palette": [
+        "#cc3300",
+        "#003366"
+      ],
+      "border": "#4b5563"
+    }
+  },
+  "oracle": {
+    "library": "graphlib",
+    "version": "2.1.8",
+    "algorithm": "isAcyclic,topsort",
+    "computed": true
+  }
+}

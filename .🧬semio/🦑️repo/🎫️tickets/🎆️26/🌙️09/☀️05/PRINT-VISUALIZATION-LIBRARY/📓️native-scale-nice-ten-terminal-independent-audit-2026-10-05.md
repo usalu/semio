@@ -1,0 +1,5 @@
+# Ten Nice Controls Independent Terminal Binding
+
+Single fp comparison reversal reconstructs 75C284E210C00419C61ABF8961D76CB31321B843E9BD05C379C8B89A1F3C274D; expected before 75C284E210C00419C61ABF8961D76CB31321B843E9BD05C379C8B89A1F3C274D; equality True. Current staged scale SHA 6D7A3A1573129790321A00FE0B1CF7B1E16127FB8DF2F063AB2A0E764B51068A; expected6D7A3A1573129790321A00FE0B1CF7B1E16127FB8DF2F063AB2A0E764B51068A. Actual retained JSONL contains 40 nice records over 10 exact scenarios; every scenario has four records: True.
+
+Source downstream nice_pair passes count unchanged into tick_increment; tick_factor uses floating arithmetic for step/count. Only index/power values are converted to integers, so fractional requested count is not prematurely truncated. Source guard int comparison was the incompatible boundary; the focused current ten-control terminal binds omission,false,true,count4,count2.5 in EN/de to40 independent D3 native values. Root terminal53773 exit0/1m36s and retained artifact hashes provide runtime receipt; one light document, no broader palette/catalogue claim.

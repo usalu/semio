@@ -1,0 +1,578 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-viz-charts-scatter}[2026/09/05 v0.3.0 semio viz namespace charts-scatter families]
+
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+\RequirePackage{semio-viz-charts-line}
+\RequirePackage{semio-viz-coordinate}
+
+\ExplSyntaxOn
+
+%region 🔖️Keys
+% 🔑 semio / viz / family / scatter — the point clouds of taxonomy §4, §17 and §51.
+%   size       (column or number, default 1.4)     radius, through a sqrt scale when it is a column
+%   shape      (circle|square|triangle|diamond, default circle)
+%   color      (column, default empty)             categorical colour encoding
+%   trend      (none|linear|loess|polynomial, default none)
+%   confidence (boolean, default false)            band of one mean absolute residual around a trend
+%   connected  (boolean, default false)            join the points in row order
+%   jitter     (mm, default 0)                     deterministic displacement to separate ties
+%   labels     (none|value|category, inherited)    per-point text from the label column
+\tl_new:N \l_semio_viz_scatter_size_tl
+\tl_new:N \l_semio_viz_scatter_shape_tl
+\tl_new:N \l_semio_viz_scatter_color_tl
+\tl_new:N \l_semio_viz_scatter_trend_tl
+\bool_new:N \l_semio_viz_scatter_conf_bool
+\bool_new:N \l_semio_viz_scatter_connected_bool
+\fp_new:N \l_semio_viz_scatter_jitter_fp
+
+\semio_viz_cart_family_keys:n { semio / viz / family / scatter }
+% 🔑 The scatter's own keys, on top of the cartesian family keys inherited above.
+\keys_define:nn { semio / viz / family / scatter } {
+  size       .tl_set:N = \l_semio_viz_scatter_size_tl,
+  shape      .tl_set:N = \l_semio_viz_scatter_shape_tl,
+  color      .tl_set:N = \l_semio_viz_scatter_color_tl,
+  trend      .tl_set:N = \l_semio_viz_scatter_trend_tl,
+  confidence .bool_set:N = \l_semio_viz_scatter_conf_bool,
+  connected  .bool_set:N = \l_semio_viz_scatter_connected_bool,
+  jitter     .fp_set:N = \l_semio_viz_scatter_jitter_fp,
+}
+
+% 🔑 semio / viz / family / coordplot — the coordinate-system variants of taxonomy §52.
+%   coordinate (cartesian|polar|radial|logpolar|ternary|barycentric|parallel|complex|
+%               spherical|cylindrical|geographic|3d, default cartesian)
+%   axesCount  (integer, default 4)   axes a parallel-coordinate plot draws
+%   grid       (inherited)
+% 🧭 Both channels are the kernel's own coordinate state (semio-viz-coordinate):
+% the coordplot family only re-labels them for the catalogue vocabulary.
+
+\semio_viz_cart_family_keys:n { semio / viz / family / coordplot }
+% 🔑 The coordinate plot's own keys, on top of the cartesian family keys inherited above.
+\keys_define:nn { semio / viz / family / coordplot } {
+  coordinate .tl_set:N = \l_semio_viz_coord_kind_tl,
+  axesCount  .int_set:N = \l_semio_viz_coord_axes_int,
+}
+%endregion 🔖️Keys
+
+%region 🔖️Families
+% 🔵 scatter — scatterplots, bubble charts, connected scatters and their trend fits.
+\seq_new:N \l_semio_viz_scatter_data_seq
+\fp_new:N \l_semio_viz_scatter_smin_fp
+\fp_new:N \l_semio_viz_scatter_smax_fp
+\bool_new:N \l_semio_viz_scatter_size_col_bool
+\bool_new:N \l_semio_viz_scatter_color_col_bool
+\tl_new:N \l_semio_viz_scatter_cell_tl
+
+\cs_new_protected:Npn \semio_viz_scatter_keys_reset: {
+  \semio_viz_cart_keys_reset:
+  \tl_set:Nn \l_semio_viz_cart_data_tl { demo-scatter }
+  \tl_set:Nn \l_semio_viz_cart_x_tl { x }
+  \tl_set:Nn \l_semio_viz_cart_y_tl { y }
+  \tl_clear:N \l_semio_viz_cart_group_tl
+  \tl_set:Nn \l_semio_viz_scatter_size_tl { 1.4 }
+  \tl_set:Nn \l_semio_viz_scatter_shape_tl { circle }
+  \tl_clear:N \l_semio_viz_scatter_color_tl
+  \tl_set:Nn \l_semio_viz_scatter_trend_tl { none }
+  \bool_set_false:N \l_semio_viz_scatter_conf_bool
+  \bool_set_false:N \l_semio_viz_scatter_connected_bool
+  \fp_zero:N \l_semio_viz_scatter_jitter_fp
+  \fp_zero:N \l_semio_viz_bar_baseline_fp
+}
+
+% ❓ True when the size or colour option names a column of the table rather than a literal.
+\cs_new_protected:Npn \semio_viz_scatter_encodings: {
+  \bool_set_false:N \l_semio_viz_scatter_size_col_bool
+  \exp_args:NnV \regex_match:nnF { \A [0-9.]+ \Z } \l_semio_viz_scatter_size_tl
+    { \bool_set_true:N \l_semio_viz_scatter_size_col_bool }
+  \bool_set_false:N \l_semio_viz_scatter_color_col_bool
+  \tl_if_empty:NF \l_semio_viz_scatter_color_tl
+    { \bool_set_true:N \l_semio_viz_scatter_color_col_bool }
+  \bool_if:NT \l_semio_viz_scatter_size_col_bool {
+    \semio_viz_cart_extent:VVNN \l_semio_viz_cart_data_tl \l_semio_viz_scatter_size_tl
+      \l_semio_viz_scatter_smin_fp \l_semio_viz_scatter_smax_fp
+    \semio_viz_scale_define:nnxx { cart-size } { sqrt }
+      { \fp_eval:n { \l_semio_viz_scatter_smin_fp } , \fp_eval:n { \l_semio_viz_scatter_smax_fp } }
+      { 0.7 , 2.8 }
+  }
+  \bool_if:NT \l_semio_viz_scatter_color_col_bool {
+    \semio_viz_cart_cats:VVN \l_semio_viz_cart_data_tl \l_semio_viz_scatter_color_tl
+      \l_semio_viz_cart_groups_seq
+  }
+}
+
+% ⚫ One point: shape, radius from the size encoding, colour from the colour encoding.
+\cs_new_protected:Npn \semio_viz_scatter_point:nn #1#2 {
+  \str_case:VnF \l_semio_viz_scatter_shape_tl {
+    { square } {
+      \semio_viz_cart_draw_rect:nnnn { (#1) - \l_semio_viz_cart_v_fp } { (#2) - \l_semio_viz_cart_v_fp }
+        { 2 * \l_semio_viz_cart_v_fp } { 2 * \l_semio_viz_cart_v_fp }
+    }
+    { triangle } {
+      \fill [ \l_semio_viz_cart_fill_tl ]
+        ( \fp_eval:n { (#1) } , \fp_eval:n { (#2) + \l_semio_viz_cart_v_fp } )
+        -- ( \fp_eval:n { (#1) - \l_semio_viz_cart_v_fp } ,
+             \fp_eval:n { (#2) - \l_semio_viz_cart_v_fp } )
+        -- ( \fp_eval:n { (#1) + \l_semio_viz_cart_v_fp } ,
+             \fp_eval:n { (#2) - \l_semio_viz_cart_v_fp } ) -- cycle ;
+      \semio_viz_probe_geometry:nx { point }
+        { \fp_eval:n { round(#1,4) } , \fp_eval:n { round(#2,4) } ,
+          \fp_eval:n { round( \l_semio_viz_cart_v_fp , 4 ) } }
+    }
+    { diamond } {
+      \fill [ \l_semio_viz_cart_fill_tl ]
+        ( \fp_eval:n { (#1) } , \fp_eval:n { (#2) + \l_semio_viz_cart_v_fp } )
+        -- ( \fp_eval:n { (#1) + \l_semio_viz_cart_v_fp } , \fp_eval:n { (#2) } )
+        -- ( \fp_eval:n { (#1) } , \fp_eval:n { (#2) - \l_semio_viz_cart_v_fp } )
+        -- ( \fp_eval:n { (#1) - \l_semio_viz_cart_v_fp } , \fp_eval:n { (#2) } ) -- cycle ;
+      \semio_viz_probe_geometry:nx { point }
+        { \fp_eval:n { round(#1,4) } , \fp_eval:n { round(#2,4) } ,
+          \fp_eval:n { round( \l_semio_viz_cart_v_fp , 4 ) } }
+    }
+  } { \semio_viz_cart_draw_dot:nnn {#1} {#2} { \fp_eval:n { \l_semio_viz_cart_v_fp } } }
+}
+
+% 📍 One data row #1 as a point: both cells through their scales, jittered when `jitter` asks,
+% then kept for the trend fit and drawn as the row's own mark.
+\cs_new_protected:Npn \semio_viz_scatter_row:n #1 {
+  \semio_viz_table_cell:nnVN { \l_semio_viz_cart_data_tl } {#1} \l_semio_viz_cart_x_tl
+    \l_semio_viz_line_xcell_tl
+  \semio_viz_table_cell:nnVN { \l_semio_viz_cart_data_tl } {#1} \l_semio_viz_cart_y_tl
+    \l_semio_viz_line_ycell_tl
+  \semio_viz_cart_xmap:VN \l_semio_viz_line_xcell_tl \l_semio_viz_cart_c_fp
+  \semio_viz_cart_ymap:VN \l_semio_viz_line_ycell_tl \l_semio_viz_cart_d_fp
+  \fp_compare:nNnT { \l_semio_viz_scatter_jitter_fp } > { 0 } {
+    \fp_add:Nn \l_semio_viz_cart_c_fp
+      { \l_semio_viz_scatter_jitter_fp * ( \int_mod:nn { 7 * (#1) } { 5 } - 2 ) / 2 }
+    \fp_add:Nn \l_semio_viz_cart_d_fp
+      { \l_semio_viz_scatter_jitter_fp * ( \int_mod:nn { 11 * (#1) } { 5 } - 2 ) / 2 }
+  }
+  \bool_if:NTF \l_semio_viz_scatter_size_col_bool
+    {
+      \semio_viz_table_cell:nnVN { \l_semio_viz_cart_data_tl } {#1} \l_semio_viz_scatter_size_tl
+        \l_semio_viz_scatter_cell_tl
+      \semio_viz_scale_map:nVN { cart-size } \l_semio_viz_scatter_cell_tl \l_semio_viz_cart_v_fp
+    }
+    { \fp_set:Nn \l_semio_viz_cart_v_fp { \l_semio_viz_scatter_size_tl } }
+  \bool_if:NTF \l_semio_viz_scatter_color_col_bool
+    {
+      \semio_viz_table_cell:nnVN { \l_semio_viz_cart_data_tl } {#1} \l_semio_viz_scatter_color_tl
+        \l_semio_viz_scatter_cell_tl
+      \seq_map_indexed_inline:Nn \l_semio_viz_cart_groups_seq {
+        \str_if_eq:VnT \l_semio_viz_scatter_cell_tl {##2}
+          { \semio_viz_cart_color:nN {##1} \l_semio_viz_cart_fill_tl }
+      }
+    }
+    { \semio_viz_cart_color:nN { 1 } \l_semio_viz_cart_fill_tl }
+  \seq_put_right:Nx \l_semio_viz_scatter_data_seq
+    { \l_semio_viz_line_xcell_tl , \l_semio_viz_line_ycell_tl }
+  \seq_put_right:Nx \l_semio_viz_cart_pts_seq
+    { \fp_eval:n { \l_semio_viz_cart_c_fp } , \fp_eval:n { \l_semio_viz_cart_d_fp } }
+  \semio_viz_scatter_point:nn { \fp_eval:n { \l_semio_viz_cart_c_fp } }
+    { \fp_eval:n { \l_semio_viz_cart_d_fp } }
+  \str_if_eq:VnT \l_semio_viz_cart_labels_tl { category } {
+    \tl_if_empty:NF \l_semio_viz_cart_label_tl {
+      \semio_viz_table_cell:nnVN { \l_semio_viz_cart_data_tl } {#1} \l_semio_viz_cart_label_tl
+        \l_semio_viz_scatter_cell_tl
+      \semio_viz_cart_text:nnnn { \fp_eval:n { \l_semio_viz_cart_c_fp + 1.4 } }
+        { \fp_eval:n { \l_semio_viz_cart_d_fp } } { west } { \l_semio_viz_scatter_cell_tl }
+    }
+  }
+}
+
+% 🔁 Draws every data row as a point and collects the cloud the trend will be fitted to.
+\cs_new_protected:Npn \semio_viz_scatter_rows_run: {
+  \seq_clear:N \l_semio_viz_scatter_data_seq
+  \seq_clear:N \l_semio_viz_cart_pts_seq
+  \int_step_inline:nn { \l_semio_viz_cart_nrows_int } { \semio_viz_scatter_row:n {##1} }
+}
+
+% 📉 The fitted trend, drawn in data space and mapped back through the scales.
+\cs_new_protected:Npn \semio_viz_scatter_trend_linear: {
+  \semio_viz_cart_regression:N \l_semio_viz_scatter_data_seq
+  \semio_viz_probe_geometry:nx { regression }
+    { \fp_eval:n { round( \l_semio_viz_cart_slope_fp , 6 ) } ,
+      \fp_eval:n { round( \l_semio_viz_cart_intercept_fp , 6 ) } }
+  \seq_clear:N \l_semio_viz_cart_pts_b_seq
+  \semio_viz_scatter_trend_sample:
+  \tl_set:Nn \l_semio_viz_cart_stroke_tl { semio-chrome-border-emphasized }
+  \semio_viz_cart_draw_path:N \l_semio_viz_cart_pts_b_seq
+  \bool_if:NT \l_semio_viz_scatter_conf_bool { \semio_viz_scatter_conf_band: }
+}
+
+% 📐 Samples the fitted line at eleven points across the x extent, mapped into figure space.
+\cs_new_protected:Npn \semio_viz_scatter_trend_sample: {
+  \int_step_variable:nNn { 11 } \l_semio_viz_cart_i_int {
+    \fp_set:Nn \l_semio_viz_cart_a_fp
+      { \l_semio_viz_cart_xmin_fp + ( \l_semio_viz_cart_i_int - 1 ) / 10
+        * ( \l_semio_viz_cart_xmax_fp - \l_semio_viz_cart_xmin_fp ) }
+    \fp_set:Nn \l_semio_viz_cart_b_fp
+      { \l_semio_viz_cart_intercept_fp + \l_semio_viz_cart_slope_fp * \l_semio_viz_cart_a_fp }
+    \semio_viz_cart_xmap:VN \l_semio_viz_cart_a_fp \l_semio_viz_cart_c_fp
+    \semio_viz_cart_ymap:VN \l_semio_viz_cart_b_fp \l_semio_viz_cart_d_fp
+    \seq_put_right:Nx \l_semio_viz_cart_pts_b_seq
+      { \fp_eval:n { \l_semio_viz_cart_c_fp } , \fp_eval:n { \l_semio_viz_cart_d_fp } }
+  }
+}
+
+% 📏 Mean absolute residual of the linear fit, drawn as a band around the trend line.
+\fp_new:N \l_semio_viz_scatter_resid_fp
+\cs_new_protected:Npn \semio_viz_scatter_conf_band: {
+  \fp_zero:N \l_semio_viz_scatter_resid_fp
+  \seq_set_eq:NN \l_semio_viz_cart_map_seq \l_semio_viz_scatter_data_seq
+  \semio_viz_scatter_resid_run:
+  \fp_set:Nn \l_semio_viz_scatter_resid_fp
+    { \l_semio_viz_scatter_resid_fp / \seq_count:N \l_semio_viz_scatter_data_seq }
+  \semio_viz_cart_ymap:nN { 0 } \l_semio_viz_cart_a_fp
+  \semio_viz_cart_ymap:VN \l_semio_viz_scatter_resid_fp \l_semio_viz_cart_b_fp
+  \fp_set:Nn \l_semio_viz_cart_e_fp { abs( \l_semio_viz_cart_b_fp - \l_semio_viz_cart_a_fp ) }
+  \semio_viz_scatter_shift_run:
+  \tl_set:Nn \l_semio_viz_cart_fill_tl { semio-chrome-border-normal }
+  \semio_viz_cart_draw_band:NN \l_semio_viz_cart_map_seq \l_semio_viz_cart_map_b_seq
+}
+
+% 📊 Total absolute residual of the fit, which sets the half-width of the confidence band.
+\cs_new_protected:Npn \semio_viz_scatter_resid_run: {
+  \seq_map_inline:Nn \l_semio_viz_cart_map_seq {
+    \fp_add:Nn \l_semio_viz_scatter_resid_fp {
+      abs( \clist_item:nn {##1} { 2 }
+        - \l_semio_viz_cart_intercept_fp
+        - \l_semio_viz_cart_slope_fp * \clist_item:nn {##1} { 1 } )
+    }
+  }
+}
+
+% ↕️ The two boundaries of the confidence band: the fitted line moved up and down by the residual.
+\cs_new_protected:Npn \semio_viz_scatter_shift_run: {
+  \seq_clear:N \l_semio_viz_cart_map_seq
+  \seq_clear:N \l_semio_viz_cart_map_b_seq
+  \seq_map_inline:Nn \l_semio_viz_cart_pts_b_seq {
+    \seq_put_right:Nx \l_semio_viz_cart_map_seq
+      { \clist_item:nn {##1} { 1 } ,
+        \fp_eval:n { \clist_item:nn {##1} { 2 } + \l_semio_viz_cart_e_fp } }
+    \seq_put_right:Nx \l_semio_viz_cart_map_b_seq
+      { \clist_item:nn {##1} { 1 } ,
+        \fp_eval:n { \clist_item:nn {##1} { 2 } - \l_semio_viz_cart_e_fp } }
+  }
+}
+
+% 〰️ loess and polynomial have no kernel fit yet: both are trailing window means over the
+% point sequence, distinguished by their window width and by the interpolation of the result.
+\cs_new_protected:Npn \semio_viz_scatter_trend_window:n #1 {
+  \seq_clear:N \l_semio_viz_cart_map_b_seq
+  \seq_set_eq:NN \l_semio_viz_cart_pts_b_seq \l_semio_viz_cart_pts_seq
+  \semio_viz_scatter_ys_run:
+  \semio_viz_cart_window_mean:Nn \l_semio_viz_cart_map_b_seq {#1}
+  \semio_viz_scatter_rebuild_run:
+  \tl_set:Nn \l_semio_viz_cart_stroke_tl { semio-chrome-border-emphasized }
+  \semio_viz_cart_draw_path:N \l_semio_viz_cart_pts_b_seq
+}
+
+% 🧮 The ordinates of the point cloud alone, which is what the window mean is taken over.
+\cs_new_protected:Npn \semio_viz_scatter_ys_run: {
+  \seq_map_inline:Nn \l_semio_viz_cart_pts_b_seq {
+    \seq_put_right:Nx \l_semio_viz_cart_map_b_seq { \clist_item:nn {##1} { 2 } }
+  }
+}
+
+% 🔗 Puts the smoothed ordinates back onto their own abscissae, giving the curve to be drawn.
+\cs_new_protected:Npn \semio_viz_scatter_rebuild_run: {
+  \int_zero:N \l_semio_viz_cart_j_int
+  \seq_set_eq:NN \l_semio_viz_cart_map_seq \l_semio_viz_cart_pts_b_seq
+  \seq_clear:N \l_semio_viz_cart_pts_b_seq
+  \seq_map_inline:Nn \l_semio_viz_cart_map_seq {
+    \int_incr:N \l_semio_viz_cart_j_int
+    \seq_put_right:Nx \l_semio_viz_cart_pts_b_seq
+      { \clist_item:nn {##1} { 1 } ,
+        \seq_item:Nn \l_semio_viz_cart_out_seq { \l_semio_viz_cart_j_int } }
+  }
+}
+
+% 📉 The trend the `trend` key asks for: a least-squares line, a loess curve or a polynomial one.
+\cs_new_protected:Npn \semio_viz_scatter_trend: {
+  \str_case:VnF \l_semio_viz_scatter_trend_tl {
+    { linear } { \semio_viz_scatter_trend_linear: }
+    { loess } {
+      \tl_set:Nn \l_semio_viz_cart_curve_tl { catmull-rom }
+      \semio_viz_scatter_trend_window:n { 5 }
+    }
+    { polynomial } {
+      \tl_set:Nn \l_semio_viz_cart_curve_tl { basis }
+      \semio_viz_scatter_trend_window:n { 3 }
+    }
+  } { }
+}
+
+% ▶️ The whole family run: defaults, the option list #1, the frame and scales, the point cloud,
+% the connecting path under `connected`, the trend, then the axes.
+\cs_new_protected:Npn \semio_viz_scatter_render:n #1 {
+  \semio_viz_frame_require:n { SemioVizRunFamily }
+  \semio_viz_scatter_keys_reset:
+  \keys_set:nn { semio / viz / family / scatter } {#1}
+  \semio_viz_cart_rect_compute:
+  \semio_viz_cart_extent:VVNN \l_semio_viz_cart_data_tl \l_semio_viz_cart_x_tl
+    \l_semio_viz_cart_xmin_fp \l_semio_viz_cart_xmax_fp
+  \semio_viz_cart_scale_x:n { linear }
+  \semio_viz_cart_domain_plain:
+  \semio_viz_cart_scale_value:nn { linear } { v }
+  \semio_viz_cart_grid_y:
+  \semio_viz_cart_grid_x:
+  \semio_viz_cart_axis_frame:
+  \semio_viz_scatter_encodings:
+  \semio_viz_table_nrows:VN \l_semio_viz_cart_data_tl \l_semio_viz_cart_nrows_int
+  \semio_viz_scatter_rows_run:
+  \bool_if:NT \l_semio_viz_scatter_connected_bool {
+    \semio_viz_cart_color:nN { 1 } \l_semio_viz_cart_stroke_tl
+    \semio_viz_cart_draw_path:N \l_semio_viz_cart_pts_seq
+  }
+  \semio_viz_scatter_trend:
+  \semio_viz_cart_axis_ticks:n { v }
+}
+
+% 🌌 §3: scatter, bubble, jittered and connected point clouds with their fitted trends.
+\SemioVizFamily { scatter } { \semio_viz_scatter_render:n {#1} }
+
+% 🧭 coordplot — the coordinate-system variants of taxonomy §52; polar kinds delegate to the
+% `polar` family of semio-viz-charts-polar when that namespace is loaded.
+\cs_new_protected:Npn \semio_viz_coord_keys_reset: {
+  \semio_viz_cart_keys_reset:
+  \tl_set:Nn \l_semio_viz_cart_data_tl { demo-scatter }
+  \tl_set:Nn \l_semio_viz_cart_x_tl { x }
+  \tl_set:Nn \l_semio_viz_cart_y_tl { y }
+  \tl_set:Nn \l_semio_viz_coord_kind_tl { cartesian }
+  \int_set:Nn \l_semio_viz_coord_axes_int { 4 }
+  \tl_set:Nn \l_semio_viz_cart_grid_tl { both }
+}
+
+% 📐 The cartesian case: grid, frame, and the data as one path with its points on top.
+\cs_new_protected:Npn \semio_viz_coord_cartesian: {
+  \semio_viz_cart_grid_y:
+  \semio_viz_cart_grid_x:
+  \semio_viz_cart_axis_frame:
+  \semio_viz_cart_color:nN { 1 } \l_semio_viz_cart_stroke_tl
+  \tl_set_eq:NN \l_semio_viz_cart_fill_tl \l_semio_viz_cart_stroke_tl
+  \semio_viz_axisplot_points:
+  \semio_viz_cart_draw_path:N \l_semio_viz_cart_pts_seq
+  \seq_set_eq:NN \l_semio_viz_cart_map_b_seq \l_semio_viz_cart_pts_seq
+  \semio_viz_line_markers_run:
+  \semio_viz_cart_axis_ticks:n { v }
+}
+
+% 🕸️ The ternary grid: lines parallel to the base, one per axesCount step.
+\cs_new_protected:Npn \semio_viz_coord_ternary_grid: {
+  \int_step_variable:nNn { \l_semio_viz_coord_axes_int } \l_semio_viz_cart_j_int {
+    \fp_set:Nn \l_semio_viz_cart_v_fp
+      { \l_semio_viz_cart_j_int / ( \l_semio_viz_coord_axes_int + 1 ) }
+    \semio_viz_cart_draw_hair:nnnn
+      { \fp_eval:n { \l_semio_viz_cart_xlo_fp
+        + \l_semio_viz_cart_a_fp * \l_semio_viz_cart_v_fp / 2 } }
+      { \fp_eval:n { \l_semio_viz_cart_ylo_fp
+        + \l_semio_viz_cart_a_fp * 0.866 * \l_semio_viz_cart_v_fp } }
+      { \fp_eval:n { \l_semio_viz_cart_xlo_fp
+        + \l_semio_viz_cart_a_fp * ( 1 - \l_semio_viz_cart_v_fp / 2 ) } }
+      { \fp_eval:n { \l_semio_viz_cart_ylo_fp
+        + \l_semio_viz_cart_a_fp * 0.866 * \l_semio_viz_cart_v_fp } }
+  }
+}
+
+% 🔺 The ternary and barycentric cases: the reference triangle, its grid, and the data inside it.
+\cs_new_protected:Npn \semio_viz_coord_ternary: {
+  \fp_set:Nn \l_semio_viz_cart_a_fp
+    { min( \l_semio_viz_cart_xhi_fp - \l_semio_viz_cart_xlo_fp ,
+           \l_semio_viz_cart_yhi_fp - \l_semio_viz_cart_ylo_fp ) }
+  \tl_set:Nn \l_semio_viz_cart_stroke_tl { semio-chrome-border-emphasized }
+  \str_if_eq:VnT \l_semio_viz_coord_kind_tl { barycentric }
+    { \tl_set:Nn \l_semio_viz_cart_stroke_tl { semio-chrome-border-normal } }
+  \str_if_eq:VnF \l_semio_viz_cart_grid_tl { none } { \semio_viz_coord_ternary_grid: }
+  \semio_viz_cart_draw_seg:nnnn { \fp_eval:n { \l_semio_viz_cart_xlo_fp } }
+    { \fp_eval:n { \l_semio_viz_cart_ylo_fp } }
+    { \fp_eval:n { \l_semio_viz_cart_xlo_fp + \l_semio_viz_cart_a_fp } }
+    { \fp_eval:n { \l_semio_viz_cart_ylo_fp } }
+  \semio_viz_cart_draw_seg:nnnn { \fp_eval:n { \l_semio_viz_cart_xlo_fp } }
+    { \fp_eval:n { \l_semio_viz_cart_ylo_fp } }
+    { \fp_eval:n { \l_semio_viz_cart_xlo_fp + \l_semio_viz_cart_a_fp / 2 } }
+    { \fp_eval:n { \l_semio_viz_cart_ylo_fp + \l_semio_viz_cart_a_fp * 0.866 } }
+  \semio_viz_cart_draw_seg:nnnn { \fp_eval:n { \l_semio_viz_cart_xlo_fp + \l_semio_viz_cart_a_fp } }
+    { \fp_eval:n { \l_semio_viz_cart_ylo_fp } }
+    { \fp_eval:n { \l_semio_viz_cart_xlo_fp + \l_semio_viz_cart_a_fp / 2 } }
+    { \fp_eval:n { \l_semio_viz_cart_ylo_fp + \l_semio_viz_cart_a_fp * 0.866 } }
+  \semio_viz_coord_barycentric_points:
+}
+
+% 🔺 Barycentric placement of every row: x, y and their complement as the three weights.
+\cs_new_protected:Npn \semio_viz_coord_barycentric_points: {
+  \semio_viz_table_nrows:VN \l_semio_viz_cart_data_tl \l_semio_viz_cart_nrows_int
+  \semio_viz_cart_color:nN { 1 } \l_semio_viz_cart_fill_tl
+  \semio_viz_coord_bary_run:
+}
+
+% 📍 Places every data row inside the reference triangle by its two barycentric weights.
+\cs_new_protected:Npn \semio_viz_coord_bary_run: {
+  \int_step_inline:nn { \l_semio_viz_cart_nrows_int } {
+    \semio_viz_table_cell:nnVN { \l_semio_viz_cart_data_tl } {##1} \l_semio_viz_cart_x_tl
+      \l_semio_viz_line_xcell_tl
+    \semio_viz_table_cell:nnVN { \l_semio_viz_cart_data_tl } {##1} \l_semio_viz_cart_y_tl
+      \l_semio_viz_line_ycell_tl
+    \fp_set:Nn \l_semio_viz_cart_b_fp
+      { ( \l_semio_viz_line_xcell_tl - \l_semio_viz_cart_xmin_fp )
+        / ( \l_semio_viz_cart_xmax_fp - \l_semio_viz_cart_xmin_fp ) }
+    \fp_set:Nn \l_semio_viz_cart_c_fp
+      { ( \l_semio_viz_line_ycell_tl - \l_semio_viz_cart_ymin_fp )
+        / ( \l_semio_viz_cart_ymax_fp - \l_semio_viz_cart_ymin_fp ) }
+    \fp_set:Nn \l_semio_viz_cart_d_fp
+      { max( 0 , 1 - \l_semio_viz_cart_b_fp - \l_semio_viz_cart_c_fp ) }
+    \fp_set:Nn \l_semio_viz_cart_e_fp
+      { \l_semio_viz_cart_b_fp + \l_semio_viz_cart_c_fp + \l_semio_viz_cart_d_fp }
+    \semio_viz_cart_draw_dot:nnn
+      { \fp_eval:n { \l_semio_viz_cart_xlo_fp
+        + \l_semio_viz_cart_a_fp * ( \l_semio_viz_cart_b_fp
+          + 0.5 * \l_semio_viz_cart_c_fp ) / \l_semio_viz_cart_e_fp } }
+      { \fp_eval:n { \l_semio_viz_cart_ylo_fp
+        + \l_semio_viz_cart_a_fp * 0.866 * \l_semio_viz_cart_c_fp / \l_semio_viz_cart_e_fp } }
+      { 1.2 }
+  }
+}
+
+% 🎚️ Parallel coordinates: one vertical axis per requested slot, one polyline per row.
+\cs_new_protected:Npn \semio_viz_coord_parallel: {
+  \tl_set:Nn \l_semio_viz_cart_stroke_tl { semio-chrome-border-normal }
+  \int_step_variable:nNn { \l_semio_viz_coord_axes_int } \l_semio_viz_cart_i_int {
+    \fp_set:Nn \l_semio_viz_cart_a_fp
+      { \l_semio_viz_cart_xlo_fp + ( \l_semio_viz_cart_i_int - 1 )
+        * ( \l_semio_viz_cart_xhi_fp - \l_semio_viz_cart_xlo_fp )
+        / ( \l_semio_viz_coord_axes_int - 1 ) }
+    \semio_viz_cart_draw_hair:nnnn { \fp_eval:n { \l_semio_viz_cart_a_fp } }
+      { \fp_eval:n { \l_semio_viz_cart_ylo_fp } } { \fp_eval:n { \l_semio_viz_cart_a_fp } }
+      { \fp_eval:n { \l_semio_viz_cart_yhi_fp } }
+  }
+  \semio_viz_table_nrows:VN \l_semio_viz_cart_data_tl \l_semio_viz_cart_nrows_int
+  \semio_viz_coord_parallel_run:
+}
+
+% 🔁 One polyline per data row, each in its own colour, across the parallel axes.
+\cs_new_protected:Npn \semio_viz_coord_parallel_run: {
+  \int_step_inline:nn { \l_semio_viz_cart_nrows_int } {
+    \semio_viz_cart_color:nN {##1} \l_semio_viz_cart_stroke_tl
+    \seq_clear:N \l_semio_viz_cart_pts_seq
+    \semio_viz_table_cell:nnVN { \l_semio_viz_cart_data_tl } {##1} \l_semio_viz_cart_x_tl
+      \l_semio_viz_line_xcell_tl
+    \semio_viz_table_cell:nnVN { \l_semio_viz_cart_data_tl } {##1} \l_semio_viz_cart_y_tl
+      \l_semio_viz_line_ycell_tl
+    \semio_viz_coord_parallel_row:
+    \semio_viz_cart_draw_path:N \l_semio_viz_cart_pts_seq
+  }
+}
+
+% 📈 The current row's vertices: its two cells taken in turn, one per parallel axis.
+\cs_new_protected:Npn \semio_viz_coord_parallel_row: {
+  \int_step_variable:nNn { \l_semio_viz_coord_axes_int } \l_semio_viz_cart_j_int {
+    \fp_set:Nn \l_semio_viz_cart_a_fp
+      { \l_semio_viz_cart_xlo_fp + ( \l_semio_viz_cart_j_int - 1 )
+        * ( \l_semio_viz_cart_xhi_fp - \l_semio_viz_cart_xlo_fp )
+        / ( \l_semio_viz_coord_axes_int - 1 ) }
+    \fp_set:Nn \l_semio_viz_cart_b_fp {
+      \int_mod:nn { \l_semio_viz_cart_j_int } { 2 } == 1
+        ? ( \l_semio_viz_line_ycell_tl ) : ( \l_semio_viz_line_xcell_tl ) }
+    \semio_viz_cart_ymap:VN \l_semio_viz_cart_b_fp \l_semio_viz_cart_d_fp
+    \seq_put_right:Nx \l_semio_viz_cart_pts_seq
+      { \fp_eval:n { \l_semio_viz_cart_a_fp } , \fp_eval:n { \l_semio_viz_cart_d_fp } }
+  }
+}
+
+% 🌀 §52's polar kinds are drawn here until the `polar` family of semio-viz-charts-polar
+% publishes an option vocabulary this family can hand a table, an angle and a radius column to;
+% the request is recorded in the ticket's CHARTS-A status file.
+\cs_new_protected:Npn \semio_viz_coord_delegate: { \semio_viz_coord_polar_local: }
+
+% 🌀 A local polar fallback so §52 renders even when the polar namespace is not loaded.
+\cs_new_protected:Npn \semio_viz_coord_polar_local: {
+  \fp_set:Nn \l_semio_viz_cart_a_fp
+    { min( \l_semio_viz_cart_xhi_fp - \l_semio_viz_cart_xlo_fp ,
+           \l_semio_viz_cart_yhi_fp - \l_semio_viz_cart_ylo_fp ) / 2 }
+  \fp_set:Nn \l_semio_viz_cart_b_fp
+    { ( \l_semio_viz_cart_xlo_fp + \l_semio_viz_cart_xhi_fp ) / 2 }
+  \fp_set:Nn \l_semio_viz_cart_c_fp
+    { ( \l_semio_viz_cart_ylo_fp + \l_semio_viz_cart_yhi_fp ) / 2 }
+  \tl_set:Nn \l_semio_viz_cart_stroke_tl { semio-chrome-border-normal }
+  \int_step_variable:nNn { \l_semio_viz_coord_axes_int } \l_semio_viz_cart_i_int {
+    \draw [ semio-chrome-border-normal , line~width=\semio@stroke@hairline , draw~opacity=0.4 ]
+      ( \fp_eval:n { \l_semio_viz_cart_b_fp } , \fp_eval:n { \l_semio_viz_cart_c_fp } )
+      circle [ radius=\fp_eval:n { \l_semio_viz_cart_a_fp * \l_semio_viz_cart_i_int
+        / \l_semio_viz_coord_axes_int } mm ] ;
+    \semio_viz_probe_geometry:nx { ring }
+      { \fp_eval:n { round( \l_semio_viz_cart_a_fp * \l_semio_viz_cart_i_int
+        / \l_semio_viz_coord_axes_int , 4 ) } }
+  }
+  \semio_viz_table_nrows:VN \l_semio_viz_cart_data_tl \l_semio_viz_cart_nrows_int
+  \semio_viz_cart_color:nN { 1 } \l_semio_viz_cart_fill_tl
+  \semio_viz_coord_polar_run:
+}
+
+% 🧭 The data as one closed polar path: the x column becomes an angle, the y column a radius.
+\cs_new_protected:Npn \semio_viz_coord_polar_run: {
+  \seq_clear:N \l_semio_viz_cart_pts_seq
+  \int_step_inline:nn { \l_semio_viz_cart_nrows_int } {
+    \semio_viz_table_cell:nnVN { \l_semio_viz_cart_data_tl } {##1} \l_semio_viz_cart_x_tl
+      \l_semio_viz_line_xcell_tl
+    \semio_viz_table_cell:nnVN { \l_semio_viz_cart_data_tl } {##1} \l_semio_viz_cart_y_tl
+      \l_semio_viz_line_ycell_tl
+    \fp_set:Nn \l_semio_viz_cart_d_fp
+      { 360 * ( \l_semio_viz_line_xcell_tl - \l_semio_viz_cart_xmin_fp )
+        / ( \l_semio_viz_cart_xmax_fp - \l_semio_viz_cart_xmin_fp + 1 ) }
+    \fp_set:Nn \l_semio_viz_cart_e_fp
+      { \l_semio_viz_cart_a_fp * ( \l_semio_viz_line_ycell_tl - \l_semio_viz_cart_ymin_fp )
+        / ( \l_semio_viz_cart_ymax_fp - \l_semio_viz_cart_ymin_fp ) }
+    \str_case:VnF \l_semio_viz_coord_kind_tl {
+      { logpolar } { \fp_set:Nn \l_semio_viz_cart_e_fp
+          { \l_semio_viz_cart_a_fp * ln( 1 + \l_semio_viz_cart_e_fp )
+            / ln( 1 + \l_semio_viz_cart_a_fp ) } }
+      { radial } { \fp_set:Nn \l_semio_viz_cart_e_fp { \l_semio_viz_cart_a_fp * 0.85 } }
+      { spherical } { \fp_set:Nn \l_semio_viz_cart_e_fp
+          { \l_semio_viz_cart_e_fp * abs( sind( \l_semio_viz_cart_d_fp ) ) } }
+      { cylindrical } { \fp_set:Nn \l_semio_viz_cart_e_fp
+          { \l_semio_viz_cart_a_fp * 0.55 + \l_semio_viz_cart_e_fp * 0.35 } }
+      { geographic } { \fp_set:Nn \l_semio_viz_cart_d_fp
+          { \l_semio_viz_cart_d_fp / 2 - 90 } }
+    } { }
+    \seq_put_right:Nx \l_semio_viz_cart_pts_seq {
+      \fp_eval:n { \l_semio_viz_cart_b_fp + \l_semio_viz_cart_e_fp * cosd( \l_semio_viz_cart_d_fp ) } ,
+      \fp_eval:n { \l_semio_viz_cart_c_fp + \l_semio_viz_cart_e_fp * sind( \l_semio_viz_cart_d_fp ) }
+    }
+  }
+  \seq_set_eq:NN \l_semio_viz_cart_map_b_seq \l_semio_viz_cart_pts_seq
+  \semio_viz_line_markers_run:
+  \tl_set:Nn \l_semio_viz_cart_stroke_tl { \semio_viz_theme_color:n { 0 } }
+  \semio_viz_cart_draw_path:N \l_semio_viz_cart_pts_seq
+}
+
+% ▶️ The whole family run: defaults, the option list #1, the frame and scales, then the coordinate
+% system the `coordinate` key names.
+\cs_new_protected:Npn \semio_viz_coord_render:n #1 {
+  \semio_viz_frame_require:n { SemioVizRunFamily }
+  \semio_viz_coord_keys_reset:
+  \keys_set:nn { semio / viz / family / coordplot } {#1}
+  \semio_viz_cart_rect_compute:
+  \semio_viz_cart_extent:VVNN \l_semio_viz_cart_data_tl \l_semio_viz_cart_x_tl
+    \l_semio_viz_cart_xmin_fp \l_semio_viz_cart_xmax_fp
+  \semio_viz_cart_scale_x:n { linear }
+  \fp_zero:N \l_semio_viz_bar_baseline_fp
+  \semio_viz_cart_domain_plain:
+  \semio_viz_cart_scale_value:nn { linear } { v }
+  \bool_set_true:N \l_semio_viz_line_markers_bool
+  \str_case:VnF \l_semio_viz_coord_kind_tl {
+    { polar } { \semio_viz_coord_delegate: }
+    { radial } { \semio_viz_coord_polar_local: }
+    { logpolar } { \semio_viz_coord_polar_local: }
+    { spherical } { \semio_viz_coord_polar_local: }
+    { cylindrical } { \semio_viz_coord_polar_local: }
+    { ternary } { \semio_viz_coord_ternary: }
+    { barycentric } { \semio_viz_coord_ternary: }
+    { parallel } { \semio_viz_coord_parallel: }
+    { geographic } { \semio_viz_coord_polar_local: }
+  } { \semio_viz_coord_cartesian: }
+}
+
+% 🧭 §52: the same data read in twelve coordinate systems, selected by `coordinate`.
+\SemioVizFamily { coordplot } { \semio_viz_coord_render:n {#1} }
+%endregion 🔖️Families
+
+\ExplSyntaxOff

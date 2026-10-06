@@ -1,0 +1,68 @@
+% 🕓 The activity network: earliest start and chain depth of every activity, then the node-link
+% drawing with the longest chain to the last finish drawn as the critical path.
+\cs_new_protected:Npn \semio_viz_dom_op_critical: {
+  \prop_clear:N \l_semio_viz_dom_par_prop
+  \prop_clear:N \l_semio_viz_dom_bag_prop
+  \prop_clear:N \l_semio_viz_dom_dep_prop
+  \prop_clear:N \l_semio_viz_dom_sum_prop
+  \prop_clear:N \l_semio_viz_dom_lab_prop
+  \prop_clear:N \l_semio_viz_dom_cur_prop
+  \seq_clear:N \l_semio_viz_dom_keys_seq
+  \semio_viz_table_nrows:VN \l_semio_viz_dom_data_tl \l_semio_viz_dom_n_int
+  \int_step_inline:nn { \l_semio_viz_dom_n_int } { \semio_viz_dom_op_activity:n {##1} }
+  \int_step_inline:nn { \l_semio_viz_dom_n_int } { \semio_viz_dom_op_relax: }
+  \semio_viz_dom_op_chain:
+  \semio_viz_dom_op_lanes:
+  \seq_map_inline:Nn \l_semio_viz_dom_keys_seq { \semio_viz_dom_op_arc:n {##1} }
+  \seq_map_inline:Nn \l_semio_viz_dom_keys_seq { \semio_viz_dom_op_task:n {##1} }
+}
+
+% 🕓 One activity: its predecessor, its duration, its caption and the neutral start it begins with.
+\cs_new_protected:Npn \semio_viz_dom_op_activity:n #1 {
+  \semio_viz_table_cell:nnnN { \l_semio_viz_dom_data_tl } {#1} { \l_semio_viz_dom_id_tl }
+    \l_semio_viz_dom_key_tl
+  \seq_put_right:NV \l_semio_viz_dom_keys_seq \l_semio_viz_dom_key_tl
+  \semio_viz_table_cell_opt:nnnN { \l_semio_viz_dom_data_tl } {#1} { \l_semio_viz_dom_group_tl }
+    \l_semio_viz_dom_cell_tl
+  \prop_put:NVV \l_semio_viz_dom_par_prop \l_semio_viz_dom_key_tl \l_semio_viz_dom_cell_tl
+  \semio_viz_table_cell:nnnN { \l_semio_viz_dom_data_tl } {#1} { \l_semio_viz_dom_value_tl }
+    \l_semio_viz_dom_cell_tl
+  \prop_put:NVV \l_semio_viz_dom_bag_prop \l_semio_viz_dom_key_tl \l_semio_viz_dom_cell_tl
+  \semio_viz_table_cell_opt:nnnN { \l_semio_viz_dom_data_tl } {#1} { \l_semio_viz_dom_label_tl }
+    \l_semio_viz_dom_cell_tl
+  \prop_put:NVV \l_semio_viz_dom_lab_prop \l_semio_viz_dom_key_tl \l_semio_viz_dom_cell_tl
+  \prop_put:NVn \l_semio_viz_dom_sum_prop \l_semio_viz_dom_key_tl { 0 }
+  \prop_put:NVn \l_semio_viz_dom_dep_prop \l_semio_viz_dom_key_tl { 1 }
+}
+
+% 🕓 One relaxation sweep of the earliest start and of the chain depth over every activity.
+\cs_new_protected:Npn \semio_viz_dom_op_relax: {
+  \seq_map_inline:Nn \l_semio_viz_dom_keys_seq { \semio_viz_dom_op_ease:n {##1} }
+}
+
+% 🕓 Pushes one activity behind its predecessor.
+\cs_new_protected:Npn \semio_viz_dom_op_ease:n #1 {
+  \prop_get:NnN \l_semio_viz_dom_par_prop {#1} \l_semio_viz_dom_tmp_tl
+  \tl_if_empty:NF \l_semio_viz_dom_tmp_tl {
+    \prop_get:NVN \l_semio_viz_dom_sum_prop \l_semio_viz_dom_tmp_tl \l_semio_viz_dom_key_tl
+    \prop_get:NVN \l_semio_viz_dom_bag_prop \l_semio_viz_dom_tmp_tl \l_semio_viz_dom_cell_tl
+    \prop_put:Nnx \l_semio_viz_dom_sum_prop {#1}
+      {
+        \fp_eval:n
+          {
+            max ( \prop_item:Nn \l_semio_viz_dom_sum_prop {#1} ,
+                  \l_semio_viz_dom_key_tl + \l_semio_viz_dom_cell_tl )
+          }
+      }
+    \prop_get:NVN \l_semio_viz_dom_dep_prop \l_semio_viz_dom_tmp_tl \l_semio_viz_dom_key_tl
+    \prop_put:Nnx \l_semio_viz_dom_dep_prop {#1}
+      {
+        \fp_to_int:n
+          {
+            max ( \prop_item:Nn \l_semio_viz_dom_dep_prop {#1} ,
+                  \l_semio_viz_dom_key_tl + 1 )
+          }
+      }
+  }
+}
+

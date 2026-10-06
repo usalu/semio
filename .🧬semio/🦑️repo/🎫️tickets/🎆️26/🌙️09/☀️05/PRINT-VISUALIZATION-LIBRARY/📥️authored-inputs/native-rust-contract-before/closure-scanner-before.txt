@@ -1,0 +1,32 @@
+/** 🪵️ Binds the actual registered Rust test build's first-party dependency inputs. */
+import {readFile,readdir,writeFile,stat} from "node:fs/promises";
+import {resolve,relative,dirname,join} from "node:path";
+import {createHash} from "node:crypto";
+const root=resolve(import.meta.dir,"../../../../../../../../");
+const ticket=resolve(import.meta.dir,"..");
+const manifest=join(root,"🧰️framework/🛍️products/📓️print/📦️packages/🦀️rust/Cargo.toml");
+const generated=join(ticket,"🗑️generated");
+const child=Bun.spawn(["cargo","metadata","--format-version=1","--manifest-path",manifest,"--offline","--locked","--filter-platform","x86_64-pc-windows-msvc"],{cwd:root,stdout:"pipe",stderr:"pipe"});
+const [raw,stderr,status]=await Promise.all([new Response(child.stdout).text(),new Response(child.stderr).text(),child.exited]);
+await writeFile(join(generated,"native-current-rust-cargo-metadata-stderr.log"),stderr);
+if(status!==0)throw new Error(`cargo metadata failed ${status}: ${stderr}`);
+await writeFile(join(generated,"native-current-rust-cargo-metadata.json"),raw);
+const metadata=JSON.parse(raw), packages=new Map(metadata.packages.map((p:any)=>[p.id,p]));
+const nodes=new Map(metadata.resolve.nodes.map((p:any)=>[p.id,p]));
+const owner:any=metadata.packages.find((p:any)=>resolve(p.manifest_path)===manifest);
+if(!owner)throw new Error(`print owner missing: ${manifest}`);
+const ids=new Set<string>(), pending=[owner.id];
+while(pending.length){const id=pending.pop()!;if(ids.has(id))continue;ids.add(id);const node:any=nodes.get(id);for(const dep of node.deps)if(dep.dep_kinds.some((k:any)=>k.kind!=="dev"||id===owner.id))pending.push(dep.pkg);}
+const firstParty:any[]=Array.from(ids).map(id=>packages.get(id)).filter((p:any)=>p.source===null&&p.manifest_path.startsWith(root));
+const expected=new Set(firstParty.flatMap(p=>p.targets.map((t:any)=>t.name.replaceAll("-","_"))));
+const files=async(dir:string):Promise<string[]>=>{const entries=await readdir(dir,{withFileTypes:true});return(await Promise.all(entries.map(e=>e.isDirectory()?files(join(dir,e.name)):Promise.resolve([join(dir,e.name)])))).flat();};
+const all=await files(join(generated,"r"));
+const inputs=new Set<string>(), evidence:any[]=[];
+for(const p of firstParty)inputs.add(p.manifest_path);
+for(const file of all.filter(f=>f.endsWith(".d"))){const name=file.split(/[\\/]/).at(-1)!;if(!Array.from(expected).some(n=>name===`${n}.d`||name===`lib${n}.d`||name.startsWith(`${n}-`)))continue;const text=await readFile(file,"utf8");const line=text.split(/\r?\n/).find(l=>l.includes(".d: "));if(!line)continue;const deps=line.slice(line.indexOf(".d: ")+4).match(/(?:\\ |[^ ])+/g)??[];let count=0;for(const dep of deps){const path=resolve(root,dep.replaceAll("\\ "," "));if(path.startsWith(root+"\\")&&!path.startsWith(generated+"\\")){try{await stat(path);inputs.add(path);count++;}catch{throw new Error(`missing actual dep-info input ${path}`);}}}evidence.push({path:relative(ticket,file).replaceAll("\\","/"),inputs:count,sha256:createHash("sha256").update(text).digest("hex")});}
+for(const name of ["Cargo.toml","Cargo.lock",".cargo/config.toml"])try{const p=join(root,name);await stat(p);inputs.add(p);}catch{}
+const rows=await Promise.all(Array.from(inputs).sort().map(async path=>{const bytes=await readFile(path);return{path:relative(root,path).replaceAll("\\","/"),sha256:createHash("sha256").update(bytes).digest("hex"),bytes:bytes.length};}));
+const aggregate=createHash("sha256").update(rows.map(r=>`${r.path}\t${r.sha256}\n`).join("")).digest("hex");
+const result={timestamp:new Date().toISOString(),terminal:96499,scope:"Actual first-party Rust dependency packages plus emitted dep-info source/include inputs and root Cargo controls; read-only context, not edit ownership",packages:firstParty.map(p=>({name:p.name,id:p.id,manifest:relative(root,p.manifest_path).replaceAll("\\","/")})),depInfo:evidence,aggregate,inputs:rows};
+await writeFile(join(generated,"native-current-rust-firstparty-input-closure.json"),JSON.stringify(result,null,2)+"\n");
+console.log(`[DEBUG] Rust actual closure: ${firstParty.length} packages / ${evidence.length} dep-info files / ${rows.length} inputs / ${aggregate}`);

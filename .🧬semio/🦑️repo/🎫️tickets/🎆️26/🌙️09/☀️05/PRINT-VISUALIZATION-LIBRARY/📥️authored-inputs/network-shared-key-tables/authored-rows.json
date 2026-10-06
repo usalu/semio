@@ -1,0 +1,838 @@
+{
+  "groups": [
+    {
+      "id": "api-helper-net-keys-add",
+      "scope": "helper:semio_viz_net_keys_add",
+      "en": "Network family options",
+      "de": "Optionen der Netzwerkfamilien",
+      "source": "semio-viz-network-graph.sty",
+      "noteEn": "Defaults below belong to the base network reset. Specialised families override their data, layout, labels and other defaults. Empty binding keys use graph roles or conventional column names.",
+      "noteDe": "Die folgenden Vorgaben gehören zum Basisreset des Netzwerks. Spezialisierte Familien überschreiben ihre Daten-, Layout-, Beschriftungs- und weiteren Vorgaben. Leere Bindungsschlüssel verwenden Graphrollen oder übliche Spaltennamen.",
+      "rows": [
+        {
+          "key": "variant",
+          "type": "string",
+          "defaultValue": "",
+          "en": "Catalogue variant selection; the registry applies its preset before the family keys.",
+          "de": "Variantenauswahl des Katalogs; die Registrierung setzt deren Vorgaben vor den Familienschlüsseln."
+        },
+        {
+          "key": "data",
+          "type": "string",
+          "defaultValue": "demo-graph-community",
+          "en": "Source graph or edge table name.",
+          "de": "Name des Quellgraphen oder der Kantentabelle."
+        },
+        {
+          "key": "nodes",
+          "type": "string",
+          "defaultValue": "",
+          "en": "Override the node table binding; empty uses the graph's declared nodes.",
+          "de": "Bindung der Knotentabelle überschreiben; leer verwendet die deklarierten Knoten des Graphen."
+        },
+        {
+          "key": "id",
+          "type": "string",
+          "defaultValue": "",
+          "en": "Override the node identifier column.",
+          "de": "Spalte der Knotenkennungen überschreiben."
+        },
+        {
+          "key": "group",
+          "type": "string",
+          "defaultValue": "",
+          "en": "Override the node group column used for grouping and colour.",
+          "de": "Knotengruppenspalte für Gruppierung und Farbe überschreiben."
+        },
+        {
+          "key": "source",
+          "type": "string",
+          "defaultValue": "",
+          "en": "Override the source endpoint column of the edges.",
+          "de": "Spalte der Quellendpunkte der Kanten überschreiben."
+        },
+        {
+          "key": "target",
+          "type": "string",
+          "defaultValue": "",
+          "en": "Override the target endpoint column of the edges.",
+          "de": "Spalte der Zielendpunkte der Kanten überschreiben."
+        },
+        {
+          "key": "weight",
+          "type": "string",
+          "defaultValue": "",
+          "en": "Override the edge weight column.",
+          "de": "Spalte der Kantengewichte überschreiben."
+        },
+        {
+          "key": "label",
+          "type": "string",
+          "defaultValue": "",
+          "en": "Edge or layer caption column for specialised renderers; base graph node captions use node identifiers.",
+          "de": "Kanten- oder Ebenenbeschriftungsspalte für spezialisierte Renderer; Knotenbeschriftungen des Basisgraphen verwenden Knotenkennungen."
+        },
+        {
+          "key": "layout",
+          "type": "string",
+          "defaultValue": "force",
+          "en": "Registered node layout; force and random use force controls, other placements use ordering controls.",
+          "de": "Registriertes Knotenlayout; force und random verwenden Kraftparameter, andere Platzierungen Ordnungsparameter."
+        },
+        {
+          "key": "iterations",
+          "type": "integer",
+          "defaultValue": "60",
+          "en": "Simulation tick count for the force layout.",
+          "de": "Anzahl der Simulationstakte für das Kräftelayout."
+        },
+        {
+          "key": "seed",
+          "type": "number",
+          "defaultValue": "1",
+          "en": "Deterministic random seed forwarded to the selected layout.",
+          "de": "Deterministischer Zufallsstartwert, der an das gewählte Layout weitergegeben wird."
+        },
+        {
+          "key": "order",
+          "type": "string",
+          "defaultValue": "index",
+          "en": "Node ordering: index, name, degree, group, component or cluster.",
+          "de": "Knotenreihenfolge: index, name, degree, group, component oder cluster."
+        },
+        {
+          "key": "columns",
+          "type": "integer",
+          "defaultValue": "0",
+          "en": "Grid columns; zero chooses the ceiling of the square root of the node count.",
+          "de": "Gitterspalten; null wählt die aufgerundete Quadratwurzel der Knotenanzahl."
+        },
+        {
+          "key": "root",
+          "type": "integer",
+          "defaultValue": "1",
+          "en": "One-based root node of the radial breadth-first placement.",
+          "de": "Bei eins beginnender Wurzelknoten der radialen Breitensuche."
+        },
+        {
+          "key": "sweeps",
+          "type": "integer",
+          "defaultValue": "4",
+          "en": "Barycentre ordering passes for layered placement.",
+          "de": "Durchläufe der Schwerpunktordnung für die geschichtete Platzierung."
+        },
+        {
+          "key": "orientation",
+          "type": "string",
+          "defaultValue": "horizontal",
+          "en": "Layer direction: horizontal or vertical.",
+          "de": "Richtung der Ebenen: horizontal oder vertical."
+        },
+        {
+          "key": "shape",
+          "type": "string",
+          "defaultValue": "circle",
+          "en": "Node glyph: circle, square, diamond, accept or box.",
+          "de": "Knotenzeichen: circle, square, diamond, accept oder box."
+        },
+        {
+          "key": "size",
+          "type": "number",
+          "defaultValue": "1.5",
+          "en": "Node radius or glyph half-size in millimetres before sizeBy scaling.",
+          "de": "Knotenradius oder halbe Zeichengröße in Millimetern vor der Skalierung durch sizeBy."
+        },
+        {
+          "key": "sizeBy",
+          "type": "string",
+          "defaultValue": "none",
+          "en": "none keeps a constant size; degree scales by node degree. The current weight branch also uses degree rather than a weighted sum.",
+          "de": "none erhält eine konstante Größe; degree skaliert nach Knotengrad. Der derzeitige weight-Zweig verwendet ebenfalls den Grad statt einer gewichteten Summe."
+        },
+        {
+          "key": "directed",
+          "type": "boolean",
+          "defaultValue": "false",
+          "en": "Draw endpoint arrowheads; the bare key enables them.",
+          "de": "Pfeilspitzen an Endpunkten zeichnen; der Schlüssel ohne Wert aktiviert sie."
+        },
+        {
+          "key": "curvature",
+          "type": "number",
+          "defaultValue": "0",
+          "en": "Dimensionless link bend; parallel links receive an additional fan offset.",
+          "de": "Dimensionslose Kantenkrümmung; parallele Kanten erhalten einen zusätzlichen Fächerversatz."
+        },
+        {
+          "key": "weightWidth",
+          "type": "boolean",
+          "defaultValue": "false",
+          "en": "Scale link width by absolute edge weight; the bare key enables it.",
+          "de": "Kantenbreite nach dem Betrag des Kantengewichts skalieren; der Schlüssel ohne Wert aktiviert dies."
+        },
+        {
+          "key": "signed",
+          "type": "boolean",
+          "defaultValue": "false",
+          "en": "Use danger colour for negative weights and success colour otherwise; the bare key enables it.",
+          "de": "Gefahrenfarbe für negative Gewichte und Erfolgsfarbe sonst verwenden; der Schlüssel ohne Wert aktiviert dies."
+        },
+        {
+          "key": "colorBy",
+          "type": "string",
+          "defaultValue": "group",
+          "en": "Node fill by group, component or degree; none uses the primary theme colour. Specialised flow families also interpret source and target.",
+          "de": "Knotenfüllung nach group, component oder degree; none verwendet die primäre Themenfarbe. Spezialisierte Flussfamilien interpretieren auch source und target."
+        },
+        {
+          "key": "labels",
+          "type": "boolean",
+          "defaultValue": "false",
+          "en": "Draw node or family captions; the bare key enables them.",
+          "de": "Knoten- oder Familienbeschriftungen zeichnen; der Schlüssel ohne Wert aktiviert sie."
+        },
+        {
+          "key": "linkWidth",
+          "type": "number",
+          "defaultValue": "0.16",
+          "en": "Base link stroke width in millimetres.",
+          "de": "Basisstrichbreite der Kanten in Millimetern."
+        },
+        {
+          "key": "linkDistance",
+          "type": "number",
+          "defaultValue": "30",
+          "en": "Force link rest length in layout units.",
+          "de": "Ruhelänge der Kraftkanten in Layouteinheiten."
+        },
+        {
+          "key": "charge",
+          "type": "number",
+          "defaultValue": "-30",
+          "en": "Many-body force strength of each node; negative values repel.",
+          "de": "Stärke der Vielkörperkraft jedes Knotens; negative Werte stoßen ab."
+        },
+        {
+          "key": "forces",
+          "type": "list",
+          "defaultValue": "link,many-body,center",
+          "en": "Force names in application order: link, many-body, center, collide, x, y or radial.",
+          "de": "Kraftnamen in Anwendungsreihenfolge: link, many-body, center, collide, x, y oder radial."
+        },
+        {
+          "key": "padding",
+          "type": "number",
+          "defaultValue": "3",
+          "en": "Inset on all four sides of the drawing rectangle in millimetres.",
+          "de": "Einzug auf allen vier Seiten des Zeichenrechtecks in Millimetern."
+        }
+      ]
+    },
+    {
+      "id": "api-helper-arc-keys-add",
+      "scope": "helper:semio_viz_arc_keys_add",
+      "en": "Arc family options",
+      "de": "Optionen der Bogenfamilien",
+      "source": "semio-viz-network-arc.sty",
+      "inherit": "api-helper-net-keys-add",
+      "noteEn": "The arc reset additionally selects layout=arc and labels=true.",
+      "noteDe": "Der Bogenreset wählt zusätzlich layout=arc und labels=true.",
+      "rows": [
+        {
+          "key": "mode",
+          "type": "string",
+          "defaultValue": "linear",
+          "en": "linear places nodes on an axis; circular places them on a ring.",
+          "de": "linear platziert Knoten auf einer Achse; circular platziert sie auf einem Ring."
+        },
+        {
+          "key": "side",
+          "type": "string",
+          "defaultValue": "above",
+          "en": "Linear bows above, below or alternating on both sides of the axis.",
+          "de": "Lineare Bögen oberhalb, unterhalb oder abwechselnd auf beiden Seiten der Achse: above, below oder both."
+        },
+        {
+          "key": "bow",
+          "type": "number",
+          "defaultValue": "0.5",
+          "en": "Linear bow height as a fraction of span; circular chord bend is this value minus 0.5.",
+          "de": "Lineare Bogenhöhe als Anteil der Spannweite; die Krümmung kreisförmiger Sehnen ist dieser Wert minus 0.5."
+        }
+      ]
+    },
+    {
+      "id": "api-helper-bun-keys-add",
+      "scope": "helper:semio_viz_bun_keys_add",
+      "en": "Edge bundling options",
+      "de": "Optionen der Kantenbündelung",
+      "source": "semio-viz-network-bundling.sty",
+      "inherit": "api-helper-net-keys-add",
+      "noteEn": "The bundling reset additionally selects order=group and labels=true.",
+      "noteDe": "Der Bündelungsreset wählt zusätzlich order=group und labels=true.",
+      "rows": [
+        {
+          "key": "beta",
+          "type": "number",
+          "defaultValue": "0.85",
+          "en": "Bundle tension; zero follows the straight chord and one follows the hierarchy control polygon.",
+          "de": "Bündelspannung; null folgt der geraden Sehne und eins dem Steuerpolygon der Hierarchie."
+        },
+        {
+          "key": "hubRadius",
+          "type": "number",
+          "defaultValue": "0.45",
+          "en": "Group hub radius as a fraction of the leaf ring radius.",
+          "de": "Radius der Gruppennaben als Anteil des Blattringradius."
+        },
+        {
+          "key": "samples",
+          "type": "integer",
+          "defaultValue": "24",
+          "en": "Points sampled on each cubic B-spline segment, including its endpoints; use at least two.",
+          "de": "Abtastpunkte jedes kubischen B-Spline-Segments einschließlich seiner Endpunkte; mindestens zwei verwenden."
+        }
+      ]
+    },
+    {
+      "id": "api-helper-chord-keys-add",
+      "scope": "helper:semio_viz_chord_keys_add",
+      "en": "Chord family options",
+      "de": "Optionen der Sehnenfamilien",
+      "source": "semio-viz-network-chord.sty",
+      "inherit": "api-helper-net-keys-add",
+      "noteEn": "The chord reset additionally enables labels. Dependency-wheel variant presets may override these base values.",
+      "noteDe": "Der Sehnenreset aktiviert zusätzlich Beschriftungen. Variantenvorgaben des Abhängigkeitsrads können diese Basiswerte überschreiben.",
+      "rows": [
+        {
+          "key": "padAngle",
+          "type": "number",
+          "defaultValue": "0.04",
+          "en": "Angular gap between group arcs in radians.",
+          "de": "Winkelabstand zwischen Gruppenbögen in Radiant."
+        },
+        {
+          "key": "sortGroups",
+          "type": "string",
+          "defaultValue": "none",
+          "en": "Group sum ordering: none, ascending or descending.",
+          "de": "Reihenfolge nach Gruppensummen: none, ascending oder descending."
+        },
+        {
+          "key": "sortSubgroups",
+          "type": "string",
+          "defaultValue": "none",
+          "en": "Subgroup weight ordering: none, ascending or descending.",
+          "de": "Reihenfolge nach Untergruppengewichten: none, ascending oder descending."
+        },
+        {
+          "key": "symmetric",
+          "type": "boolean",
+          "defaultValue": "true",
+          "en": "Mirror each edge into the transposed matrix cell; the bare key enables it.",
+          "de": "Jede Kante in die transponierte Matrixzelle spiegeln; der Schlüssel ohne Wert aktiviert dies."
+        },
+        {
+          "key": "innerRadius",
+          "type": "number",
+          "defaultValue": "0.86",
+          "en": "Inner edge of the group band as a fraction of the outer radius.",
+          "de": "Innerer Rand des Gruppenbands als Anteil des Außenradius."
+        },
+        {
+          "key": "ribbonInset",
+          "type": "number",
+          "defaultValue": "0.86",
+          "en": "Ribbon endpoint radius as a fraction of the outer radius.",
+          "de": "Endpunktradius des Bands als Anteil des Außenradius."
+        },
+        {
+          "key": "tension",
+          "type": "number",
+          "defaultValue": "0.55",
+          "en": "Pull of ribbon control points towards the centre.",
+          "de": "Zug der Bandsteuerpunkte zum Mittelpunkt."
+        }
+      ]
+    },
+    {
+      "id": "api-helper-mat-keys-add",
+      "scope": "helper:semio_viz_mat_keys_add",
+      "en": "Adjacency matrix options",
+      "de": "Optionen der Adjazenzmatrix",
+      "source": "semio-viz-network-matrix.sty",
+      "inherit": "api-helper-net-keys-add",
+      "noteEn": "The matrix reset additionally selects layout=adjacency and labels=true. Node-link-matrix uses the same ordered matrix and a separate node line.",
+      "noteDe": "Der Matrixreset wählt zusätzlich layout=adjacency und labels=true. Node-link-matrix verwendet dieselbe geordnete Matrix und eine zusätzliche Knotenlinie.",
+      "rows": [
+        {
+          "key": "symmetric",
+          "type": "boolean",
+          "defaultValue": "true",
+          "en": "Add edge weights to the direct and transposed ordered cells; the bare key enables it.",
+          "de": "Kantengewichte zur direkten und transponierten geordneten Zelle addieren; der Schlüssel ohne Wert aktiviert dies."
+        },
+        {
+          "key": "cellGap",
+          "type": "number",
+          "defaultValue": "0.15",
+          "en": "Inset between neighbouring painted cells in millimetres.",
+          "de": "Abstand zwischen benachbarten gemalten Zellen in Millimetern."
+        },
+        {
+          "key": "scaleBy",
+          "type": "string",
+          "defaultValue": "weight",
+          "en": "weight shades cells by absolute weight; binary uses a uniform primary fill. Negative cells use the danger colour.",
+          "de": "weight schattiert Zellen nach dem Gewichtsbetracht; binary verwendet eine einheitliche primäre Füllung. Negative Zellen verwenden die Gefahrenfarbe."
+        },
+        {
+          "key": "diagonal",
+          "type": "boolean",
+          "defaultValue": "false",
+          "en": "Paint nonempty diagonal cells; the bare key enables them.",
+          "de": "Nichtleere Diagonalzellen malen; der Schlüssel ohne Wert aktiviert sie."
+        },
+        {
+          "key": "labelWidth",
+          "type": "number",
+          "defaultValue": "9",
+          "en": "Reserved row and column caption gutter in millimetres.",
+          "de": "Reservierter Rand für Zeilen- und Spaltenbeschriftungen in Millimetern."
+        },
+        {
+          "key": "blocks",
+          "type": "boolean",
+          "defaultValue": "false",
+          "en": "Draw separators when adjacent ordered nodes belong to different groups; the bare key enables them.",
+          "de": "Trennlinien zeichnen, wenn benachbarte geordnete Knoten zu verschiedenen Gruppen gehören; der Schlüssel ohne Wert aktiviert sie."
+        },
+        {
+          "key": "split",
+          "type": "boolean",
+          "defaultValue": "false",
+          "en": "Stored split flag; current matrix rendering does not branch on it. The hybrid family sets it to true but uses its fixed split independently.",
+          "de": "Gespeicherter Teilungsmerker; die derzeitige Matrixdarstellung verzweigt nicht danach. Die Hybridfamilie setzt ihn auf true, verwendet ihre feste Teilung jedoch unabhängig davon."
+        }
+      ]
+    },
+    {
+      "id": "api-helper-snk-keys-add",
+      "scope": "helper:semio_viz_snk_keys_add",
+      "en": "Sankey family options",
+      "de": "Optionen der Sankeyfamilien",
+      "source": "semio-viz-flow-sankey.sty",
+      "inherit": "api-helper-net-keys-add",
+      "noteEn": "The flow reset additionally selects data=demo-flow, weight=value, colorBy=source, labels=true and curvature=0.5. Family-local keys supply the relaxation count.",
+      "noteDe": "Der Flussreset wählt zusätzlich data=demo-flow, weight=value, colorBy=source, labels=true und curvature=0.5. Familienlokale Schlüssel liefern die Anzahl der Entspannungsdurchläufe.",
+      "rows": [
+        {
+          "key": "nodeWidth",
+          "type": "number",
+          "defaultValue": "4",
+          "en": "Node rectangle width in millimetres.",
+          "de": "Breite der Knotenrechtecke in Millimetern."
+        },
+        {
+          "key": "nodePadding",
+          "type": "number",
+          "defaultValue": "2.4",
+          "en": "Vertical node separation in each column in millimetres.",
+          "de": "Senkrechter Knotenabstand jeder Spalte in Millimetern."
+        },
+        {
+          "key": "nodeAlign",
+          "type": "string",
+          "defaultValue": "justify",
+          "en": "Column assignment: left, right, center or justify.",
+          "de": "Spaltenzuweisung: left, right, center oder justify."
+        },
+        {
+          "key": "nodeSort",
+          "type": "string",
+          "defaultValue": "auto",
+          "en": "auto orders each column by its lower edge; none preserves declaration order.",
+          "de": "auto ordnet jede Spalte nach ihrer Unterkante; none erhält die Deklarationsreihenfolge."
+        },
+        {
+          "key": "linkSort",
+          "type": "string",
+          "defaultValue": "auto",
+          "en": "auto orders links by partner breadth; none preserves declaration order.",
+          "de": "auto ordnet Kanten nach der Breite des Partners; none erhält die Deklarationsreihenfolge."
+        },
+        {
+          "key": "labelWidth",
+          "type": "number",
+          "defaultValue": "11",
+          "en": "Reserved caption space at the left and right in millimetres.",
+          "de": "Reservierter Beschriftungsraum links und rechts in Millimetern."
+        }
+      ]
+    },
+    {
+      "id": "api-path-network-placement",
+      "scope": "semio / viz / layout / place",
+      "en": "Network placement options",
+      "de": "Optionen der Netzwerkplatzierung",
+      "source": "semio-viz-network.sty",
+      "noteEn": "These keys serve circular, shell, grid, arc, adjacency, radial, spectral, layered and bundling layouts. Distances are layout units; angles are radians.",
+      "noteDe": "Diese Schlüssel dienen den Layouts circular, shell, grid, arc, adjacency, radial, spectral, layered und bundling. Abstände sind Layouteinheiten; Winkel sind Radiant.",
+      "rows": [
+        {
+          "key": "order",
+          "type": "string",
+          "defaultValue": "index",
+          "en": "Node order: index, name, degree, group, component or cluster. Degree order is descending with declaration order as the tie break.",
+          "de": "Knotenreihenfolge: index, name, degree, group, component oder cluster. Die Gradordnung ist absteigend mit der Deklarationsreihenfolge bei Gleichstand."
+        },
+        {
+          "key": "radius",
+          "type": "number",
+          "defaultValue": "1",
+          "en": "Radius of a circular ring or outer leaf ring.",
+          "de": "Radius eines Kreisrings oder äußeren Blattrings."
+        },
+        {
+          "key": "inner-radius",
+          "type": "number",
+          "defaultValue": "0",
+          "en": "Innermost shell radius or group hub radius.",
+          "de": "Radius der innersten Schale oder der Gruppennaben."
+        },
+        {
+          "key": "radius-step",
+          "type": "number",
+          "defaultValue": "1",
+          "en": "Radial distance between shells or breadth-first rings.",
+          "de": "Radialer Abstand zwischen Schalen oder Breitensuchringen."
+        },
+        {
+          "key": "center-x",
+          "type": "number",
+          "defaultValue": "0",
+          "en": "Horizontal centre of polar placements.",
+          "de": "Waagerechter Mittelpunkt polarer Platzierungen."
+        },
+        {
+          "key": "center-y",
+          "type": "number",
+          "defaultValue": "0",
+          "en": "Vertical centre of polar placements.",
+          "de": "Senkrechter Mittelpunkt polarer Platzierungen."
+        },
+        {
+          "key": "start-angle",
+          "type": "number",
+          "defaultValue": "0",
+          "en": "First ring angle in radians.",
+          "de": "Erster Ringwinkel in Radiant."
+        },
+        {
+          "key": "end-angle",
+          "type": "number",
+          "defaultValue": "6.283185307179586",
+          "en": "End of the angular span in radians; the reset spans one full turn.",
+          "de": "Ende des Winkelbereichs in Radiant; der Reset umfasst eine volle Umdrehung."
+        },
+        {
+          "key": "columns",
+          "type": "integer",
+          "defaultValue": "0",
+          "en": "Grid column count; zero chooses the ceiling of the square root of the node count.",
+          "de": "Anzahl der Gitterspalten; null wählt die aufgerundete Quadratwurzel der Knotenanzahl."
+        },
+        {
+          "key": "dx",
+          "type": "number",
+          "defaultValue": "1",
+          "en": "Grid column or layered layer spacing.",
+          "de": "Abstand der Gitterspalten oder geschichteten Ebenen."
+        },
+        {
+          "key": "dy",
+          "type": "number",
+          "defaultValue": "1",
+          "en": "Grid row spacing.",
+          "de": "Abstand der Gitterzeilen."
+        },
+        {
+          "key": "origin-x",
+          "type": "number",
+          "defaultValue": "0",
+          "en": "Horizontal origin of the first grid cell, arc node or layer.",
+          "de": "Waagerechter Ursprung der ersten Gitterzelle, des ersten Bogenknotens oder der ersten Ebene."
+        },
+        {
+          "key": "origin-y",
+          "type": "number",
+          "defaultValue": "0",
+          "en": "Vertical origin of the first grid cell, arc node or layer.",
+          "de": "Senkrechter Ursprung der ersten Gitterzelle, des ersten Bogenknotens oder der ersten Ebene."
+        },
+        {
+          "key": "spacing",
+          "type": "number",
+          "defaultValue": "1",
+          "en": "Arc node spacing or within-layer node spacing.",
+          "de": "Abstand der Bogenknoten oder der Knoten innerhalb einer Ebene."
+        },
+        {
+          "key": "shells",
+          "type": "list",
+          "defaultValue": "",
+          "en": "Explicit shell sizes; empty places all nodes on one shell.",
+          "de": "Explizite Schalengrößen; leer platziert alle Knoten auf einer Schale."
+        },
+        {
+          "key": "root",
+          "type": "integer",
+          "defaultValue": "1",
+          "en": "One-based starting node for radial breadth-first placement.",
+          "de": "Bei eins beginnender Startknoten der radialen Breitensuchplatzierung."
+        },
+        {
+          "key": "power-iterations",
+          "type": "integer",
+          "defaultValue": "200",
+          "en": "Power iteration count of the spectral layout.",
+          "de": "Anzahl der Potenziterationen des Spektrallayouts."
+        },
+        {
+          "key": "sweeps",
+          "type": "integer",
+          "defaultValue": "4",
+          "en": "Barycentre ordering passes of the layered layout.",
+          "de": "Durchläufe der Schwerpunktordnung des geschichteten Layouts."
+        },
+        {
+          "key": "orientation",
+          "type": "string",
+          "defaultValue": "horizontal",
+          "en": "Layer direction: horizontal or vertical.",
+          "de": "Ebenenrichtung: horizontal oder vertical."
+        },
+        {
+          "key": "beta",
+          "type": "number",
+          "defaultValue": "0.85",
+          "en": "Bundling tension.",
+          "de": "Bündelspannung."
+        },
+        {
+          "key": "seed",
+          "type": "number",
+          "defaultValue": null,
+          "en": "Stored force seed shared with the force namespace; the placement reset does not initialise it, and current placement consumers do not read it.",
+          "de": "Gespeicherter Kraftstartwert, der mit dem Kräfteschlüsselbereich geteilt wird; der Platzierungsreset initialisiert ihn nicht und die derzeitigen Platzierungen lesen ihn nicht."
+        }
+      ]
+    }
+  ],
+  "force": {
+    "id": "api-path-network-force",
+    "scope": "semio / viz / layout / force",
+    "en": "Force layout options",
+    "de": "Optionen des Kräftelayouts",
+    "source": "semio-viz-network.sty",
+    "rows": [
+      {
+        "key": "iterations",
+        "type": "integer",
+        "defaultValue": "300",
+        "en": "Simulation ticks; cost grows with ticks times nodes squared plus edges.",
+        "de": "Simulationstakte; der Aufwand wächst mit Takten mal Knoten zum Quadrat plus Kanten."
+      },
+      {
+        "key": "alpha",
+        "type": "number",
+        "defaultValue": "1",
+        "en": "Initial simulation temperature.",
+        "de": "Anfängliche Simulationstemperatur."
+      },
+      {
+        "key": "alpha-min",
+        "type": "number",
+        "defaultValue": "0.001",
+        "en": "Minimum temperature used to derive automatic decay.",
+        "de": "Mindesttemperatur zur Herleitung des automatischen Abfalls."
+      },
+      {
+        "key": "alpha-decay",
+        "type": "number",
+        "defaultValue": "-1",
+        "en": "Negative means automatic decay: one minus alpha-min to the power of one over 300.",
+        "de": "Negativ bedeutet automatischer Abfall: eins minus alpha-min hoch eins durch 300."
+      },
+      {
+        "key": "alpha-target",
+        "type": "number",
+        "defaultValue": "0",
+        "en": "Target temperature approached on each tick.",
+        "de": "Zieltemperatur, die bei jedem Takt angenähert wird."
+      },
+      {
+        "key": "velocity-decay",
+        "type": "number",
+        "defaultValue": "0.4",
+        "en": "Public damping fraction; velocity is multiplied by one minus this value.",
+        "de": "Öffentlicher Dämpfungsanteil; die Geschwindigkeit wird mit eins minus diesem Wert multipliziert."
+      },
+      {
+        "key": "forces",
+        "type": "list",
+        "defaultValue": "link,many-body,center",
+        "en": "Force names in application order: link, many-body, center, collide, x, y or radial.",
+        "de": "Kraftnamen in Anwendungsreihenfolge: link, many-body, center, collide, x, y oder radial."
+      },
+      {
+        "key": "link-distance",
+        "type": "number",
+        "defaultValue": "30",
+        "en": "Link rest length in layout units.",
+        "de": "Ruhelänge der Kanten in Layouteinheiten."
+      },
+      {
+        "key": "link-strength",
+        "type": "number",
+        "defaultValue": "-1",
+        "en": "Negative selects one divided by the smaller endpoint degree.",
+        "de": "Negativ wählt eins geteilt durch den kleineren Endknotengrad."
+      },
+      {
+        "key": "link-iterations",
+        "type": "integer",
+        "defaultValue": "1",
+        "en": "Link force passes per tick.",
+        "de": "Durchläufe der Kantenkraft je Takt."
+      },
+      {
+        "key": "many-body-strength",
+        "type": "number",
+        "defaultValue": "-30",
+        "en": "Charge of every node; negative values repel.",
+        "de": "Ladung jedes Knotens; negative Werte stoßen ab."
+      },
+      {
+        "key": "distance-min",
+        "type": "number",
+        "defaultValue": "1",
+        "en": "Minimum distance clamp for the many-body force in layout units.",
+        "de": "Untere Abstandsbegrenzung der Vielkörperkraft in Layouteinheiten."
+      },
+      {
+        "key": "distance-max",
+        "type": "number",
+        "defaultValue": "-1",
+        "en": "Maximum many-body distance; negative means no upper cutoff.",
+        "de": "Maximaler Vielkörperabstand; negativ bedeutet keine obere Grenze."
+      },
+      {
+        "key": "center-x",
+        "type": "number",
+        "defaultValue": "0",
+        "en": "Horizontal centroid target.",
+        "de": "Waagerechtes Schwerpunktziel."
+      },
+      {
+        "key": "center-y",
+        "type": "number",
+        "defaultValue": "0",
+        "en": "Vertical centroid target.",
+        "de": "Senkrechtes Schwerpunktziel."
+      },
+      {
+        "key": "center-strength",
+        "type": "number",
+        "defaultValue": "1",
+        "en": "Fraction of centroid displacement applied on each tick.",
+        "de": "Anteil der Schwerpunktverschiebung je Takt."
+      },
+      {
+        "key": "collide-radius",
+        "type": "number",
+        "defaultValue": "1",
+        "en": "Uniform collision radius in layout units.",
+        "de": "Einheitlicher Kollisionsradius in Layouteinheiten."
+      },
+      {
+        "key": "collide-strength",
+        "type": "number",
+        "defaultValue": "0.7",
+        "en": "Collision resolution strength.",
+        "de": "Stärke der Kollisionsauflösung."
+      },
+      {
+        "key": "collide-iterations",
+        "type": "integer",
+        "defaultValue": "1",
+        "en": "Collision force passes per tick.",
+        "de": "Durchläufe der Kollisionskraft je Takt."
+      },
+      {
+        "key": "x-target",
+        "type": "number",
+        "defaultValue": "0",
+        "en": "Target coordinate of the horizontal spring.",
+        "de": "Zielkoordinate der waagerechten Feder."
+      },
+      {
+        "key": "x-strength",
+        "type": "number",
+        "defaultValue": "0.1",
+        "en": "Horizontal spring strength.",
+        "de": "Stärke der waagerechten Feder."
+      },
+      {
+        "key": "y-target",
+        "type": "number",
+        "defaultValue": "0",
+        "en": "Target coordinate of the vertical spring.",
+        "de": "Zielkoordinate der senkrechten Feder."
+      },
+      {
+        "key": "y-strength",
+        "type": "number",
+        "defaultValue": "0.1",
+        "en": "Vertical spring strength.",
+        "de": "Stärke der senkrechten Feder."
+      },
+      {
+        "key": "radial-radius",
+        "type": "number",
+        "defaultValue": "100",
+        "en": "Target radius of the radial spring in layout units.",
+        "de": "Zielradius der radialen Feder in Layouteinheiten."
+      },
+      {
+        "key": "radial-x",
+        "type": "number",
+        "defaultValue": "0",
+        "en": "Horizontal centre of the radial spring.",
+        "de": "Waagerechter Mittelpunkt der radialen Feder."
+      },
+      {
+        "key": "radial-y",
+        "type": "number",
+        "defaultValue": "0",
+        "en": "Vertical centre of the radial spring.",
+        "de": "Senkrechter Mittelpunkt der radialen Feder."
+      },
+      {
+        "key": "radial-strength",
+        "type": "number",
+        "defaultValue": "0.1",
+        "en": "Radial spring strength.",
+        "de": "Stärke der radialen Feder."
+      },
+      {
+        "key": "seed",
+        "type": "number",
+        "defaultValue": "1",
+        "en": "Seed of the deterministic linear congruential generator used by the force simulation.",
+        "de": "Startwert des deterministischen linearen Kongruenzgenerators der Kräftesimulation."
+      }
+    ]
+  }
+}
+

@@ -61,3 +61,28 @@ The neutral contract now declares potentialViewportFraction0.65. Independent D3 
 The existing sci-levels owner now measures/schedules visible captions before painting. Potential mode temporarily uses65% of authored width for its shared frame, axes/grid and complete sampled curve; it restores full authored width for existing physical rungs, leaders and right-column captions. It leaves physical values/domain/range/font size unchanged. Energy-level and band viewport widths remain authored. No new public key, command, dependency or runtime module was added.
 
 Registered full physics GREEN candidate52500 is live atgenerated/physics-potential-path-green-full.log. No GREEN or stock publication is claimed before terminal evidence.
+
+## Current Potential Repair Terminal And Stock Views
+
+Registered full physics52500 ended exit0 in2m50s. Every theme compiled16cases and passed32independent D3 physical projections,242absolute D3 PDF potential points,8actual path/caption checks and20PDF.js pages. Thus the actual n=4 collision fails on245c16ff and passes after52dfb58b. Actual stock9394 ended exit0 in24m2s; ordinary cache was enabled, with0/5hits and both final authored PDFs published.
+
+Both actual stock page4 rasters were viewed at180dpi. Potential curve is complete inside its left65% viewport, and alln=1…n=5captions are visibly outside the curve with separated measured positions and leaders. Numerical ticks align with the resized curve frame. Existing energy-level transitions and their captions on the same page remain readable. Poppler required its current directory for ASCII image names; unsuccessful absolute emoji-output calls created no images and were rerun inside the ticket generated directory. Viewed rasters aregenerated/physics-potential-stock-after-visual/light-page4.png anddark-page4.png.
+
+| Current Source/Publication | SHA256 |
+| --- | --- |
+| Existing physics stylesheet |52DFB58BEB621CD36EACECFB727CB9D41E9DC2C7509709FCD86EB986A59CB994|
+| Physics neutral JSON |22468525621B40F24A64D23BFBB69E5207E0B04FFBF337FD10F50D397AC7491A|
+| Physics D3/PDF.js helper |6490D2D200FEE5AA4002A3060A891FA02F869D50215BBF50D2B0523BDBC0F20F|
+| Actual stock30 light PDF |8A418D128B52C073824822F2EECCC88BD634F0AF7B4938D029BC90257792674A|
+| Actual stock30 dark PDF |E58AC865D24B7348B363B058485B9BACB1C9B96C9B55D2E86D5609120E047E96|
+
+This source is frozen pending registered generate-viz, fresh graph/input snapshot and current81-owner/162-PDF catalogue execution. No full-catalogue completion is claimed.
+
+Root independently viewed both retained current stock page4 rasters. The complete potential curve stays inside the left data frame; n=1 through n=5 captions and their leaders occupy the reserved right region without the previous curve/text intersection. Axis ticks align with the resized frame. The energy-level and transition content on the same page remains readable in both themes. This is two additional actual views of the current stock PDFs identified in the SHA256 table above, not additional page coverage.
+
+Registered generate-viz10393 completed exit0,1.6s. Compared with prior actual compiler294 snapshot, onlyphysics245→52df changed;other293 compilerinputs, generatedstyles andall81templates are byteidentical. Fresh actualshow-project1491 runs withisolatedgenerated/nx-catalogue-physics-final,NX_DAEMON=false,NX_ISOLATE_PLUGINS=falseandforcedcachedgraphreuseunset. Currentordinarycachefullroute followsfreshowner/inputvalidation.
+
+
+## Final Catalogue Physics Publication Rebinding
+
+Currentfull43202 completedactualphysics30pairedpublication (authoritativefull-logline4199). BothPDFhashesexactlymatchsuccessfulstock9394:light8a418d128b52c073824822f2eeccc88bd634f0af7b4938d029bc90257792674a anddarke58ac865d24b7348b363b058485b9bacb1c9b96c9b55d2e86d5609120e047e96. Thereforebothactuallyviewedafterpage4frames arebyte-rebound tocurrent294-source finalcatalogue publication. Currentfullhas48pairedpublisherscompleted;final162-PDFeverypageconsumerremainspending.

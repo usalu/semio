@@ -55,6 +55,7 @@
     {
       \prop_get:NnN \g_semio_viz_kind_family_prop {#1} \l_semio_viz_kind_family_tl
       \prop_get:NnN \g_semio_viz_kind_options_prop {#1} \l_semio_viz_kind_options_tl
+      \str_if_eq:VnT \l_semio_viz_kind_family_tl { neural-network } { \semio_viz_nn_catalog_options:Nn \l_semio_viz_kind_options_tl {#2} }
       \tl_if_empty:nF {#2} { \tl_put_right:Nn \l_semio_viz_kind_options_tl { , #2 } }
       \semio_viz_family_run:VV \l_semio_viz_kind_family_tl \l_semio_viz_kind_options_tl
     }

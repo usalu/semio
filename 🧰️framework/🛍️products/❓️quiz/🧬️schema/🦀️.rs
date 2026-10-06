@@ -320,6 +320,8 @@ pub struct Quiz {
     pub id: Slug,
     pub emoji: String,
     pub title: Text,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub short: Option<Text>,
     pub description: Text,
     pub tasks: Vec<Task>,
 }
@@ -378,6 +380,8 @@ pub struct Catalog {
     pub schema: String,
     pub id: Slug,
     pub title: Text,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub short: Option<Text>,
     pub introduction: Introduction,
     pub quizzes: Vec<String>,
     pub badges: Vec<Badge>,
@@ -892,6 +896,8 @@ pub struct CatalogQuizView {
     pub id: Slug,
     pub emoji: String,
     pub title: Text,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub short: Option<Text>,
     pub description: Text,
     pub tasks: Vec<CatalogTaskView>,
 }
@@ -912,6 +918,8 @@ pub struct CatalogBadgeView {
 pub struct CatalogView {
     pub id: Slug,
     pub title: Text,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub short: Option<Text>,
     pub introduction: Introduction,
     pub quizzes: Vec<CatalogQuizView>,
     pub badges: Vec<CatalogBadgeView>,

@@ -1,0 +1,1178 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-viz-scientific-engineering}[2026/09/05 v0.2.0 semio viz namespace scientific-engineering families]
+
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+\RequirePackage{semio-viz-scientific-field}
+
+\ExplSyntaxOn
+
+%region 🔖️Parsing
+\cs_generate_variant:Nn \seq_set_split:Nnn { Nnx }
+\cs_generate_variant:Nn \prop_put:Nnn { Nxx }
+\cs_generate_variant:Nn \prop_item:Nn { Ne }
+\tl_new:N \l_semio_viz_eng_key_tl
+\seq_new:N \l_semio_viz_eng_rec_seq
+% ✂️ Splits one slash-separated record #1 into the shared field sequence.
+\cs_new_protected:Npn \semio_viz_eng_record:n #1
+  { \seq_set_split:Nnx \l_semio_viz_eng_rec_seq { / } {#1} }
+% 🔢 Expands to field #1 of the record most recently split.
+\cs_new:Npn \semio_viz_eng_field:n #1
+  { \seq_item:Nn \l_semio_viz_eng_rec_seq {#1} }
+%endregion 🔖️Parsing
+
+%region 🔖️Families
+
+%region 🔖️Keys
+% 🔑 Keys of `sci-circuit` (§31 schematics and block diagrams):
+%    mode (schematic|logic|ladder|wiring|block|signal-flow, schematic): which symbol vocabulary is used.
+%    elements (clist of `type/x1/y1/x2/y2/label`): the netlist; coordinates in millimetres.
+%    types: wire, resistor, capacitor, inductor, source, ground, diode, transistor, opamp,
+%           and, or, not, xor, nand, block, node.
+%    symbolSize (fp, 4): body length of a two-terminal symbol in millimetres.
+%    labels (bool, true): print element labels.
+\tl_new:N \l_semio_viz_eng_mode_tl
+\clist_new:N \l_semio_viz_eng_elements_clist
+\fp_new:N \l_semio_viz_eng_symbol_fp
+\bool_new:N \l_semio_viz_eng_labels_bool
+%endregion 🔖️Keys
+
+\semio_viz_sci_keys_canvas:n { sci-circuit }
+% 🔌 Binds the `sci-circuit` option names onto the symbol vocabulary, the netlist, the symbol body length and the label switch.
+\keys_define:nn { semio / viz / family / sci-circuit }
+  {
+    mode       .tl_set:N    = \l_semio_viz_eng_mode_tl ,
+    elements   .clist_set:N = \l_semio_viz_eng_elements_clist ,
+    symbolSize .fp_set:N    = \l_semio_viz_eng_symbol_fp ,
+    labels     .bool_set:N  = \l_semio_viz_eng_labels_bool ,
+  }
+
+% 🔌 §31 schematics: every element drawn from the netlist with its own symbol, oriented along its own two terminals.
+\SemioVizFamily { sci-circuit }
+  {
+    \semio_viz_sci_enter:nnn { sci-circuit }
+      {
+        mode=schematic , symbolSize=4 , labels=true , axes=false , grid=false ,
+        elements={
+          source/0/0/0/24/V , wire/0/24/16/24/ , resistor/16/24/34/24/R1 ,
+          wire/34/24/50/24/ , capacitor/50/24/50/8/C1 , wire/50/8/50/0/ ,
+          wire/50/0/0/0/ , ground/22/0/22/-6/
+        }
+      }
+      {#1}
+    \clist_map_inline:Nn \l_semio_viz_eng_elements_clist
+      {
+        \semio_viz_eng_record:n {##1}
+        \semio_viz_eng_element:
+      }
+  }
+% 🧰 Draws one netlist element: takes the angle and length of its two terminals, opens a scope shifted and rotated onto that axis to draw the symbol, captions the midpoint and reports the terminals.
+\cs_new_protected:Npn \semio_viz_eng_element:
+  {
+    \fp_set:Nn \l_semio_viz_sci_a_fp { \semio_viz_eng_field:n { 2 } }
+    \fp_set:Nn \l_semio_viz_sci_b_fp { \semio_viz_eng_field:n { 3 } }
+    \fp_set:Nn \l_semio_viz_sci_c_fp { \semio_viz_eng_field:n { 4 } }
+    \fp_set:Nn \l_semio_viz_sci_d_fp { \semio_viz_eng_field:n { 5 } }
+    \fp_set:Nn \l_semio_viz_sci_e_fp
+      {
+        atand ( \l_semio_viz_sci_d_fp - \l_semio_viz_sci_b_fp ,
+                \l_semio_viz_sci_c_fp - \l_semio_viz_sci_a_fp )
+      }
+    \fp_set:Nn \l_semio_viz_sci_f_fp
+      {
+        sqrt ( ( \l_semio_viz_sci_c_fp - \l_semio_viz_sci_a_fp ) ^ 2
+             + ( \l_semio_viz_sci_d_fp - \l_semio_viz_sci_b_fp ) ^ 2 )
+      }
+    \tl_set:Nx \l_semio_viz_eng_key_tl { \semio_viz_eng_field:n { 1 } }
+    \begin{scope}
+      [ shift={( \fp_eval:n { \l_semio_viz_sci_a_fp } , \fp_eval:n { \l_semio_viz_sci_b_fp } )} ,
+        rotate=\fp_eval:n { \l_semio_viz_sci_e_fp } ]
+      \semio_viz_eng_symbol:
+    \end{scope}
+    \bool_if:NT \l_semio_viz_eng_labels_bool
+      {
+        \tl_set:Nx \l_tmpa_tl { \semio_viz_eng_field:n { 6 } }
+        \tl_if_empty:NF \l_tmpa_tl
+          {
+            \node [ font=\c_semio_viz_theme_font_label_tl , text=semio-chrome-text-normal , anchor=south ,
+                    inner~sep=1.2mm ]
+              at ( \fp_eval:n { ( \l_semio_viz_sci_a_fp + \l_semio_viz_sci_c_fp ) / 2 } ,
+                   \fp_eval:n { ( \l_semio_viz_sci_b_fp + \l_semio_viz_sci_d_fp ) / 2 } )
+              { \tl_use:N \l_tmpa_tl } ;
+          }
+      }
+    \semio_viz_sci_report_values:nn { circuit/element }
+      { \fp_to_decimal:N \l_semio_viz_sci_a_fp , \fp_to_decimal:N \l_semio_viz_sci_b_fp ,
+        \fp_to_decimal:N \l_semio_viz_sci_c_fp , \fp_to_decimal:N \l_semio_viz_sci_d_fp }
+  }
+% 🔌 The symbol library, drawn in a local frame from (0,0) to (length,0).
+\cs_new_protected:Npn \semio_viz_eng_symbol:
+  {
+    \fp_set:Nn \l_semio_viz_sci_g_fp
+      { ( \l_semio_viz_sci_f_fp - \l_semio_viz_eng_symbol_fp * 2 ) / 2 }
+    \str_case:VnF \l_semio_viz_eng_key_tl
+      {
+        { wire }
+          { \draw [ semio~sci~thin ] ( 0 , 0 ) -- ( \fp_eval:n { \l_semio_viz_sci_f_fp } , 0 ) ; }
+        { node }
+          { \fill [ fill=semio-chrome-foreground ] ( 0 , 0 ) circle [ radius=0.7 ] ; }
+        { ground }
+          {
+            \draw [ semio~sci~thin ] ( 0 , 0 ) -- ( \fp_eval:n { \l_semio_viz_sci_f_fp } , 0 ) ;
+            \int_step_inline:nnnn { 0 } { 1 } { 2 }
+              {
+                \draw [ semio~sci~thin ]
+                  ( \fp_eval:n { \l_semio_viz_sci_f_fp - ##1 * 0.9 } , \fp_eval:n { -1.8 + 0.9 * ##1 } ) --
+                  ( \fp_eval:n { \l_semio_viz_sci_f_fp - ##1 * 0.9 } , \fp_eval:n { 1.8 - 0.9 * ##1 } ) ;
+              }
+          }
+        { resistor }
+          {
+            \semio_viz_eng_leads:
+            \draw [ semio~sci~thin ]
+              ( \fp_eval:n { \l_semio_viz_sci_g_fp } , -1.6 ) rectangle
+              ( \fp_eval:n { \l_semio_viz_sci_f_fp - \l_semio_viz_sci_g_fp } , 1.6 ) ;
+          }
+        { capacitor }
+          {
+            \draw [ semio~sci~thin ] ( 0 , 0 ) -- ( \fp_eval:n { \l_semio_viz_sci_f_fp / 2 - 0.9 } , 0 ) ;
+            \draw [ semio~sci~thin ] ( \fp_eval:n { \l_semio_viz_sci_f_fp / 2 + 0.9 } , 0 ) -- ( \fp_eval:n { \l_semio_viz_sci_f_fp } , 0 ) ;
+            \draw [ semio~sci~thin ] ( \fp_eval:n { \l_semio_viz_sci_f_fp / 2 - 0.9 } , -2.4 ) -- ++ ( 0 , 4.8 ) ;
+            \draw [ semio~sci~thin ] ( \fp_eval:n { \l_semio_viz_sci_f_fp / 2 + 0.9 } , -2.4 ) -- ++ ( 0 , 4.8 ) ;
+          }
+        { inductor }
+          {
+            \semio_viz_eng_leads:
+            \int_step_inline:nnnn { 0 } { 1 } { 3 }
+              {
+                \draw [ semio~sci~thin ]
+                  ( \fp_eval:n { \l_semio_viz_sci_g_fp + ( ##1 + 0.5 ) * 2 * \l_semio_viz_eng_symbol_fp / 4 } , 0 )
+                  circle [ radius=\fp_eval:n { \l_semio_viz_eng_symbol_fp / 4 } ] ;
+              }
+          }
+        { source }
+          {
+            \semio_viz_eng_leads:
+            \draw [ semio~sci~thin ]
+              ( \fp_eval:n { \l_semio_viz_sci_f_fp / 2 } , 0 )
+              circle [ radius=\fp_eval:n { \l_semio_viz_eng_symbol_fp } ] ;
+            \draw [ semio~sci~thin ]
+              ( \fp_eval:n { \l_semio_viz_sci_f_fp / 2 - 1.2 } , 0 ) -- ++ ( 2.4 , 0 ) ;
+          }
+        { diode }
+          {
+            \semio_viz_eng_leads:
+            \draw [ semio~sci~thin , fill=semio-chrome-foreground ]
+              ( \fp_eval:n { \l_semio_viz_sci_g_fp } , -1.8 ) --
+              ( \fp_eval:n { \l_semio_viz_sci_g_fp } , 1.8 ) --
+              ( \fp_eval:n { \l_semio_viz_sci_f_fp - \l_semio_viz_sci_g_fp } , 0 ) -- cycle ;
+            \draw [ semio~sci~thin ]
+              ( \fp_eval:n { \l_semio_viz_sci_f_fp - \l_semio_viz_sci_g_fp } , -1.8 ) -- ++ ( 0 , 3.6 ) ;
+          }
+        { transistor }
+          {
+            \draw [ semio~sci~thin ] ( 0 , 0 ) -- ( \fp_eval:n { \l_semio_viz_sci_f_fp / 2 } , 0 ) ;
+            \draw [ semio~sci~thin ]
+              ( \fp_eval:n { \l_semio_viz_sci_f_fp / 2 } , -3 ) -- ++ ( 0 , 6 ) ;
+            \draw [ semio~sci~arrow ]
+              ( \fp_eval:n { \l_semio_viz_sci_f_fp / 2 } , 1.8 ) --
+              ( \fp_eval:n { \l_semio_viz_sci_f_fp } , 3.6 ) ;
+            \draw [ semio~sci~thin ]
+              ( \fp_eval:n { \l_semio_viz_sci_f_fp / 2 } , -1.8 ) --
+              ( \fp_eval:n { \l_semio_viz_sci_f_fp } , -3.6 ) ;
+          }
+        { opamp }
+          {
+            \draw [ semio~sci~box ]
+              ( 0 , -4 ) -- ( 0 , 4 ) -- ( \fp_eval:n { \l_semio_viz_sci_f_fp } , 0 ) -- cycle ;
+            \node [ font=\c_semio_viz_theme_font_label_tl , anchor=west , text=semio-chrome-text-normal ]
+              at ( 0.6 , 2 ) { - } ;
+            \node [ font=\c_semio_viz_theme_font_label_tl , anchor=west , text=semio-chrome-text-normal ]
+              at ( 0.6 , -2 ) { + } ;
+          }
+        { block }
+          {
+            \draw [ semio~sci~box ]
+              ( 0 , -4 ) rectangle ( \fp_eval:n { \l_semio_viz_sci_f_fp } , 4 ) ;
+          }
+        { not }
+          {
+            \draw [ semio~sci~box ]
+              ( 0 , -3.4 ) -- ( 0 , 3.4 ) -- ( \fp_eval:n { \l_semio_viz_sci_f_fp - 1.2 } , 0 ) -- cycle ;
+            \draw [ semio~sci~thin ]
+              ( \fp_eval:n { \l_semio_viz_sci_f_fp - 0.6 } , 0 ) circle [ radius=0.6 ] ;
+          }
+      }
+      { \semio_viz_eng_gate: }
+  }
+% 🪢 Draws the two connecting wire stubs that join the terminals to the symbol body.
+\cs_new_protected:Npn \semio_viz_eng_leads:
+  {
+    \draw [ semio~sci~thin ] ( 0 , 0 ) -- ( \fp_eval:n { \l_semio_viz_sci_g_fp } , 0 ) ;
+    \draw [ semio~sci~thin ]
+      ( \fp_eval:n { \l_semio_viz_sci_f_fp - \l_semio_viz_sci_g_fp } , 0 ) --
+      ( \fp_eval:n { \l_semio_viz_sci_f_fp } , 0 ) ;
+  }
+% 🔌 Boolean gates: the AND body is a half-stadium, OR and XOR add their curved input edges, and NAND adds the bubble.
+\cs_new_protected:Npn \semio_viz_eng_gate:
+  {
+    \draw [ semio~sci~box ]
+      ( 0 , -3.4 ) -- ( \fp_eval:n { \l_semio_viz_sci_f_fp / 2 } , -3.4 )
+      arc [ start~angle=-90 , end~angle=90 , radius=3.4 ] --
+      ( 0 , 3.4 ) -- cycle ;
+    \str_case:VnF \l_semio_viz_eng_key_tl
+      {
+        { or }
+          {
+            \draw [ semio~sci~thin , draw=semio-chrome-base , line~width=1.4pt ] ( 0 , -3.4 ) -- ( 0 , 3.4 ) ;
+            \draw [ semio~sci~thin ]
+              ( -1.2 , -3.4 ) .. controls ( 1.2 , 0 ) and ( 1.2 , 0 ) .. ( -1.2 , 3.4 ) ;
+          }
+        { xor }
+          {
+            \draw [ semio~sci~thin ]
+              ( -1.2 , -3.4 ) .. controls ( 1.2 , 0 ) and ( 1.2 , 0 ) .. ( -1.2 , 3.4 ) ;
+            \draw [ semio~sci~thin ]
+              ( -2.4 , -3.4 ) .. controls ( 0 , 0 ) and ( 0 , 0 ) .. ( -2.4 , 3.4 ) ;
+          }
+        { nand }
+          {
+            \draw [ semio~sci~thin ]
+              ( \fp_eval:n { \l_semio_viz_sci_f_fp / 2 + 4 } , 0 ) circle [ radius=0.6 ] ;
+          }
+      }
+      { }
+  }
+
+%region 🔖️Keys
+% 🔑 Keys of `sci-control` (§31 linear-system responses):
+%    mode (bode|bode-phase|nyquist|nichols|root-locus|pole-zero|impulse|step|frequency, bode).
+%    numerator, denominator (clist, descending powers): the transfer function G(s).
+%    decades (clist of 2, `-1,2`): the log frequency sweep. samples (int, 160): sweep resolution.
+%    gains (int, 40): root-locus gain steps. gainMax (fp, 40): the largest gain traced.
+%    steps (int, 160), step (fp, 0.05): the time-response budget.
+\clist_new:N \l_semio_viz_eng_num_clist
+\clist_new:N \l_semio_viz_eng_den_clist
+\clist_new:N \l_semio_viz_eng_decades_clist
+\int_new:N \l_semio_viz_eng_samples_int
+\int_new:N \l_semio_viz_eng_gains_int
+\int_new:N \l_semio_viz_eng_steps_int
+\fp_new:N \l_semio_viz_eng_gainmax_fp
+\fp_new:N \l_semio_viz_eng_step_fp
+%endregion 🔖️Keys
+
+\semio_viz_sci_keys_canvas:n { sci-control }
+% 🎛️ Binds the `sci-control` option names onto the transfer-function coefficients, the decade sweep, the root-locus gain budget and the time-response budget.
+\keys_define:nn { semio / viz / family / sci-control }
+  {
+    mode        .tl_set:N    = \l_semio_viz_eng_mode_tl ,
+    numerator   .clist_set:N = \l_semio_viz_eng_num_clist ,
+    denominator .clist_set:N = \l_semio_viz_eng_den_clist ,
+    decades     .clist_set:N = \l_semio_viz_eng_decades_clist ,
+    samples     .int_set:N   = \l_semio_viz_eng_samples_int ,
+    gains       .int_set:N   = \l_semio_viz_eng_gains_int ,
+    gainMax     .fp_set:N    = \l_semio_viz_eng_gainmax_fp ,
+    steps       .int_set:N   = \l_semio_viz_eng_steps_int ,
+    step        .fp_set:N    = \l_semio_viz_eng_step_fp ,
+  }
+
+% 🎚️ §31 linear-system responses: Bode, Nyquist, Nichols, root locus and pole-zero maps, all from the same coefficient pair.
+\SemioVizFamily { sci-control }
+  {
+    \semio_viz_sci_enter:nnn { sci-control }
+      {
+        mode=bode , numerator={ 1 } , denominator={ 1 , 0.4 , 1 } , decades={ -1 , 2 } ,
+        samples=160 , gains=40 , gainMax=40 , steps=160 , step=0.05 , domain={} , range={}
+      }
+      {#1}
+    \str_case:VnF \l_semio_viz_eng_mode_tl
+      {
+        { bode-phase } { \semio_viz_eng_bode:n { phase } }
+        { nyquist }    { \semio_viz_eng_nyquist: }
+        { nichols }    { \semio_viz_eng_nichols: }
+        { root-locus } { \semio_viz_eng_locus: }
+        { pole-zero }  { \semio_viz_eng_polezero: }
+        { impulse }    { \semio_viz_eng_time:n { impulse } }
+        { step }       { \semio_viz_eng_time:n { step } }
+      }
+      { \semio_viz_eng_bode:n { magnitude } }
+  }
+% 📻 Evaluates G(jω) on a logarithmic frequency grid, collecting the complex response into one sequence and the log-frequency versus decibel magnitude into another.
+\cs_new_protected:Npn \semio_viz_eng_sweep:
+  {
+    \seq_clear:N \l_semio_viz_sci_pts_seq
+    \seq_clear:N \l_semio_viz_sci_pts_b_seq
+    \int_step_inline:nnnn { 0 } { 1 } { \l_semio_viz_eng_samples_int }
+      {
+        \fp_set:Nn \l_semio_viz_sci_g_fp
+          {
+            10 ^ ( \clist_item:Nn \l_semio_viz_eng_decades_clist { 1 }
+              + ( \clist_item:Nn \l_semio_viz_eng_decades_clist { 2 }
+                  - \clist_item:Nn \l_semio_viz_eng_decades_clist { 1 } )
+                * ##1 / \l_semio_viz_eng_samples_int )
+          }
+        \semio_viz_sci_tf:VVn \l_semio_viz_eng_num_clist \l_semio_viz_eng_den_clist
+          { \l_semio_viz_sci_g_fp }
+        \semio_viz_points_put:Nnn \l_semio_viz_sci_pts_seq
+          { \l_semio_viz_sci_re_fp } { \l_semio_viz_sci_im_fp }
+        \semio_viz_points_put:Nnn \l_semio_viz_sci_pts_b_seq
+          { ln ( \l_semio_viz_sci_g_fp ) / ln (10) }
+          { 20 * ln ( max ( 1e-9 , sqrt ( \l_semio_viz_sci_re_fp ^ 2 + \l_semio_viz_sci_im_fp ^ 2 ) ) ) / ln (10) }
+      }
+  }
+% 📊 Plots the Bode magnitude, or for #1 = phase replaces the decibel ordinate with the argument of the response before framing and stroking it.
+\cs_new_protected:Npn \semio_viz_eng_bode:n #1
+  {
+    \semio_viz_eng_sweep:
+    \str_if_eq:nnT {#1} { phase }
+      {
+        \seq_clear:N \l_semio_viz_sci_pts_c_seq
+        \int_zero:N \l_tmpa_int
+        \seq_map_inline:Nn \l_semio_viz_sci_pts_seq
+          {
+            \semio_viz_points_put:Nnn \l_semio_viz_sci_pts_c_seq
+              { \semio_viz_points_x:n { \seq_item:Nn \l_semio_viz_sci_pts_b_seq { \l_tmpa_int + 1 } } }
+              { atand ( \semio_viz_points_y:n {##1} , \semio_viz_points_x:n {##1} ) }
+            \int_incr:N \l_tmpa_int
+          }
+        \seq_set_eq:NN \l_semio_viz_sci_pts_b_seq \l_semio_viz_sci_pts_c_seq
+      }
+    \semio_viz_sci_window_from:Nn \l_semio_viz_sci_pts_b_seq { 0.06 }
+    \semio_viz_sci_window_keys:
+    \semio_viz_sci_frame:
+    \semio_viz_sci_polyline:Nn \l_semio_viz_sci_pts_b_seq { semio~sci~curve }
+  }
+% 🌗 Plots the swept response in the complex plane and marks the critical point −1 in the danger colour.
+\cs_new_protected:Npn \semio_viz_eng_nyquist:
+  {
+    \semio_viz_eng_sweep:
+    \semio_viz_sci_window_from:Nn \l_semio_viz_sci_pts_seq { 0.12 }
+    \semio_viz_sci_window_keys:
+    \semio_viz_sci_frame:
+    \semio_viz_sci_zero_lines:
+    \semio_viz_sci_polyline:Nn \l_semio_viz_sci_pts_seq { semio~sci~curve }
+    \semio_viz_sci_dot:nnn { -1 } { 0 } { semio-danger }
+  }
+% 🧮 Re-pairs the swept response into phase against decibel gain and plots that Nichols locus.
+\cs_new_protected:Npn \semio_viz_eng_nichols:
+  {
+    \semio_viz_eng_sweep:
+    \seq_clear:N \l_semio_viz_sci_pts_c_seq
+    \int_zero:N \l_tmpa_int
+    \seq_map_inline:Nn \l_semio_viz_sci_pts_seq
+      {
+        \semio_viz_points_put:Nnn \l_semio_viz_sci_pts_c_seq
+          { atand ( \semio_viz_points_y:n {##1} , \semio_viz_points_x:n {##1} ) }
+          { \semio_viz_points_y:n { \seq_item:Nn \l_semio_viz_sci_pts_b_seq { \l_tmpa_int + 1 } } }
+        \int_incr:N \l_tmpa_int
+      }
+    \semio_viz_sci_window_from:Nn \l_semio_viz_sci_pts_c_seq { 0.08 }
+    \semio_viz_sci_window_keys:
+    \semio_viz_sci_frame:
+    \semio_viz_sci_polyline:Nn \l_semio_viz_sci_pts_c_seq { semio~sci~curve }
+  }
+% 🎚️ Root locus: the closed-loop characteristic polynomial den + K·num, its roots found by Durand–Kerner at every gain.
+\cs_new_protected:Npn \semio_viz_eng_locus:
+  {
+    \semio_viz_sci_window:nnnn { -3 } { 1 } { -2 } { 2 }
+    \semio_viz_sci_window_keys:
+    \semio_viz_sci_frame:
+    \semio_viz_sci_zero_lines:
+    \int_step_inline:nnnn { 0 } { 1 } { \l_semio_viz_eng_gains_int }
+      {
+        \fp_set:Nn \l_semio_viz_sci_g_fp
+          { \l_semio_viz_eng_gainmax_fp * ##1 / \l_semio_viz_eng_gains_int }
+        \semio_viz_eng_closed_loop:
+        \semio_viz_sci_roots:VN \l_semio_viz_eng_key_tl \l_semio_viz_sci_pts_seq
+        \seq_map_inline:Nn \l_semio_viz_sci_pts_seq
+          {
+            \fill [ fill=\semio_viz_sci_ramp:n { ##1 / \l_semio_viz_eng_gainmax_fp } ]
+              ( \semio_viz_sci_mx:n { \semio_viz_points_x:n {####1} } ,
+                \semio_viz_sci_my:n { \semio_viz_points_y:n {####1} } ) circle [ radius=0.35 ] ;
+          }
+      }
+    \semio_viz_eng_polezero_marks:
+  }
+% 🎚️ Coefficient list of den(s) + K·num(s), right-aligned so the two polynomials add degree by degree.
+\cs_new_protected:Npn \semio_viz_eng_closed_loop:
+  {
+    \int_set:Nn \l_tmpa_int { \clist_count:N \l_semio_viz_eng_den_clist }
+    \int_set:Nn \l_tmpb_int { \clist_count:N \l_semio_viz_eng_num_clist }
+    \clist_clear:N \l_tmpa_clist
+    \int_step_inline:nnnn { 1 } { 1 } { \l_tmpa_int }
+      {
+        \int_compare:nNnTF {##1} > { \l_tmpa_int - \l_tmpb_int }
+          {
+            \clist_put_right:Nx \l_tmpa_clist
+              {
+                \fp_to_decimal:n
+                  {
+                    \clist_item:Nn \l_semio_viz_eng_den_clist {##1}
+                    + \l_semio_viz_sci_g_fp
+                      * \clist_item:Nn \l_semio_viz_eng_num_clist { ##1 - \l_tmpa_int + \l_tmpb_int }
+                  }
+              }
+          }
+          {
+            \clist_put_right:Nx \l_tmpa_clist
+              { \fp_to_decimal:n { \clist_item:Nn \l_semio_viz_eng_den_clist {##1} } }
+          }
+      }
+    \tl_set_eq:NN \l_semio_viz_eng_key_tl \l_tmpa_clist
+  }
+% 🗺️ Frames a fixed region of the s-plane with its zero lines and marks the poles and zeros on it.
+\cs_new_protected:Npn \semio_viz_eng_polezero:
+  {
+    \semio_viz_sci_window:nnnn { -3 } { 1 } { -2 } { 2 }
+    \semio_viz_sci_window_keys:
+    \semio_viz_sci_frame:
+    \semio_viz_sci_zero_lines:
+    \semio_viz_eng_polezero_marks:
+  }
+% ❌ Roots the denominator and crosses every pole, reporting each, then rings the numerator roots as zero circles when the numerator is more than a constant.
+\cs_new_protected:Npn \semio_viz_eng_polezero_marks:
+  {
+    \semio_viz_sci_roots:VN \l_semio_viz_eng_den_clist \l_semio_viz_sci_pts_seq
+    \seq_map_inline:Nn \l_semio_viz_sci_pts_seq
+      {
+        \draw [ semio~sci~curve ]
+          ( \fp_eval:n { \semio_viz_sci_mx:n { \semio_viz_points_x:n {##1} } - 1 } ,
+            \fp_eval:n { \semio_viz_sci_my:n { \semio_viz_points_y:n {##1} } - 1 } ) --
+          ( \fp_eval:n { \semio_viz_sci_mx:n { \semio_viz_points_x:n {##1} } + 1 } ,
+            \fp_eval:n { \semio_viz_sci_my:n { \semio_viz_points_y:n {##1} } + 1 } ) ;
+        \draw [ semio~sci~curve ]
+          ( \fp_eval:n { \semio_viz_sci_mx:n { \semio_viz_points_x:n {##1} } - 1 } ,
+            \fp_eval:n { \semio_viz_sci_my:n { \semio_viz_points_y:n {##1} } + 1 } ) --
+          ( \fp_eval:n { \semio_viz_sci_mx:n { \semio_viz_points_x:n {##1} } + 1 } ,
+            \fp_eval:n { \semio_viz_sci_my:n { \semio_viz_points_y:n {##1} } - 1 } ) ;
+        \semio_viz_sci_report_values:nn { control/pole }
+          { \semio_viz_points_x:n {##1} , \semio_viz_points_y:n {##1} }
+      }
+    \int_compare:nNnT { \clist_count:N \l_semio_viz_eng_num_clist } > { 1 }
+      {
+        \semio_viz_sci_roots:VN \l_semio_viz_eng_num_clist \l_semio_viz_sci_pts_b_seq
+        \seq_map_inline:Nn \l_semio_viz_sci_pts_b_seq
+          {
+            \draw [ semio~sci~curve~alt ]
+              ( \semio_viz_sci_mx:n { \semio_viz_points_x:n {##1} } ,
+                \semio_viz_sci_my:n { \semio_viz_points_y:n {##1} } ) circle [ radius=1.1 ] ;
+          }
+      }
+  }
+% 🎚️ Time responses by explicit integration of the controllable-canonical state space of G(s).
+\cs_new_protected:Npn \semio_viz_eng_time:n #1
+  {
+    \seq_clear:N \l_semio_viz_sci_pts_seq
+    \fp_zero:N \l_semio_viz_sci_a_fp
+    \fp_zero:N \l_semio_viz_sci_b_fp
+    \int_step_inline:nnnn { 0 } { 1 } { \l_semio_viz_eng_steps_int }
+      {
+        \semio_viz_points_put:Nnn \l_semio_viz_sci_pts_seq
+          { ##1 * \l_semio_viz_eng_step_fp }
+          { \clist_item:Nn \l_semio_viz_eng_num_clist { -1 } * \l_semio_viz_sci_a_fp }
+        \semio_viz_eng_time_step:n {#1}
+      }
+    \semio_viz_sci_window_from:Nn \l_semio_viz_sci_pts_seq { 0.08 }
+    \semio_viz_sci_window_keys:
+    \semio_viz_sci_frame:
+    \semio_viz_sci_zero_lines:
+    \semio_viz_sci_polyline:Nn \l_semio_viz_sci_pts_seq { semio~sci~curve }
+  }
+% ⏭️ Advances the state-space integration one Euler step, driving it with unity only when #1 is `step`.
+\cs_new_protected:Npn \semio_viz_eng_time_step:n #1
+  {
+    \fp_set:Nn \l_semio_viz_sci_c_fp
+      {
+        (
+          \str_if_eq_p:nn {#1} { step } * 1
+          - \clist_item:Nn \l_semio_viz_eng_den_clist { -1 } * \l_semio_viz_sci_a_fp
+          - \clist_item:Nn \l_semio_viz_eng_den_clist { 2 } * \l_semio_viz_sci_b_fp
+        ) / \clist_item:Nn \l_semio_viz_eng_den_clist { 1 }
+      }
+    \fp_add:Nn \l_semio_viz_sci_b_fp { \l_semio_viz_eng_step_fp * \l_semio_viz_sci_c_fp }
+    \fp_add:Nn \l_semio_viz_sci_a_fp { \l_semio_viz_eng_step_fp * \l_semio_viz_sci_b_fp }
+  }
+
+%region 🔖️Keys
+% 🔑 Keys of `sci-smith` (§31 impedance charts):
+%    resistances (clist, `0.2,0.5,1,2,5`): the constant-resistance circles drawn.
+%    reactances (clist, `0.2,0.5,1,2,5`): the constant-reactance arcs drawn.
+%    points (clist of `r/x/label`): normalised impedances marked on the chart.
+%    radius (fp, 24): chart radius in millimetres.
+\clist_new:N \l_semio_viz_eng_res_clist
+\clist_new:N \l_semio_viz_eng_reac_clist
+\clist_new:N \l_semio_viz_eng_points_clist
+\fp_new:N \l_semio_viz_eng_radius_fp
+%endregion 🔖️Keys
+
+\semio_viz_sci_keys_canvas:n { sci-smith }
+% 🧭 Binds the `sci-smith` option names onto the resistance and reactance families, the marked impedances and the chart radius.
+\keys_define:nn { semio / viz / family / sci-smith }
+  {
+    resistances .clist_set:N = \l_semio_viz_eng_res_clist ,
+    reactances  .clist_set:N = \l_semio_viz_eng_reac_clist ,
+    points      .clist_set:N = \l_semio_viz_eng_points_clist ,
+    radius      .fp_set:N    = \l_semio_viz_eng_radius_fp ,
+  }
+
+% 🧭 §31 Smith chart: the constant-resistance and constant-reactance families, drawn as the circles the bilinear map really produces.
+\SemioVizFamily { sci-smith }
+  {
+    \semio_viz_sci_enter:nnn { sci-smith }
+      {
+        resistances={ 0.2 , 0.5 , 1 , 2 , 5 } , reactances={ 0.2 , 0.5 , 1 , 2 , 5 } ,
+        points={ 1/0.6/Z1 , 0.4/-0.8/Z2 } , radius=24 , axes=false , grid=false
+      }
+      {#1}
+    \draw [ semio~sci~axis ] ( 0 , 0 ) circle [ radius=\fp_eval:n { \l_semio_viz_eng_radius_fp } ] ;
+    \draw [ semio~sci~axis ]
+      ( \fp_eval:n { - \l_semio_viz_eng_radius_fp } , 0 ) -- ( \fp_eval:n { \l_semio_viz_eng_radius_fp } , 0 ) ;
+    \clist_map_inline:Nn \l_semio_viz_eng_res_clist
+      {
+        \draw [ semio~sci~grid ]
+          ( \fp_eval:n { \l_semio_viz_eng_radius_fp * ##1 / ( 1 + ##1 ) } , 0 )
+          circle [ radius=\fp_eval:n { \l_semio_viz_eng_radius_fp / ( 1 + ##1 ) } ] ;
+      }
+    \clist_map_inline:Nn \l_semio_viz_eng_reac_clist
+      {
+        \int_step_inline:nnnn { -1 } { 2 } { 1 }
+          {
+            \draw [ semio~sci~grid ]
+              ( \fp_eval:n { \l_semio_viz_eng_radius_fp } ,
+                \fp_eval:n { ####1 * \l_semio_viz_eng_radius_fp / ##1 } )
+              circle [ radius=\fp_eval:n { \l_semio_viz_eng_radius_fp / ##1 } ] ;
+          }
+      }
+    \clist_map_inline:Nn \l_semio_viz_eng_points_clist
+      {
+        \semio_viz_eng_record:n {##1}
+        \semio_viz_eng_smith_point:
+      }
+  }
+% 📍 Maps the normalised impedance r + jx to its reflection coefficient, dots and names it on the chart and reports the position.
+\cs_new_protected:Npn \semio_viz_eng_smith_point:
+  {
+    \fp_set:Nn \l_semio_viz_sci_g_fp
+      {
+        ( \semio_viz_eng_field:n { 1 } + 1 ) ^ 2 + ( \semio_viz_eng_field:n { 2 } ) ^ 2
+      }
+    \fp_set:Nn \l_semio_viz_sci_a_fp
+      {
+        \l_semio_viz_eng_radius_fp
+        * ( ( \semio_viz_eng_field:n { 1 } ) ^ 2 + ( \semio_viz_eng_field:n { 2 } ) ^ 2 - 1 )
+        / \l_semio_viz_sci_g_fp
+      }
+    \fp_set:Nn \l_semio_viz_sci_b_fp
+      { \l_semio_viz_eng_radius_fp * 2 * \semio_viz_eng_field:n { 2 } / \l_semio_viz_sci_g_fp }
+    \fill [ fill=semio-primary ]
+      ( \fp_eval:n { \l_semio_viz_sci_a_fp } , \fp_eval:n { \l_semio_viz_sci_b_fp } ) circle [ radius=1 ] ;
+    \node [ font=\c_semio_viz_theme_font_label_tl , text=semio-chrome-foreground , anchor=south~west ]
+      at ( \fp_eval:n { \l_semio_viz_sci_a_fp } , \fp_eval:n { \l_semio_viz_sci_b_fp } )
+      { \semio_viz_eng_field:n { 3 } } ;
+    \semio_viz_sci_report_values:nn { smith/point }
+      { \fp_to_decimal:N \l_semio_viz_sci_a_fp , \fp_to_decimal:N \l_semio_viz_sci_b_fp }
+  }
+
+%region 🔖️Keys
+% 🔑 Keys of `sci-constellation` (§31 digital-link views):
+%    mode (constellation|eye, constellation).
+%    order (int, 16): the QAM order; the lattice is its square root per axis.
+%    noise (fp, 0.06): the standard deviation of the seeded symbol noise. symbols (int, 240): symbol count.
+%    span (int, 2), samples (int, 32): the eye diagram's symbol span and samples per symbol.
+\int_new:N \l_semio_viz_eng_order_int
+\int_new:N \l_semio_viz_eng_symbols_int
+\int_new:N \l_semio_viz_eng_span_int
+\fp_new:N \l_semio_viz_eng_noise_fp
+%endregion 🔖️Keys
+
+\semio_viz_sci_keys_canvas:n { sci-constellation }
+% 📡 Binds the `sci-constellation` option names onto the QAM order, the noise level, the symbol count and the eye-diagram span and sampling.
+\keys_define:nn { semio / viz / family / sci-constellation }
+  {
+    mode    .tl_set:N  = \l_semio_viz_eng_mode_tl ,
+    order   .int_set:N = \l_semio_viz_eng_order_int ,
+    noise   .fp_set:N  = \l_semio_viz_eng_noise_fp ,
+    symbols .int_set:N = \l_semio_viz_eng_symbols_int ,
+    span    .int_set:N = \l_semio_viz_eng_span_int ,
+    samples .int_set:N = \l_semio_viz_eng_samples_int ,
+  }
+
+% 📡 §31 digital-link views: a noisy QAM constellation and the eye diagram of the same seeded symbol stream.
+\SemioVizFamily { sci-constellation }
+  {
+    \semio_viz_sci_enter:nnn { sci-constellation }
+      {
+        mode=constellation , order=16 , noise=0.06 , symbols=240 , span=2 , samples=32 ,
+        domain={-1.3,1.3} , range={-1.3,1.3}
+      }
+      {#1}
+    \semio_viz_sci_window_keys:
+    \semio_viz_sci_frame:
+    \semio_viz_sci_zero_lines:
+    \str_if_eq:VnTF \l_semio_viz_eng_mode_tl { eye }
+      { \semio_viz_eng_eye: }
+      { \semio_viz_eng_constellation: }
+  }
+% ✳️ Scatters the requested symbols: each snaps to a random cell of the square QAM lattice and is then displaced by seeded Gaussian noise.
+\cs_new_protected:Npn \semio_viz_eng_constellation:
+  {
+    \int_set:Nn \l_tmpa_int { \fp_to_int:n { round ( sqrt ( \l_semio_viz_eng_order_int ) ) } }
+    \int_step_inline:nnnn { 1 } { 1 } { \l_semio_viz_eng_symbols_int }
+      {
+        \semio_viz_sci_random:N \l_semio_viz_sci_e_fp
+        \semio_viz_sci_random:N \l_semio_viz_sci_f_fp
+        \semio_viz_sci_random_normal:N \l_semio_viz_sci_c_fp
+        \semio_viz_sci_random_normal:N \l_semio_viz_sci_d_fp
+        \semio_viz_sci_dot:nnn
+          {
+            2 * ( floor ( \l_semio_viz_sci_e_fp * \l_tmpa_int ) + 0.5 ) / \l_tmpa_int - 1
+            + \l_semio_viz_eng_noise_fp * \l_semio_viz_sci_c_fp
+          }
+          {
+            2 * ( floor ( \l_semio_viz_sci_f_fp * \l_tmpa_int ) + 0.5 ) / \l_tmpa_int - 1
+            + \l_semio_viz_eng_noise_fp * \l_semio_viz_sci_d_fp
+          }
+          { semio-primary }
+      }
+  }
+% 👁️ Overlays two dozen translucent raised-cosine traces, each with a random polarity and a random amplitude jitter, to build the eye opening.
+\cs_new_protected:Npn \semio_viz_eng_eye:
+  {
+    \int_step_inline:nnnn { 1 } { 1 } { 24 }
+      {
+        \seq_clear:N \l_semio_viz_sci_pts_seq
+        \semio_viz_sci_random:N \l_semio_viz_sci_e_fp
+        \semio_viz_sci_random:N \l_semio_viz_sci_f_fp
+        \int_step_inline:nnnn { 0 } { 1 } { \l_semio_viz_eng_samples_int }
+          {
+            \fp_set:Nn \SemioT
+              { -1.3 + 2.6 * ####1 / \l_semio_viz_eng_samples_int }
+            \semio_viz_points_put:Nnn \l_semio_viz_sci_pts_seq { \SemioT }
+              {
+                ( \l_semio_viz_sci_e_fp < 0.5 ? -1 : 1 ) * cos ( pi * \SemioT / 2.6 ) ^ 2
+                + ( \l_semio_viz_sci_f_fp - 0.5 ) * 0.16
+              }
+          }
+        \semio_viz_sci_polyline:Nn \l_semio_viz_sci_pts_seq
+          { semio~sci~thin , draw=semio-primary , opacity=0.45 }
+      }
+  }
+
+%region 🔖️Keys
+% 🔑 Keys of `sci-beam` (§36 structural analysis):
+%    mode (beam|shear|moment, beam): the beam sketch or one of its computed internal-force diagrams.
+%    length (fp, 60): span in millimetres, also the length unit of the load positions.
+%    supports (clist of `position/kind`): kinds pin, roller, fixed.
+%    loads (clist of `position/magnitude`): downward point loads.
+%    distributed (clist of `from/to/intensity`): uniformly distributed loads.
+%    samples (int, 120): resolution of the internal-force sweep.
+\clist_new:N \l_semio_viz_eng_supports_clist
+\clist_new:N \l_semio_viz_eng_loads_clist
+\clist_new:N \l_semio_viz_eng_dist_clist
+\fp_new:N \l_semio_viz_eng_length_fp
+\fp_new:N \l_semio_viz_eng_reactiona_fp
+\fp_new:N \l_semio_viz_eng_reactionb_fp
+%endregion 🔖️Keys
+
+\semio_viz_sci_keys_canvas:n { sci-beam }
+% 🌉 Binds the `sci-beam` option names onto the span, the support, point-load and distributed-load lists and the internal-force sweep resolution.
+\keys_define:nn { semio / viz / family / sci-beam }
+  {
+    mode        .tl_set:N    = \l_semio_viz_eng_mode_tl ,
+    length      .fp_set:N    = \l_semio_viz_eng_length_fp ,
+    supports    .clist_set:N = \l_semio_viz_eng_supports_clist ,
+    loads       .clist_set:N = \l_semio_viz_eng_loads_clist ,
+    distributed .clist_set:N = \l_semio_viz_eng_dist_clist ,
+    samples     .int_set:N   = \l_semio_viz_eng_samples_int ,
+  }
+
+% 🏗️ §36 structural analysis: the support reactions solved from equilibrium, then the shear and bending-moment diagrams computed from them.
+\SemioVizFamily { sci-beam }
+  {
+    \semio_viz_sci_enter:nnn { sci-beam }
+      {
+        mode=beam , length=60 , samples=120 , axes=false , grid=false ,
+        supports={ 0/pin , 60/roller } , loads={ 18/4 , 42/2.5 } , distributed={ 24/48/0.08 }
+      }
+      {#1}
+    \semio_viz_eng_reactions:
+    \str_case:VnF \l_semio_viz_eng_mode_tl
+      {
+        { shear }  { \semio_viz_eng_internal:n { shear } }
+        { moment } { \semio_viz_eng_internal:n { moment } }
+      }
+      { \semio_viz_eng_beam_sketch: }
+  }
+% 🏗️ Support reactions of a simply supported span from ΣM = 0 and ΣF = 0.
+\cs_new_protected:Npn \semio_viz_eng_reactions:
+  {
+    \fp_zero:N \l_semio_viz_sci_a_fp
+    \fp_zero:N \l_semio_viz_sci_b_fp
+    \clist_map_inline:Nn \l_semio_viz_eng_loads_clist
+      {
+        \seq_set_split:Nnn \l_tmpb_seq { / } {##1}
+        \fp_add:Nn \l_semio_viz_sci_a_fp { \seq_item:Nn \l_tmpb_seq { 2 } }
+        \fp_add:Nn \l_semio_viz_sci_b_fp
+          { \seq_item:Nn \l_tmpb_seq { 2 } * \seq_item:Nn \l_tmpb_seq { 1 } }
+      }
+    \clist_map_inline:Nn \l_semio_viz_eng_dist_clist
+      {
+        \seq_set_split:Nnn \l_tmpb_seq { / } {##1}
+        \fp_add:Nn \l_semio_viz_sci_a_fp
+          {
+            \seq_item:Nn \l_tmpb_seq { 3 }
+            * ( \seq_item:Nn \l_tmpb_seq { 2 } - \seq_item:Nn \l_tmpb_seq { 1 } )
+          }
+        \fp_add:Nn \l_semio_viz_sci_b_fp
+          {
+            \seq_item:Nn \l_tmpb_seq { 3 }
+            * ( \seq_item:Nn \l_tmpb_seq { 2 } - \seq_item:Nn \l_tmpb_seq { 1 } )
+            * ( \seq_item:Nn \l_tmpb_seq { 2 } + \seq_item:Nn \l_tmpb_seq { 1 } ) / 2
+          }
+      }
+    \fp_set:Nn \l_semio_viz_eng_reactionb_fp { \l_semio_viz_sci_b_fp / \l_semio_viz_eng_length_fp }
+    \fp_set:Nn \l_semio_viz_eng_reactiona_fp
+      { \l_semio_viz_sci_a_fp - \l_semio_viz_eng_reactionb_fp }
+    \semio_viz_sci_report_values:nn { beam/reactions }
+      { \fp_to_decimal:N \l_semio_viz_eng_reactiona_fp , \fp_to_decimal:N \l_semio_viz_eng_reactionb_fp }
+  }
+% 🏗️ Internal shear at x: the left reaction minus every load to its left; the moment is the same sum weighted by lever arm.
+\cs_new_protected:Npn \semio_viz_eng_internal:n #1
+  {
+    \seq_clear:N \l_semio_viz_sci_pts_seq
+    \int_step_inline:nnnn { 0 } { 1 } { \l_semio_viz_eng_samples_int }
+      {
+        \fp_set:Nn \l_semio_viz_sci_g_fp
+          { \l_semio_viz_eng_length_fp * ##1 / \l_semio_viz_eng_samples_int }
+        \semio_viz_eng_internal_at:n {#1}
+        \semio_viz_points_put:Nnn \l_semio_viz_sci_pts_seq
+          { \l_semio_viz_sci_g_fp } { \l_semio_viz_sci_c_fp }
+      }
+    \semio_viz_sci_window_from:Nn \l_semio_viz_sci_pts_seq { 0.08 }
+    \semio_viz_sci_window_keys:
+    \semio_viz_sci_frame:
+    \semio_viz_sci_zero_lines:
+    \semio_viz_sci_polyarea:Nnn \l_semio_viz_sci_pts_seq { semio~sci~band } { 0 }
+    \semio_viz_sci_polyline:Nn \l_semio_viz_sci_pts_seq { semio~sci~curve }
+  }
+% 🧾 Accumulates the internal #1 (shear or moment) at the current section: the left reaction less every point load already passed and the overlapped part of every distributed load.
+\cs_new_protected:Npn \semio_viz_eng_internal_at:n #1
+  {
+    \str_if_eq:nnTF {#1} { moment }
+      { \fp_set:Nn \l_semio_viz_sci_c_fp { \l_semio_viz_eng_reactiona_fp * \l_semio_viz_sci_g_fp } }
+      { \fp_set:Nn \l_semio_viz_sci_c_fp { \l_semio_viz_eng_reactiona_fp } }
+    \clist_map_inline:Nn \l_semio_viz_eng_loads_clist
+      {
+        \seq_set_split:Nnn \l_tmpb_seq { / } {##1}
+        \fp_compare:nNnT { \seq_item:Nn \l_tmpb_seq { 1 } } < { \l_semio_viz_sci_g_fp }
+          {
+            \str_if_eq:nnTF {#1} { moment }
+              {
+                \fp_sub:Nn \l_semio_viz_sci_c_fp
+                  {
+                    \seq_item:Nn \l_tmpb_seq { 2 }
+                    * ( \l_semio_viz_sci_g_fp - \seq_item:Nn \l_tmpb_seq { 1 } )
+                  }
+              }
+              { \fp_sub:Nn \l_semio_viz_sci_c_fp { \seq_item:Nn \l_tmpb_seq { 2 } } }
+          }
+      }
+    \clist_map_inline:Nn \l_semio_viz_eng_dist_clist
+      {
+        \seq_set_split:Nnn \l_tmpb_seq { / } {##1}
+        \fp_set:Nn \l_semio_viz_sci_d_fp
+          {
+            max ( 0 , min ( \l_semio_viz_sci_g_fp , \seq_item:Nn \l_tmpb_seq { 2 } )
+              - \seq_item:Nn \l_tmpb_seq { 1 } )
+          }
+        \str_if_eq:nnTF {#1} { moment }
+          {
+            \fp_sub:Nn \l_semio_viz_sci_c_fp
+              {
+                \seq_item:Nn \l_tmpb_seq { 3 } * \l_semio_viz_sci_d_fp * \l_semio_viz_sci_d_fp / 2
+              }
+          }
+          {
+            \fp_sub:Nn \l_semio_viz_sci_c_fp
+              { \seq_item:Nn \l_tmpb_seq { 3 } * \l_semio_viz_sci_d_fp }
+          }
+      }
+  }
+% 🪵 Draws the loaded beam itself: the span line, a triangle at every support, an arrow scaled to each point load, a shaded block per distributed load, and the two reaction values.
+\cs_new_protected:Npn \semio_viz_eng_beam_sketch:
+  {
+    \draw [ semio~sci~curve ] ( 0 , 0 ) -- ( \fp_eval:n { \l_semio_viz_eng_length_fp } , 0 ) ;
+    \clist_map_inline:Nn \l_semio_viz_eng_supports_clist
+      {
+        \semio_viz_eng_record:n {##1}
+        \draw [ semio~sci~thin , fill=semio-chrome-panel ]
+          ( \fp_eval:n { \semio_viz_eng_field:n { 1 } } , 0 ) --
+          ( \fp_eval:n { \semio_viz_eng_field:n { 1 } - 2.6 } , -4 ) --
+          ( \fp_eval:n { \semio_viz_eng_field:n { 1 } + 2.6 } , -4 ) -- cycle ;
+      }
+    \clist_map_inline:Nn \l_semio_viz_eng_loads_clist
+      {
+        \semio_viz_eng_record:n {##1}
+        \draw [ semio~sci~vector ]
+          ( \fp_eval:n { \semio_viz_eng_field:n { 1 } } ,
+            \fp_eval:n { 4 + 2 * \semio_viz_eng_field:n { 2 } } ) --
+          ( \fp_eval:n { \semio_viz_eng_field:n { 1 } } , 0.6 ) ;
+      }
+    \clist_map_inline:Nn \l_semio_viz_eng_dist_clist
+      {
+        \semio_viz_eng_record:n {##1}
+        \fill [ fill=semio-secondary , fill~opacity=0.3 ]
+          ( \fp_eval:n { \semio_viz_eng_field:n { 1 } } , 1 ) rectangle
+          ( \fp_eval:n { \semio_viz_eng_field:n { 2 } } ,
+            \fp_eval:n { 1 + 40 * \semio_viz_eng_field:n { 3 } } ) ;
+      }
+    \node [ font=\c_semio_viz_theme_font_label_tl , text=semio-chrome-text-normal , anchor=north~east ]
+      at ( 0 , -4.4 ) { \semio_viz_sci_num:nn { \l_semio_viz_eng_reactiona_fp } { 2 } } ;
+    \node [ font=\c_semio_viz_theme_font_label_tl , text=semio-chrome-text-normal , anchor=north~west ]
+      at ( \fp_eval:n { \l_semio_viz_eng_length_fp } , -4.4 )
+      { \semio_viz_sci_num:nn { \l_semio_viz_eng_reactionb_fp } { 2 } } ;
+  }
+
+%region 🔖️Keys
+% 🔑 Keys of `sci-mohr` (§36 stress state):
+%    sigmaX, sigmaY, tauXY (fp, 80/20/30): the plane stress state.
+%    principal (bool, true): mark the principal stresses and the maximum shear.
+%    pole (bool, false): draw the pole construction.
+\fp_new:N \l_semio_viz_eng_sigmax_fp
+\fp_new:N \l_semio_viz_eng_sigmay_fp
+\fp_new:N \l_semio_viz_eng_tau_fp
+\bool_new:N \l_semio_viz_eng_principal_bool
+\bool_new:N \l_semio_viz_eng_pole_bool
+%endregion 🔖️Keys
+
+\semio_viz_sci_keys_canvas:n { sci-mohr }
+% 🔩 Binds the `sci-mohr` option names onto the three plane-stress components and the principal-marker and pole switches.
+\keys_define:nn { semio / viz / family / sci-mohr }
+  {
+    sigmaX    .fp_set:N   = \l_semio_viz_eng_sigmax_fp ,
+    sigmaY    .fp_set:N   = \l_semio_viz_eng_sigmay_fp ,
+    tauXY     .fp_set:N   = \l_semio_viz_eng_tau_fp ,
+    principal .bool_set:N = \l_semio_viz_eng_principal_bool ,
+    pole      .bool_set:N = \l_semio_viz_eng_pole_bool ,
+  }
+
+% 🔩 §36 Mohr's circle: the centre, radius and principal stresses solved from the plane stress state.
+\SemioVizFamily { sci-mohr }
+  {
+    \semio_viz_sci_enter:nnn { sci-mohr }
+      { sigmaX=80 , sigmaY=20 , tauXY=30 , principal=true , pole=false , domain={} , range={} }
+      {#1}
+    \fp_set:Nn \l_semio_viz_sci_a_fp { ( \l_semio_viz_eng_sigmax_fp + \l_semio_viz_eng_sigmay_fp ) / 2 }
+    \fp_set:Nn \l_semio_viz_sci_b_fp
+      {
+        sqrt ( ( ( \l_semio_viz_eng_sigmax_fp - \l_semio_viz_eng_sigmay_fp ) / 2 ) ^ 2
+             + \l_semio_viz_eng_tau_fp ^ 2 )
+      }
+    \semio_viz_sci_window:nnnn
+      { \l_semio_viz_sci_a_fp - 1.25 * \l_semio_viz_sci_b_fp }
+      { \l_semio_viz_sci_a_fp + 1.25 * \l_semio_viz_sci_b_fp }
+      { - 1.25 * \l_semio_viz_sci_b_fp } { 1.25 * \l_semio_viz_sci_b_fp }
+    \semio_viz_sci_window_keys:
+    \semio_viz_sci_frame:
+    \semio_viz_sci_zero_lines:
+    \seq_clear:N \l_semio_viz_sci_pts_seq
+    \int_step_inline:nnnn { 0 } { 1 } { 120 }
+      {
+        \semio_viz_points_put:Nnn \l_semio_viz_sci_pts_seq
+          { \l_semio_viz_sci_a_fp + \l_semio_viz_sci_b_fp * cos ( 2 * pi * ##1 / 120 ) }
+          { \l_semio_viz_sci_b_fp * sin ( 2 * pi * ##1 / 120 ) }
+      }
+    \semio_viz_sci_polyline:Nn \l_semio_viz_sci_pts_seq { semio~sci~curve }
+    \bool_if:NT \l_semio_viz_eng_principal_bool
+      {
+        \semio_viz_sci_dot:nnn { \l_semio_viz_sci_a_fp - \l_semio_viz_sci_b_fp } { 0 } { semio-primary }
+        \semio_viz_sci_dot:nnn { \l_semio_viz_sci_a_fp + \l_semio_viz_sci_b_fp } { 0 } { semio-primary }
+        \semio_viz_sci_dot:nnn { \l_semio_viz_eng_sigmax_fp } { \l_semio_viz_eng_tau_fp } { semio-secondary }
+        \semio_viz_sci_dot:nnn { \l_semio_viz_eng_sigmay_fp } { - \l_semio_viz_eng_tau_fp } { semio-secondary }
+        \semio_viz_sci_arrow:nnnnn
+          { \l_semio_viz_eng_sigmax_fp } { \l_semio_viz_eng_tau_fp }
+          { \l_semio_viz_eng_sigmay_fp } { - \l_semio_viz_eng_tau_fp } { semio~sci~aux }
+      }
+    \semio_viz_sci_report_values:nn { mohr/state }
+      {
+        \fp_to_decimal:N \l_semio_viz_sci_a_fp , \fp_to_decimal:N \l_semio_viz_sci_b_fp ,
+        \fp_to_decimal:n { \l_semio_viz_sci_a_fp + \l_semio_viz_sci_b_fp } ,
+        \fp_to_decimal:n { \l_semio_viz_sci_a_fp - \l_semio_viz_sci_b_fp }
+      }
+  }
+
+%region 🔖️Keys
+% 🔑 Keys of `sci-truss` (§36 pin-jointed structures):
+%    mode (truss|frame|mesh, truss).
+%    nodes (clist of `id/x/y`), members (clist of `from/to/force`): the geometry and its member forces,
+%    positive in tension and negative in compression, coloured accordingly.
+%    columns, rows (int, 8/5): the finite-element or CFD lattice of the `mesh` mode.
+%    field (l3fp over \SemioX,\SemioY): the element value that colours the mesh.
+\clist_new:N \l_semio_viz_eng_nodes_clist
+\clist_new:N \l_semio_viz_eng_members_clist
+\tl_new:N \l_semio_viz_eng_field_tl
+\int_new:N \l_semio_viz_eng_cols_int
+\int_new:N \l_semio_viz_eng_rows_int
+\prop_new:N \l_semio_viz_eng_nx_prop
+\prop_new:N \l_semio_viz_eng_ny_prop
+%endregion 🔖️Keys
+
+\semio_viz_sci_keys_canvas:n { sci-truss }
+% 🏗️ Binds the `sci-truss` option names onto the node and member lists and the mesh lattice size and its colouring field.
+\keys_define:nn { semio / viz / family / sci-truss }
+  {
+    mode    .tl_set:N    = \l_semio_viz_eng_mode_tl ,
+    nodes   .clist_set:N = \l_semio_viz_eng_nodes_clist ,
+    members .clist_set:N = \l_semio_viz_eng_members_clist ,
+    columns .int_set:N   = \l_semio_viz_eng_cols_int ,
+    rows    .int_set:N   = \l_semio_viz_eng_rows_int ,
+    field   .tl_set:N    = \l_semio_viz_eng_field_tl ,
+  }
+
+% 🏗️ §36 pin-jointed structures and analysis meshes: members drawn at a width and colour set by their own force.
+\SemioVizFamily { sci-truss }
+  {
+    \semio_viz_sci_enter:nnn { sci-truss }
+      {
+        mode=truss , columns=8 , rows=5 , field={ sin ( \SemioX / 8 ) * cos ( \SemioY / 6 ) } ,
+        axes=false , grid=false ,
+        nodes={ a/0/0 , b/16/0 , c/32/0 , d/48/0 , e/8/13 , f/24/13 , g/40/13 } ,
+        members={ a/b/12 , b/c/12 , c/d/9 , a/e/-15 , e/b/-6 , e/f/-14 ,
+                  b/f/5 , f/c/-6 , f/g/-11 , c/g/4 , g/d/-12 }
+      }
+      {#1}
+    \str_if_eq:VnTF \l_semio_viz_eng_mode_tl { mesh }
+      { \semio_viz_eng_mesh: }
+      { \semio_viz_eng_truss: }
+  }
+% 🕸️ Indexes the node coordinates by id, strokes every member between them and finally caps each joint with a pin dot.
+\cs_new_protected:Npn \semio_viz_eng_truss:
+  {
+    \prop_clear:N \l_semio_viz_eng_nx_prop
+    \prop_clear:N \l_semio_viz_eng_ny_prop
+    \clist_map_inline:Nn \l_semio_viz_eng_nodes_clist
+      {
+        \semio_viz_eng_record:n {##1}
+        \prop_put:Nxx \l_semio_viz_eng_nx_prop
+          { \semio_viz_eng_field:n { 1 } } { \semio_viz_eng_field:n { 2 } }
+        \prop_put:Nxx \l_semio_viz_eng_ny_prop
+          { \semio_viz_eng_field:n { 1 } } { \semio_viz_eng_field:n { 3 } }
+      }
+    \clist_map_inline:Nn \l_semio_viz_eng_members_clist
+      {
+        \semio_viz_eng_record:n {##1}
+        \semio_viz_eng_member:
+      }
+    \clist_map_inline:Nn \l_semio_viz_eng_nodes_clist
+      {
+        \semio_viz_eng_record:n {##1}
+        \fill [ fill=semio-chrome-foreground ]
+          ( \semio_viz_eng_field:n { 2 } , \semio_viz_eng_field:n { 3 } ) circle [ radius=0.9 ] ;
+      }
+  }
+% 🪝 Strokes one member between its two nodes, colouring it by the sign of its force and thickening it with the magnitude, then reports that force.
+\cs_new_protected:Npn \semio_viz_eng_member:
+  {
+    \fp_set:Nn \l_semio_viz_sci_g_fp { \semio_viz_eng_field:n { 3 } }
+    \tl_set:Nx \l_semio_viz_eng_key_tl
+      {
+        \fp_compare:nNnTF { \l_semio_viz_sci_g_fp } < { 0 } { semio-secondary } { semio-primary }
+      }
+    \use:x
+      {
+        \exp_not:N \draw
+          [ semio~sci~thin , draw=\l_semio_viz_eng_key_tl ,
+            line~width=\fp_eval:n { 0.4 + 0.06 * abs ( \l_semio_viz_sci_g_fp ) } pt ]
+          ( \prop_item:Ne \l_semio_viz_eng_nx_prop { \semio_viz_eng_field:n { 1 } } ,
+            \prop_item:Ne \l_semio_viz_eng_ny_prop { \semio_viz_eng_field:n { 1 } } ) --
+          ( \prop_item:Ne \l_semio_viz_eng_nx_prop { \semio_viz_eng_field:n { 2 } } ,
+            \prop_item:Ne \l_semio_viz_eng_ny_prop { \semio_viz_eng_field:n { 2 } } ) ;
+      }
+    \semio_viz_sci_report_values:nn { truss/member } { \fp_to_decimal:N \l_semio_viz_sci_g_fp }
+  }
+% 🧱 Walks the column-by-row lattice and emits one analysis cell at each position.
+\cs_new_protected:Npn \semio_viz_eng_mesh:
+  {
+    \int_step_inline:nnnn { 0 } { 1 } { \l_semio_viz_eng_cols_int - 1 }
+      {
+        \int_step_inline:nnnn { 0 } { 1 } { \l_semio_viz_eng_rows_int - 1 }
+          { \semio_viz_eng_mesh_cell:nn {##1} {####1} }
+      }
+  }
+% 🔻 Evaluates the mesh field at lattice cell (#1,#2) and fills its two triangles from the diverging ramp with opposite signs, then reports the element value.
+\cs_new_protected:Npn \semio_viz_eng_mesh_cell:nn #1#2
+  {
+    \fp_set:Nn \SemioX { #1 * 7 }
+    \fp_set:Nn \SemioY { #2 * 7 }
+    \fp_set:Nn \l_semio_viz_sci_g_fp { \l_semio_viz_eng_field_tl }
+    \draw [ semio~sci~thin , fill=\semio_viz_sci_ramp_diverging:n { \l_semio_viz_sci_g_fp } ]
+      ( \fp_eval:n { \SemioX } , \fp_eval:n { \SemioY } ) --
+      ( \fp_eval:n { \SemioX + 7 } , \fp_eval:n { \SemioY } ) --
+      ( \fp_eval:n { \SemioX + 7 } , \fp_eval:n { \SemioY + 7 } ) -- cycle ;
+    \draw [ semio~sci~thin , fill=\semio_viz_sci_ramp_diverging:n { - \l_semio_viz_sci_g_fp } ]
+      ( \fp_eval:n { \SemioX } , \fp_eval:n { \SemioY } ) --
+      ( \fp_eval:n { \SemioX + 7 } , \fp_eval:n { \SemioY + 7 } ) --
+      ( \fp_eval:n { \SemioX } , \fp_eval:n { \SemioY + 7 } ) -- cycle ;
+    \semio_viz_sci_report_values:nn { mesh/element }
+      { #1 , #2 , \fp_to_decimal:N \l_semio_viz_sci_g_fp }
+  }
+
+%region 🔖️Keys
+% 🔑 Keys of `sci-dimensioned` (§36 dimensioned drawings):
+%    outline (clist of `x/y`): the part outline, closed automatically.
+%    dimensions (clist of `x1/y1/x2/y2/offset/label`): witness lines and their dimension text.
+%    hatch (bool, false): fill the outline with a section hatch.
+\clist_new:N \l_semio_viz_eng_outline_clist
+\clist_new:N \l_semio_viz_eng_dims_clist
+\bool_new:N \l_semio_viz_eng_hatch_bool
+%endregion 🔖️Keys
+
+\semio_viz_sci_keys_canvas:n { sci-dimensioned }
+% 📏 Binds the `sci-dimensioned` option names onto the part outline, the dimension table and the section-hatch switch.
+\keys_define:nn { semio / viz / family / sci-dimensioned }
+  {
+    outline    .clist_set:N = \l_semio_viz_eng_outline_clist ,
+    dimensions .clist_set:N = \l_semio_viz_eng_dims_clist ,
+    hatch      .bool_set:N  = \l_semio_viz_eng_hatch_bool ,
+  }
+
+% 📏 §36 dimensioned drawing: the outline plus witness lines, arrows and dimension text placed from the dimension table.
+\SemioVizFamily { sci-dimensioned }
+  {
+    \semio_viz_sci_enter:nnn { sci-dimensioned }
+      {
+        hatch=false , axes=false , grid=false ,
+        outline={ 0/0 , 48/0 , 48/18 , 30/18 , 30/30 , 0/30 } ,
+        dimensions={ 0/0/48/0/-8/48 , 0/0/0/30/-8/30 , 30/18/48/18/8/18 }
+      }
+      {#1}
+    \tl_clear:N \l_semio_viz_sci_path_tl
+    \clist_map_inline:Nn \l_semio_viz_eng_outline_clist
+      {
+        \semio_viz_eng_record:n {##1}
+        \tl_if_empty:NF \l_semio_viz_sci_path_tl { \tl_put_right:Nn \l_semio_viz_sci_path_tl { -- } }
+        \tl_put_right:Nx \l_semio_viz_sci_path_tl
+          { ( \semio_viz_eng_field:n { 1 } , \semio_viz_eng_field:n { 2 } ) }
+      }
+    \bool_if:NTF \l_semio_viz_eng_hatch_bool
+      {
+        \use:x
+          {
+            \exp_not:N \draw [ semio~sci~curve , fill=semio-primary , fill~opacity=0.14 ]
+              \exp_not:V \l_semio_viz_sci_path_tl ~ -- ~ cycle ;
+          }
+      }
+      {
+        \use:x
+          { \exp_not:N \draw [ semio~sci~curve ] \exp_not:V \l_semio_viz_sci_path_tl ~ -- ~ cycle ; }
+      }
+    \clist_map_inline:Nn \l_semio_viz_eng_dims_clist
+      {
+        \semio_viz_eng_record:n {##1}
+        \semio_viz_eng_dimension:
+      }
+  }
+% 📐 Offsets one dimension perpendicular to its own measured segment, draws the two witness lines and the double-headed dimension arrow, and sets the text on it.
+\cs_new_protected:Npn \semio_viz_eng_dimension:
+  {
+    \fp_set:Nn \l_semio_viz_sci_a_fp { \semio_viz_eng_field:n { 1 } }
+    \fp_set:Nn \l_semio_viz_sci_b_fp { \semio_viz_eng_field:n { 2 } }
+    \fp_set:Nn \l_semio_viz_sci_c_fp { \semio_viz_eng_field:n { 3 } }
+    \fp_set:Nn \l_semio_viz_sci_d_fp { \semio_viz_eng_field:n { 4 } }
+    \fp_set:Nn \l_semio_viz_sci_e_fp { \semio_viz_eng_field:n { 5 } }
+    \fp_set:Nn \l_semio_viz_sci_f_fp
+      {
+        atand ( \l_semio_viz_sci_d_fp - \l_semio_viz_sci_b_fp ,
+                \l_semio_viz_sci_c_fp - \l_semio_viz_sci_a_fp ) + 90
+      }
+    \fp_set:Nn \l_semio_viz_sci_g_fp { \l_semio_viz_sci_e_fp * cosd ( \l_semio_viz_sci_f_fp ) }
+    \fp_set:Nn \l_semio_viz_sci_re_fp { \l_semio_viz_sci_e_fp * sind ( \l_semio_viz_sci_f_fp ) }
+    \draw [ semio~sci~aux ]
+      ( \fp_eval:n { \l_semio_viz_sci_a_fp } , \fp_eval:n { \l_semio_viz_sci_b_fp } ) --
+      ( \fp_eval:n { \l_semio_viz_sci_a_fp + \l_semio_viz_sci_g_fp } ,
+        \fp_eval:n { \l_semio_viz_sci_b_fp + \l_semio_viz_sci_re_fp } ) ;
+    \draw [ semio~sci~aux ]
+      ( \fp_eval:n { \l_semio_viz_sci_c_fp } , \fp_eval:n { \l_semio_viz_sci_d_fp } ) --
+      ( \fp_eval:n { \l_semio_viz_sci_c_fp + \l_semio_viz_sci_g_fp } ,
+        \fp_eval:n { \l_semio_viz_sci_d_fp + \l_semio_viz_sci_re_fp } ) ;
+    \draw [ semio~sci~arrow , {Straight~Barb[length=1.1mm,width=1.1mm]}-{Straight~Barb[length=1.1mm,width=1.1mm]} ]
+      ( \fp_eval:n { \l_semio_viz_sci_a_fp + \l_semio_viz_sci_g_fp } ,
+        \fp_eval:n { \l_semio_viz_sci_b_fp + \l_semio_viz_sci_re_fp } ) --
+      ( \fp_eval:n { \l_semio_viz_sci_c_fp + \l_semio_viz_sci_g_fp } ,
+        \fp_eval:n { \l_semio_viz_sci_d_fp + \l_semio_viz_sci_re_fp } ) ;
+    \node [ font=\c_semio_viz_theme_font_label_tl , text=semio-chrome-foreground , fill=semio-chrome-base ,
+            inner~sep=0.5mm ]
+      at ( \fp_eval:n { ( \l_semio_viz_sci_a_fp + \l_semio_viz_sci_c_fp ) / 2 + \l_semio_viz_sci_g_fp } ,
+           \fp_eval:n { ( \l_semio_viz_sci_b_fp + \l_semio_viz_sci_d_fp ) / 2 + \l_semio_viz_sci_re_fp } )
+      { \semio_viz_eng_field:n { 6 } } ;
+  }
+
+%region 🔖️Keys
+% 🔑 Keys of `sci-material` (§36 material response):
+%    curve (clist of `strain/stress`): the measured response.
+%    yield, ultimate (fp, 0/0): strains to mark; 0 leaves the marker out.
+%    modulus (bool, true): draw the elastic tangent through the origin.
+\clist_new:N \l_semio_viz_eng_curve_clist
+\fp_new:N \l_semio_viz_eng_yield_fp
+\fp_new:N \l_semio_viz_eng_ultimate_fp
+\bool_new:N \l_semio_viz_eng_modulus_bool
+%endregion 🔖️Keys
+
+\semio_viz_sci_keys_canvas:n { sci-material }
+% 🧲 Binds the `sci-material` option names onto the measured stress–strain curve, the yield and ultimate strains to mark and the elastic-tangent switch.
+\keys_define:nn { semio / viz / family / sci-material }
+  {
+    curve    .clist_set:N = \l_semio_viz_eng_curve_clist ,
+    yield    .fp_set:N    = \l_semio_viz_eng_yield_fp ,
+    ultimate .fp_set:N    = \l_semio_viz_eng_ultimate_fp ,
+    modulus  .bool_set:N  = \l_semio_viz_eng_modulus_bool ,
+  }
+
+% 🧲 §36 stress–strain curve with its elastic tangent and the yield and ultimate markers.
+\SemioVizFamily { sci-material }
+  {
+    \semio_viz_sci_enter:nnn { sci-material }
+      {
+        yield=0.004 , ultimate=0.09 , modulus=true , domain={} , range={} ,
+        curve={ 0/0 , 0.002/210 , 0.004/400 , 0.006/415 , 0.012/420 , 0.03/470 ,
+                0.06/520 , 0.09/540 , 0.12/505 , 0.14/430 }
+      }
+      {#1}
+    \seq_clear:N \l_semio_viz_sci_pts_seq
+    \clist_map_inline:Nn \l_semio_viz_eng_curve_clist
+      {
+        \semio_viz_eng_record:n {##1}
+        \semio_viz_points_put:Nnn \l_semio_viz_sci_pts_seq
+          { \semio_viz_eng_field:n { 1 } } { \semio_viz_eng_field:n { 2 } }
+      }
+    \semio_viz_sci_window_from:Nn \l_semio_viz_sci_pts_seq { 0.06 }
+    \semio_viz_sci_window_keys:
+    \semio_viz_sci_frame:
+    \bool_if:NT \l_semio_viz_eng_modulus_bool
+      {
+        \draw [ semio~sci~aux ]
+          ( \semio_viz_sci_mx:n { 0 } , \semio_viz_sci_my:n { 0 } ) --
+          ( \semio_viz_sci_mx:n { 0.006 } ,
+            \semio_viz_sci_my:n
+              {
+                0.006 * \semio_viz_points_y:n { \seq_item:Nn \l_semio_viz_sci_pts_seq { 2 } }
+                / \semio_viz_points_x:n { \seq_item:Nn \l_semio_viz_sci_pts_seq { 2 } }
+              } ) ;
+      }
+    \semio_viz_sci_polyline:Nn \l_semio_viz_sci_pts_seq { semio~sci~curve }
+    \fp_compare:nNnT { \l_semio_viz_eng_yield_fp } > { 0 }
+      {
+        \draw [ semio~sci~aux , draw=semio-secondary ]
+          ( \semio_viz_sci_mx:n { \l_semio_viz_eng_yield_fp } , 0 ) --
+          ( \semio_viz_sci_mx:n { \l_semio_viz_eng_yield_fp } , \fp_eval:n { \l_semio_viz_sci_h_fp } ) ;
+      }
+    \fp_compare:nNnT { \l_semio_viz_eng_ultimate_fp } > { 0 }
+      {
+        \draw [ semio~sci~aux , draw=semio-tertiary ]
+          ( \semio_viz_sci_mx:n { \l_semio_viz_eng_ultimate_fp } , 0 ) --
+          ( \semio_viz_sci_mx:n { \l_semio_viz_eng_ultimate_fp } , \fp_eval:n { \l_semio_viz_sci_h_fp } ) ;
+      }
+  }
+%endregion 🔖️Families
+
+\ExplSyntaxOff

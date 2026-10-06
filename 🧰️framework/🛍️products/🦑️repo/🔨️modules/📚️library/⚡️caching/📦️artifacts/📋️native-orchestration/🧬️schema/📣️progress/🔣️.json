@@ -1,0 +1,64 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "durationMs",
+    "cases",
+    "artifactEnvironment"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "durationMs": {
+      "const": 10500
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "mode",
+          "wrapperProgress"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "mode": {
+            "enum": [
+              "wrapper",
+              "delegated"
+            ]
+          },
+          "wrapperProgress": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "artifactEnvironment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "route",
+        "defaultRelativeRoot"
+      ],
+      "properties": {
+        "route": {
+          "const": "native-owner-command-policy"
+        },
+        "defaultRelativeRoot": {
+          "const": ".🧬semio/🦑️repo/⚡️cache/🧪️tests"
+        }
+      }
+    }
+  }
+}

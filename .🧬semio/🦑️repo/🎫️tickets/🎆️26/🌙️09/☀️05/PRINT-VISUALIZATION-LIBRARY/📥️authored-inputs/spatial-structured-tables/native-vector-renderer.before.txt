@@ -1,0 +1,688 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-viz-geo-routes}[2026/09/05 v0.3.0 semio viz namespace geo-routes families: routes, flows, vector fields]
+
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+\RequirePackage{semio-tokens}
+\RequirePackage{semio-viz-geo}
+\RequirePackage{semio-viz-spatial}
+\RequirePackage{semio-viz-family}
+
+\ExplSyntaxOn
+
+%region 🔖️Keys
+% 🔑 semio / viz / family / geo-route — inherits semio / viz / geo / base, plus
+% 🔑 routes    (name)   line geometry to draw; default demo-geo-routes.
+% 🔑 mode      (choice) direct | great-circle | octilinear; octilinear is the schematic metro/transit rendering; default direct.
+% 🔑 samples   (int)    great-circle samples per route; default 20.
+% 🔑 stations  (bool)   mark the route endpoints; default false.
+% 🔑 basemap   (bool)   draw the land geometry underneath; default true.
+% 🔑 routeWidth (mm)    stroke width of the heaviest route; default 1.4.
+\tl_new:N \l_semio_viz_georte_routes_tl
+\tl_new:N \l_semio_viz_georte_mode_tl
+\int_new:N \l_semio_viz_georte_samples_int
+\bool_new:N \l_semio_viz_georte_stations_bool
+\bool_new:N \l_semio_viz_georte_basemap_bool
+\fp_new:N \l_semio_viz_georte_width_fp
+
+\keys_define:nn { semio / viz / family / geo-route }
+  {
+    routes .tl_set:N = \l_semio_viz_georte_routes_tl ,
+    mode .tl_set:N = \l_semio_viz_georte_mode_tl ,
+    samples .int_set:N = \l_semio_viz_georte_samples_int ,
+    stations .bool_set:N = \l_semio_viz_georte_stations_bool ,
+    basemap .bool_set:N = \l_semio_viz_georte_basemap_bool ,
+    routeWidth .fp_set:N = \l_semio_viz_georte_width_fp ,
+    unknown .code:n = { } ,
+  }
+
+% 🔑 semio / viz / family / geo-flow — inherits geo-route, plus
+% 🔑 flow      (choice) band | arrow | desire | migration; default band.
+% 🔑 curvature (0..1)   sideways bow of a flow band; default 0.25.
+% 🔑 origins   (bool)   mark the flow origins; default true.
+\tl_new:N \l_semio_viz_georte_flow_tl
+\fp_new:N \l_semio_viz_georte_curv_fp
+\bool_new:N \l_semio_viz_georte_origins_bool
+
+\keys_define:nn { semio / viz / family / geo-flow }
+  {
+    flow .tl_set:N = \l_semio_viz_georte_flow_tl ,
+    curvature .fp_set:N = \l_semio_viz_georte_curv_fp ,
+    origins .bool_set:N = \l_semio_viz_georte_origins_bool ,
+    unknown .code:n = { } ,
+  }
+
+% 🔑 semio / viz / family / spatial-vector-field — the plane field families of taxonomy section 27.
+% 🔑 render    (choice) quiver | direction | streamline | streakline | particle | lic | gradient | curl | divergence; default quiver.
+% 🔑 field     (choice) shear | source | vortex | dipole | saddle; the analytic field sampled; default shear.
+% 🔑 columns   (int)    sample columns; default 9.
+% 🔑 rows      (int)    sample rows; default 6.
+% 🔑 cell      (mm)     sample pitch; default 8.
+% 🔑 arrow     (mm)     arrow length at unit magnitude; default 4.
+% 🔑 steps     (int)    RK4 integration steps per streamline; default 24.
+% 🔑 dt        (number) RK4 step size; default 0.35.
+% 🔑 seeds     (int)    number of streamline seeds; default 8.
+\tl_new:N \l_semio_viz_georte_render_tl
+\tl_new:N \l_semio_viz_georte_field_tl
+\int_new:N \l_semio_viz_georte_cols_int
+\int_new:N \l_semio_viz_georte_rows_int
+\fp_new:N \l_semio_viz_georte_cell_fp
+\fp_new:N \l_semio_viz_georte_arrow_fp
+\int_new:N \l_semio_viz_georte_steps_int
+\fp_new:N \l_semio_viz_georte_dt_fp
+\int_new:N \l_semio_viz_georte_seeds_int
+
+\keys_define:nn { semio / viz / family / spatial-vector-field }
+  {
+    render .tl_set:N = \l_semio_viz_georte_render_tl ,
+    field .tl_set:N = \l_semio_viz_georte_field_tl ,
+    columns .int_set:N = \l_semio_viz_georte_cols_int ,
+    rows .int_set:N = \l_semio_viz_georte_rows_int ,
+    cell .fp_set:N = \l_semio_viz_georte_cell_fp ,
+    arrow .fp_set:N = \l_semio_viz_georte_arrow_fp ,
+    steps .int_set:N = \l_semio_viz_georte_steps_int ,
+    dt .fp_set:N = \l_semio_viz_georte_dt_fp ,
+    seeds .int_set:N = \l_semio_viz_georte_seeds_int ,
+    unknown .code:n = { } ,
+  }
+%endregion 🔖️Keys
+
+%region 🔖️Families
+% ♻️ Puts every route, flow-map, quiver and streamline key back to its documented default.
+\cs_new_protected:Npn \semio_viz_georte_reset:
+  {
+    \semio_viz_geo_base_reset:
+    \tl_set:Nn \l_semio_viz_georte_routes_tl { demo-geo-routes }
+    \tl_set:Nn \l_semio_viz_georte_mode_tl { direct }
+    \int_set:Nn \l_semio_viz_georte_samples_int { 20 }
+    \bool_set_false:N \l_semio_viz_georte_stations_bool
+    \bool_set_true:N \l_semio_viz_georte_basemap_bool
+    \fp_set:Nn \l_semio_viz_georte_width_fp { 1.4 }
+    \tl_set:Nn \l_semio_viz_georte_flow_tl { band }
+    \fp_set:Nn \l_semio_viz_georte_curv_fp { 0.25 }
+    \bool_set_true:N \l_semio_viz_georte_origins_bool
+    \tl_set:Nn \l_semio_viz_georte_render_tl { quiver }
+    \tl_set:Nn \l_semio_viz_georte_field_tl { shear }
+    \int_set:Nn \l_semio_viz_georte_cols_int { 9 }
+    \int_set:Nn \l_semio_viz_georte_rows_int { 6 }
+    \fp_set:Nn \l_semio_viz_georte_cell_fp { 8 }
+    \fp_set:Nn \l_semio_viz_georte_arrow_fp { 4 }
+    \int_set:Nn \l_semio_viz_georte_steps_int { 24 }
+    \fp_set:Nn \l_semio_viz_georte_dt_fp { 0.35 }
+    \int_set:Nn \l_semio_viz_georte_seeds_int { 8 }
+  }
+
+% 🗺️ The faint reference outline routes are read against, drawn under `basemap`.
+\cs_new_protected:Npn \semio_viz_georte_basemap:
+  {
+    \bool_if:NT \l_semio_viz_georte_basemap_bool
+      {
+        \semio_viz_geo_draw_geometry:nnn { semio-family }
+          { \l_semio_viz_geo_f_geometry_tl }
+          {
+            draw=semio-chrome-border-normal, line~width=\semio@stroke@hairline,
+            fill=semio-chrome-panel, fill~opacity=0.35
+          }
+      }
+  }
+
+% 🛤️ Route family: direct, great-circle or octilinear renderings of a line geometry, stroked by value.
+\SemioVizFamily { geo-route }
+  {
+    \semio_viz_georte_reset:
+    \keys_set:nn { semio / viz / geo / base } {#1}
+    \keys_set:nn { semio / viz / family / geo-route } {#1}
+    \exp_args:NV \semio_viz_geo_base_frame:n \l_semio_viz_geo_f_geometry_tl
+    \semio_viz_georte_basemap:
+    \exp_args:NV \semio_viz_geo_value_extent:n \l_semio_viz_georte_routes_tl
+    \semio_viz_georte_lines:
+    \bool_if:NT \l_semio_viz_georte_stations_bool
+      {
+        \semio_viz_geo_map_anchors:nnn { semio-family }
+          { \l_semio_viz_georte_routes_tl } { \semio_viz_georte_station:nnnn }
+      }
+  }
+
+% 🛤️ Draws every part of the `routes` geometry as one route line.
+\cs_new_protected:Npn \semio_viz_georte_lines:
+  {
+    \exp_args:NV \semio_viz_geom_map_inline:nn \l_semio_viz_georte_routes_tl
+      { \semio_viz_georte_line:nnnn ##1 }
+  }
+
+% 🚉 One route part, resampled by `mode`: straight, along a great circle, or on octilinear legs.
+\cs_new_protected:Npn \semio_viz_georte_line:nnnn #1#2#3#4
+  {
+    \semio_viz_geom_new:n { semio-family-route }
+    \str_case:VnF \l_semio_viz_georte_mode_tl
+      {
+        { great-circle } { \semio_viz_georte_arc:nn {#3} {#4} }
+        { octilinear } { \semio_viz_georte_octi:nn {#3} {#4} }
+      }
+      {
+        \semio_viz_geom_part:nnnn { semio-family-route } { line }
+          { value = #3 } {#4}
+      }
+    \semio_viz_geo_path:nn { semio-family } { semio-family-route }
+    \use:x
+      {
+        \exp_not:N \semio_viz_geo_draw:n
+          {
+            draw= \semio_viz_geo_ramp:n { \semio_viz_geo_norm:n {#3} } ,
+            line~width=
+              \fp_eval:n
+                {
+                  0.3 + \l_semio_viz_georte_width_fp
+                  * \semio_viz_geo_norm:n {#3}
+                } pt ,
+            line~cap=round, line~join=round
+          }
+      }
+  }
+
+% 🛫 The great-circle resampling of one route: `samples` interpolations between its endpoints.
+\cs_new_protected:Npn \semio_viz_georte_arc:nn #1#2
+  {
+    \semio_viz_geo_endpoints:n {#2}
+    \tl_clear:N \l_tmpa_tl
+    \int_step_inline:nnn { 0 } { \l_semio_viz_georte_samples_int }
+      {
+        \semio_viz_geo_interpolate:nnnnn
+          { \clist_item:Nn \l_semio_viz_geo_pta_clist { 1 } }
+          { \clist_item:Nn \l_semio_viz_geo_pta_clist { 2 } }
+          { \clist_item:Nn \l_semio_viz_geo_ptb_clist { 1 } }
+          { \clist_item:Nn \l_semio_viz_geo_ptb_clist { 2 } }
+          { ##1 / \l_semio_viz_georte_samples_int }
+        \tl_put_right:Nx \l_tmpa_tl
+          {
+            \fp_eval:n { \l_semio_viz_geo_lon_fp } ,
+            \fp_eval:n { \l_semio_viz_geo_lat_fp } ;
+          }
+      }
+    \use:x
+      {
+        \exp_not:N \semio_viz_geom_part:nnnn { semio-family-route } { line }
+          { value = #1 } { \exp_not:V \l_tmpa_tl }
+      }
+  }
+
+% 📐 Octilinear route: the schematic transit rendering — a 45 degree dogleg between the endpoints.
+\cs_new_protected:Npn \semio_viz_georte_octi:nn #1#2
+  {
+    \semio_viz_geo_endpoints:n {#2}
+    \use:x
+      {
+        \exp_not:N \semio_viz_geom_part:nnnn { semio-family-route } { line }
+          { value = #1 }
+          {
+            \clist_item:Nn \l_semio_viz_geo_pta_clist { 1 } ,
+            \clist_item:Nn \l_semio_viz_geo_pta_clist { 2 } ;
+            \fp_eval:n
+              {
+                \clist_item:Nn \l_semio_viz_geo_ptb_clist { 1 }
+                - abs ( \clist_item:Nn \l_semio_viz_geo_ptb_clist { 2 }
+                        - \clist_item:Nn \l_semio_viz_geo_pta_clist { 2 } )
+                  * ( \clist_item:Nn \l_semio_viz_geo_ptb_clist { 1 }
+                      < \clist_item:Nn \l_semio_viz_geo_pta_clist { 1 }
+                      ? -1 : 1 )
+              } ,
+            \clist_item:Nn \l_semio_viz_geo_pta_clist { 2 } ;
+            \clist_item:Nn \l_semio_viz_geo_ptb_clist { 1 } ,
+            \clist_item:Nn \l_semio_viz_geo_ptb_clist { 2 }
+          }
+      }
+  }
+
+% 🚏 One station marker on a route, drawn as a filled ring so a crossing route stays legible.
+\cs_new_protected:Npn \semio_viz_georte_station:nnnn #1#2#3#4
+  {
+    \filldraw [ draw=semio-chrome-foreground, fill=semio-chrome-canvas,
+                line~width=\semio@stroke@hairline ]
+      (#1,#2) circle [ radius=0.9 ] ;
+  }
+
+% 🌊 Flow family: origin–destination bands, desire lines or migration arrows whose width encodes the value.
+\SemioVizFamily { geo-flow }
+  {
+    \semio_viz_georte_reset:
+    \keys_set:nn { semio / viz / geo / base } {#1}
+    \keys_set:nn { semio / viz / family / geo-route } {#1}
+    \keys_set:nn { semio / viz / family / geo-flow } {#1}
+    \exp_args:NV \semio_viz_geo_base_frame:n \l_semio_viz_geo_f_geometry_tl
+    \semio_viz_georte_basemap:
+    \exp_args:NV \semio_viz_geo_value_extent:n \l_semio_viz_georte_routes_tl
+    \exp_args:NV \semio_viz_geom_map_inline:nn \l_semio_viz_georte_routes_tl
+      { \semio_viz_georte_flow:nnnn ##1 }
+  }
+
+\fp_new:N \l_semio_viz_georte_xa_fp
+\fp_new:N \l_semio_viz_georte_ya_fp
+\fp_new:N \l_semio_viz_georte_xb_fp
+\fp_new:N \l_semio_viz_georte_yb_fp
+
+% 🌊 One flow-map band: the route's two endpoints projected, then drawn as a tapered ribbon,
+% a straight desire line or an arrow, whichever the family's own key asked for.
+\cs_new_protected:Npn \semio_viz_georte_flow:nnnn #1#2#3#4
+  {
+    \semio_viz_geo_use:n { semio-family }
+    \semio_viz_geo_endpoints:n {#4}
+    \semio_viz_geo_forward:nn
+      { \clist_item:Nn \l_semio_viz_geo_pta_clist { 1 } }
+      { \clist_item:Nn \l_semio_viz_geo_pta_clist { 2 } }
+    \fp_set_eq:NN \l_semio_viz_georte_xa_fp \l_semio_viz_geo_x_fp
+    \fp_set_eq:NN \l_semio_viz_georte_ya_fp \l_semio_viz_geo_y_fp
+    \semio_viz_geo_forward:nn
+      { \clist_item:Nn \l_semio_viz_geo_ptb_clist { 1 } }
+      { \clist_item:Nn \l_semio_viz_geo_ptb_clist { 2 } }
+    \fp_set_eq:NN \l_semio_viz_georte_xb_fp \l_semio_viz_geo_x_fp
+    \fp_set_eq:NN \l_semio_viz_georte_yb_fp \l_semio_viz_geo_y_fp
+    \str_case:VnF \l_semio_viz_georte_flow_tl
+      {
+        { desire } { \semio_viz_georte_desire:n {#3} }
+        { arrow } { \semio_viz_georte_arrow:nn {#3} { -{Latex} } }
+        { migration } { \semio_viz_georte_arrow:nn {#3} { -{Stealth} } }
+      }
+      { \semio_viz_georte_band:n {#3} }
+    \bool_if:NT \l_semio_viz_georte_origins_bool
+      {
+        \fill [ semio-chrome-foreground ]
+          ( \fp_eval:n { \l_semio_viz_georte_xa_fp } ,
+            \fp_eval:n { \l_semio_viz_georte_ya_fp } ) circle [ radius=0.8 ] ;
+      }
+  }
+
+% 🎗️ Bowed band whose half width at the origin is the value and which tapers to a point at the destination.
+\cs_new_protected:Npn \semio_viz_georte_band:n #1
+  {
+    \use:x
+      {
+        \exp_not:N \fill
+          [
+            \semio_viz_geo_ramp:n { \semio_viz_geo_norm:n {#1} } ,
+            fill~opacity=0.65
+          ]
+          ( \fp_eval:n
+              {
+                \l_semio_viz_georte_xa_fp
+                - ( \l_semio_viz_georte_yb_fp - \l_semio_viz_georte_ya_fp )
+                  * \semio_viz_georte_halfwidth:n {#1}
+                  / \semio_viz_georte_len:
+              } ,
+            \fp_eval:n
+              {
+                \l_semio_viz_georte_ya_fp
+                + ( \l_semio_viz_georte_xb_fp - \l_semio_viz_georte_xa_fp )
+                  * \semio_viz_georte_halfwidth:n {#1}
+                  / \semio_viz_georte_len:
+              } )
+          .. controls
+          ( \semio_viz_georte_ctrl_x: , \semio_viz_georte_ctrl_y: ) ..
+          ( \fp_eval:n { \l_semio_viz_georte_xb_fp } ,
+            \fp_eval:n { \l_semio_viz_georte_yb_fp } )
+          .. controls
+          ( \semio_viz_georte_ctrl_x: , \semio_viz_georte_ctrl_y: ) ..
+          ( \fp_eval:n
+              {
+                \l_semio_viz_georte_xa_fp
+                + ( \l_semio_viz_georte_yb_fp - \l_semio_viz_georte_ya_fp )
+                  * \semio_viz_georte_halfwidth:n {#1}
+                  / \semio_viz_georte_len:
+              } ,
+            \fp_eval:n
+              {
+                \l_semio_viz_georte_ya_fp
+                - ( \l_semio_viz_georte_xb_fp - \l_semio_viz_georte_xa_fp )
+                  * \semio_viz_georte_halfwidth:n {#1}
+                  / \semio_viz_georte_len:
+              } ) -- cycle ;
+      }
+  }
+
+% 📏 Length of the current flow band's chord, floored so a degenerate route never divides by zero.
+\cs_new:Npn \semio_viz_georte_len:
+  {
+    \fp_eval:n
+      {
+        max
+          (
+            0.001 ,
+            sqrt
+              (
+                ( \l_semio_viz_georte_xb_fp - \l_semio_viz_georte_xa_fp ) ** 2
+                + ( \l_semio_viz_georte_yb_fp - \l_semio_viz_georte_ya_fp ) ** 2
+              )
+          )
+      }
+  }
+
+% 📐 Half the band width carrying the value #1, from a visible minimum up to `width`.
+\cs_new:Npn \semio_viz_georte_halfwidth:n #1
+  {
+    \fp_eval:n
+      {
+        0.4 + 2 * \l_semio_viz_georte_width_fp * \semio_viz_geo_norm:n {#1}
+      }
+  }
+
+% 〰️ Abscissa of the band's Bézier control point: the chord midpoint pushed sideways by `curvature`.
+\cs_new:Npn \semio_viz_georte_ctrl_x:
+  {
+    \fp_eval:n
+      {
+        ( \l_semio_viz_georte_xa_fp + \l_semio_viz_georte_xb_fp ) / 2
+        - ( \l_semio_viz_georte_yb_fp - \l_semio_viz_georte_ya_fp )
+          * \l_semio_viz_georte_curv_fp
+      }
+  }
+
+% 〰️ Ordinate of the same control point, on the normal of the chord.
+\cs_new:Npn \semio_viz_georte_ctrl_y:
+  {
+    \fp_eval:n
+      {
+        ( \l_semio_viz_georte_ya_fp + \l_semio_viz_georte_yb_fp ) / 2
+        + ( \l_semio_viz_georte_xb_fp - \l_semio_viz_georte_xa_fp )
+          * \l_semio_viz_georte_curv_fp
+      }
+  }
+
+% ➖ A desire line: the straight chord, its width and ramp colour both carrying the value #1.
+\cs_new_protected:Npn \semio_viz_georte_desire:n #1
+  {
+    \use:x
+      {
+        \exp_not:N \draw
+          [
+            draw= \semio_viz_geo_ramp:n { \semio_viz_geo_norm:n {#1} } ,
+            line~width= \semio_viz_georte_halfwidth:n {#1} pt ,
+            draw~opacity=0.75
+          ]
+          ( \fp_eval:n { \l_semio_viz_georte_xa_fp } ,
+            \fp_eval:n { \l_semio_viz_georte_ya_fp } ) --
+          ( \fp_eval:n { \l_semio_viz_georte_xb_fp } ,
+            \fp_eval:n { \l_semio_viz_georte_yb_fp } ) ;
+      }
+  }
+
+% ➡️ A curved connector carrying the value #1, with the arrow-tip keys #2 the caller chose.
+\cs_new_protected:Npn \semio_viz_georte_arrow:nn #1#2
+  {
+    \use:x
+      {
+        \exp_not:N \draw
+          [
+            draw= \semio_viz_geo_ramp:n { \semio_viz_geo_norm:n {#1} } ,
+            line~width= \semio_viz_georte_halfwidth:n {#1} pt ,
+            \exp_not:n {#2}
+          ]
+          ( \fp_eval:n { \l_semio_viz_georte_xa_fp } ,
+            \fp_eval:n { \l_semio_viz_georte_ya_fp } )
+          .. controls
+          ( \semio_viz_georte_ctrl_x: , \semio_viz_georte_ctrl_y: ) ..
+          ( \fp_eval:n { \l_semio_viz_georte_xb_fp } ,
+            \fp_eval:n { \l_semio_viz_georte_yb_fp } ) ;
+      }
+  }
+
+% ➡️ Vector-field family: an analytic plane field sampled on a lattice, drawn as arrows or integrated into streamlines.
+\SemioVizFamily { spatial-vector-field }
+  {
+    \semio_viz_georte_reset:
+    \keys_set:nn { semio / viz / geo / base } {#1}
+    \keys_set:nn { semio / viz / family / spatial-vector-field } {#1}
+    \str_case:VnF \l_semio_viz_georte_render_tl
+      {
+        { streamline } { \semio_viz_georte_streamlines:n { 0 } }
+        { streakline } { \semio_viz_georte_streamlines:n { 1 } }
+        { particle } { \semio_viz_georte_streamlines:n { 2 } }
+        { lic } { \semio_viz_georte_streamlines:n { 3 } }
+      }
+      { \semio_viz_georte_quiver: }
+  }
+
+%region 🔖️Field
+% 🧲 The analytic fields. u and v are read from l_..._fu_fp / l_..._fv_fp after a call, so the RK4 integrator
+% 🧲 and the quiver renderer sample exactly the same function.
+\fp_new:N \l_semio_viz_georte_fu_fp
+\fp_new:N \l_semio_viz_georte_fv_fp
+
+\cs_new_protected:Npn \semio_viz_georte_sample:nn #1#2
+  {
+    \str_case:VnF \l_semio_viz_georte_field_tl
+      {
+        { source }
+          {
+            \fp_set:Nn \l_semio_viz_georte_fu_fp {#1}
+            \fp_set:Nn \l_semio_viz_georte_fv_fp {#2}
+          }
+        { vortex }
+          {
+            \fp_set:Nn \l_semio_viz_georte_fu_fp { - (#2) }
+            \fp_set:Nn \l_semio_viz_georte_fv_fp {#1}
+          }
+        { dipole }
+          {
+            \fp_set:Nn \l_semio_viz_georte_fu_fp
+              {
+                ( (#1) ** 2 - (#2) ** 2 )
+                / max ( 0.05 , ( (#1) ** 2 + (#2) ** 2 ) ** 2 )
+              }
+            \fp_set:Nn \l_semio_viz_georte_fv_fp
+              {
+                2 * (#1) * (#2)
+                / max ( 0.05 , ( (#1) ** 2 + (#2) ** 2 ) ** 2 )
+              }
+          }
+        { saddle }
+          {
+            \fp_set:Nn \l_semio_viz_georte_fu_fp {#1}
+            \fp_set:Nn \l_semio_viz_georte_fv_fp { - (#2) }
+          }
+      }
+      {
+        \fp_set:Nn \l_semio_viz_georte_fu_fp { sin ( #2 ) }
+        \fp_set:Nn \l_semio_viz_georte_fv_fp { sin ( #1 ) }
+      }
+  }
+%endregion 🔖️Field
+
+% 🎏 The quiver: one arrow per node of a `rows` by `cols` lattice over the vector field.
+\cs_new_protected:Npn \semio_viz_georte_quiver:
+  {
+    \int_step_inline:nnn { 0 } { \l_semio_viz_georte_rows_int - 1 }
+      {
+        \int_step_inline:nnn { 0 } { \l_semio_viz_georte_cols_int - 1 }
+          { \semio_viz_georte_arrow_at:nn { ####1 } { ##1 } }
+      }
+  }
+
+% ↗️ One quiver arrow: the field sampled at lattice node (#1,#2), drawn along its own direction.
+\cs_new_protected:Npn \semio_viz_georte_arrow_at:nn #1#2
+  {
+    \fp_set:Nn \l_tmpa_fp { (#1) * 0.7 - 3 }
+    \fp_set:Nn \l_tmpb_fp { (#2) * 0.7 - 2 }
+    \semio_viz_georte_sample:nn
+      { \l_tmpa_fp } { \l_tmpb_fp }
+    \use:x
+      {
+        \exp_not:N \draw
+          [
+            draw= \semio_viz_geo_ramp:n
+                    {
+                      \fp_eval:n
+                        {
+                          min ( 1 ,
+                                sqrt ( \l_semio_viz_georte_fu_fp ** 2
+                                       + \l_semio_viz_georte_fv_fp ** 2 ) / 2 )
+                        }
+                    } ,
+            line~width=\semio@stroke@hairline,
+            \str_if_eq:VnF \l_semio_viz_georte_render_tl { direction }
+              { -{Latex[length=1.2mm]} }
+          ]
+          ( \fp_eval:n { (#1) * \l_semio_viz_georte_cell_fp } ,
+            \fp_eval:n { (#2) * \l_semio_viz_georte_cell_fp } ) --
+          ( \fp_eval:n
+              {
+                (#1) * \l_semio_viz_georte_cell_fp
+                + \l_semio_viz_georte_arrow_fp * \l_semio_viz_georte_fu_fp
+              } ,
+            \fp_eval:n
+              {
+                (#2) * \l_semio_viz_georte_cell_fp
+                + \l_semio_viz_georte_arrow_fp * \l_semio_viz_georte_fv_fp
+              } ) ;
+      }
+  }
+
+%region 🔖️Streamline
+% 🌀 Classical fourth-order Runge–Kutta on the plane field. The state is (sx, sy); one call advances it by `dt`.
+\fp_new:N \l_semio_viz_georte_sx_fp
+\fp_new:N \l_semio_viz_georte_sy_fp
+\fp_new:N \l_semio_viz_georte_kau_fp
+\fp_new:N \l_semio_viz_georte_kav_fp
+\fp_new:N \l_semio_viz_georte_kbu_fp
+\fp_new:N \l_semio_viz_georte_kbv_fp
+\fp_new:N \l_semio_viz_georte_kcu_fp
+\fp_new:N \l_semio_viz_georte_kcv_fp
+\fp_new:N \l_semio_viz_georte_kdu_fp
+\fp_new:N \l_semio_viz_georte_kdv_fp
+
+\cs_new_protected:Npn \semio_viz_georte_rk_step:
+  {
+    \semio_viz_georte_sample:nn
+      { \l_semio_viz_georte_sx_fp } { \l_semio_viz_georte_sy_fp }
+    \fp_set_eq:NN \l_semio_viz_georte_kau_fp \l_semio_viz_georte_fu_fp
+    \fp_set_eq:NN \l_semio_viz_georte_kav_fp \l_semio_viz_georte_fv_fp
+    \semio_viz_georte_sample:nn
+      {
+        \l_semio_viz_georte_sx_fp
+        + \l_semio_viz_georte_dt_fp * \l_semio_viz_georte_kau_fp / 2
+      }
+      {
+        \l_semio_viz_georte_sy_fp
+        + \l_semio_viz_georte_dt_fp * \l_semio_viz_georte_kav_fp / 2
+      }
+    \fp_set_eq:NN \l_semio_viz_georte_kbu_fp \l_semio_viz_georte_fu_fp
+    \fp_set_eq:NN \l_semio_viz_georte_kbv_fp \l_semio_viz_georte_fv_fp
+    \semio_viz_georte_sample:nn
+      {
+        \l_semio_viz_georte_sx_fp
+        + \l_semio_viz_georte_dt_fp * \l_semio_viz_georte_kbu_fp / 2
+      }
+      {
+        \l_semio_viz_georte_sy_fp
+        + \l_semio_viz_georte_dt_fp * \l_semio_viz_georte_kbv_fp / 2
+      }
+    \fp_set_eq:NN \l_semio_viz_georte_kcu_fp \l_semio_viz_georte_fu_fp
+    \fp_set_eq:NN \l_semio_viz_georte_kcv_fp \l_semio_viz_georte_fv_fp
+    \semio_viz_georte_sample:nn
+      {
+        \l_semio_viz_georte_sx_fp
+        + \l_semio_viz_georte_dt_fp * \l_semio_viz_georte_kcu_fp
+      }
+      {
+        \l_semio_viz_georte_sy_fp
+        + \l_semio_viz_georte_dt_fp * \l_semio_viz_georte_kcv_fp
+      }
+    \fp_set_eq:NN \l_semio_viz_georte_kdu_fp \l_semio_viz_georte_fu_fp
+    \fp_set_eq:NN \l_semio_viz_georte_kdv_fp \l_semio_viz_georte_fv_fp
+    \fp_add:Nn \l_semio_viz_georte_sx_fp
+      {
+        \l_semio_viz_georte_dt_fp / 6 *
+        ( \l_semio_viz_georte_kau_fp + 2 * \l_semio_viz_georte_kbu_fp
+          + 2 * \l_semio_viz_georte_kcu_fp + \l_semio_viz_georte_kdu_fp )
+      }
+    \fp_add:Nn \l_semio_viz_georte_sy_fp
+      {
+        \l_semio_viz_georte_dt_fp / 6 *
+        ( \l_semio_viz_georte_kav_fp + 2 * \l_semio_viz_georte_kbv_fp
+          + 2 * \l_semio_viz_georte_kcv_fp + \l_semio_viz_georte_kdv_fp )
+      }
+    \semio_viz_georte_clamp:
+  }
+
+% 🚧 Divergent fields (saddle, source) leave the sampled window in a few steps; the state is clamped to the window so the
+% 🚧 integrated path stops at the border instead of overflowing TeX's dimension range.
+\cs_new_protected:Npn \semio_viz_georte_clamp:
+  {
+    \fp_set:Nn \l_semio_viz_georte_sx_fp
+      { min ( 3.4 , max ( -3.4 , \l_semio_viz_georte_sx_fp ) ) }
+    \fp_set:Nn \l_semio_viz_georte_sy_fp
+      { min ( 2.4 , max ( -2.4 , \l_semio_viz_georte_sy_fp ) ) }
+  }
+
+% 🌀 Integrates `seeds` streamlines; #1 = 0 solid line, 1 dashed streakline, 2 particle dots, 3 short LIC-like hatches.
+\cs_new_protected:Npn \semio_viz_georte_streamlines:n #1
+  {
+    \int_step_inline:nn { \l_semio_viz_georte_seeds_int }
+      { \semio_viz_georte_streamline:nn { ##1 } {#1} }
+  }
+
+% 🌀 One streamline: seed #1 integrated through the field for `steps` steps, drawn in style #2.
+\cs_new_protected:Npn \semio_viz_georte_streamline:nn #1#2
+  {
+    \fp_set:Nn \l_semio_viz_georte_sx_fp
+      { -3 + 6 * \semio_viz_spatial_rand:n {#1} }
+    \fp_set:Nn \l_semio_viz_georte_sy_fp
+      { -2 + 4 * \semio_viz_spatial_rand:n { #1 + 41 } }
+    \seq_clear:N \l_tmpa_seq
+    \int_step_inline:nn { \l_semio_viz_georte_steps_int }
+      {
+        \seq_put_right:Nx \l_tmpa_seq
+          {
+            (
+              \fp_eval:n
+                {
+                  ( \l_semio_viz_georte_sx_fp + 3 ) / 0.7
+                  * \l_semio_viz_georte_cell_fp
+                } ,
+              \fp_eval:n
+                {
+                  ( \l_semio_viz_georte_sy_fp + 2 ) / 0.7
+                  * \l_semio_viz_georte_cell_fp
+                }
+            )
+          }
+        \semio_viz_georte_rk_step:
+      }
+    \int_compare:nNnTF {#2} = { 2 }
+      { \semio_viz_georte_particles: }
+      { \semio_viz_georte_stream_path:n {#2} }
+  }
+
+% 〰️ The integrated path as one stroke; #1 selects its ramp position, weight and dash pattern.
+\cs_new_protected:Npn \semio_viz_georte_stream_path:n #1
+  {
+    \use:x
+      {
+        \exp_not:N \draw
+          [
+            draw= \semio_viz_geo_ramp:n
+                    {
+                      \fp_eval:n
+                        { #1 / max ( 1 , \l_semio_viz_georte_seeds_int ) + 0.4 }
+                    } ,
+            line~width=
+              \int_compare:nNnTF {#1} = { 3 }
+                { \semio@stroke@hairline } { \semio@stroke@default } ,
+            \int_compare:nNnT {#1} = { 1 }
+              { dash~pattern=on~1.4pt~off~1.1pt , }
+            \int_compare:nNnT {#1} = { 3 }
+              { draw~opacity=0.55 , }
+            line~cap=round
+          ]
+          \seq_use:Nn \l_tmpa_seq { -- } ;
+      }
+  }
+
+% ⚫ The same integrated path as separate dots, which is how a particle trace reads on paper.
+\cs_new_protected:Npn \semio_viz_georte_particles:
+  {
+    \seq_map_inline:Nn \l_tmpa_seq
+      { \fill [ \semio_viz_theme_color:n { 0 }, fill~opacity=0.7 ] ##1 circle [ radius=0.45 ] ; }
+  }
+%endregion 🔖️Streamline
+%endregion 🔖️Families
+
+\ExplSyntaxOff

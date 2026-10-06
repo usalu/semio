@@ -1,0 +1,20 @@
+[
+  {
+    "path": "dashboard/🌀️daemon/🧪️tests/🔬️unit/🦀️.rs",
+    "replace": [
+      {
+        "from": "while Instant::now() < deadline && !String::from_utf8_lossy(&bytes).contains(\"elapsed_us=\") {",
+        "to": "while Instant::now() < deadline && !String::from_utf8_lossy(&bytes).split(\"elapsed_us=\").nth(1).is_some_and(|tail| tail.contains(['\\r', '\\n'])) {"
+      }
+    ]
+  },
+  {
+    "path": "dashboard/⚙️preferences/🧪️tests/🔬️unit/🦀️.rs",
+    "replace": [
+      {
+        "from": "for argv in [[\"dashboard\", \"--language\", \"xx\"], [\"dashboard\", \"--unknown\", \"yes\"]] {\n        assert!(apply_arguments(&mut preferences, &crate::args::parse(&argv.map(String::from))).is_err());",
+        "to": "for argv in [vec![\"dashboard\", \"--language\", \"xx\"], vec![\"dashboard\", \"--unknown\", \"yes\"], vec![\"dashboard\", \"--root\"], vec![\"dashboard\", \"--config\", \"\"], vec![\"dashboard\", \"--workspace\", \"yes\"]] {\n        assert!(apply_arguments(&mut preferences, &crate::args::parse(&argv.into_iter().map(String::from).collect::<Vec<_>>())).is_err());"
+      }
+    ]
+  }
+]

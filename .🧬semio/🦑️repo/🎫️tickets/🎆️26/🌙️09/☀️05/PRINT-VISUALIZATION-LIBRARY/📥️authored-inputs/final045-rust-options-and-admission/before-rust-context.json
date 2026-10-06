@@ -1,0 +1,4136 @@
+{
+  "capturedAt": "2026-10-05T07:14:45.4566116Z",
+  "purpose": "Prospective final045 scoped Rust option/admission producer inputs before dispatch",
+  "inputs": [
+    {
+      "path": ".cargo/config.toml",
+      "bytes": 5332,
+      "sha256": "268175185E28E0E4529335AF588D231066488FF5B1B979C6766BB5590FCC22F7"
+    },
+    {
+      "path": "Cargo.lock",
+      "bytes": 259774,
+      "sha256": "FC9A064E242726E7F6632D05EF7BA74365076532FC9022D86ED133BCE2A5C518"
+    },
+    {
+      "path": "Cargo.toml",
+      "bytes": 33272,
+      "sha256": "CD2907A5B3500B116E2DCDCF5A283133961E2B86D3C3D94DF4FBA19F32E61FE6"
+    },
+    {
+      "path": "🧰️framework/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 4211,
+      "sha256": "C2EBEE3DA5063C34AAB1A07175611D5B4218F566B7219B1BEE5C6D15A1329C6E"
+    },
+    {
+      "path": "🧰️framework/📦️packages/🦀️rust/🦀️.rs",
+      "bytes": 8181,
+      "sha256": "9DDD747A860E6D4598711550F2E64158AD3CF9A158A6477D6F833F6E6C17893C"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏪️time-travel/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 1084,
+      "sha256": "B51928B4D750D8772F8D369F488CB821826E369635633AF8C9284C98406CAAA8"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏪️time-travel/📦️packages/🦀️rust/🦀️.rs",
+      "bytes": 268,
+      "sha256": "0584B760F5123D410696DA6FBF7C758744C3650322BF8547C73FE90CFA583C93"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏪️time-travel/🦀️.rs",
+      "bytes": 45580,
+      "sha256": "D0A1486AB9B1968336F377FA7EFF47B912AF5D60E431CC570AC902CCAF28BC48"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 1467,
+      "sha256": "3EFBF5E3BD7632FA6F9708905421491E5AA9E74834328AFB65FECBDC4FEE430C"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust/🦀️.rs",
+      "bytes": 316,
+      "sha256": "0A59A711FDAD24382F66F7FA3C599B6B14CA9FDEFB02CFD7CE530DED5F198AEA"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏯️tool-run/🦀️.rs",
+      "bytes": 101457,
+      "sha256": "67F0333CDB3BE0B9DADE344A1BF8CAAB126F982C097EEB3BAEDDCA56A397D9DB"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏱️trace/⏱️clock/🏁️tail/🦀️.rs",
+      "bytes": 2040,
+      "sha256": "7E18A08F5A8062D81A95A57B990B2DA556E1785497FDBFF67E94C00C37777A92"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏱️trace/📝️record/🦀️.rs",
+      "bytes": 26393,
+      "sha256": "5FE2F1450E2BE6DF663E7E81FA6BB6207935DFB42BA3791A917C4E716D488A53"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 997,
+      "sha256": "899B030428672518EBBD299FA901EE2A3E6C12D66510054A0571F1A8FCBF0737"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust/🦀️.rs",
+      "bytes": 432,
+      "sha256": "C0A3C4FAEE63223DD0DBA8E51A2BF87DF9AD6B2B951CD31562E7B8034DD7A250"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏱️trace/🦀️.rs",
+      "bytes": 47910,
+      "sha256": "592FBAA936FC2ACC326055AEA9F876121162A4655784A87A398B378747C4941D"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏱️trace/🧮️memory/🦀️.rs",
+      "bytes": 11189,
+      "sha256": "BFED075D62812A356D64D7B0A57CA60A7E4BBA86BAFB624874A38212EE5D4D97"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 769,
+      "sha256": "25E664C2B59D61BF8849BD49521266613E351F12010814341FEA0904C8D94F7C"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust/🦀️.rs",
+      "bytes": 703,
+      "sha256": "243F737179CEE72B04E15FC0FE194C49512BDDC7DBF6FDE9578E3408094B8537"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/✨️macros/🦀️.rs",
+      "bytes": 4269,
+      "sha256": "0467412725820944401A1B3322DE4042BF5C4F4BCAFB585785147F46B0F9EF2D"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 2898,
+      "sha256": "0F1ACB5B199F7DD6EA1A381DAB82E2F2B9BF70632214B2BB186139377FBDB97D"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/🦀️.rs",
+      "bytes": 863,
+      "sha256": "C71AC48CAF2E686E4612B35300B615FCF9D3D7B03F30B2E7778CF798A7637BCB"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/🔂️poll/🦀️.rs",
+      "bytes": 544,
+      "sha256": "6A68C414ECBB75DDFF3B548754B7E5E54340C8688C1CEC4BC284982168B7574D"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/🔐️publication/🦀️.rs",
+      "bytes": 8786,
+      "sha256": "0441392BBBC067A37F20B7E0BD8D087508D1AB56A382D1EDF607FF91009377BA"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/🔔️deferred-wake/🦀️.rs",
+      "bytes": 7486,
+      "sha256": "C421DEB3EE159D12016A55763852D127AB5FFEC77D4EFAF3233A6CB637A61D61"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/🔔️maintenance/🦀️.rs",
+      "bytes": 10602,
+      "sha256": "5401843DE36A45443FDAD56E43EF872EA49B15E685A93E5D86AC143C2E2659EE"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/🦀️.rs",
+      "bytes": 130761,
+      "sha256": "3EA4E90E0B5BB62815D35EE1CB8BC82B70D5B1ADB768AFB07B13C72C5333178F"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/⚙️engine/🦀️.rs",
+      "bytes": 4299,
+      "sha256": "094C5AC9663CABFB01571B0BE644A0C44C9768E620A305540B4F236B3014789B"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🦀️.rs",
+      "bytes": 1170,
+      "sha256": "8FCC3A67907AB3C936899C754CD39D6CCED0B8D684E063390E3C8257745FC67C"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 1641,
+      "sha256": "D2733693E9AA04234CEB6D330E1C9E2DE6712306FC568C94E96D01C5B1D4AB6D"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust/🦀️.rs",
+      "bytes": 1022,
+      "sha256": "57E5AEEE871891D2A50DC428C5F34197384B21E6A2DD273C2820A0D15FC2FC22"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🔀️booleans/🛤️paths/🦀️.rs",
+      "bytes": 11733,
+      "sha256": "DFE80E5B271AF2DBCF555DF00343B9D82406888F2BA292666F02D7F50A7872EF"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🔀️booleans/🦀️.rs",
+      "bytes": 32175,
+      "sha256": "491B977C454B999AED1F6121620F4196FC2085098FC5DF5CBA5B4F3BEBA4DB61"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🔍️trace/🦀️.rs",
+      "bytes": 18452,
+      "sha256": "2A073C9E6471473D5186A2A00BE426E0944F80D5229C3803F0A8EC7CB0EF95B2"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🛤️path/📏️flatten/🦀️.rs",
+      "bytes": 11132,
+      "sha256": "3131449F9AB1419B9334C9BD0979A2246B2455E34AD4E515475E1924421E231B"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🛤️path/🖊️stroke/🦀️.rs",
+      "bytes": 18386,
+      "sha256": "FBC962DC0D2E1CA7276F8188931BBF662BD233A219B3FE2729A0DC81B3A11438"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🧮️compute/🦀️.rs",
+      "bytes": 7166,
+      "sha256": "A4FEB4EF147D559D7A6F297BB7BF700416FFDF7788BC6233254CB6FF1C41DB02"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🧹️retire/🦀️.rs",
+      "bytes": 696,
+      "sha256": "B7CF7C6559D89E92471F48D91CF59D6BC96A666F98F05EA437D30D55FE82EFC4"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⚠️diagnostic/🎛️controlled/🦀️.rs",
+      "bytes": 17395,
+      "sha256": "024FD453A51F97843D42E0D026BA385EB7225AB3A1F8217AEADA4E02C5E9A489"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⚠️diagnostic/📍️span/🦀️.rs",
+      "bytes": 3283,
+      "sha256": "29A9F40AD95A7745814C56A6EAEEF713B6A37E0729DD36F141991ED45C7F5F59"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 576,
+      "sha256": "8B42DE2FA4EC607C66A25082BEC0C6A4B5A3935DAD3BBE4340F8617018440DFC"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust/🦀️.rs",
+      "bytes": 253,
+      "sha256": "43E59F28840170311092CE7C3C52E4EA3783E7B8921F575AC48DFF373730BF9D"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⚠️diagnostic/🦀️.rs",
+      "bytes": 39127,
+      "sha256": "A09EF3709E4694B6057D1F76C1EC7FEBE268017981EABB39E03FF3620F9BD162"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⚠️diagnostic/🧬️retirement/🦀️.rs",
+      "bytes": 1522,
+      "sha256": "222B1D91EBEDD2C5D59C7618EAB972B6A70DBBFE869140BD92632F6259F817DD"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌉️abi/🦀️.rs",
+      "bytes": 36108,
+      "sha256": "833A6752DB96F35FF15D385CD5389824E1D419277F7C316F40203CBA5434CB59"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌉️abi/🧬️schema/🔣️.json",
+      "bytes": 6905,
+      "sha256": "7379D3B07BD44C7D1F9A399C1691F1906C1E8E913A126B9A0039FCF11B93CA5D"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🦀️.rs",
+      "bytes": 22792,
+      "sha256": "98FE183B2389377B7339744E3DA449A13CA83FCDD072199435266EA507AC2F6B"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🧬️contract/🦀️.rs",
+      "bytes": 1968,
+      "sha256": "5B2D5F4839F680A276DAF65AE35F4BE60945021BEF17AEF593AB153311EE763D"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/⚠️refusal/🔁️codec/🦀️.rs",
+      "bytes": 4870,
+      "sha256": "7D6610C03CC2D75C000D9A0B331429B4D1EF1CD1DE63FBE7BACC6F6F0C395E9D"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/⚠️refusal/🔤️utf8/🦀️.rs",
+      "bytes": 629,
+      "sha256": "5197E79CAA564B9353E1F677E809E68B25E8D1DDDA2790D68A8F88CD592F0CC9"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/⚠️refusal/🦀️.rs",
+      "bytes": 2109,
+      "sha256": "DE4E2154DABE08224402F0546E8DBB1AB4F9B5825F5C41E463283DB9DDB87E3D"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/✨️derive/⚙️expansion/🦀️.rs",
+      "bytes": 143127,
+      "sha256": "FCDCB090EC74156FC6D55AC072A2E14FC23E63C1C4E488C1A72F521B14E0CCB1"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 1842,
+      "sha256": "AB0A8953A3838B805A58777D550ECD83B86699690FF4D0BFCE57AF089B048DDB"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/✨️derive/🦀️.rs",
+      "bytes": 1738,
+      "sha256": "6DBAAFE06AB0C6879E60B4E38B159D710E0828CA11120BAD8831B92E4E836F07"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/✨️derive/🧬️retained-clone/🦀️.rs",
+      "bytes": 35401,
+      "sha256": "487A1A71E2AEE8C8EF7DD706284B1F2919892A32CC13221C7A7B697BA45DAF1C"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🏷️type/🛬️controlled/🦀️.rs",
+      "bytes": 4418,
+      "sha256": "A8C5986579202A56374DC5C8D7218E1995B896DBF52797F37418AF4FB436E561"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🏷️type/🦀️.rs",
+      "bytes": 4972,
+      "sha256": "194DAA4E2B8EB0BC4C35D5F438F5F793422F6C36EE952DF4229D3D0B17884D1A"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🦀️.rs",
+      "bytes": 28236,
+      "sha256": "9FC75D40F3FBA8CAD4FD64ED9B44398A2E9EC7A771E49020DE96E3C7C8CE16A6"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 1097,
+      "sha256": "DD1D45941B1053690C71390D67EF7AD1EF38598D8428B4A644DE34ACC95DD1DA"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/🦀️.rs",
+      "bytes": 763,
+      "sha256": "9116F2CFBBD1D441DF1411C705420A80ABC9669DF267535D5B6DBE2ADA86593D"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📦️paged/🦀️.rs",
+      "bytes": 26520,
+      "sha256": "D9C64028DED041FB3CE489F6C4F07645FC54DBE2A6E796F0AEE1FEE5C1457CBF"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🔁️codec/♻️retirement/🦀️.rs",
+      "bytes": 2632,
+      "sha256": "5B5A09FDC76EDB61A31C4E76DF90F3C465C887651F2A0A1C775777BB9F5E1109"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🔁️codec/🛫️controlled/🦀️.rs",
+      "bytes": 11607,
+      "sha256": "8C032992424A6CA6A41C1F1C394AC2F32DEF287F3735AD0914F2196B5833F35F"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🔁️codec/🛬️controlled/🦀️.rs",
+      "bytes": 14352,
+      "sha256": "E622FFC6954D6BC919A4EA66D5AC190B5BEA80058D8B6D2BA8709CB8EE4C94B2"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🔁️codec/🦀️.rs",
+      "bytes": 77494,
+      "sha256": "77F6313A0547007B37AF6ADE34A842F6B301BE912E51FEFD3A4F29FCD115CA49"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🚦️native/🦀️.rs",
+      "bytes": 3541,
+      "sha256": "84EB98215E382929D4E9DDE5E344FD85135AC7D62B78E85C097FE11ED7A176F8"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🦀️.rs",
+      "bytes": 35414,
+      "sha256": "23C2F876C9DCA71D128A42665A0D7646DE2335FC678B0F4F159132EA558390EE"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🧺️set/🚦️native/🦀️.rs",
+      "bytes": 1465,
+      "sha256": "2162D2361BEDFB9AEC89CC6FBA9E3200986EA3329059E93CAE224FC9F3D54E50"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🧺️set/🦀️.rs",
+      "bytes": 7074,
+      "sha256": "290F2C93309F140AAFE505D2AA265122666A47040943E3CFB9A9B01CAC7F977D"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛫️encode/🦀️.rs",
+      "bytes": 8794,
+      "sha256": "FE58AE4A0372EDA6285193A623BD438EA8E14A1426D4A16B3CC2F923BBF49F74"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🦀️.rs",
+      "bytes": 9012,
+      "sha256": "E28D40AE7CDF49BAE63D719B65DD9F80F77A37355077CA051FC58FE407974A78"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🦀️.rs",
+      "bytes": 18981,
+      "sha256": "27A861A8B62C78FCCA73D1C6B100E1F82D5E22962CA1D2549A39F8D89C6CB3B5"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️bytes/🦀️.rs",
+      "bytes": 2776,
+      "sha256": "63C82E11ADF94E29E4EB7D08C2973C0B2B6559737AB8B788FB9E50176DF4045E"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️clone/🦀️.rs",
+      "bytes": 17095,
+      "sha256": "89F85BEAEFFF9D04B02649690457CCF8FA4B3A95210B86EE9CD9DE1DF4DA9E5A"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📋️paged-list/🦀️.rs",
+      "bytes": 15476,
+      "sha256": "ED3E68664310BCF8028F0FAC8AC1C10476C3B4D4D452C1959DCF933EF0003EBD"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️paged/🦀️.rs",
+      "bytes": 19462,
+      "sha256": "CA53B05C4601510F6AAB0BA9C66BE0FE3D5CFF2DF7F73C3F4DFA3657304BC484"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🦀️.rs",
+      "bytes": 48079,
+      "sha256": "337925D40A713464B489CCDE584007A3F89723A44E7EDEF9862AA6858D31B1BB"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🦀️.rs",
+      "bytes": 54286,
+      "sha256": "3CC9FB728FB37852A91EF1EEAD9A0734FA9A9470AD28C217A4C9EB0416CC1C7A"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️schema/🌳️intrinsic/🔣️json/🦀️.rs",
+      "bytes": 6273,
+      "sha256": "FC1981C07E6CF09EE10A4934F5BD804E3FB2A343141C95CA819870398373B625"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️schema/🔣️.json",
+      "bytes": 3583,
+      "sha256": "CDC61BD69AAE3C40FDF62639D226DCB6B38721EAEF88F273B3CA6C8AF940E961"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/⏳️async/🦀️.rs",
+      "bytes": 21645,
+      "sha256": "461BC9CCD38CEEA807E89AAEA7F431204F94969BB32C503E4631A5300B4FDC65"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/⚠️error/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 680,
+      "sha256": "7F82EE5C3971EF37C7796BDABE7EDF50DB2697C8535FF05CF3A193A1E4BD87E6"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/⚠️error/🔌️capture/👥️context/🦀️.rs",
+      "bytes": 13679,
+      "sha256": "D87CEC2DEDF3EE7267D7DBA10FC54AB4FA2504933C348C071D17C2DF0FA00804"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/⚠️error/🔌️capture/🦀️.rs",
+      "bytes": 8407,
+      "sha256": "7975FDEC5ABD5BEBDD6C63FBFD9616EF76D51D959C874F65BC30B715E2707A67"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/⚠️error/🦀️.rs",
+      "bytes": 3674,
+      "sha256": "B37ED0DBD2DAE4658249A4292FE8047A4FEEB14B11FA061D4C0E3AD922ED74F2"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/⚠️error/🪶️refusal/🦀️.rs",
+      "bytes": 5184,
+      "sha256": "DE2F8B4CD3D5C85E8BA73B4C2D93374DF4961FEAA4E0F645330EBF039C471255"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌐️http/🦀️.rs",
+      "bytes": 18135,
+      "sha256": "BAC43948DF07B82478C26060772E87B8EFD77611C626F2D305126B008AC8841C"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🌳️intrinsic/🦀️.rs",
+      "bytes": 2872,
+      "sha256": "8AB4451332A78B5CC51A8681B781412DADD6FB4270C8813F538B923700CDB101"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🏭️schema/🗂️index/🦀️.rs",
+      "bytes": 3808,
+      "sha256": "E8BA86BE2E5A0BBBD4F2E875B4899205BF3898670854A14E570C461860345A40"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🏭️schema/🦀️.rs",
+      "bytes": 16330,
+      "sha256": "8F1F7015B99E5AE9E2B06C58A7722E884C050A2761D27D9A7E249131802984F3"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🔎️scalar-witness/🦀️.rs",
+      "bytes": 14864,
+      "sha256": "F0462C4640C61EC68BE065D0E8882E0770A8B32C7F1F68A93A4C43D0221300D6"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🦀️.rs",
+      "bytes": 30316,
+      "sha256": "32B6605AC012BEDDA0D6C029EFA792992D429162AB717AB65681C33D1F3149AB"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🦀️.rs",
+      "bytes": 172424,
+      "sha256": "650D35C4478EFE2277F2561F5FCD4DF17BAF66B6806FB4C57764DC8A8484759D"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🔬️schema-hash/🦀️.rs",
+      "bytes": 16869,
+      "sha256": "95426E120451AEA942D9704238CA1F75B0E62E0191AD8A6F72475D0911D15096"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧫️fixtures/🔑️schema-hash/🔣️.json",
+      "bytes": 7477,
+      "sha256": "7B05976D468DF28A0BB74CB92F61854E198B2D02DF3027C21F17314CAD905973"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🫳️preflight/🏭️schema/🦀️.rs",
+      "bytes": 12494,
+      "sha256": "9541F0F485D0755FDE6253FFB21D9B3C60E748A4861F43115C978835BA8078EB"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🫳️preflight/🦀️.rs",
+      "bytes": 17594,
+      "sha256": "85888F4FEE01606B27494E58446396D9D09F61B09785D97546479B53F04CFEA6"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/📐️format/🛫️encoding/🦀️.rs",
+      "bytes": 10896,
+      "sha256": "BD15B6267C46BEB9FAF2D6868604289358F641BA7749E0C72B84271B6242C1BA"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/📐️format/🦀️.rs",
+      "bytes": 201832,
+      "sha256": "C1235FBACCBBE42F7E89EA6EF3C3757D3647E9BB26168D9DA68E5702F1AD96E2"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 2297,
+      "sha256": "779236B7407380773D202F02265A3291641690C9A4FD0BC4F113D3ACCC526C1F"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/🦀️.rs",
+      "bytes": 2585,
+      "sha256": "CB9DCBDD60F2941CD1420EB17F39E0B55C22480268ABEB911FA7C87279381E7E"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 607,
+      "sha256": "FDDBDF41A18E566C5A8B7A95B5934CAD5259C50F207A475F65F3DC4E099E6D86"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🦀️.rs",
+      "bytes": 106388,
+      "sha256": "A7CEAF2C992B836C55EBA698A6A53E3D7B8AA2764D3485B81042660C3BB1E5B0"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🧩️members/🦀️.rs",
+      "bytes": 178,
+      "sha256": "A2F384A1B3DB066B977D041628B8023B26ACBDA5BC5231233E879DDC6D7D4F27"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🦀️.rs",
+      "bytes": 3733,
+      "sha256": "827F4AF0DE6BC8AC28692ABC2B79813AA53C4D6F161B2E96B96FB1D13E0FADE6"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎠️kernel/📤️return/📦️content/💌️message/🦀️.rs",
+      "bytes": 6120,
+      "sha256": "28191F8B540F77E7FEB051D69027D9E2B1BC350370A30AF9176314FDC2371224"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎠️kernel/📤️return/📦️content/🦀️.rs",
+      "bytes": 5817,
+      "sha256": "0460605A7C9555EDC6FBD46D2A61A0C026DA8D02BB3C7A18C9606447DBFBAD85"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎠️kernel/📥️cold-pair/🦀️.rs",
+      "bytes": 3152,
+      "sha256": "B5D86C447799E9782C08B6BEE1379BC142C9498B152EB986E70785C229707095"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎠️kernel/🦀️.rs",
+      "bytes": 177115,
+      "sha256": "4EDE0D03FEC4703385A39FBC3B23613BBB5B0A43805F7864685307FBA6E6109D"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🎠️activation-reservation/🦀️.rs",
+      "bytes": 5312,
+      "sha256": "67BBE47AAAD176E18337646E1D5D33E13DCEFD5472D2E24368B7836A24487CD2"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/📃️page/🦀️.rs",
+      "bytes": 2051,
+      "sha256": "0B4A873E49DA5F5D6FD094F5B1E1C2A8164D2BF72BEF173751BAB5CDE450E2B5"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/📤️return/🦀️.rs",
+      "bytes": 15845,
+      "sha256": "EF4026D401CCE0C6F7744D5FFB3D5C668D9D2DFF0E412C112F009A4FDCE93795"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/📥️cold-pair/🦀️.rs",
+      "bytes": 10484,
+      "sha256": "37623AC43B4790FA8BA134387322D28EFAD963C34A5BD4E1FFE76FF981ADE89A"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 4340,
+      "sha256": "31B85A021857649C08D583F181440363055210151DAE3DE7AE4F45B67A94F066"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/🦀️.rs",
+      "bytes": 1803,
+      "sha256": "69A6ADB5DC8FC84CF725CD2297528EF5DF4DB8F2E892E127725E314575F1D622"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🦀️.rs",
+      "bytes": 20183,
+      "sha256": "5FD9856C9FE78F5236355A15B2828DF01BC796A0A84944EC06AF108894F97538"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🦀️.rs",
+      "bytes": 3479,
+      "sha256": "83D1F8BA85A134E4F17BC4F93BD00FB01F69EC30259EE3763D1159889E073523"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🦀️.rs",
+      "bytes": 245929,
+      "sha256": "6FF7A0072A0BAA0E7A907FB5726A895F70D5695E26C5680C1F5DF394B2802ABC"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎯️action-bus/🦀️.rs",
+      "bytes": 40031,
+      "sha256": "39D4C45B5F906010DE01AD455C29B2C0DAE8C7B01A70A031EFEA4451DBC4259D"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏗️mesh-engine/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 1726,
+      "sha256": "0F7184736D6E9B251C20C6AA9BF2A285059E8EDCB338DDFEB1698A7661FDC01C"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏗️mesh-engine/🦀️.rs",
+      "bytes": 100668,
+      "sha256": "73799746E3E22897E282B786C069CD9AD47674DE4283496E5825D918D3AD6757"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏗️mesh-engine/🪆️binding/🦀️.rs",
+      "bytes": 1881,
+      "sha256": "2A6F7E9DFC505B90F076FBC0F3279A19B5CA36E83375BC114645044C3FCC8510"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📐️geometry/⚙️engine/🦀️.rs",
+      "bytes": 59779,
+      "sha256": "450F9308EF0629E2CB7B61BC0AFADAF27B4A962E855C66C5ECD7DE3B7E10879E"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📐️geometry/🎲️random/🦀️.rs",
+      "bytes": 12623,
+      "sha256": "CFA0F47E5407CD42DBA2196BF630D1E65CE9C6D7657756AA421956DB4EA4B14D"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 920,
+      "sha256": "B30E5C524E22E4DBEF6B8ABFA6218B5196DB36050A0F344C351FC93FACE55346"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust/🦀️.rs",
+      "bytes": 355,
+      "sha256": "B02ED9FEC078264C30E8754AB3634C0219FBA66B72D6FBA3C890B564351370FE"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/⚔️conflict/🦀️.rs",
+      "bytes": 28357,
+      "sha256": "7DE62C710B2CD1386CCE238905E66DDD9244351DACFF9B0040E6C8604767E3FC"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🆔️ids/🦀️.rs",
+      "bytes": 2334,
+      "sha256": "E9C837812520B3407CCD08EA4FAC0360C1DC7B7B7E4FE776EA3BBF6C68EA2676"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🦀️.rs",
+      "bytes": 25247,
+      "sha256": "A430CDE4CFF7D289D1F50A030DC6C5B5BF2F724CA1FC0F264FB4407F390EB435"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🆔️ids/🦀️.rs",
+      "bytes": 10944,
+      "sha256": "460FFD737DF29A35233CA09F1ED8BDA6AC586DC2D0D8C8CE4B23151C8C6F9EEB"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🗂️map/🦀️.rs",
+      "bytes": 9655,
+      "sha256": "511D8EE287E673F7F1C186E4480E8A5416F65ACD5EFBD18CC5B155850254A2F7"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🦀️.rs",
+      "bytes": 103202,
+      "sha256": "D597D680638283A0DCD61E911E9A07228758DC70458744A2A51303A17D78DE91"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/👕️peer-overlay/🦀️.rs",
+      "bytes": 8769,
+      "sha256": "7572CAB1E609EC73206E81AEFB51CCA923CDA28A2B6196074AA889432C65ECB1"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📐️format/🔎️verification/🦀️.rs",
+      "bytes": 11722,
+      "sha256": "6A3C5E4F11E67D7CB4B7922EFD44E9B8342492DC582A5D9DE093CB341E906A18"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📐️format/🔎️verification/🧾️record/🦀️.rs",
+      "bytes": 2425,
+      "sha256": "5FE78A4952CD8000854898DC1284A13C0BFB776E78FCE10482578B66CF35B5FC"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📐️format/🦀️.rs",
+      "bytes": 40449,
+      "sha256": "8A72832827A672C253FAD99D4E3CABA79DA629A91767CD9FB1B3C13D4B7C4AAF"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📖️dictionary/🦀️.rs",
+      "bytes": 2538,
+      "sha256": "2546E4E53DD2E96159CAB11EB4B35095DF87F94C3781741F3663C59623B7C894"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📡️wire/🎮️command/📥️ingress/🦀️.rs",
+      "bytes": 54934,
+      "sha256": "3FA1C43D647404A98A4CF0863F72A03967593A8C32663462E56A72D89C898C0B"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🌳️root/🦀️.rs",
+      "bytes": 7240,
+      "sha256": "D3A27356EEB4CD9663EA0EF7F987DDEB09C30A22AF87E9F9A48A01710ADEB637"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🌳️root/🩹️update/🦀️.rs",
+      "bytes": 12167,
+      "sha256": "D4F9C7D2259F7962A3206F268FD64C3B5C399ABA0EE8238EAF2D251025E6CCDC"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/📡️transport/🦀️.rs",
+      "bytes": 19776,
+      "sha256": "A28C1D7CEFDA540CA7BB1712B5285C937BE7E0845E41538E952117117897FAD9"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🦀️.rs",
+      "bytes": 28952,
+      "sha256": "64897433F28F78A6CE8BE473455F5CEC1A85AE5DB5A9556ECBA02109AC3888ED"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📡️wire/🦀️.rs",
+      "bytes": 171669,
+      "sha256": "0D647C93F6AC4FE68702DCBF94CC5ABD44A8DC652AE8519EDB4F60666A7D5452"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 6099,
+      "sha256": "D9385DC60DD8CDD23686B51DEE6260FEB031A1E0216D87F4E9CCB2C8BF78FBC3"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/🦀️.rs",
+      "bytes": 3230,
+      "sha256": "95C0F66E6D0598E2E17F56FA0ED07F788FFB4BD55734DD38120077DD20532E9A"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🔐️crypto/🦀️.rs",
+      "bytes": 1150,
+      "sha256": "7A747DE45E69EC7D50A138A68C1201A01D0EFE8270C4497F8C7D4E7BFC6C32B3"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🦀️.rs",
+      "bytes": 44528,
+      "sha256": "2D983C6522223C366602596E51A77B276E627049FA15B10E823A361D3DAEA4FD"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🦀️.rs",
+      "bytes": 66938,
+      "sha256": "01C9B93300C7E821195D25C511437DF32B867E13258AD8AFBCCD9FA6AFD78598"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🔢️scalar/🦀️.rs",
+      "bytes": 14026,
+      "sha256": "D464894B9D1A6AE43FD96A137447690F447657A9732D4A1185BA642023522FA6"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🚰️source/🦀️.rs",
+      "bytes": 2844,
+      "sha256": "1469B624AD5FCF3491D99ADE32886A393B981AAE001AABDA9236935950DE659F"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🦀️.rs",
+      "bytes": 5447,
+      "sha256": "0E93F9ABE66FC1C7E9C6393E4A90A3163C5178897293672A267F30CD4CB3152F"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🧬️retirement/🦀️.rs",
+      "bytes": 3474,
+      "sha256": "CDDCFB24EAE066595FDA6F322985D3A5CC44F459A86B670B630CCA31BE47D0CD"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🧾️wire/🦀️.rs",
+      "bytes": 18064,
+      "sha256": "D0CFB13A3A3BE52F92770DD1CAC38C7787F99BA17C7B7891698D55AF331822CB"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 1037,
+      "sha256": "D43FFDC4B55ADDCA2E6B2A2595DB7D19C705962E3837F239F16FED4AD0A04024"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust/🦀️.rs",
+      "bytes": 2216,
+      "sha256": "66736C216168CBD7B7CE50BCE136587C816F0F0316EBF0C04CD8A19458DB8DD0"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔀️dispatch/🦀️.rs",
+      "bytes": 28986,
+      "sha256": "5D2D37D7CC14C3969BF415CADC2D56F7868A9AF6BF50C9CD3A027576B236B39B"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔄️machine/✨️derive/⚙️expansion/🦀️.rs",
+      "bytes": 54036,
+      "sha256": "9A3B3CC0BED7E07A3E8F472D7BCB028F46ABB7B37F150B18F265F0257071AC30"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔄️machine/✨️derive/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 550,
+      "sha256": "A5DF2DDEF6F3491CFD672ABBAF88CB681FA720DFDC87809C9B913E50E62D5D27"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔄️machine/✨️derive/🦀️.rs",
+      "bytes": 1471,
+      "sha256": "FFC1B78A9B95A6800393EEACE3CADF940478066F58E457D3EF9AF428066F734F"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔄️machine/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 1520,
+      "sha256": "36E750FFB35F6E932ACE85FEAD37EE7D382CC832B7048BB2FD72BA03A9B3F6FD"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔄️machine/📦️packages/🦀️rust/🦀️.rs",
+      "bytes": 415,
+      "sha256": "8C91357EF7A7CA3BD0B28323C1BED833D6E2FF306B6C54FBF28691CFC82AC389"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔄️machine/🦀️.rs",
+      "bytes": 71840,
+      "sha256": "D7C6B35F499797AAB0F2645E9E2579184AB4646A7057E89C485EEC3E1F3DFC95"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 383,
+      "sha256": "A1D5144186D975584E320E6230DE7D0AF0668B96C7C569865C0E929B49C8FDBA"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust/🦀️.rs",
+      "bytes": 140,
+      "sha256": "A0428A2744E00D4BF55EAB043B28D4526A409CCA65A2D6F29470076324557D79"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔏️hash/🦀️.rs",
+      "bytes": 25506,
+      "sha256": "34A53DEB2478A913C07C261E0D95EDC5B5811B6122CF7DCF4C2A1A34508D30E8"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/✍️editing/🦀️.rs",
+      "bytes": 30735,
+      "sha256": "6710A8F0F6B38265E95F568220C2FB785D16D48FDA1DD152C6A3D67A267F60CE"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🦀️.rs",
+      "bytes": 9038,
+      "sha256": "D41B05E4EE36B71B4F86017C3E9C520472B07827A19185095F19B76EDA677D03"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 955,
+      "sha256": "2464FBB229695919F1C95AF555F36C0715F226E1878B85DDB745EDF179852FD8"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/📦️packages/🦀️rust/🦀️.rs",
+      "bytes": 429,
+      "sha256": "33711C3E1ABA4597217523E7B2DEE19147436027007C9C22A4E7D500DF73B6B1"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/📷️png/✍️encode/🦀️.rs",
+      "bytes": 3206,
+      "sha256": "5F24E36531F9E74287E9FF94AFF473494D65977A49CED53A3276BDFAC574C160"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/📷️png/📥️decode/🦀️.rs",
+      "bytes": 14479,
+      "sha256": "982397363ADEDEA1168C2FF5B538E0444D9D1A25177A39584E55669B86617344"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/🖊️coverage/🦀️.rs",
+      "bytes": 14910,
+      "sha256": "98959D1206855E0F7034D01DFACDB1E28F32201085111C5BC0EB184A2ACA0A2C"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/🖼️image/📥️decode/🦀️.rs",
+      "bytes": 5251,
+      "sha256": "948A829C849AE52DBA6E3B9243A7DBAC0A58B9FB3ED9E9FD43894857E80E5552"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/🦀️.rs",
+      "bytes": 56548,
+      "sha256": "74433FF00268A60DAB0CD535C56051173C6412D7A74463085686CA2DA36C2310"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/🧩️compositing/📐️frames/🦀️.rs",
+      "bytes": 1751,
+      "sha256": "4CA38C1376942E790B0DC5E6260141CF4C9914698071225B311EE25F873C8163"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/🧩️compositing/🗂️layers/🦀️.rs",
+      "bytes": 11783,
+      "sha256": "20DC4D504BD609DF7DA100AA0B1313E004269431E887602A64E87EE99010DBE0"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/🧩️compositing/🦀️.rs",
+      "bytes": 13583,
+      "sha256": "AFC94D66E8BB78A087CE84CAC66B31E029BDBAC5A31851DD8DCBFDAB07089C7F"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🕹️interaction/👆️gesture/🦀️.rs",
+      "bytes": 10102,
+      "sha256": "03517083CF14E92B4C0FD1C219B69F1837171B6AEC0722E0E36E456B6EBC82DE"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🕹️interaction/🦀️.rs",
+      "bytes": 6817,
+      "sha256": "9024D26964557EA9615AA14D82D6E90A791C888E50412067A63A9AE11FEEA235"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🕹️interaction/🧬️schema/🔗️.graphql",
+      "bytes": 2708,
+      "sha256": "6014A1CAA54995A5452ED797D1E1C79A96C74AD055D21B564579B9A664E42A3A"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🕹️interaction/🧬️schema/🔣️.json",
+      "bytes": 10354,
+      "sha256": "F22905F9B400EE0DE41BCB1DF515C25B7E855BB8DCB2DC6C6E0F8E27EFC963AC"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🕹️interaction/🧬️schema/🟦️.ts",
+      "bytes": 14322,
+      "sha256": "42128DCBD2CCA36AF390DA3B63DA97F911BF397D2887F29EC63E90A093835B6E"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🕹️interaction/🧬️schema/🦀️.rs",
+      "bytes": 4268,
+      "sha256": "88FD5EF664ECDBF6480D6E45F7668396842ED7C65D15A94D3F6525BCBDDD9A89"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖥️platform/🦀️.rs",
+      "bytes": 2419,
+      "sha256": "DDB9EE8D02D5727ECD1A1B7444D709643FD67161743DFDD0A7D5EFD744F248E8"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🌐️locale/🏷️label/🦀️.rs",
+      "bytes": 15946,
+      "sha256": "9D0AAA17348BE63038E1E6E67ED1B5A7C42575BBE4E837048F3AFEE38B6C2CFB"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 787,
+      "sha256": "0C708B9279DDA5896F55C9590FDEE0E9DF9300AF3A4C66583A36D49C0A38D9A9"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🌐️locale/🦀️.rs",
+      "bytes": 564,
+      "sha256": "E6FB4753DD00634973FC8090F91E74745200B093C0BA5530245EB1D735B97CE3"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🌐️locale/🧩️labels/🦀️.rs",
+      "bytes": 2171,
+      "sha256": "9C173F48CE37E3FC9969102623B81041AD1186351465C379DE8217513B09F18C"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🌐️locale/🧾️value/🦀️.rs",
+      "bytes": 4064,
+      "sha256": "2FD7119C1A64903E4DB00750A8DBB0AEF25447514085B64BD8D09D61E26029D8"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎚️axes/🤖️generated/🦀️.rs",
+      "bytes": 2388,
+      "sha256": "2D8C5A4FB418A79744DEAC12E5DAB0BD2087B2A1F3672807225862E549D19D28"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🌓️theme/🦀️.rs",
+      "bytes": 1998,
+      "sha256": "ED3B59EC80DC6652A74BD1E523098390C0B4EBA610C8CA69AB1FF2CAB288173C"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🌗️mixing/🦀️.rs",
+      "bytes": 3668,
+      "sha256": "B886B0FFF80BBAE95CEF172CAB3F536CCA452FB61A76041FDEC656ED72C14DE6"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 353,
+      "sha256": "7BB62110634805AA9A2BF94FBBC283EEBD3AFDCBDF4D5F55762BD3BA981CE413"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🔤️tokens/🦀️.rs",
+      "bytes": 59360,
+      "sha256": "7874208926B3039EE937735295661A90517B859C2F5F8F126E5080D301FA2B4C"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🦀️.rs",
+      "bytes": 527,
+      "sha256": "0603331601D83CE2CE83FDB61B8C42A73010352D9C3A1C10311A35B7033C40EF"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/✂️text-splice/🦀️.rs",
+      "bytes": 16051,
+      "sha256": "A6124EA90A9D23E751A96713CE94292C2A9ED7CA546D6191CD59405BB5D1B6CC"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/🌉️surface/🦀️.rs",
+      "bytes": 4329,
+      "sha256": "A8B1EE867C821726677342CFBB51A2CDD8E6215575CAFA3230B852F4C87846D4"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/🌍️world3d-snapshot/🦀️.rs",
+      "bytes": 23101,
+      "sha256": "93D5EF11D45664C083032E769C33256B220679C34CD437E256F3D64D4E3C3AD7"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/🎬️scenes/🦀️.rs",
+      "bytes": 147006,
+      "sha256": "62647E8ED25207A7E3121C884F74579389416F4A022C5801264D405AFB55B5C4"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/📐️math/🦀️.rs",
+      "bytes": 121226,
+      "sha256": "911026D26A0F2089EB113376212751079C4EE4D1871854B98901B304673FEE3A"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️pack/🦀️.rs",
+      "bytes": 23623,
+      "sha256": "2618D26B8DEA353E78334F5194312CDD41B0099AA592E9A74287A9207B353B7A"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 1903,
+      "sha256": "1BEC10B49F272E1663F9990CDA19450E4A96C4D857A5B0DE752B4575F6FBE415"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust/🦀️.rs",
+      "bytes": 2421,
+      "sha256": "415DF5E544BE3181909109C15C9C348AF92F09FAE37740E7BDC96BD08CF8EFD2"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/📷️framing/🦀️.rs",
+      "bytes": 1430,
+      "sha256": "8593F4DFB86ED75390A2645E7E280D074D3A54F91237BC7850CD5597D79E336A"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/🖼️canvas2d-snapshot/🦀️.rs",
+      "bytes": 12836,
+      "sha256": "97DAB6CBFB7BE499365DD0370CE9C86A7F1250359E9CE320713BEFF6ECE5CD02"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎟️prepared/🦀️.rs",
+      "bytes": 172086,
+      "sha256": "84D72FE21B6B61ED6E49D7B4D4115BF920F67B3CDDF8BA357315282F16AB1A01"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎨️theme/🦀️.rs",
+      "bytes": 23782,
+      "sha256": "E231F5124902C8FF3C9DCA96CEA3B9FDBCA55D5EC5BEC41286CE5D408D2CE5F6"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎬️action/🦀️.rs",
+      "bytes": 51599,
+      "sha256": "99BA1B594652B8591E438210CCA43A1034FE7F604EDDDCB9970FE70A3CFF8299"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/📐️geometry/🦀️.rs",
+      "bytes": 685,
+      "sha256": "06465A20A6F303564F862E5BC5B10BBB696ECA8B868B4B92E30B259F1EB13230"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/📥️input/🦀️.rs",
+      "bytes": 38733,
+      "sha256": "B32424D318365DC56A088976AB688C59B1C45436838479B55E2EB210AF2210F4"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🔣️icon-name/🧾️value/🦀️.rs",
+      "bytes": 2529,
+      "sha256": "96E9433C6ED2B1EE8352E3B2CC55D53EB8729FAD6D123C9C57617AE7EBA96341"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/🦀️.rs",
+      "bytes": 68323,
+      "sha256": "3C0958AD9F5C8886E281769112848013DB608B9E90DA65615F56240FA1769CC9"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖼️raster-ownership/🦀️.rs",
+      "bytes": 33700,
+      "sha256": "0CE52F989BA6B69FD23FD7C561F4CAD03C65F4C813DDE08A3581D01A782C854D"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🗺️minimap/🦀️.rs",
+      "bytes": 4400,
+      "sha256": "5BCA95A8CC4E1708B26FA18D0359DC75CE97113A40D537D73CB1DE96EF851EF9"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🦀️.rs",
+      "bytes": 26006,
+      "sha256": "89485FAD1E0214315AFAB0F3B8964E12EDCA2CB977F2A693FDFCF02DFA4C96BE"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🧩️component/🦀️.rs",
+      "bytes": 208329,
+      "sha256": "FCC924FEBF0518F7B5B345D34F4F806F4503EACE280F4CD518CDCCE88A2BCFA6"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 9067,
+      "sha256": "B78AB7DF84B90D2DFF9C5BBCB3F016974D8C4AFD466D35695610849B972B423A"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🦀️.rs",
+      "bytes": 660,
+      "sha256": "659CAFE78B598C5788EA83C533C2B15E4F89229466EFD58ADC61D4E9768E842F"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/♻️reconcile/🦀️.rs",
+      "bytes": 209648,
+      "sha256": "717847D5934B97C8AFC7FABD13C672EEACAECC91822257A39F2F2587A5433905"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/♻️retirement/🌲️tree/🦀️.rs",
+      "bytes": 1897,
+      "sha256": "5AA8FEEE35F08B731017582A97F4026991B86426C51AC8E9A04EC8A1628BB374"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/🎛️context/🦀️.rs",
+      "bytes": 9393,
+      "sha256": "A8BDA8EE92993D315F1990705C2282D0BD6470DFA41D34B442BDD403BF4730EB"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/🎭️present/🦀️.rs",
+      "bytes": 13792,
+      "sha256": "A0EDC70CEFB8DC5CF33A34AC257117A91DA1A5CBC2637388DC06320714D7C569"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/🎯️dispatch/🦀️.rs",
+      "bytes": 6013,
+      "sha256": "8679A5592C2C4B629278A51EC267772334ED385F94DA82292D9E75BE1C47D383"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/👥️presence/🦀️.rs",
+      "bytes": 7372,
+      "sha256": "A84D8ADD5C72D345060B76CE88B406C39D712330BCA537A4B5C1820D4CB96E60"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📤️output/🦀️.rs",
+      "bytes": 17492,
+      "sha256": "55E78EB507C72C08BD5289AAC772EF9C46BF7C6B843611DD68B2F0413E8BB65D"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📥️inbox/🦀️.rs",
+      "bytes": 4883,
+      "sha256": "B88B0CB37DEAB084B8E66D8AE207D9F51385F707899651F4C71D4B77C30F1B19"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 1056,
+      "sha256": "BB9CA422E0BEA49F35AE2DCFE5B8748C3CF358934A90E4CD46F5CF98F9F92951"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/🦀️.rs",
+      "bytes": 1792,
+      "sha256": "B75B93F3791A98B498232EC2EC4A6BB0459D7F968F3E077C3C964741795645F9"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📮️gateway/🦀️.rs",
+      "bytes": 10455,
+      "sha256": "0E4A3CB81DF86830B9EDB06E8C24F0384D9862AC2DA28D15BCC3E2715474FBF9"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/🕸️tracking/🦀️.rs",
+      "bytes": 7020,
+      "sha256": "0CC8B6AFFB9A4370D234753C15DCC09841294EA71E1715FD0DB46D8809D19EBA"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/🪪️entity/🦀️.rs",
+      "bytes": 14332,
+      "sha256": "AAE726B2E72369515C4B70F1EC3C26B554B2B0EEE4FD37B8867E36F0E51339D8"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/♻️retirement/🌲️built/📋️children/🦀️.rs",
+      "bytes": 1514,
+      "sha256": "168E246ECC6FB2861B64A17CB659255770C26D2DB53A502F6BACACBE46364372"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/♻️retirement/🌲️built/🦀️.rs",
+      "bytes": 6058,
+      "sha256": "6D71E9AD0ACE9ED2AE3347DD860E453153E232405F882ED3EB14BE15A1026BD6"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/♻️retirement/🌳️typed/📃️document/🦀️.rs",
+      "bytes": 11195,
+      "sha256": "F3678876A26E4F22E98BE97F16FECD6E12DA4AFED5F295091E7E2B1B8D0B1DA4"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/♻️retirement/🌳️typed/🧱️component/🦀️.rs",
+      "bytes": 15406,
+      "sha256": "92F2C41C63D30902C25DDB0A5A84E0AA0923D969028D7C44EB51627FED015177"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/♻️retirement/📮️handback/🦀️.rs",
+      "bytes": 3700,
+      "sha256": "76C53EAC58C3D99A008E9C834EC4B9AE2ED8189948A0A8C5FDB6A39B36C11C6F"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/♻️retirement/🦀️.rs",
+      "bytes": 15803,
+      "sha256": "690130168C2F3B79BD1E046F3A3DB57EB59A49B1267C13D1BD99D31C0D9CC70A"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/♻️retirement/🩹️patch/📨️pending/📦️whole/🦀️.rs",
+      "bytes": 2061,
+      "sha256": "74B391296583D2079877900995C9587862A2399CB7C92F9CA0AB12C437CD28EC"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/♻️retirement/🩹️patch/📨️pending/🦀️.rs",
+      "bytes": 3086,
+      "sha256": "2159F3E91E332A388DEB0BF22765044C4E1DBC64DE73265B0E6194B66FF680F7"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/♻️retirement/🩹️patch/🦀️.rs",
+      "bytes": 13265,
+      "sha256": "29B8BDC859E9BF103B912C74A67847EE10C154945547F2C89243098F21812AEC"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/♿️accessibility/🦀️.rs",
+      "bytes": 17768,
+      "sha256": "12C42FE2F15CB299C742528D8CCF7CB77F052C4D29832E6762D1C9ECBA1EA993"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/⚖️compare/📃️document/🦀️.rs",
+      "bytes": 6665,
+      "sha256": "F88749A450F2A4AD9AE316D1E0B0F3BAFD67278A331699AB0978F06DA78709BA"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/⚖️compare/🦀️.rs",
+      "bytes": 22849,
+      "sha256": "B1A926A46F7F30CFFE0AEC3162DDE7875BFC87546967BBE5201F3D1D9CA97DD5"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🎟️resident/🦀️.rs",
+      "bytes": 16426,
+      "sha256": "6CEA8E94ADAAD23CB42E52C6DFAD19CA4785C37073B7593E7EF0BB05B283E4BA"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🎨️style/🦀️.rs",
+      "bytes": 4590,
+      "sha256": "2516D41AA3569855E25C597D6F2C7D2991E8214633D882B1E574A2C3A847AF37"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🎬️action/🦀️.rs",
+      "bytes": 76270,
+      "sha256": "8446A9957535DF01F27027726121FABBD80C3B466C218DED45867DC99B347F65"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🏗️builder/🦀️.rs",
+      "bytes": 108198,
+      "sha256": "60807838EF4BD3CDDE9CD44829B70FBC34A2DA980CA514C5EA4D88713C9CB9A6"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/👥️presence/🦀️.rs",
+      "bytes": 5956,
+      "sha256": "652DE15B83AC846352EB7922B456A0CB3F11C3586394FA47C861B2CF639B8744"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📃️document/🎟️assembly/🦀️.rs",
+      "bytes": 19937,
+      "sha256": "AF67DE32B0FBB4653CD522FF7C6AEF0C25B07987B1A981FFCC2D800F423BFC57"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📃️document/🦀️.rs",
+      "bytes": 43461,
+      "sha256": "EFD2BD8B854F99A971B27475963C39D35E18CC67F09D9E8BD9591F6E769E874D"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📐️layout/🦀️.rs",
+      "bytes": 18243,
+      "sha256": "B656726EBD3942712C167DDCB7E1CAE375C65ACAB4915B8ABA4653B4C9759C49"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 2241,
+      "sha256": "227146887C6FFC316A847FA4D600DC8597699BBDD2638EEEB8515CBA778E5B95"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🔗️bindings/📋️copy/🦀️.rs",
+      "bytes": 8076,
+      "sha256": "2BB00F89D1D2B47FC10D006E4E0529870B4A2F831258D299E0775407D76AF54D"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🔢️number-format/🦀️.rs",
+      "bytes": 4727,
+      "sha256": "9512A9371C70BDB8AEBAB7D4CA378DD5AA6C75FC23D29F1E2EF4FC12ED50B7C1"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🕰️host-temporal-format/🦀️.rs",
+      "bytes": 6922,
+      "sha256": "D598FBE48C3183F203BED399AE41182A1ED3E6F06A4C1385972FC2D6AB4CE221"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🗺️surface/🦀️.rs",
+      "bytes": 12135,
+      "sha256": "6D2DDA28A6610DA54A1D6A9534DA25297DE649CA11010AA125EF7EACFA6053D1"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🛡️limits/🦀️.rs",
+      "bytes": 75959,
+      "sha256": "61E91C0A0F37DD9A710FD6E330F11A82E6AE3D3625224414E1456A665E4ABC28"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🦀️.rs",
+      "bytes": 3041,
+      "sha256": "84E2A628750D6AF520F811FE92D3FEFF286BFF90A7D598DC667C61B65CEADA5E"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧩️component/🦀️.rs",
+      "bytes": 73981,
+      "sha256": "59B6B5A7732D8C4E8013E853636303D70CF59F2CC693EA5F02930769388F587A"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧪️tests/🖼️image-described/🦀️.rs",
+      "bytes": 460,
+      "sha256": "1DE8AB787B79172FCABF92C6A79145E78B56AD2D2C3F6F48625DC51B663257CA"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧪️tests/🚫️image-description-required/🦀️.rs",
+      "bytes": 222,
+      "sha256": "2E74BB8CFBC0DE34310C01F591E2452FB0FF685D225378C687B05AB13312B046"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧪️tests/🧬️typegen-export/🦀️.rs",
+      "bytes": 615,
+      "sha256": "23B2BAC09300B28F6A08123D464D3811D6175B6E2BE94B228C08D2668D0AD918"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧬️schema/🔣️.json",
+      "bytes": 7774,
+      "sha256": "0373845F1DC9D27ECD702351E06DE1027F39E56702DBDEBB4AECD95D3E2AC840"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧬️schema/🦀️.rs",
+      "bytes": 66900,
+      "sha256": "76952A5F5774234DCD97072BE4C7B04280DDE7DCD7F4FF5C00B7D1EC7E887D45"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧾️typed/🦀️.rs",
+      "bytes": 7427,
+      "sha256": "0DE1A5909EC3014D2E56DD1984769A175F76BE72541FC2B923B51602E946DF3B"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🪞️copy/🦀️.rs",
+      "bytes": 26184,
+      "sha256": "A90193C03148A3A5F2B8448703B64DEE926668FCEC13157877F428854A8F4181"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🪟️overlay/🦀️.rs",
+      "bytes": 14511,
+      "sha256": "5AF3AA0DDEF3D8954A807B8687DCE1EE82C42B031002F6439056E8969461B97E"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🪢️text-edit/🦀️.rs",
+      "bytes": 35038,
+      "sha256": "65860DFFC8E4305397A1D58493BEB9B381BFA7D7F19C7C970150FDB6F0F113AC"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🪟️window/🦀️.rs",
+      "bytes": 16037,
+      "sha256": "0A0238BFBBBA2C67C9A6FB4D5209ED066E964CDBC27417E795B4F4BE84D71B07"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/👥️PresenceBar/🎯️targets/🧊️wgpu/🦀️.rs",
+      "bytes": 12569,
+      "sha256": "0E26CD51332F5112C73920A954413EC4EB606EB39EF7AB72F8F641811E2B48E3"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📑️Tabs/🎯️targets/🧊️wgpu/🦀️.rs",
+      "bytes": 8357,
+      "sha256": "D6D44ACFF716793B0416A41412F1E3CE3450F00407E69357E23D521A72DEAABD"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/◻️2d/🧬️schema/🦀️.rs",
+      "bytes": 3152,
+      "sha256": "00F27D595D90A4867C9069FCAA0765DEE1A0F99EF38ABB7AA0D68EB8DCCA1B33"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 665,
+      "sha256": "FE8D36AD11E876303CE2D08BBEBCA616A3ABC510C25199B3E07A4BAB257F84F7"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/🦀️.rs",
+      "bytes": 2405,
+      "sha256": "853CF09BFC4BBB3CBD9110C5D34527C1515ECB360A8736A89AE750D19D7FE73E"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/🧊️3d/🧬️schema/🦀️.rs",
+      "bytes": 34202,
+      "sha256": "D522362374DEC239255067D861B295CA711B964906D33ECCB6D0971FAE2A86CB"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/🪆️binding/🦀️.rs",
+      "bytes": 4973,
+      "sha256": "425A6504A0E0EEB6F43EAFA483573432522ED18D2E04CAFCF4B6113EE80A3EC7"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/✍️editing/↩️undo.svg",
+      "bytes": 267,
+      "sha256": "7634B3EC9DA95503E206FB5A953F55E2B82B44190E22D84218FE65FFB1EB2803"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/✍️editing/↪️redo.svg",
+      "bytes": 269,
+      "sha256": "BA6EA06CA3A5803BBF098AED5C4EA5D8B360BEEC9F907E8A8307ECC24D1C79A9"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/✍️editing/⏩️redo-2.svg",
+      "bytes": 286,
+      "sha256": "441AA519F9772C0A2B9395379E3661C8712BAF54284DE29302DDDB7E91A768B6"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/✍️editing/⏪️undo-2.svg",
+      "bytes": 287,
+      "sha256": "4D24CE8E1A2309EA5AB2E79E20B741A289A76B21C2181BEC82066FD95E9479BE"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/✍️editing/✏️edit.svg",
+      "bytes": 269,
+      "sha256": "282C49C5F29A7883B248145E0B4D31D1BB4D0EAA7C2F144519EC4B70AFED2C7D"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/✍️editing/💾️save.svg",
+      "bytes": 395,
+      "sha256": "DBAA9B94B19DFC5F206EFB505FE2CD39AE60CBE2D1ECF926389E47869A0B906F"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/✍️editing/📋️clipboard.svg",
+      "bytes": 332,
+      "sha256": "E9EE1304013AB8BA71DB39938C0201EF1381924F5E441454FF2FBB478C7CBE09"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/✍️editing/📑️copy.svg",
+      "bytes": 317,
+      "sha256": "5A1DB0CFDA8FC395059E713E70881A98A962A96F4409C7BC3CFA8DA06ED868B7"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/✍️editing/📝️edit-3.svg",
+      "bytes": 354,
+      "sha256": "727E43111F7A8D99DB0A6B283A12BBAE761F2319C021239D76BF91970A113AD4"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/✍️editing/📤️export.svg",
+      "bytes": 290,
+      "sha256": "8460AC5E2BB03F0E4AAD7D782769A2ED6D4D320335D1990588EA6A45335D3482"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/✍️editing/📥️import.svg",
+      "bytes": 290,
+      "sha256": "4374A5872F9A163C064F4F679E6F178D1E316C935344D7A7E55FE5F21B1A3DAF"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/✍️editing/📩️download.svg",
+      "bytes": 296,
+      "sha256": "45DDCDF5401D83D54B4C54EB8F1B5638D4F24A912577A6EC380CEEA2614036A1"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/✍️editing/🗑️trash.svg",
+      "bytes": 313,
+      "sha256": "C27DEF834E72CC0F51F3FF597FEBD74D5A7FB5C7C929104D41F7C49C8F820C86"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/✍️editing/🚮️trash-2.svg",
+      "bytes": 367,
+      "sha256": "08609A1CF12ABA8431996A69CC7BEDDCC59CBEC0BDB2051778B4D01AC4649846"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🌍️geography/🌍️gis3d.svg",
+      "bytes": 220,
+      "sha256": "C395C8E620F395397C7FFAACB91C98F21324911E8FA3BC6E725E8406DF5567F0"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🌍️geography/🌐️globe.svg",
+      "bytes": 309,
+      "sha256": "52B1556F59F43A9FBC335D613B5A140303719554386A301B37DEDA7974A95A2F"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🌍️geography/🏔️terrain-3d.svg",
+      "bytes": 254,
+      "sha256": "C40D4EB282A811A54E950E7C03160859A0BCDE0212C11ADFD35279B35EB8F230"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🌍️geography/🏠️home.svg",
+      "bytes": 369,
+      "sha256": "5539095002A8721F34633AD635BF1E414F85D666A678F1D9B5107F352DEB7E1D"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🌍️geography/🗺️gis2d.svg",
+      "bytes": 260,
+      "sha256": "84E395549B4F79487B63C91EA299AA9089B9A67CAA154D669471982469AD37CF"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🌍️geography/🧭️map.svg",
+      "bytes": 314,
+      "sha256": "91B70FA9828BE520638585190FC1BDE5265A3E66BB444F399BB5C95B65440B12"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🎛️controls/↕️grip-vertical.svg",
+      "bytes": 391,
+      "sha256": "C8C61C54DE81FFCE41B2C4F1027A98DA2220769263D39364EB5943AAB8DE6603"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🎛️controls/⚙️settings.svg",
+      "bytes": 564,
+      "sha256": "2A49EDDC9F4868BA36FFC24F3F18768E847D81CCC9AF2296C9A6BE96F1AF25CD"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🎛️controls/➕️plus.svg",
+      "bytes": 234,
+      "sha256": "A066A01240AC5708E4BC31669A95D76C83437DD71172574B0A3ADBD94D674B7F"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🎛️controls/➖️minus.svg",
+      "bytes": 210,
+      "sha256": "EA027E8AF82894F846A7A028004899B4646C6AAD9E23642859B47CBC456EBC8C"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🎛️controls/🎚️sliders-horizontal.svg",
+      "bytes": 555,
+      "sha256": "27BC1C7CB668ADB131D985DB4515725049E71D2F839E6ADE5002279223F43DD2"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🎛️controls/🎛️settings-2.svg",
+      "bytes": 302,
+      "sha256": "0F0C59C3DD44B7F0747BC433AD1D2B12EF48ED89FC570728D468055EA09AA920"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🎛️controls/🔘️toggle-left.svg",
+      "bytes": 274,
+      "sha256": "4EB7B48875907F0F87C2916F40649A9BB672CFF27F965CFA3DBEAA2F04141D54"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🎛️controls/🟰️more-horizontal.svg",
+      "bytes": 290,
+      "sha256": "2FA6C338293B5898266F81461913BF93CF5B5CD50B500F355183292C9FC9C6F1"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🎨️drawing/✂️scissors.svg",
+      "bytes": 349,
+      "sha256": "D057D223E02D27CE0C4041C5F4A47A4FF789A1112720CF2446878D020682B62B"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🎨️drawing/✍️draw.svg",
+      "bytes": 220,
+      "sha256": "2515A38BD5A92CD0CD9F4F3559D46D8F1BEC240569D6C56BC4A891A8FCCE2542"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🎨️drawing/✏️pencil.svg",
+      "bytes": 246,
+      "sha256": "FA7E414A1BA11FBE1E79A68E66B4B031874830782EBB89C054778B93999F791D"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🎨️drawing/🎨️palette.svg",
+      "bytes": 463,
+      "sha256": "34F1E4D2BE2E0E7C9E940585970BA47F398691A0D2C21A5395D42E0FB5B2148A"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🎨️drawing/💉️pipette.svg",
+      "bytes": 439,
+      "sha256": "20D26D088CA9D9ED28791EA62BC8C73D0C1EFE8C159165236028CB5A5343FB6F"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🎨️drawing/🖋️pen-tool.svg",
+      "bytes": 522,
+      "sha256": "051DA35482AC116671C08D45AF3C3C7569C2FC9D72CDFC60EFCA991A287AEEF0"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🎨️drawing/🖌️paintbrush.svg",
+      "bytes": 601,
+      "sha256": "EAE01A327CA78800CE1334A29BF18FB88F78A3ED41D67CE7C877D88931A972E0"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🎨️drawing/🧊️volume-brush.svg",
+      "bytes": 268,
+      "sha256": "A1EFA2948C3DB5CD05D777F0D6B1E48309F709F4167AE6AB077E66986D238B95"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🎨️drawing/🧽️eraser.svg",
+      "bytes": 361,
+      "sha256": "C0B62230811F4CEE65E6B2FDBB7744ADD9669CE49FAB42EC7CF9819FBFB5E0A2"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🎨️drawing/🪣️paint-bucket.svg",
+      "bytes": 387,
+      "sha256": "3AAEAC8A76C3672DDFAE5DA79D2B275883BB6DF5C96042D2142EDF54AA87E04D"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🎬️media/⏭️skip-forward.svg",
+      "bytes": 311,
+      "sha256": "41562920D1EA02E042EB805A3B3F747B949B73CE4A2C5ACA0BF43F266B5A0E14"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🎬️media/⏮️skip-back.svg",
+      "bytes": 313,
+      "sha256": "AD71FB81304471702D6334DDE41716B47C8843D985F8C02C81C90E3194C847E7"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🎬️media/⏸️pause.svg",
+      "bytes": 291,
+      "sha256": "28C09263D14476AE84DD7356CB49F9B46EEA67BEA0254E07B92FE63D50F85E1F"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🎬️media/▶️play.svg",
+      "bytes": 284,
+      "sha256": "EAA38924DD9890E6DD464F6A2B785A9565A1B7D1E886CC2EB3170B4CB740E4B5"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🎬️media/🌆️preview.svg",
+      "bytes": 303,
+      "sha256": "904DA3467BF46C19DCC05B889A0A72AC112FC79F28C3A5954BED5E6411EC30AE"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🎬️media/📤️image-up.svg",
+      "bytes": 388,
+      "sha256": "DF2D98CFE864A5EBDDFFEC327731765F076D6CFDF4BF25EA6A54BA7790B42043"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🎬️media/📷️camera.svg",
+      "bytes": 327,
+      "sha256": "BDED7AF976C58488F59BED832DA6696EDD1E2A85A2934AC34E98008FF7950B49"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🎬️media/📸️image-plus.svg",
+      "bytes": 399,
+      "sha256": "E7E1A10339DDCE8437DEE59201ABAA44E3DCF87817F829A30BC86339D8A5E842"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🎬️media/🔘️play-circle.svg",
+      "bytes": 246,
+      "sha256": "A9FB8A681AC690801D14E08776973C8A728F34FB3A0F4AF34071D52B2539C4C9"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🎬️media/🖼️image.svg",
+      "bytes": 336,
+      "sha256": "02B109B9E4F29A281B4EB3DD48E9D823887146C62E9F11BC63EA182E5D7CCA0E"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🎬️media/🪄️animate.svg",
+      "bytes": 478,
+      "sha256": "5913E120F2C9E4CC368AA39EDCE2363531C15F49FF69D1785F52759F8B76F71A"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🏗️construction/🏗️building.svg",
+      "bytes": 496,
+      "sha256": "4980ABEBCD24045E68BCE26E52214F9CE4920C69843FCCA90A4DA195CEC2282F"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🏗️construction/🏦️landmark.svg",
+      "bytes": 425,
+      "sha256": "C35C91C18C8C1E32B4418A8A0AD98571A99D6274A8849FAC74670F2B47593DA4"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🏗️construction/🧱️slab.svg",
+      "bytes": 402,
+      "sha256": "525D2298F405C9FBFFA9E910BE604E5C7A08E2E7A719667BB7581C4264ECDFF2"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🏗️construction/🪵️beam.svg",
+      "bytes": 356,
+      "sha256": "BA43E7245E057A60FF588535311BD81A661D36E3EE8C4B74A244C2A25D435F69"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/👥️people/👤️user.svg",
+      "bytes": 277,
+      "sha256": "3F4B264C5A87CB51DBD4D52E0DBDDE80E08C912F38A21659C2369166774D0A90"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/👥️people/👥️users.svg",
+      "bytes": 361,
+      "sha256": "E7BE907F3C3BA83D61566FE282E450E09D856CF3399F8CB77FD4116CF8F0DDB7"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/👥️people/💬️message-circle.svg",
+      "bytes": 325,
+      "sha256": "972CAC2EABB4EA829D81C074D075F9D461A10AB6316199E9118226A08CBD0C81"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/👥️people/🗨️message-square.svg",
+      "bytes": 317,
+      "sha256": "A93008959519A09121DB509CE5115B2A7C3F65D84BABA9C609EF2C0718737C11"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/💻️devices/☁️cloud.svg",
+      "bytes": 253,
+      "sha256": "DE8AF3D5F8771B51B7BA80889940C884CE15F94E5045AC0C9EF1BB19B6728F1F"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/💻️devices/💽️hard-drive.svg",
+      "bytes": 440,
+      "sha256": "EFF156C7572FDBEE7BE6B8EBE1AA9884AC2CB27CFA88EC4AA9886826FD6D006C"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/💻️devices/📟️tablet.svg",
+      "bytes": 292,
+      "sha256": "99EAEB11B7AA07245115BBA24BE99CA46548A12D2475DD1445118794BE7908D7"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/💻️devices/📱️smartphone.svg",
+      "bytes": 272,
+      "sha256": "99D9E9EBF1181B4294FC1760E4BEBA3A5CDEF0D89FDBA2EF5FA57955B1B84D16"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/💻️devices/🔌️plug.svg",
+      "bytes": 313,
+      "sha256": "BB51D218A70F4254F75587C0696242180C182A9A00EA19A22B699FB419DE9C73"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/💻️devices/🖥️monitor.svg",
+      "bytes": 324,
+      "sha256": "B9490BBB9864D771EB0827AE359AB9CA4C3F413F3B5FC36A28277921C7B405E8"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/💻️devices/🧠️cpu.svg",
+      "bytes": 605,
+      "sha256": "4E61124D122B45501322D16FD4A7D720108209B990F0A3611CF67A7E4CA588A7"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/📊️data/☑️list-checks.svg",
+      "bytes": 356,
+      "sha256": "3A9896808282B154745EFFB73422BA8A075B3F5CE90DAA247D0523C8C40C97A3"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/📊️data/⚗️filter.svg",
+      "bytes": 348,
+      "sha256": "B6E9DF5CD9675A919B524DA485F0048368348BDEB2EDA715136F8F7EF7494B40"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/📊️data/⬅️align-left.svg",
+      "bytes": 257,
+      "sha256": "D083F229006F44D725AB779821FFE1992AB0A2D02C5D2A86337D35853F348770"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/📊️data/🌳️list-tree.svg",
+      "bytes": 336,
+      "sha256": "A8CFA50BEE9EA0EFC46DC594A9D49063C9A0C673C89BA7EC3769B1728A49BE77"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/📊️data/📊️bar-chart-3.svg",
+      "bytes": 298,
+      "sha256": "6C33DA0AFC84845893696175B1A60021801AABB85ACAB9AD1C8BB199B293525B"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/📊️data/📜️list.svg",
+      "bytes": 331,
+      "sha256": "7AFF2A4D7A4C01773445E249F1F75993CD0F07A020C9A47FA70ECE6C91F075E6"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/📊️data/🔠️type.svg",
+      "bytes": 306,
+      "sha256": "5C9F727F18609FACE39AB889BE72F47C2E939AA564D907584F12D4E8B829357C"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/📊️data/🔢️list-ordered.svg",
+      "bytes": 353,
+      "sha256": "F79178FD4F60DC0A4CDE1EBD4D21CD720B7CD11BFF6B775544420B8439D8493C"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/📊️data/🔣️hash.svg",
+      "bytes": 351,
+      "sha256": "EB6082B5E4663C9EF76D1001EA646D8FBE9534F25B564081B6BC18A6BCB6BF41"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/📊️data/🔤️typography.svg",
+      "bytes": 306,
+      "sha256": "810041956D8FCB367731B6648587153B83A7ED0C0B8CD75BCB46283B71AD915D"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/📊️data/🗓️table-2.svg",
+      "bytes": 340,
+      "sha256": "4951F99D7BDC30CD370A5BC4031982D6E4B1953BCAE1B58F9BAEA5BA480A3DE6"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/📊️data/🧮️sigma.svg",
+      "bytes": 308,
+      "sha256": "E652767DAE14FAF32C53C8607E49BB6F51518C20EC9BA469A98774439E7A5D27"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/📊️data/🧾️clipboard-list.svg",
+      "bytes": 430,
+      "sha256": "7A4F3A208CA441AFE215B22CB6D1E755B80737541E92D3172FA196EDA73E3828"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/📐️projection/1️⃣projection-one-point.svg",
+      "bytes": 268,
+      "sha256": "D833957056E9C4B8FEB2745AD37651120BB42ADDDCCD29F3B24446DCF59E451B"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/📐️projection/2️⃣projection-two-point.svg",
+      "bytes": 290,
+      "sha256": "28E32D1D0BEB1D79EDA6F087C9EDB39B5E21E22E3D5113BDAA3D0505B5197DEB"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/📐️projection/3️⃣projection-three-point.svg",
+      "bytes": 361,
+      "sha256": "C4CBEC91D2C90D2FF46312E293485AF2B39E702C289B8967BCFE65C1FCD6DC4C"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/📐️projection/↗️projection-axonometric.svg",
+      "bytes": 256,
+      "sha256": "65476704A5760CC2F27A27663ABDED319D547806E9C7DB11FB540308020177FE"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/📐️projection/⤴️projection-oblique.svg",
+      "bytes": 251,
+      "sha256": "0E06D69B9988CA3CDF0D82241C1CA81F00CB65DDCDED7461B3020162B5B1645F"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/📐️projection/🎲️projection-isometric.svg",
+      "bytes": 250,
+      "sha256": "0C363DB0989084F159F87EE9BB0528805B0C2F79D375CD5A3B14183E9C2F7636"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/📐️projection/🐎️projection-oblique-cavalier.svg",
+      "bytes": 251,
+      "sha256": "0E06D69B9988CA3CDF0D82241C1CA81F00CB65DDCDED7461B3020162B5B1645F"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/📐️projection/🐟️projection-curvilinear.svg",
+      "bytes": 300,
+      "sha256": "CE0E3D5A70882B3769FF4AF829EE72DD353E1B39A2B9957450B4B517C61B2166"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/📐️projection/👁️projection-perspective.svg",
+      "bytes": 268,
+      "sha256": "926A747FE7B8A94AACA6B408AA25D2D20F1C6EC1EC76B13FB99E455EBF1E8604"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/📐️projection/📏️projection-orthographic.svg",
+      "bytes": 337,
+      "sha256": "6E7056E21106E31ACCE021093EEAD6685C55668835AB509942E5FED95074BA97"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/📐️projection/🔀️projection-parallel.svg",
+      "bytes": 337,
+      "sha256": "1DBEF0289E37CACEB7CEBD78E9B7AF8BCCE9B7D82D0DEDEA76D700BD5ED1F376"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/📐️projection/🔺️projection-trimetric.svg",
+      "bytes": 254,
+      "sha256": "1C053B25536DC2443A0504AEC01668292FA20726D46A49ED7BEE884106827D0A"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/📐️projection/🗄️projection-oblique-cabinet.svg",
+      "bytes": 276,
+      "sha256": "44D72B07135E3EC5FB7E6C41EF86B54040EB7BB64B14B58A80AEF67793CDBF98"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/📐️projection/🪖️projection-oblique-military.svg",
+      "bytes": 262,
+      "sha256": "6B3B1D665C39CA9983B035A4A5F1753C7E2193E08664BB526F3DE439020F3D0E"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/📐️projection/🪞️projection-dimetric.svg",
+      "bytes": 254,
+      "sha256": "6193BE2994AC0DCBC76B8758A28258973A3FBC347CF511DF7F40966BE5E493D7"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/📚️documents/🎓️graduation-cap.svg",
+      "bytes": 390,
+      "sha256": "43418189DD6C92F0620790DBC9C1E03F5CF264857B3C04D4F139A24BD98B4015"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/📚️documents/🎞️file-video.svg",
+      "bytes": 419,
+      "sha256": "42FDBF46D44C9606080D8971A5B2DEEFD9A827F6F45509963F3BB7D055522E1C"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/📚️documents/👨‍💻file-code.svg",
+      "bytes": 370,
+      "sha256": "9A4B6381FF02EC9ECAAD6AAB82CFF31B232BC88A2E35CAD9F13847FFFD77F968"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/📚️documents/📊️file-spreadsheet.svg",
+      "bytes": 393,
+      "sha256": "BDD602948FB491E98FB60C0045658EF34285B41A5A8DA80C3A90D874E3B78F70"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/📚️documents/📖️book-open.svg",
+      "bytes": 356,
+      "sha256": "66106E85B6D2E72C20DEC9ACD8448F384CE20625036D214F43334EAC69BDDBC1"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/📚️documents/📚️library.svg",
+      "bytes": 282,
+      "sha256": "75F7B93D779C0DAF97B0B1EBA29EB220977DF7FA529A020286A27617FEDC9A6C"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/📚️documents/📝️file-text.svg",
+      "bytes": 370,
+      "sha256": "4A3E46BD3369D7499FD0AB30C51CD327596B2D75A47F98A9A8D90EAE1C44D364"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/📚️documents/🔣️file-json.svg",
+      "bytes": 465,
+      "sha256": "837857373D624D2F13F039C5D3CCF7A01E4A150660BB5B5A636386C860E3E251"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/📚️documents/🔤️file-type.svg",
+      "bytes": 375,
+      "sha256": "ACA727FDE4DA02AEF7922CA91C92B8D25D1A1831D06CB1BFAB57F65240E0A23D"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/📚️documents/🖼️file-image.svg",
+      "bytes": 397,
+      "sha256": "520436A4C73BCE3747EBDDA8C858A24314CC641E18E6AFF1886E41C4A3FACF44"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/📚️documents/🗒️file.svg",
+      "bytes": 299,
+      "sha256": "8774ACECF60935DA1853F99C048C545325CB2B3A13021C1E99D4A9ED245E5BE1"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/📚️documents/🗜️file-archive.svg",
+      "bytes": 420,
+      "sha256": "97E8344C8EC9B51926A5752D6225137140B4332A04EBF9ABEF9B2D0C076D03B9"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/📝️notes/📌️sticky-note.svg",
+      "bytes": 290,
+      "sha256": "1CE9A0ACA92E84016D2C8F23495256A52D23A0031D3D710FC0754F19F0E83ECC"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/📝️notes/📝️note.svg",
+      "bytes": 262,
+      "sha256": "96F600D62CAB020F2B263CAF9DE1072EA03641449DBDF387470E4BFFAFCED12F"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/📝️notes/🧮️note-math.svg",
+      "bytes": 244,
+      "sha256": "C11430A4E057C63B5BD768612BEA78FFC6F094404261EB1DF226A53C48F42C12"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🔄️transforms/↔️flip-horizontal.svg",
+      "bytes": 392,
+      "sha256": "7598C901C15CC52F553061B5011837F9C20718740DEC73754ED0F74E9502E37D"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🔄️transforms/↕️flip-vertical.svg",
+      "bytes": 395,
+      "sha256": "2D3AA5C14135C94FA0B4973C3073C9DD5ED52B2791A77488AF93CDCBE08BAA37"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🔄️transforms/↗️move.svg",
+      "bytes": 349,
+      "sha256": "BE78708B398DD2EF31BA0F4A0E529BA35A20DD824C1BBAECB42C932FA6FEC373"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🔄️transforms/📏️scaling.svg",
+      "bytes": 338,
+      "sha256": "F73C7C0952C68A6DB0CDC6A0A4223181B75FC3FB576F3E59459CD2EDFE72CBD4"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🔄️transforms/🔁️rotate-cw.svg",
+      "bytes": 277,
+      "sha256": "83E24EFF33C53B2DF4B08E50916AAF3D28DC2955D6C17FDCD925BC3E3BAA62E3"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🔄️transforms/🔄️rotate-ccw.svg",
+      "bytes": 275,
+      "sha256": "E149422EE195174A4EC9205A2BFCE3D98D54C2F5B736E47DE2EE2DF453912BED"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🔄️transforms/🕹️move-3d.svg",
+      "bytes": 295,
+      "sha256": "AF3741FCFA83F16CAF062249435452502FD9F1B119FE6E18845859FBF9E4E33B"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🔄️transforms/🧊️transform-3d.svg",
+      "bytes": 287,
+      "sha256": "214E1AC144B0785A7F0245E2669F747C2C37E1DB88EB732C45E23DCC882389CC"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🔄️transforms/🧭️relocate-3d.svg",
+      "bytes": 344,
+      "sha256": "852CA5D7A06A43D7C2D06D6F9A9044A24CADF1C71CDC7B46F0F2071302B04655"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🔎️viewing/➕️zoom-in.svg",
+      "bytes": 354,
+      "sha256": "F572248E1ABDC69853B01AC3CCA1B74D0E5DEEF7E99B97DD4EB9986B7216CF1C"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🔎️viewing/➖️zoom-out.svg",
+      "bytes": 312,
+      "sha256": "F34D270B56AAE9A074205144F0633899DBDF2BA9A6F17F79BBE2AE7C7A5326C1"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🔎️viewing/🎯️crosshair.svg",
+      "bytes": 390,
+      "sha256": "C4051D84C036AE8D35281D90C7419D881BBE5DFAF82D608D304D4586FF1C11C4"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🔎️viewing/👁️eye.svg",
+      "bytes": 338,
+      "sha256": "D76F1319E4740E0F506D584BC7B06D847C339361BA5A34608FFF3EE73CB538C9"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🔎️viewing/📏️scan-line.svg",
+      "bytes": 362,
+      "sha256": "2302BCF12D079F29015193A8245FF861EA5B00C569C0911BBC0480F95DE4989E"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🔎️viewing/📠️scan.svg",
+      "bytes": 338,
+      "sha256": "DD7226A764002C6355C97FBFC0F25F968638AD714D428C33557F4C853AE8F4E7"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🔎️viewing/🔍️search.svg",
+      "bytes": 253,
+      "sha256": "B68A2D1006E17557D0256B3FF7DDB563D0541FB099AA5EDF4F8C09178551AD21"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🔎️viewing/🔎️text-search.svg",
+      "bytes": 322,
+      "sha256": "F37375E72E0DCF25E890E8FABD278005F4254DEE0CD979FA710D1B13D5CED4A7"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🔎️viewing/🔭️focus.svg",
+      "bytes": 379,
+      "sha256": "B8F6F8EDE9F0A5DB7B4478D8C92BC07E1FCCBEB6A800617583EC34AF4D343FC1"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🔎️viewing/🔲️maximize-2.svg",
+      "bytes": 287,
+      "sha256": "92EB702A5B7B6FA09B5EDCB48421EE887E759BFE2398EC3142D001DBC1F37DE9"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🔎️viewing/🔳️minimize-2.svg",
+      "bytes": 289,
+      "sha256": "1C77A918DF1C1D78287BA783053AA518D6BA09B93834CDA09FFAB24AD286638B"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🔎️viewing/🙈️eye-off.svg",
+      "bytes": 482,
+      "sha256": "DE3316BF92A9ED176B00138130E31901F245183E3EEF528846D038FA1C800EE5"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🔐️security/🔒️lock.svg",
+      "bytes": 287,
+      "sha256": "FAEDE85D69B452344156376BBF5A461DC2C5F038AB3561266E6F75639567E87C"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🔐️security/🔓️unlock.svg",
+      "bytes": 280,
+      "sha256": "12AF4C3C23FB8E008E26ADB4B395E3969262ADB31DD079DD9504F28AA122C463"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🔐️security/🗝️lock-open.svg",
+      "bytes": 286,
+      "sha256": "678B6A1CA574647762E76A5EE3B6511657F2B87F27641B4DFD49F041D630469A"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🔗️connections/↗️external-link.svg",
+      "bytes": 310,
+      "sha256": "0D81733D03E32DBF6152BED67EDAD49A281E28A1D85D60D6D7C00DE7B590C760"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🔗️connections/⛓️‍💥️link-2-off.svg",
+      "bytes": 343,
+      "sha256": "B80AEFA2C9801398AEE573C3A1BC17E09012A4449D5A343F5A670475E667657F"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🔗️connections/✂️unlink.svg",
+      "bytes": 555,
+      "sha256": "B99F19F992083FAF34A57278967505F36608C44ADCBF12ADEB6F56DC66F06120"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🔗️connections/🔗️link.svg",
+      "bytes": 337,
+      "sha256": "D98DB78D4E13C2B8CD4F580C9ED752ADC89D5CD032B5CE2C6B8A7DB032A03E3C"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🔷️shapes/⚪️circle.svg",
+      "bytes": 222,
+      "sha256": "F6F795C9A81DFBA2CC360AC4A29FC2FDEF8D40E85DDCA0E1AFF943F6E48638C7"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🔷️shapes/⬜️square.svg",
+      "bytes": 239,
+      "sha256": "E187A6DAD4C739A1DAD7BE40557966186DB10793B52336BE489CB0FBC362E140"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🔷️shapes/📦️box.svg",
+      "bytes": 379,
+      "sha256": "4C21D07008EAC14BBF7A509EF7B85835C557F7072402C18DEF9E5E8496C71C3A"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🔷️shapes/🔘️circle-dot.svg",
+      "bytes": 257,
+      "sha256": "FA28CDFE07A1BDFA1FA97D7BFB5EDA1A26512AFB5227DBC027C9624889841A24"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🔷️shapes/🔲️square-dashed.svg",
+      "bytes": 510,
+      "sha256": "1409353A0637062C77088480542F88CED46B51BFF16C708181EC1848C894C89C"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🔷️shapes/🔳️rectangle-tool.svg",
+      "bytes": 218,
+      "sha256": "75D34948E21280A2029F62F6B182730031FC727C415B1D9957C745AA973A3A0C"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🔷️shapes/🔶️hexagon.svg",
+      "bytes": 323,
+      "sha256": "20716D2270DD5D6201C6290B6D1C270FA59BF832757C987D3A7C2C7D00B7EA67"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🔷️shapes/🔷️shapes.svg",
+      "bytes": 383,
+      "sha256": "7FA763092EEF6C6A2FC5765BF0A9C703A1EE2CDBBA0EB9C055EB563051F23FB1"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🔷️shapes/🔺️triangle.svg",
+      "bytes": 269,
+      "sha256": "B5FDAC0525A4BC54B058D5E4C11F2715F66328FF9450E01AA8AD58029249C45A"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🔷️shapes/🛢️cylinder.svg",
+      "bytes": 269,
+      "sha256": "4C081C285DF0762DEF36BA6A991BB2B867E2213DD8E43F561E8A9BF7F0B11D47"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🔷️shapes/🧩️combine.svg",
+      "bytes": 462,
+      "sha256": "927ADE454B936FEAF557B3171D88E94FAA03DDA42E5F6CEDE0817A307A01166C"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🕰️time/☀️sun.svg",
+      "bytes": 463,
+      "sha256": "F4E7A94045395EDF3E0EF88357CD20087B18EB6A100F103B94CF8173430F2653"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🕰️time/🌙️moon.svg",
+      "bytes": 312,
+      "sha256": "55ADC0B2A327CF752BC8B80838DC78E16D15BAC4EDF9A7A71AA17C5221EBD42C"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🕰️time/📅️calendar.svg",
+      "bytes": 362,
+      "sha256": "0629D9E7E3FBA8299523003C94D383E607F20CEF89323E662A36187916D0299C"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🕰️time/🕰️clock.svg",
+      "bytes": 249,
+      "sha256": "283BC5F641780F4B5D23DB59ABEA6A86E2175D5E521A773E84D05BA45D4C8317"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🕰️time/🗓️calendar-days.svg",
+      "bytes": 462,
+      "sha256": "7850009AD85EE5452C0AE6E50C9D798B6C40813FE08029BEFA4B3F64AA145578"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🕸️graphs/♻️trinity-rewriting.svg",
+      "bytes": 242,
+      "sha256": "81D072D5A5961EFC9E78D0950BD3F6ADB7ABC5AF566C65000DC1009468979645"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🕸️graphs/⚡️imperative.svg",
+      "bytes": 281,
+      "sha256": "3AD9C1BB640DBF587C3CA581C3B5E2BB27324D09F22FFB458DEBE640D3742EA1"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🕸️graphs/🌊️flow-graph.svg",
+      "bytes": 313,
+      "sha256": "ACFCDB0EDAB37DB1CB7C5705AA112F096B54C4B2BF105C8CDB2C85D9DC4B155B"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🕸️graphs/🌿️git-branch.svg",
+      "bytes": 329,
+      "sha256": "F09A9CA11F403CC02CA120604B6FCCC040072FDBAD55630B7630C69C11C11D87"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🕸️graphs/🎞️graph-media.svg",
+      "bytes": 339,
+      "sha256": "834035F9B00E61BDCF1D74EE855A36CE8C86B4449AA703A4C25174F34F17C515"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🕸️graphs/🏛️architect-graph.svg",
+      "bytes": 398,
+      "sha256": "FA9328385AAC615525E696D7F79648A6B55589FF3E6855C05843E122116F0653"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🕸️graphs/👈️trinity-lhs.svg",
+      "bytes": 265,
+      "sha256": "910E3AC0849F858F2FC542302F48BCC37EC89BE40E7662F1A571B07F681C5100"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🕸️graphs/👉️trinity-rhs.svg",
+      "bytes": 266,
+      "sha256": "964C5CA90DB5D6878002659DA1130D64B40023D33D265668A08106F3EBA4729E"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🕸️graphs/📍️git-commit.svg",
+      "bytes": 305,
+      "sha256": "E5467822A489755272BE7C0B4C1218C91DD401BEC93ABA881721777E4E1B9C9E"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🕸️graphs/🔀️git-merge.svg",
+      "bytes": 291,
+      "sha256": "783ACE9F9CA81B596F6E00658FC44E57159E569F9DEE8CF04268E29B2140AB3E"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🕸️graphs/🔁️workflow.svg",
+      "bytes": 345,
+      "sha256": "53274B20C1243EB310FD6F2D6B572540B24E9AC8CE3625F428B45B013ECE0836"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🕸️graphs/🔗️dag.svg",
+      "bytes": 350,
+      "sha256": "1E6AD11D0106D71B127BC401C80C5D87CCE2E7EA21BF7ABCBA0FC268DE36965E"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🕸️graphs/🔱️trinity.svg",
+      "bytes": 246,
+      "sha256": "05CA0E4A88C0CF4045379513D2F10162ED46435D25DE2957758918888D8B9D0D"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🕸️graphs/🕸️network.svg",
+      "bytes": 423,
+      "sha256": "F7C77DC54E1559D0E6F05DB3A37B209DF04935630113AC57D9E2F55114C69D3C"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🕸️graphs/🛤️sequence.svg",
+      "bytes": 260,
+      "sha256": "9A67F50B79E811E9AC74DE1F4283F80776FEB65413B4780B3FA748A08703ECA4"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🕸️graphs/🧬️graph-dag.svg",
+      "bytes": 367,
+      "sha256": "AE56A74D0489FF89192FA8F78D69A26D41449AA510BA74E6E12826A46B4F5F8B"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🕸️graphs/🧮️math-graph.svg",
+      "bytes": 341,
+      "sha256": "74C4764651E5FD8E4BA4EBE6F514ECC1CB0D3AA91C33DE20B130C60A1F7276B5"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🕸️graphs/🧵️reasoning-wires.svg",
+      "bytes": 318,
+      "sha256": "9CA875D004AB00A0D3209E39669FF1BF241F9B45D63EA53D283ADCD243FDA8CA"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🖱️interaction/⌨️text-cursor.svg",
+      "bytes": 321,
+      "sha256": "1AD49E6DD2235A46E6376044877EB946DA2AE734B91E288504392A86EA1010F0"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🖱️interaction/✋️hand.svg",
+      "bytes": 461,
+      "sha256": "66FB9A405AFB62506608779D4B7B8FE4A4E468B71E70ADD15D0E5E9878A3DB56"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🖱️interaction/🔲️select-all.svg",
+      "bytes": 287,
+      "sha256": "802FD6F53EF6A80A88530B0A752AE36C0ED75831B7EA2D8ED92373405A650F61"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🖱️interaction/🖱️mouse-pointer.svg",
+      "bytes": 378,
+      "sha256": "682BF9D51E38746082F23CB5D5E025B381F0DC2AA2EC815A8FA5F3DF994E97EE"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🖱️interaction/🖲️mouse-pointer-2.svg",
+      "bytes": 334,
+      "sha256": "AB524E9ED7978EA9A2CE9132846C68082BE2F28CFD7ACA2C8AF3E694F29F6321"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🖱️interaction/🧲️magnet.svg",
+      "bytes": 467,
+      "sha256": "38301D27216214E6069D56BE01AB161A82167FE9AFEA3918D1544C7A234AAFC8"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🖱️interaction/🪢️lasso.svg",
+      "bytes": 359,
+      "sha256": "4EED6E52DAFB64B2211F487E62E41E597347B665FE73425330F3B44B4AE6C45F"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🗂️filing/🆕️folder-plus.svg",
+      "bytes": 361,
+      "sha256": "377870587F3022B59893EDECA2E20C1C40A06234C3B30029E597448FE97D266B"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🗂️filing/🏷️tags.svg",
+      "bytes": 484,
+      "sha256": "8B904D05FDA625A508559FE29E1FBDFE6DB7E67FB935240433FAC9C2B3594C32"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🗂️filing/🗂️folder.svg",
+      "bytes": 320,
+      "sha256": "59A95616FB81D8EF4383E68F34C1F9E1EC5DCD5B5ECCC227E93008796B7FEE14"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🗂️filing/🗃️folder-open.svg",
+      "bytes": 379,
+      "sha256": "20D142E5BA8E66094E09C6B62353CE86DCEEA60E5160C1CFD803E39F996142C4"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🚦️feedback/ℹ️info.svg",
+      "bytes": 272,
+      "sha256": "81A3BF025E507FFD2D631E0B93EA025D0FFA31394E76791955F3C764A61D19BD"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🚦️feedback/⏳️loader-2.svg",
+      "bytes": 229,
+      "sha256": "20277BEC511B29DE28140753AE3315038DE4FD6F6F2A46CBF5DD9B74AF6CF0DB"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🚦️feedback/☑️check-circle-2.svg",
+      "bytes": 251,
+      "sha256": "729490425F7523B2FF595739AC7FAE2D0800EA78DD5049D2DF45E853DD1DD425"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🚦️feedback/⚠️triangle-alert.svg",
+      "bytes": 323,
+      "sha256": "F870F6141D34704CBF42DB2187C3518CBA33FA4C3FD6D568369F2E8A518AC2B5"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🚦️feedback/✅️check.svg",
+      "bytes": 217,
+      "sha256": "290B8D41C39A63170E7E57EEE57C3A1DD118AE77C4BF0B1678C9C8085AB3E227"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🚦️feedback/✨️sparkles.svg",
+      "bytes": 545,
+      "sha256": "EEFA8099B7753EC678398EBBCC2F35D4CD51F7919A22AA4E613E7C55DC0F4172"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🚦️feedback/❌️x.svg",
+      "bytes": 238,
+      "sha256": "A3AD944B7475756C69A2AE56556CEC9A39C032FB6022365D914DE33FD3C74A2A"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🚦️feedback/❓️help-circle.svg",
+      "bytes": 294,
+      "sha256": "E169CB47C26D0896C6AA2DE4C0C45781301A94DDC0603BB15CEA3414C2F13BA8"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🚦️feedback/❗️alert-circle.svg",
+      "bytes": 310,
+      "sha256": "5A96473357C12D0427F4A84E3291FF44AAD8DBCB2CE84709E27DAD40CABEF16A"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🚦️feedback/🏅️award.svg",
+      "bytes": 354,
+      "sha256": "568A04CFF573E9D0FE3978F5607524803190B3E7B064D71BA8A5BC5008B5DE85"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🚦️feedback/💡️lightbulb.svg",
+      "bytes": 349,
+      "sha256": "869B649F5EBE7482EE5C7A801BE64FF7FB627625D84D4A516B6830BDBE65142E"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🚦️feedback/🔔️bell.svg",
+      "bytes": 371,
+      "sha256": "BA2786D4129B97BA2A1964470F7D88B6B89ACBDE166368D209F652DCE1D403DD"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🚦️feedback/😀️smile.svg",
+      "bytes": 347,
+      "sha256": "D931E233FD6F004AAF2844B8C162D03079C1C99BBC406184685EF2964308398E"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🛠️applications/✏️s.svg",
+      "bytes": 193,
+      "sha256": "1F6838792CFEE3B384366FFEC17B4C34F1B2E789B6B89C24D407CC0201411709"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🛠️applications/🌊️flow.svg",
+      "bytes": 245,
+      "sha256": "0EB282A31CD9D944B1B3937C7E1A3CAC7BE465B803723B41BF3D757FC2EB078D"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🛠️applications/🎬️scene-3d.svg",
+      "bytes": 298,
+      "sha256": "2C988A6B72D4C1D327947E72966F22A7A359786694DAEEF835E87463A69A3201"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🛠️applications/🏙️procedural2d.svg",
+      "bytes": 286,
+      "sha256": "62516A55A14D7420573FE5DD2AC17636A420C0AB19C4CF9C298835E0039EBCC4"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🛠️applications/🏛️architect.svg",
+      "bytes": 271,
+      "sha256": "ABE251E2DCA9154BEB8BA36D8A9846F4F21D6D9388513E4268D42D6C0A779357"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🛠️applications/🏠️remodel-model.svg",
+      "bytes": 309,
+      "sha256": "16CD0F070368D9711808E6E3B0EE218282651D14E19CEDA4D7DBA93706B72C39"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🛠️applications/📋️forms.svg",
+      "bytes": 286,
+      "sha256": "88FF12DDBCA8B874A538ECE8C341343ABC492BAD13F8D48C564A98996CD54F52"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🛠️applications/📐️fem-app.svg",
+      "bytes": 247,
+      "sha256": "1B5C53B4768ADA33BF206CD1790DB11916BA51DFAFD6F40D038B03714A1ED49C"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🛠️applications/📰️document-report.svg",
+      "bytes": 286,
+      "sha256": "75E64B78DD1EFC6A2DCB487C4A9FF6888C90C80AE5BEBC3184F93B0B5EF0A83B"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🛠️applications/📷️shooting-scene.svg",
+      "bytes": 318,
+      "sha256": "F7DAFEEB0995F72BE141AD398AEBE4967F6B89C501801075CCF8A72061DBFC01"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🛠️applications/🔺️lowpoly-model.svg",
+      "bytes": 278,
+      "sha256": "1BB53C186590C186B77613879F7FB08B5F7FE4205623AB09DB14C2100C24811C"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🛠️applications/🕸️fem-model.svg",
+      "bytes": 280,
+      "sha256": "88FE186D4269C4C79199AF760B28966E332433635C7174029E16B757654FC200"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🛠️applications/🖋️writer.svg",
+      "bytes": 288,
+      "sha256": "D1BE059962FDE1B747A56EDEE4C36D6285C8D70460432AD01C61890326D60301"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🛠️applications/🧊️cad-shape.svg",
+      "bytes": 249,
+      "sha256": "7227B5316A20FEF39BA4FE3B5361BF25F1FE0120335BC14496FF85A30DF9C3F3"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🛠️applications/🧩️puzzle5d-3d.svg",
+      "bytes": 270,
+      "sha256": "F0109309BA310E35A5B7E778315D7BA6E9DB3C1FCD7FB40B4FE710CD810B3371"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🛠️applications/🧮️math-app.svg",
+      "bytes": 271,
+      "sha256": "9F9CA152EAE2FB8462C3A266F4982441B665C027923C0AFB51AF731A010CF21D"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🛠️applications/🧱️raster.svg",
+      "bytes": 275,
+      "sha256": "AF4E025ABE02D6C817B9C74DAD57B5825040C36A358AD7AE4184A00F1E905013"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🛠️applications/🧾️document-jack.svg",
+      "bytes": 268,
+      "sha256": "EDF8631043EE4FA12C1DC8CDEFC00AD0EF2BA9EE13D632020B3C491C0D32A57C"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🛠️applications/🪚️remodel-app.svg",
+      "bytes": 294,
+      "sha256": "A103F3CE57DCC7417FB213396D186AB643E0032A9A3BA5E8C91B520CC44FB226"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🧑‍💻development/🔧️wrench.svg",
+      "bytes": 395,
+      "sha256": "9905530A411B6198510CE1108B9D8F50099B303DE870060F47F2047679277AF8"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🧑‍💻development/🔨️hammer.svg",
+      "bytes": 461,
+      "sha256": "FA19FAD627C2114AA90C11D09A9B42D844CDB3CCEE86E7DE66B88CC75BEDB0AD"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🧑‍💻development/🛠️workbench.svg",
+      "bytes": 287,
+      "sha256": "D822CE24EE3E4BDD3981B635160CFFD75643A9F14A7B9445A9AABCF1FE2768F5"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🧑‍💻development/🧑‍💻code.svg",
+      "bytes": 244,
+      "sha256": "BBCDF6B01ED12B350365641872DEF0B026F9DFE22D228805D36A67079554FECD"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🧑‍💻development/🧩️puzzle.svg",
+      "bytes": 663,
+      "sha256": "2CC9362DB774A2F5A1CF3A4D20348D26EE776A05624D7F1582BDB9127C78F9E2"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🧑‍💻development/🧰️process-workpiece.svg",
+      "bytes": 298,
+      "sha256": "62CD440A30D55D89046C10C38C4C0991424D4F5E1B3A44631492EF79F8B9BD65"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🧑‍💻development/🧱️component.svg",
+      "bytes": 741,
+      "sha256": "D71943504EFAC676EFA0A1830A35E74070D23865F5B88296A4CFEEA3C629B312"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🧭️navigation/↔️arrow-right-left.svg",
+      "bytes": 291,
+      "sha256": "FB1075650CDBCA0CD5E295F8871990BC0B782581DABA2C8AECA41B2F3E1BB264"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🧭️navigation/↕️chevrons-up-down.svg",
+      "bytes": 243,
+      "sha256": "C61736C1786DA050ED91AD0DE29D39B15873345DEB3D7EC78986EA5067A065B6"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🧭️navigation/↖️square-arrow-up-left.svg",
+      "bytes": 290,
+      "sha256": "A7855713829D40DBF28E99FEA993FBA0E238CE834AFE7F47F63A2F407D105251"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🧭️navigation/↗️square-arrow-up-right.svg",
+      "bytes": 288,
+      "sha256": "167FF96C202998A126DB72C3C28627F5C32129282A3B61407ACF5831B670E0FF"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🧭️navigation/↘️square-arrow-down-right.svg",
+      "bytes": 288,
+      "sha256": "794B65549197ABE1176AB3F8ABE7704E3A2EE531AF65F93893296111E3581855"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🧭️navigation/↙️square-arrow-down-left.svg",
+      "bytes": 290,
+      "sha256": "7736CBE504792C286139C5D601B614654A81445211EC347723B6B76285D072FE"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🧭️navigation/▶️chevron-right.svg",
+      "bytes": 215,
+      "sha256": "EAB23C24D042F26FEF74684238D330B8E600EE392174E447DB3C37A0DB1F4F8E"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🧭️navigation/◀️chevron-left.svg",
+      "bytes": 216,
+      "sha256": "696876DA96585BFED023FE0BAD6BFBD23CC83B73A88AB834AC1ED7CB1BE065C2"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🧭️navigation/➡️arrow-right.svg",
+      "bytes": 239,
+      "sha256": "034288D7DE9CF9F4570CEF7C18C0AD4B20FCB9F279AF5D222C3D00BAB011A488"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🧭️navigation/⬅️arrow-left.svg",
+      "bytes": 240,
+      "sha256": "2B9EE039B00ABE16BDAB1F749D2B8D2AF9A0F227E91C69E6AD0BEBA9CEE0DF0A"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🧭️navigation/⬆️arrow-up.svg",
+      "bytes": 239,
+      "sha256": "F5485428CED266BE7E466733A62972819F89110726A779764A5AE557972B7461"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🧭️navigation/⬇️arrow-down.svg",
+      "bytes": 240,
+      "sha256": "8FC012B743B07B7FFC45D6BC7C7289DD71605DC085A1A148A8457B87BBC7EEE8"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🧭️navigation/🔼️chevron-up.svg",
+      "bytes": 216,
+      "sha256": "DDF27823C37E2B0C54C75491F7318AA76912CBABC993BC6FB23476FD8C38D2F4"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🧭️navigation/🔽️chevron-down.svg",
+      "bytes": 214,
+      "sha256": "A12E0D9D7523DAD84D3E180F25B31DAB4DF9759DB28563397B4AAAA128441F12"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🪟️layout/➡️panel-right.svg",
+      "bytes": 263,
+      "sha256": "9310A1D15BA20013FB639C1CD371942DD6E024E706F088F6AD38959A86CB50D3"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🪟️layout/⬅️panel-left.svg",
+      "bytes": 262,
+      "sha256": "AD3337AED6D68332A1757EC6795EC1C8EED73C918FDA43388589A0229C039833"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🪟️layout/⬆️panel-top.svg",
+      "bytes": 262,
+      "sha256": "46320945C774B666766EBC9A95C5D2CF33DE3709FA4C54D2B7C881EE99AA394E"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🪟️layout/🎛️panel-parameters.svg",
+      "bytes": 356,
+      "sha256": "16E02264EC95B3A5937648C0C516E901DC197931E181234E314ABCBE9DFA492E"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🪟️layout/🏛️columns.svg",
+      "bytes": 257,
+      "sha256": "089A896CC3FC0F32B27EF55984BBBC1C7531B8B47CE678A2C67B57AE3F1858AA"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🪟️layout/📉️lod-depth.svg",
+      "bytes": 286,
+      "sha256": "A390A0CA4E002D50677B38B6AF3DAC8B7916F221E754FD270C63DADF51018CDC"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🪟️layout/📐️layout.svg",
+      "bytes": 285,
+      "sha256": "8137EBAF7EBE94BE2A5D8C278FF40C574223E2404EE2BF627876F4760369A26F"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🪟️layout/🔍️panel-inspection.svg",
+      "bytes": 272,
+      "sha256": "8E14988D457E11D459B0BFDDEA86D38C28FB5316F70217C9660E6C5F8B9FD3EC"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🪟️layout/🔲️display-windows.svg",
+      "bytes": 373,
+      "sha256": "14AD7D2D604CA422638F5D8BBAECF921486EBFA58DC82546529259DFE9A3E943"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🪟️layout/🖥️app-window.svg",
+      "bytes": 307,
+      "sha256": "6CFF53B27FC3A40423ABC3BD5F26797B768E0AF804092F32AEDBBD6B02A89F19"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🪟️layout/🗃️panel-catalogue.svg",
+      "bytes": 271,
+      "sha256": "B8854D7DBA3B901555BA3FEDE889E29602A67793DA92332FFD094817FBD8C615"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🪟️layout/🥽️hud-overlay.svg",
+      "bytes": 287,
+      "sha256": "607B9FD8ABF4A42E5A3B752CD15F799D62BE12570F24154A553940D693F915D9"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🪟️layout/🧩️layout-grid.svg",
+      "bytes": 394,
+      "sha256": "88C17C60A40C521E12876CACB79A0FB5784735ABE259D2D10D014603191340DF"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🪟️layout/🧮️grid-3x3.svg",
+      "bytes": 333,
+      "sha256": "6F77365E3921F5F471A8A4C12FF53E789078D609312F3CA8944EE30677DDEEB2"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🪟️layout/🪜️layers.svg",
+      "bytes": 488,
+      "sha256": "39FD94FC274524D5E02D3198B8C58BE4DB2A214B6E72F37DAA019159C586D2E4"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icon_svgs/🪟️layout/🪟️window.svg",
+      "bytes": 317,
+      "sha256": "AFF22E65A0CEA11B88E066CEA5873EAEB30B1ED6634E5590EDC55B4E38364FF8"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🪪️icon-name/🦀️.rs",
+      "bytes": 91809,
+      "sha256": "A3C6970FF022D9A4F20E9080BB75AC2D032E2DB2962E2C54163585900E0D3316"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗜️deflate/🎒️zip/🦀️.rs",
+      "bytes": 11956,
+      "sha256": "404D04BB7FE3236703C0A89B797D456A64982BADE81E5E0515548411676EAED2"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗜️deflate/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 844,
+      "sha256": "8A10AE36240F09C919CA712BA557038F83583F704690EAB74A3AFD85EE19EF10"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗜️deflate/📦️packages/🦀️rust/🦀️.rs",
+      "bytes": 129,
+      "sha256": "5E4C729D2730D92C81396A14FB81B69781926CC798F82B376B5C6BA9CC3626E0"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗜️deflate/🦀️.rs",
+      "bytes": 49417,
+      "sha256": "FC133B7193B273B569C7018C0013A49D3F8A300B8DA827E7A5ECD38FC7FF9373"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗜️deflate/🫳️measure/🦀️.rs",
+      "bytes": 3799,
+      "sha256": "5F7B31173A6AB2BBC2E223FB9DE6FAFFDF284C5A1D7BD57A0AB077543FE907AD"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🎖️trust/🦀️.rs",
+      "bytes": 1005,
+      "sha256": "820DAD5C386EA98498F8DC4C9C1E52D71EB88860BE09C49554D8140E248862FD"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/📖️grammar/📡️literal/🦀️.rs",
+      "bytes": 7678,
+      "sha256": "69F1F981772D6E032903210F55CB5CFEA81B48C279FD3D42A2D87209BB3D460B"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/📖️grammar/🦀️.rs",
+      "bytes": 120582,
+      "sha256": "9E0841DEE2920EADC8E90920BD4E0937FB227B1AA6ABFE0AF63AA4945EF12903"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 1027,
+      "sha256": "89744449E951CAF403DF7CD1DAF93DA766801FC90F3FE764AB865123DE85CF83"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/📦️packages/🦀️rust/🦀️.rs",
+      "bytes": 1126,
+      "sha256": "45AEF6268809F9B84566D86F745E62BC5C21DD63E94008B879D480C5F4832803"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🔍️lexer/🦀️.rs",
+      "bytes": 36964,
+      "sha256": "E77EDA146CF9B4823AF960F0C497BDD7BD81DCE3EE7E8F34C517C2DFFE27BA7C"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🔤️token/🦀️.rs",
+      "bytes": 16838,
+      "sha256": "1F616C82BF84C9B523C5F2636B10E376645599E91DA6C0C93506A4F9B0C46A57"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🗣️idiom/🦀️.rs",
+      "bytes": 13379,
+      "sha256": "98D5986806B451BF9C5833B070435FA19A150F8215007127BA0D5904466F8484"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 495,
+      "sha256": "5ED6E8E4F1610FD6E5BE0D50C810B6BAAC32E79A092B1D34E0A8D0BF52898244"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/🦀️.rs",
+      "bytes": 84530,
+      "sha256": "327E3F5477D7E4961FAA6F8D648D64E3283DE89F10E62F51CF8C2D78C5E89A31"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🏭️producer/🦀️.rs",
+      "bytes": 4359,
+      "sha256": "22A4650E63A1A5EA0332E5FE8FC242AEADF45F9485297E4561D9A55E0041F3C4"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 1081,
+      "sha256": "A5B711CF2D190ABF50AEC059369CA6FB5B11DCC42243F943F70717DA7B39BBF4"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🖋️notation/🦀️.rs",
+      "bytes": 17084,
+      "sha256": "D91D45BDB6484832F17B1654631553893E773B9ED5737A4A0BFD3542941DE560"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🛫️encode/🦀️.rs",
+      "bytes": 26656,
+      "sha256": "FF394BD5D04D6CF06C3DB2C1F6B91EB108C604A9F8FCD40A254752B407707EF7"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🛫️encoding/🦀️.rs",
+      "bytes": 64584,
+      "sha256": "12B2F5B2EA3E36DCD4EE19A8E16F3E928058189D2FC00A7F6FBB6B53CBF13CEA"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🛫️encoding/🫳️borrowed/🦀️.rs",
+      "bytes": 8455,
+      "sha256": "BC75ED015E794AD6D599ED63482922DCF02F4AA34617A495D212C0144C6132EB"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🛬️decoding/🦀️.rs",
+      "bytes": 41291,
+      "sha256": "4B59AE0A0D798DA23513A99DCA561420B3784F50087CA11E065153118002BEFA"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🦀️.rs",
+      "bytes": 115387,
+      "sha256": "A251B810A2BA242E61A9604F1FF1BD70A98C309FDBD0CE50D28621398291BC51"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🧩️record/🗂️fields/🦀️.rs",
+      "bytes": 3909,
+      "sha256": "5B2825A367358D9BBD8131DCA752181E9CC1E71B0EC7280A51FDA1A16FE5978C"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🏷️type/🦀️.rs",
+      "bytes": 1350,
+      "sha256": "61E0F42742D14CF3B9792EE931568DA791F4865678D8DBFC65F67AE1FDCA08C0"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🦀️.rs",
+      "bytes": 38104,
+      "sha256": "DADE677EDE6CB3B4F15FABC806FF1638B109EC23A667777C3B8EC004FF0A3BFC"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🫳️borrowed/🦀️.rs",
+      "bytes": 2106,
+      "sha256": "756AAA78C09417069F84857F07B4C668855EABD9DCC689D68A5D645986BE8F59"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🔢️binary/📥️source/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 575,
+      "sha256": "54F8572681B61E47633C30AB2B2C6C3A1AD1296D9A229AA2B95C0845F8C7DF6F"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🔢️binary/📥️source/📦️packages/🦀️rust/🦀️.rs",
+      "bytes": 129,
+      "sha256": "9AF442F59F11694220871C93B555084DA5ECE8963614E9C735B7E2290CB9197A"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🔢️binary/📥️source/🦀️.rs",
+      "bytes": 7447,
+      "sha256": "AD5CB55FFAEC364F5A01B17497D4AF806E64D7BDE96AB1D627FD9C1861962114"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 636,
+      "sha256": "3E8B746CC027DB64678660A4BC0D52E7B06D46A119257CA73FD2A891B3055B0F"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust/🦀️.rs",
+      "bytes": 193,
+      "sha256": "78B0B15C404A6BE6A1D9FB3C18330B8911BB561F5E802F2B011BDCD51520E449"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🔤️base64/🦀️.rs",
+      "bytes": 10503,
+      "sha256": "BD4DC50E1DE1047B72A9F53B16F133CA68A1E8B5F3B28F83ABE01920A2DEAF47"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🦀️.rs",
+      "bytes": 163546,
+      "sha256": "71045A68B55772489C94EEA1B2AB03B5B89F120A3C0AAE08856BCADCE76A021C"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🧬️schema/♻️retirement/🦀️.rs",
+      "bytes": 285,
+      "sha256": "5F2DBE65F527B3EB25F23C8F0BDF0574ADE68CA6544F73FF79E6B96D4C8DED73"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🧬️schema/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 953,
+      "sha256": "4B82CAB456A8949B2F80FE9B5972BA0A3202F161F20A61F6E205F956CBA9F8E3"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🧬️schema/📦️packages/🦀️rust/🦀️.rs",
+      "bytes": 851,
+      "sha256": "EF8AC43398919169D60BF27490A9A54D753DDC31EC20CE4A0F49463D8CC1673B"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🧬️schema/🔗️.graphql",
+      "bytes": 544,
+      "sha256": "979B0A67A569C2CA95A8AC81A08E09A1D2588FAA3A09CCCEFACB7D79A8BDF81D"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🧬️schema/🔗️reference/🦀️.rs",
+      "bytes": 4408,
+      "sha256": "1EF11ED5BC5013BC7EEC8F7626B36A09384512DA89DCD5C5E6DDDD05461312D5"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🧬️schema/🔣️.json",
+      "bytes": 3871,
+      "sha256": "2658C2D0E37B381904BAAA4446520ACA68F8CC06C6D630327285D4A69A2DB74D"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🧬️schema/🛰️.proto",
+      "bytes": 543,
+      "sha256": "50A481F01EE8ACB014761ACAE735DAF69ACCA0B9378811F65B645CB72B9C0876"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🧬️schema/🟦️.ts",
+      "bytes": 5442,
+      "sha256": "9D7346AF808D5AD0762A483533ED596763D8AC766BE1D29EEFFA1F22DF396665"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🧬️schema/🦀️.rs",
+      "bytes": 20984,
+      "sha256": "F36020686BA15386F14BDCB4262DB196EA6B786339CFC6C338B576BC1F557E36"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔁️transfer/🦀️.rs",
+      "bytes": 49478,
+      "sha256": "B1504C9A1D530E66B83C642A15B36706E16B33F9598BA8A70691897D04FC77C6"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🦀️.rs",
+      "bytes": 27327,
+      "sha256": "D8F2357713A980A5371A88B5EAF0692736C8BB3D9294F6096AAB9EFA339C0298"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🦀️.rs",
+      "bytes": 37674,
+      "sha256": "8CAC604B0F0F46751A53E3A5AFBC338E87840D254FDF3CFC8D79E2C202BBA77C"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🧮️rows/🦀️.rs",
+      "bytes": 7840,
+      "sha256": "E0202288DEDF7FC3C35D687E55616BB3C9D984347A7AF63D77B43EE4215828CF"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧬️schema/🗄️.sql",
+      "bytes": 281,
+      "sha256": "D5F171EA7B2F03090DC674A235D04159B79358BBC088858F7F68D507B42A1A06"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🛂️manifest/🎞️media/🦀️.rs",
+      "bytes": 1764,
+      "sha256": "A4A0E2BEB02620FDA4712FDB0626FCFA9D15982EDAED5FC1B56823EBFBD7608B"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🛂️manifest/🔣️input-labels.json",
+      "bytes": 19020,
+      "sha256": "3DDF3A85933ED85E2526D2D8FFB60DD6DDBF08607AFEE16B46312D3AFB6DA0F1"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🛂️manifest/🤖️generated/📜️ui-contract/🟦️.ts",
+      "bytes": 47773,
+      "sha256": "3310FC8F1CA6B8C975B8E7162BBC99CA37109A71CBCE11C45247FE25C1CC3E54"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🛂️manifest/🦀️.rs",
+      "bytes": 461823,
+      "sha256": "24D8A625B2D3CB6F2806C95E5C867AE5A98F1D37BDF0ED3679935F5E4C0FE69C"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🛠️tool-machine/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 1092,
+      "sha256": "38E3408411F48C2AF1A237EDD293748E57135E429F12E98A7BBB57F575B87859"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🛠️tool-machine/📦️packages/🦀️rust/🦀️.rs",
+      "bytes": 269,
+      "sha256": "A81E6F31945B1BA3B746F266DB3564FB36594725017CC2142F916CA19BD8D00F"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🛠️tool-machine/🦀️.rs",
+      "bytes": 77271,
+      "sha256": "5FA5A715EDA4B6EE3129B69B99A6F61F7DCD3380046DFE7594DDB5E98F18C093"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/⚛️component/🦀️.rs",
+      "bytes": 18538,
+      "sha256": "A2EA738562C7941C9FBE74050567C2AFAEECCE0ED47112AECC0A7B23780FF2A1"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/✅️validator/⚠️error/🦀️.rs",
+      "bytes": 2014,
+      "sha256": "A9B18D09C181CE1BE27E9D2FE69B7DCD75CA0295C417F7A2F8515F0267EC339E"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 634,
+      "sha256": "219CEF24718DE59D9CB092B6B00F9205ADCC1C502B7404B2717A66138E93EE13"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🦀️rust/🦀️.rs",
+      "bytes": 334,
+      "sha256": "CFD3B48B5BB35F030D565F41A428C61BED3929040AA448718EC82C839D30E8D6"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/✅️validator/🦀️.rs",
+      "bytes": 76401,
+      "sha256": "C82AA820D25D9CF17A0E9F624E13F70B872F68C18EBD7671BA596057AACE08D0"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/✨️derive/⚙️expansion/🦀️.rs",
+      "bytes": 11826,
+      "sha256": "E143A97C25985552DCABD5F256FF9E26DE9E654F09318A3B55FC3883C824B735"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/✨️derive/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 750,
+      "sha256": "E2844783B6D6E02AE109F10855EC4F06AE3FC5A7ED778DBAC4C16B2BEADE79D0"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/✨️derive/🦀️.rs",
+      "bytes": 1059,
+      "sha256": "F28ECB4B87114D6259F9C074B4DB715248BB6B2223B61563034D4C18C89D6B16"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/🏷️entity-kinds/🔣️.json",
+      "bytes": 6365,
+      "sha256": "F237CDD640BD1AC2B4546726F78F33C90AAF0C2ED11E1F6115294C8E9C3BE242"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 800,
+      "sha256": "F65421B091408AC4C5848F14217CE7F8C8B36D0CBA52CE4FB21021E7284922C7"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust/🦀️.rs",
+      "bytes": 135,
+      "sha256": "CE14D7E1B9A75055728335DE7B2219C6EACB67D20C6BC161958C186109DCB930"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/📇️registry/🦀️.rs",
+      "bytes": 31642,
+      "sha256": "A6623D265FF7C3922BA58FD39F85F04DC2717A4C8BF557399E2341D28E35614E"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 1508,
+      "sha256": "B1DD7F9CE3B3BF5520926D0778955CBCE7054B48BB104FF39614E6019B9F20ED"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust/🦀️.rs",
+      "bytes": 269,
+      "sha256": "1F9E7EF4CD2010710825B7A937C94287769DD3F5BAE33C58736F2CCE3A97F41D"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 591,
+      "sha256": "8022FE6F86DA7A4ACAE1DD4FD1B1F79A385C7309D8F291D5BD4B0507A037DF4A"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust/🦀️.rs",
+      "bytes": 119,
+      "sha256": "14B1BF9F1D6209917AAD5345769F46EA982F8342C1665639A917718D3B37EDFC"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/📶️state/🦀️.rs",
+      "bytes": 4301,
+      "sha256": "7C9D6FC394AD517EB705416C7467735BFBD3B918D100CEF9CA77699A37CCE767"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/🔣️.json",
+      "bytes": 13167,
+      "sha256": "A24BAE2AADE6EA94B47E56D7A932B6C4002A69786425EE0E5CDFB3B2A3861713"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/🟦️.ts",
+      "bytes": 15150,
+      "sha256": "A7D7C20D59B42A1734D33D36A49C790043A63FC3384A0451B66BB1A4498D5548"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/🤖️generated/🏷️entity-kinds/🦀️.rs",
+      "bytes": 7575,
+      "sha256": "B08B820670B9C7D5B930D44A7EE9F1496AC81C78E72C9F892DCDF220045B1C54"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/🧩️composition/👁️read/🦀️.rs",
+      "bytes": 1117,
+      "sha256": "93C1C673D31947C1025254EF8FA47DDB6F6AA112C8519F1110A68A855F8A37D9"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 518,
+      "sha256": "F175D4BD433558044FCD65190B1B7F4D6EAD0809EBB733685F2A91F60B5B75CF"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust/🦀️.rs",
+      "bytes": 125,
+      "sha256": "120DC45F6C784B81EBF50C1472B7746D136591199EB25370D0DCD0ED2751C41F"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/🧩️composition/🦀️.rs",
+      "bytes": 3239,
+      "sha256": "9AF358A2A347516B4A42B3BA7FE319C882F51B817DD0AACBA0208A24AB89A2F7"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 1529,
+      "sha256": "7006996D8AEBE115729AEDF0F85BD9B82683B1A73210926576A7217F43D83059"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust/🦀️.rs",
+      "bytes": 501,
+      "sha256": "9B610DED38FF1C3B8F2CE07EF01B589E28A1A11533384A28A71DAA9E6F345E3B"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/🔎️reconcile/🧬️schema/🦀️.rs",
+      "bytes": 2123,
+      "sha256": "96DF7543B39D32E5AC48BD6FC6010312FC5A1DFC0F7C98E47FFC1C0FF5D093F8"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/🦀️.rs",
+      "bytes": 163623,
+      "sha256": "D4996674AC947A82FE81CFF35287CD8E4C4D60EDE570D1498B788E8BF52318E4"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 11552,
+      "sha256": "79E84517510486C0D04163BF7DE37155E4D97CD934DBC1927BB9EDA8863FC3DB"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/🦀️.rs",
+      "bytes": 13358,
+      "sha256": "C39BAD9CA174BB179B610C776D2C4A1902064026DDC608BF095ADCB4356FEC39"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🦀️.rs",
+      "bytes": 88186,
+      "sha256": "663FAA9A497645968BD5B46E8724ADB466D297C930F1B29967C320E9045028D3"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🌱️value/🏭️schema/🦀️.rs",
+      "bytes": 17249,
+      "sha256": "6536C883BDB5B06DC5575AB2881407420B8104388BD28B087360ED44C0966C8E"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🌱️value/🛫️encode/🦀️.rs",
+      "bytes": 29446,
+      "sha256": "63E9A1615CFD63FBD889BB4ED5E3804A793879926886142FA86F350AD1069324"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🌱️value/🦀️.rs",
+      "bytes": 172427,
+      "sha256": "BF4A3781D23DD45E22AEB38386A06EA7CA453C4CF5163A028CFEA40E321FCDD8"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🔎️scalar-witness/🦀️.rs",
+      "bytes": 14864,
+      "sha256": "F0462C4640C61EC68BE065D0E8882E0770A8B32C7F1F68A93A4C43D0221300D6"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🦀️.rs",
+      "bytes": 5571,
+      "sha256": "7F142877FA0FA8899628A613C77539BB85B78D88B7C26AB236693FF2CB539329"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/♻️retirement/🦀️.rs",
+      "bytes": 943,
+      "sha256": "FAEA4BED7F570B32271D8EC9F0A25B586ADDF69E7508FFC5FA74923FDE80F51D"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎚️config/📥️retained/🦀️.rs",
+      "bytes": 36246,
+      "sha256": "B80ACDA5A718AA8F3CB6E1F01C8CBCDD8BE6DB2C3648FE74DF68AF56671715D5"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/♻️retirement/🦀️.rs",
+      "bytes": 12443,
+      "sha256": "227347889B8478961F3DA7FFB153FF9CF57BB293B8BD58F7541E9FF8624D067C"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/🚫️rejection/🦀️.rs",
+      "bytes": 4957,
+      "sha256": "CF3CF4EB53E2DBFD10AB6CF57112F4C932B1249D40218DD3D125B963B2483124"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🧬️schema/📸️snapshot/🪶️sqlite/📏️preflight/🦀️.rs",
+      "bytes": 1476,
+      "sha256": "BC5667FC69C3911D68E52A7AE57F35B6EB63AF1C2EEE53AA16CA220A812412E9"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🧬️schema/📸️snapshot/🪶️sqlite/🗄️.sql",
+      "bytes": 1878,
+      "sha256": "10E8861DFF9BE4FCD0F7CA6AC89B4E6337F7DF672E104F49986CE8740F79831C"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🧬️schema/📸️snapshot/🪶️sqlite/🚦️native/🦀️.rs",
+      "bytes": 27931,
+      "sha256": "71E37E8D3F1A1F0CE0A12004B253194664C1E81A7DF7E6E4137D9ACA6213D071"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "bytes": 13213,
+      "sha256": "ED67B6E56D77256B984EECAEF7B8F4F41213646BFCD8CD522613FCC3796E35FC"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️blob/🧬️schema/🔗️.graphql",
+      "bytes": 78,
+      "sha256": "F03D7CAC2060B8338414EF511065EF2410A8264574AEB01840CB2E0C7784CF25"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️blob/🧬️schema/🔣️.json",
+      "bytes": 495,
+      "sha256": "82F57C47C2A85CCFA4888834D4A30ED22169261DB012B0E8BAAC246DC4C371B2"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️blob/🧬️schema/🛰️.proto",
+      "bytes": 120,
+      "sha256": "3025B88D7046F117A9DCBF59F43C0CD0FE19572C741623364D9B1E6346B112B3"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️blob/🧬️schema/🟦️.ts",
+      "bytes": 828,
+      "sha256": "276CBBBEAB1DB3EDAE99541A8B6B62C28B960C38D425957874C2F6C9948AC7C1"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️blob/🧬️schema/🦀️.rs",
+      "bytes": 920,
+      "sha256": "D9120BFFE2A7EBEACB6D901A260202D6A1AA00242C8480E5184313BF1D55BC43"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🛫️native-encoding/🦀️.rs",
+      "bytes": 3619,
+      "sha256": "E37949B2E620FE8B1F9F7162B4B1EAA881379C9AA503B36F1BA7B73FE04807D2"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🛬️native-decoding/🦀️.rs",
+      "bytes": 3127,
+      "sha256": "A71C733A5CAFAB585AE3D3765F578020AC87A33D8726801B2A2B38F4D9979300"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-retirement/🦀️.rs",
+      "bytes": 667,
+      "sha256": "CDAE829AE20A0973DBF0B2724DD0AD4251705AC2EB4662338A794199A1D66121"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️link/🧬️schema/🔗️.graphql",
+      "bytes": 577,
+      "sha256": "BEEEC7BD8AA21B34E310CA15B5F4A8A8DDF9B043F3CFE645F0886EF66F0EE3CF"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️link/🧬️schema/🔣️.json",
+      "bytes": 1981,
+      "sha256": "13BB48229BFF2F7F1074039F1981167C6CF0701E5FC2F0A2A877E9FDE9B6DB9F"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️link/🧬️schema/🛰️.proto",
+      "bytes": 581,
+      "sha256": "5CB667D0C9D747E57B9010AD79699177E45F94F923384A7EE53822295F1CA224"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️link/🧬️schema/🟦️.ts",
+      "bytes": 1969,
+      "sha256": "4C5BA90868E818B2EBA4C1DA18C2AF1235183E4F718B6731CD97F31768F63ADF"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️link/🧬️schema/🦀️.rs",
+      "bytes": 1365,
+      "sha256": "DAB44A57D253D3C5B3DAF604AE9BE491EDB9AAD55DF95C95DF4BF81924A77F37"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "bytes": 1586222,
+      "sha256": "6DFCA69E43AE16817B2C98156A5C0F0263AEE340728B3D6C5ED0E85765A78F22"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🌱️initial/🪪️identity/🦀️.rs",
+      "bytes": 1999,
+      "sha256": "E405BBEEEBE21E492FC8BD63A5D7971B9A5A28C39660E866197CA3662D446FA3"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🌳️closure/🦀️.rs",
+      "bytes": 10814,
+      "sha256": "DC11BE88D985A873B7EEBE7058866863E4E763B4B6BEBDE703F11E0E767B3EDD"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs",
+      "bytes": 202064,
+      "sha256": "75906B736A8DA464FD570425A04AF8576B5C3D15C88F5C7A8DFAC73B829498E2"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/🦀️.rs",
+      "bytes": 46327,
+      "sha256": "1CFA06F9FB249D9C37DFB669D0710189AFEDA82CF32C52840B1314CDF4E00A71"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🦀️.rs",
+      "bytes": 14833,
+      "sha256": "AEEF4F89AC1EB997B37EBB5D9D23FF2654C6E4205E91CFC9CD1F77A0A80CF885"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🗂️dictionary/📇️index/🦀️.rs",
+      "bytes": 6943,
+      "sha256": "10B2076887C0D4D4625DAB3803B8BF3C8F7725271DCF0C81F51063A4AF6EC6B7"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🗂️dictionary/🛂️identity/🦀️.rs",
+      "bytes": 4018,
+      "sha256": "42BCFF78FEB21BDA1C23F8C67411ABCBADE22AA14882BB25640D5614D36A4704"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🗂️dictionary/🦀️.rs",
+      "bytes": 27258,
+      "sha256": "55F4D099F85E4AE57C1F7D8B65676F2201D6447DC492570D6FA4592381BCB022"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🗂️dictionary/🧾️record/🦀️.rs",
+      "bytes": 8314,
+      "sha256": "3F26C5597DB67F856E78540AC33B0A1A528786F80D32E800B2B08D14E532B5E3"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🦀️.rs",
+      "bytes": 11408,
+      "sha256": "E764604BFE6E9751F7A49FFA7667C23CC73102C6D4908709D6A7F71249467E2F"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🦀️.rs",
+      "bytes": 26135,
+      "sha256": "2875EB59477951DC9A55382319230BA0FD2A7CC2D357B5B22E61A0AC110F6085"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/🧬️mutations/🌿️create-space-alternative/🔣️.json",
+      "bytes": 563,
+      "sha256": "C992A69B4AD921735E4FC2B36BE69426B1C59AB10FB4742DD1242F9D0A01A54F"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/🧬️mutations/🌿️create-space-alternative/🦀️.rs",
+      "bytes": 2553,
+      "sha256": "EA20E5D55C12DBEDD4F429B8696F820845C366AA78C46C88244DECE153E9BD8C"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/🧬️mutations/🌿️create-space-alternative/🧬️schema/🔣️.json",
+      "bytes": 2003,
+      "sha256": "9018050648C73BF7322ECDE466E4948BED56548EB787AD71497C1B3318A13A8F"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/🧬️mutations/🎯️restore-active-space-alternative/🔣️.json",
+      "bytes": 607,
+      "sha256": "791E5030E6FC29F73C2C4F9E6FCA77BA71C83D8269A16220BA98FDC814A100D5"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/🧬️mutations/🎯️restore-active-space-alternative/🦀️.rs",
+      "bytes": 3098,
+      "sha256": "5F54B17C038DB9D741A8B59181046C6FAF15EB92CEC61FE38C6299366E82E2BC"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/🧬️mutations/🎯️restore-active-space-alternative/🧬️schema/🔣️.json",
+      "bytes": 732,
+      "sha256": "9D3457D953C5023E92C1A0D9BB5F368B5F2C36CCA6B1EC573947224CED405AED"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/🧬️mutations/📌️commit-space-checkpoint/🔣️.json",
+      "bytes": 572,
+      "sha256": "EBBB6091CEB33DC845534061266CB8F5F04FE7AFC713AEC07ED10954935A8357"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/🧬️mutations/📌️commit-space-checkpoint/🦀️.rs",
+      "bytes": 1976,
+      "sha256": "356EE63AB873D02DE82CA5F2CEC0CF7B877825BFDAAA046957EF246D60F623A9"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/🧬️mutations/📌️commit-space-checkpoint/🧬️schema/🔣️.json",
+      "bytes": 7366,
+      "sha256": "85030105C236C6F49C9EDB7BA9C1612AD36BF915E7E7A3FA1DCAB66232024926"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/🧬️mutations/🔀️switch-space-alternative/🔣️.json",
+      "bytes": 576,
+      "sha256": "BF03EC0E0F379397422FB56594788D656C1E61D45B86713AC2C8E18B04345D31"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/🧬️mutations/🔀️switch-space-alternative/🦀️.rs",
+      "bytes": 2284,
+      "sha256": "739FE2D486F6E7D508F8C2003BA02FE00B54F5DC494874CC0D042FA82973D845"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/🧬️mutations/🔀️switch-space-alternative/🧬️schema/🔣️.json",
+      "bytes": 683,
+      "sha256": "00CC7D966564256A054CC30C8DC07B8C836E276CB2598B4993FD0E20C131B534"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/🧬️mutations/🗑️remove-space-checkpoint/🔣️.json",
+      "bytes": 572,
+      "sha256": "D728C3DB16769233E2582B178F1901DE3C449AF63D9498A6D847DDC353F3B381"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/🧬️mutations/🗑️remove-space-checkpoint/🦀️.rs",
+      "bytes": 2340,
+      "sha256": "FEFFAF34CC2843CD819EC5BCE40F4B91AC541B3EC214A094D55425106098096A"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/🧬️mutations/🗑️remove-space-checkpoint/🧬️schema/🔣️.json",
+      "bytes": 676,
+      "sha256": "C7EA00783EDB70CE64BE17973016FBDE9CE2415BCF5C8306533F9D8E4E24E025"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/🧬️mutations/🦀️.rs",
+      "bytes": 1935,
+      "sha256": "0FE4B07B0F4F72FA8ABB25DA2FF48155FBC99A1CC764524BDFC6CE688BB7C6D6"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/🧬️mutations/🧹️remove-space-alternative/🔣️.json",
+      "bytes": 563,
+      "sha256": "1F232EE4DF4B9FE87B210752875E884B4F12D670F7E573FBCFCA0FF22A720298"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/🧬️mutations/🧹️remove-space-alternative/🦀️.rs",
+      "bytes": 2671,
+      "sha256": "AF85C324612DB6E687C7B34EED7B049F59282160DD71893F0941D669FA9020B2"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/🧬️mutations/🧹️remove-space-alternative/🧬️schema/🔣️.json",
+      "bytes": 683,
+      "sha256": "47A3EA0945FDD626446C3B63E7BA767230D92A7C38DD6BA1CB948F6F4EF950CB"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️snapshot-clone/🚚️handoff/🦀️.rs",
+      "bytes": 2595,
+      "sha256": "86141B09489FEF4E0D1EDA8108BAB1A16194A6210971FFD6AD9D1300CFB4CF53"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️snapshot-clone/🦀️.rs",
+      "bytes": 29151,
+      "sha256": "211DDB28D959C1918DD9D8151138B8A21A987E4DA8A7EA0830CC2F1AF3E1F761"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🌱️value/🦀️.rs",
+      "bytes": 2641,
+      "sha256": "E1FD9442E5EA3EB9428A7F6F78DD5BEAFF9E56AD49E446CF859A8F3020A7EE0A"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🌱️value/🪪️admission/🦀️.rs",
+      "bytes": 14179,
+      "sha256": "744D49D8F94C64312BDB0FD7074003B9F87AF872E8D6600BEA8795B2D3674844"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/📖️reader/🦀️.rs",
+      "bytes": 6705,
+      "sha256": "5FAC4B0269D676BAB90E69CC39422B47285A1B0FA1BBA56E7CED9CE404225924"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🦀️.rs",
+      "bytes": 45116,
+      "sha256": "4A52D2FB73A044FAD564CDE3569C095EFFD93E9ADDA086822312F2DCD7E26A66"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧵️borrowed/🦀️.rs",
+      "bytes": 12134,
+      "sha256": "46B7E1CF1776FD319117B8510B75F48E1EAC3A74CBCDC3F12D80034D47D76F0D"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🦀️.rs",
+      "bytes": 46827,
+      "sha256": "54FFAC0029C2468FA2902F68DC2C2C38C61D856CBE7503AF5D2C66701E11E13E"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📥️mounted-pack/🦀️.rs",
+      "bytes": 24227,
+      "sha256": "69B346C2141CC57EAAF74F5DAC4EFFB5D41BF46E8EAC28C7D0099325726A72C6"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🏠️owner/🧬️schema/🔗️.graphql",
+      "bytes": 228,
+      "sha256": "0218B73F30DC59AE67AD51540D17F09366E3197C4B63CF3EE3EE4E68DD839AFD"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🏠️owner/🧬️schema/🔣️.json",
+      "bytes": 523,
+      "sha256": "0604DA07347659637E5377363762A044C10E6C3996B893BB5E47FBC819483B68"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🏠️owner/🧬️schema/🛰️.proto",
+      "bytes": 241,
+      "sha256": "4459838073572BEEAE178C82C693818A2EDE7D5F11B1A8628D7C2FA8590FDFDC"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🏠️owner/🧬️schema/🟦️.ts",
+      "bytes": 959,
+      "sha256": "DF89C40B2A82272C44AD93E6C7BED735E143FB8E88F36859493CC2082A9A69DC"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🏠️owner/🧬️schema/🦀️.rs",
+      "bytes": 462,
+      "sha256": "EA485121D86C479F4F0BA386AAB5E50A3884655DAFCAB68B486E9A4963A4D1DF"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql",
+      "bytes": 239,
+      "sha256": "075016E150B8DCF08CA0504C4EBC2A704A5FAAAD7C468CEBD3CDC0AF61A7130B"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔣️.json",
+      "bytes": 957,
+      "sha256": "8AEE5F4298CCFB51419BB77430B2521B70528258371C3BFF8023244DB6681316"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto",
+      "bytes": 213,
+      "sha256": "2239A2E83CC48E2DC745EC9252DF5F5C1C3DCAB5894B45EC95F9CBE6B87342CD"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts",
+      "bytes": 1285,
+      "sha256": "6034A4ADA49E18935FB50001062D5DB8811347B78474AE91243739C755269AAB"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🫧️ephemeral/📢️publication/🔁️transfer/🦀️.rs",
+      "bytes": 4089,
+      "sha256": "CF4A7E147E2EE4AD71612A67A0A22EAD1CC8BCCE701FE6FDCA7CACCB2FC08A3F"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🫧️ephemeral/📢️publication/🧩️preparation/🦀️.rs",
+      "bytes": 11910,
+      "sha256": "E78C8D08B38B328ADF7BB5BB6AEAA43597D20D733637ACE2FF8B94F631A704F9"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🦀️.rs",
+      "bytes": 16344,
+      "sha256": "2B1A581BCD62B6E113C872C8C615C6372889D6D9D958CA9619FF80207CF92DED"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🌐️document-http/🦀️.rs",
+      "bytes": 8578,
+      "sha256": "55CDA18E4CF37C9F1869EAE59B7C4D0D2637BF1216F666743BE1A3BA7EC66A02"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🌱️space-artifact-creation/🦀️.rs",
+      "bytes": 6570,
+      "sha256": "68B33B46301BD4C24EF518303806D4C5A5FBB6AA8804D61F494DCAC7FDC00CCF"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/📌️document-check-in/🦀️.rs",
+      "bytes": 4964,
+      "sha256": "72579C2040419C89B373A4818F314B46E3F82406FE175C638B69BDE5C90D0B16"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🤖️agent-delegations/🦀️.rs",
+      "bytes": 5020,
+      "sha256": "19F4E23F6E5DE88DD3ED04A6ED5BD70B8DAA090A1E32EB5099130097C6504AB6"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🦀️.rs",
+      "bytes": 131343,
+      "sha256": "2E7C7F1FE345BDE6240CE50A9D38493B202EA9642258BE39C191B3B1138B51E0"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🧩️execution-target-module/🦀️.rs",
+      "bytes": 16510,
+      "sha256": "A5848AB0078A12C307DE3A0D14741FD4C0BF862368B68639C60824CFAE7CC05E"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🧬️schema/🔣️.json",
+      "bytes": 2294,
+      "sha256": "90FA7FC0F4AD1DB9FC3FF7EC7182EA6502B4B63C64ACDFABE80A1C37884FA394"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🪢️canonical-checkpoint-pair/🦀️.rs",
+      "bytes": 4820,
+      "sha256": "09F9584029F43367D1E472FFD64A79F5BC26B411D5CBE485984A6EA7C951E388"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🛡️access-policy/🔣️.json",
+      "bytes": 2300,
+      "sha256": "1C6F592A8559A605EB78D9645C39BC9267E6A63B315CD5F0991933E2E16183B3"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🛡️access-policy/🧬️schema/🦀️.rs",
+      "bytes": 6731,
+      "sha256": "4DC3D00720B88883820FFE92DC3F8FBF671FEE0618B1870E36A5C5718EE03F98"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🦀️.rs",
+      "bytes": 14909,
+      "sha256": "CA7B73FBC941F93C0BD29AB7D0116385374EB590785117927C25FE1AA911D86D"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌐️browser-actor/🦀️.rs",
+      "bytes": 8942,
+      "sha256": "3DE73F12536147D7002508A711400A688D535B1F54E19E2740950FFC5E2E73F8"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🦀️.rs",
+      "bytes": 13784,
+      "sha256": "A31EBEB1CD327D605C8C99F87C1AFC4D2EBB64D7121C68B8F44BA9083A79A8EC"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/📇️document-index-v1/🦀️.rs",
+      "bytes": 4636,
+      "sha256": "4F18DCBF6C2B03FC3D3435F146CD9AD31A8144FA685A9A7A3BAC1CFB399EC8A1"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/📌️document-check-in-v1/🦀️.rs",
+      "bytes": 7167,
+      "sha256": "96B9BB1B6AD4F15CE9D8DE2B5FE14D208E818739651AE54D11CD872DB58F3281"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🦀️.rs",
+      "bytes": 105908,
+      "sha256": "2D35957C9B7EA5E9A8259E9336EC033F65F2219D36C6AE528B2C15E09FA376D3"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🪢️canonical-checkpoint-pair-v1/🦀️.rs",
+      "bytes": 15730,
+      "sha256": "2EC3CAA980909127AAC7D7A1A573127F2C9AC22FA08DB8E7FEEC841D613647AB"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🪪️session-authority-v1/🦀️.rs",
+      "bytes": 3474,
+      "sha256": "2B7D5D48E8D28EE0B4BAEC353DF43D01570799CD262C212B7359969F18427424"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🪪️identity/🦀️.rs",
+      "bytes": 4536,
+      "sha256": "2872BA58F5302A522CEB869E666E591EAA90CE87DCFEB0D57457CE5C0D84AEBA"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🦀️.rs",
+      "bytes": 60901,
+      "sha256": "7D7935525A00E24556970BD443600F42B5A18DEF0B205F5907C448A1E4C5D687"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/💎️materialize/🦀️.rs",
+      "bytes": 27365,
+      "sha256": "DCACF10B6C0EBBCF24B0A83CB0E01C80511A2D9C96A6AF605FA43364CD4DC495"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛂️identity/🦀️.rs",
+      "bytes": 159,
+      "sha256": "7EBF6E70AC2CE60D0AE8C79BE8A37343656E612573CFA7D9A91F498055C33908"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛂️identity/🪪️id/🦀️.rs",
+      "bytes": 9187,
+      "sha256": "A146A7D22B7D2F5EE53C09D5C508BA257601BE9C00E6D0C8230BDB571B814845"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🦀️.rs",
+      "bytes": 108150,
+      "sha256": "AABC076939AD5AE45392ACFD30D0112BDE5B1D19FE929A498059CD00F518A27E"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🦀️.rs",
+      "bytes": 16183,
+      "sha256": "DB3C6B1BD3302DCCFEE83378C54ACECA0546D4DD54932E8723805D6DC3378C7B"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🦀️.rs",
+      "bytes": 166802,
+      "sha256": "4CD2CA46CFB35D2D83ECAB5A00C9234384D59CF09E28CAE1F7B59E855AED4D9A"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏪️time-travel/🦀️.rs",
+      "bytes": 258876,
+      "sha256": "5252819425B4190DCED389969EE0EADA0263FE3CEF2AE7C3718ED559BF2AC5AC"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏯️tool-run/🦀️.rs",
+      "bytes": 145401,
+      "sha256": "D95802606BAD5A97A38A78AD7EC788CBAB94099207FE40485F1A79FD21E5746D"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏳️operation-progress/🦀️.rs",
+      "bytes": 8956,
+      "sha256": "DB2FD71D4CC96B0B3EA0D0204CC0DC7ADEDFF461708220720081D61D1F92B18E"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/💼️jobs/💡️infer/🦀️.rs",
+      "bytes": 36903,
+      "sha256": "2700A85F90F069C6D1E6875AB01007C9E2BFF8691BC4B5C5D9BE9FE4EF9B4331"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/💼️jobs/🔀️migrate/🦀️.rs",
+      "bytes": 4922,
+      "sha256": "FBFDD62BCDD3D9F15C230DFF9332FF665E69B3D7CD176FB1768F5D1B5AE58D23"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/💼️jobs/🦀️.rs",
+      "bytes": 32665,
+      "sha256": "AA186670FCB6A107C01D341DF6277D777CA2368565E6471EE75C61F43CF7DCF8"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/💼️jobs/🧬️mutation-plan/🦀️.rs",
+      "bytes": 3949,
+      "sha256": "FA60F80DD3E40CC42C7805B7F2CA23D7003839204B21A247F2002B51A2C15C25"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/📥️cold-pair/🦀️.rs",
+      "bytes": 20141,
+      "sha256": "D9DFD1FD32B4C14D6BEFF8D396E638BA6BAEA29BB5B24216388B89F1BDF0D04B"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/📨️pending/🦀️.rs",
+      "bytes": 36420,
+      "sha256": "2EAE2C5CC2CFBCDF2B921448205F5DBFDF0D6ECCE6B18134A222925E01A4A340"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/📮️requests/🦀️.rs",
+      "bytes": 27263,
+      "sha256": "7F188FCB6447EE5EDF249E8FFFA307CC03F64E02177BCA305B7669711850413D"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/📸️checkpoint/🦀️.rs",
+      "bytes": 6823,
+      "sha256": "D553A8E7195F89D6ED4360A27ACAA17B840BE9A576805D5647C1C7D49244E310"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔄️turn/🦀️.rs",
+      "bytes": 140949,
+      "sha256": "5453CD9EC01E5B837E8505AD49ED03C2DDDF630BD94ED73255C6D5C3A54EA563"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🚪️lifetime/🦀️.rs",
+      "bytes": 23329,
+      "sha256": "A07A85F83815064E65F00922686D0E3CD668053B6FB4A7BA746CBF98DC1E8955"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🦀️.rs",
+      "bytes": 112332,
+      "sha256": "7BD0778FC02A0365D81B95D3A158FC9BAA1E9E11ADDF6413567F1E019885CB58"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🧵️executor/🦀️.rs",
+      "bytes": 31305,
+      "sha256": "5EAA7CA45F054AF00ADB08E5534F8E9CED2075AFCE854AF366A1A17DD555F2F9"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🩹️patches/🦀️.rs",
+      "bytes": 73623,
+      "sha256": "4C4D10BFC5ABA8ED59A5789D1A39B8BDBE820D66343A3770C458ED8193677666"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🪟️surfaces/🦀️.rs",
+      "bytes": 9775,
+      "sha256": "B0CE462AEA742BE89E21121283BB133D84DAD12B0F2B24F4956A388AE9649248"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐host/📖️body/🦀️.rs",
+      "bytes": 4765,
+      "sha256": "67AB6FCF41C8E1C9F0882BC43B8BEFDC41D62E7222E96091B3FB31FDF8277489"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐host/🦀️.rs",
+      "bytes": 59809,
+      "sha256": "E1A85308E82A7397E2518D8ABEC842BA5312DE7CABF225F7869EF57E56815BE8"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🎚️config/🚫️none/♻️retirement/🦀️.rs",
+      "bytes": 1057,
+      "sha256": "2D1904510A1AC07CC013D4A1F6C7701FB66D58F5FAA9E2F7542D7F17F2716986"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️builder/🦀️.rs",
+      "bytes": 46017,
+      "sha256": "59D26371B1517711155D53478CC229AA7BE2CFE94FA814AB3FE8D9B15E5ABDB9"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👥️presence/♻️retirement/🦀️.rs",
+      "bytes": 11094,
+      "sha256": "B0E9AB311E466535620BE3FB47A9D32C012A7A4C100873710874752462CB7B38"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🧬️schema/🔣️.json",
+      "bytes": 8236,
+      "sha256": "ADA03F9EFF096E52805EC0B90B0D993672958719D12BB9E4051258227C70B527"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🧬️schema/🟦️.ts",
+      "bytes": 14415,
+      "sha256": "FDF7CF4CE79ECADEC0F841A184B3A6D0C48D638FB76BE29D6252E9370A179094"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🧬️schema/🦀️.rs",
+      "bytes": 4873,
+      "sha256": "496ACA5C9519313AE54A5A1942F47277EEF8CCF3AF5DDACF6B71C2F4B6231AA1"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📝️draft/🚫️none/♻️retirement/🦀️.rs",
+      "bytes": 3321,
+      "sha256": "4B673782168B64BB7170ABF8F524B296A1712E0AA8FE993CBEC319C76F90711B"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📡️backbone/🔗️binding/🦀️.rs",
+      "bytes": 10214,
+      "sha256": "D9C2CE351B7F8C26CBBD6F23ADE525D25DDA951C417A05EFEB5245F4E09BDA10"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 10173,
+      "sha256": "1F2CF42F0C92D9BEF21580979DEFE3B43D68E738EEEB88A7032E09603F334622"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/🦀️.rs",
+      "bytes": 1891,
+      "sha256": "B02627C025C2D5C818A0F59193D4FA401E7A369E6F6471198945721BC19317CD"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🕹️interaction/♻️retirement/🦀️.rs",
+      "bytes": 6943,
+      "sha256": "28E0B59994ACCE50F486DB9D2B33E76C8DDD12BF286CE69E89A4301F62003371"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🕹️interaction/📃️query/🦀️.rs",
+      "bytes": 8264,
+      "sha256": "9AC1B7203656F7F22670BDEAB07FB707947B9D12A5EC663B9656349EB0651F0C"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🕹️interaction/📖️capture/🦀️.rs",
+      "bytes": 8423,
+      "sha256": "2634F1CB1A24E08153B3EDBCD2312DA762D010D28162AFF78B4E5D06966C6946"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🕹️interaction/📡️live/🦀️.rs",
+      "bytes": 10682,
+      "sha256": "6D5F33475739163E32745FF64AB9456B73317D955013551F90F6DF39626429CF"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🕹️interaction/🔐️authority/📖️inputs/🦀️.rs",
+      "bytes": 2890,
+      "sha256": "E4F2586C9F8FAB845510704E735698C9B76387C7DC1DE6E95A772B59F6019483"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🕹️interaction/🔐️authority/🦀️.rs",
+      "bytes": 1687,
+      "sha256": "C5237BD55F72001E3AF50548AC16B28334810C9F386D86CC4031195018509A96"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🕹️interaction/🦀️.rs",
+      "bytes": 463,
+      "sha256": "774087A73D53A6701779994C78DB461FD212949CAD3CC54941820B12C4F2EABD"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🕹️interaction/🧬️mutations/🔁️set-state/🔣️.json",
+      "bytes": 637,
+      "sha256": "4A49A3BBAF5D468DB19CD13D5885B79758AB35A83BEAEF3FC62E6EC45790EC23"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🕹️interaction/🧬️mutations/🔁️set-state/🦀️.rs",
+      "bytes": 2561,
+      "sha256": "4D19156EDC7040818F993547FBB88E4363B265B5EF3602187C490BE8E02A9DC0"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🕹️interaction/🧬️mutations/🔁️set-state/🧬️schema/🔣️.json",
+      "bytes": 2489,
+      "sha256": "3D87E867DDE987381462D198F03823DED3D6C92CF3A045F4C9DCFD553807FE34"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🕹️interaction/🧬️mutations/🦀️.rs",
+      "bytes": 1076,
+      "sha256": "1E55F323728C8D2E63F4C573E39008CCCD82C85FAA9AA12FB1DD3D0997AEEAD0"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖱️context-menu/🦀️.rs",
+      "bytes": 13880,
+      "sha256": "C02654AAED67D7D9096EE199EA9323FED91A252D1474178316114CA00F8B77D2"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🚪️lifetime/🦀️.rs",
+      "bytes": 5717,
+      "sha256": "7269C8D471A9584285627892E48A2D49C8E49325787B46883F2208A917D7586C"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🛂️describe/🦀️.rs",
+      "bytes": 18726,
+      "sha256": "A5541D7B9260E9F9BA4ADBCBDFE48F9028834E17CE92B70527EE8D2658C63E12"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🛠️tool-machine/🦀️.rs",
+      "bytes": 32860,
+      "sha256": "6237C6209A42E4566CD27A1E26ED23E50714877B990510D7CD529FF209FB9A07"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs",
+      "bytes": 3013153,
+      "sha256": "7DF20B87680032C340F8B82FC151DD60D177DBC36FC524A74B6466960500E5EC"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️extension/🚪️retirement/🦀️.rs",
+      "bytes": 22295,
+      "sha256": "779854A074A914460AC8A8B5BC77A73A436697CF9FAA2463184360F8F6311148"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️generated-test-contracts/🦀️.rs",
+      "bytes": 4933,
+      "sha256": "15D1EE576EE99B41BA616BE68EC8F66FF32FF109E8B1687F5B4FA923C3C49040"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/🪶️sqlite/🦀️.rs",
+      "bytes": 5874,
+      "sha256": "83B5AC0BD2E1D2AF8122E68ACF82245CCBC195DD0D5B449FEB0B13A26FA6668C"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🦀️.rs",
+      "bytes": 43649,
+      "sha256": "5DF60C90CCF73CBA4D56E5D3B6B0780067924BCD3A0D4A8875C20EB41BD2DD74"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/📥️retained/🦀️.rs",
+      "bytes": 81369,
+      "sha256": "B89D3B4EE1DE411BCB3114785D6DAA598F11D00B2CDB93857C09EC48540280C2"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🦀️.rs",
+      "bytes": 48252,
+      "sha256": "B4803845B8AC447ED412D1082A1874A226A568222169309E2A4EF01641795CE9"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🫧️transient/🔁️document-replacement/🦀️.rs",
+      "bytes": 4091,
+      "sha256": "AB4541F97ED8212D87DAF75CE0768C09E7D1B1039745E4F81F042AF3879232D1"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🫧️transient/🦀️.rs",
+      "bytes": 36913,
+      "sha256": "566853AED0193A0D3C91FC7C1C410430338C660601AA47C7CC426363C85ABD84"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🫧️transient/♻️retirement/🦀️.rs",
+      "bytes": 3382,
+      "sha256": "5832049ECDA5FF4913B90728C93615E77D7CE7A2C2EFC3E07014F9C11AA3527D"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🫧️transient/🧵️publication/🦀️.rs",
+      "bytes": 14899,
+      "sha256": "02884C24B012EDAD79A9D173A60069880E480406A13035196CEFFD9963E2F5C7"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 1169,
+      "sha256": "1CC8E0E36176AAA6D2B171103DE20C8D1EF24B228C957E0A35FBE5E8F0C7D0E5"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/🦀️.rs",
+      "bytes": 2498,
+      "sha256": "3012437546824C4333AF05BA03543C8D0E0E5FC70A930ADC5B556B0FB36E24CA"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🔣️mutation-authority.json",
+      "bytes": 29066,
+      "sha256": "AE0FF3B537AAFB99C3F5C52A079439E448723143E7E72AE5BAE0AD81B1870F0A"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🦀️.rs",
+      "bytes": 93979,
+      "sha256": "C81566F7DD47864198CB1F8048B96C2F581CDB4873D7967933DB8E88D95D357B"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/🌍️geo/📖️.grammar.semio",
+      "bytes": 402,
+      "sha256": "721F0241258DBD372E2459C514FB97D5DEE3403B40561043D0AF1BDFAFFA1FAB"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/🌍️geo/🦀️.rs",
+      "bytes": 1058,
+      "sha256": "971A6F81F57CB4C92B84052C42C8EC6564AD13C6B13FEC62CF0A299FB5805529"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/🎬️scene/📖️.grammar.semio",
+      "bytes": 617,
+      "sha256": "FFAEE83FA174A21918A71ED062618804B8B90A49EEBA4513A19488ACBB0E5E02"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/🎬️scene/🦀️.rs",
+      "bytes": 2118,
+      "sha256": "F554908707F38147F3CB9C6C016AEB6C9DA83747C2EAE7E243308E2BD9B933F1"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/📊️sheet/📖️.grammar.semio",
+      "bytes": 981,
+      "sha256": "6EB577D5D0022E3FE64C38FD315DF15C6FC85621B212FC03399118E75CBC3496"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/📊️sheet/🦀️.rs",
+      "bytes": 8447,
+      "sha256": "394BC76F6A5DE797D543ADEB69F73446E744C0D2EB067D032392C968EEE248FD"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/📎️embed/📖️.grammar.semio",
+      "bytes": 251,
+      "sha256": "A727308A3726AC6CB0EE1D3F3C260EDA08C0C4E05CCF2F17F45CEF368633735D"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/📎️embed/🦀️.rs",
+      "bytes": 520,
+      "sha256": "B3355CD91E4951E7152AFA8869BEF2A71A624F82D4FD3F7602F12FE32D7AC043"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/🕸️graph/📖️.grammar.semio",
+      "bytes": 587,
+      "sha256": "BCA790072BD36BEFAB0506A20F1F1699F4C3B3DF193EA561FC23627BEC5BAEB8"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/🕸️graph/🦀️.rs",
+      "bytes": 7392,
+      "sha256": "6C257C3347734219DE579B5A29774AC1B1C3E06FCF48F8B3A842A4CA2C4D311D"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/🗂️catalog/📖️.grammar.semio",
+      "bytes": 299,
+      "sha256": "CDB45AFE289263DB6CE1AFA243B6AD82024ABBA23E1AD4162A7078574D0A1FAE"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/🗂️catalog/🦀️.rs",
+      "bytes": 3948,
+      "sha256": "80E80F89DA61C1CE341029333D491355D352B8A8EF67B84DB267FDBA5937EACB"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/🧑‍🍳recipe/📖️.grammar.semio",
+      "bytes": 243,
+      "sha256": "68BD8F98595192F01E03B398E25F79E7E8C91BCF4B5A0D3E787605D1E985BAD4"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/🧑‍🍳recipe/🦀️.rs",
+      "bytes": 4717,
+      "sha256": "8DB888F8B3D1B885611406132F44C4E8B1CF7ED462D01F35E75BA8AB3161CDB1"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/📖️grammar/🦀️.rs",
+      "bytes": 5977,
+      "sha256": "76D0FBA172BD1C28F7C4A12EEC1244CFC795A56210B9A639697F7AD32C56E026"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🦀️.rs",
+      "bytes": 22565,
+      "sha256": "6142B88108F96168366691B8BDF345092371271753354B9010ED680B98861496"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧠️lsp/🦀️.rs",
+      "bytes": 4488,
+      "sha256": "326E5829DBE15B6946D6F8B3D4C8F8E48ED44571050153299DE91688A7171BE3"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 4735,
+      "sha256": "263758C92ABD78A77A58A0421FBCD6DFFEFC32E90BCBAF5978178CD4D6583FD3"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️.rs",
+      "bytes": 27171,
+      "sha256": "26A422D085D46312422FCD2CB7A34A3E76B477AACEA0594E9A60FD5CFE8F7B31"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🪶️sqlite/📏️preflight/🦀️.rs",
+      "bytes": 4012,
+      "sha256": "852EB81B3FEF37AF1E303CB0B5D80FCE5C06DACD4CADAB05DEA8EE2699C02485"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🪶️sqlite/🦀️.rs",
+      "bytes": 9326,
+      "sha256": "57C882D4FBA4FF507BEDD6A8580EC8F3DF6FA7046F4C6D33962A49160218B981"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🪪️identity/🦀️.rs",
+      "bytes": 7851,
+      "sha256": "FF5B0BEAF940B015AA999D09D8175CD90C08CC4ED24CF387D3900F59CEE622F4"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 1277,
+      "sha256": "AEF4112ADBE0FF1055E1A7D2E3E53AD3770D0C266DE2E9457FF35DFABAED1C7E"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🖼️assets/🔣️viz-catalog.json",
+      "bytes": 818870,
+      "sha256": "83CAB801138C01F1F469384A62EC9C2860F879C15D5E7E4873F3C90B065E88DA"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🦀️.rs",
+      "bytes": 10455,
+      "sha256": "860C8BB0536D60685919E206D550A8CC0D4C9EAA3EA8DE17BE361C26E53FE458"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧪️tests/🧬️chart-mutations/🦀️.rs",
+      "bytes": 17938,
+      "sha256": "F1F070FB060D834E33C05671975BA40C4886A745F0863E2C3B21E2CF5D5BC135"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧪️tests/🧬️native-chart-grammar/🔣️.json",
+      "bytes": 64234,
+      "sha256": "4B49ADFF2899CB129099BD5C9477EE97081C6459599AC6CF5EA68619B3D482E1"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧫️fixtures/🧬️chart-mutations/🎨️paint.json",
+      "bytes": 585,
+      "sha256": "789B6BCC001E909CB67870FA2784A28BBADE3B66F905BF030D9DCC8A8E8F8165"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧫️fixtures/🧬️chart-mutations/📊️native-grammar.json",
+      "bytes": 12502,
+      "sha256": "6BBB947943C43158B40E3D064FC963B6B8B6FEEF69D18AA3412E0C9B5815484C"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧫️fixtures/🧬️chart-mutations/🔣️.json",
+      "bytes": 106096,
+      "sha256": "96B14BA6222AEE901A481633CEF3C5444E2DDF16CACFD6F551B63749E34A6326"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧬️schema/💡️inferences/🎨theme/🦀️.rs",
+      "bytes": 3703,
+      "sha256": "8F86DD4944B688B812031A5EFAA63C9B9A1204C91BC1664744D42EBDCB3A65D1"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧬️schema/💡️inferences/🔣️.json",
+      "bytes": 29246,
+      "sha256": "A1232C89DCF15C63C22962AF544E2521196529DC6A03B151141FDDA6A255D7D3"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧬️schema/💡️inferences/🟦️.ts",
+      "bytes": 4934,
+      "sha256": "EDB3DFE3639B08A14EF87D750E3AEE277A6DD08ABB647F91708A177224620DD9"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧬️schema/💡️inferences/🦀️.rs",
+      "bytes": 40425,
+      "sha256": "A9B36E9DA1751399CCDA8FFCC2741CFF878336E7AC68F97626C0AF6E09CA66E9"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧬️schema/📸️snapshot/📊️chart/🎨️color/🔣️.json",
+      "bytes": 3829,
+      "sha256": "DEF3436D7F6EE7265D9E21DC44BCD9DDD22B18AA36485D2171133AFDA608B0B0"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧬️schema/📸️snapshot/🔣️.json",
+      "bytes": 2139,
+      "sha256": "B09C75402F60338C05E784C38A6D323E483F555C3F179975745221037F175361"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧬️schema/📸️snapshot/🚦️native/🦀️.rs",
+      "bytes": 5180,
+      "sha256": "95B691135396ED3031194829616FF1E2B7CA22DDF78097B290623857C19D9766"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧬️schema/📸️snapshot/🟦️.ts",
+      "bytes": 925,
+      "sha256": "CBF925D6646E6ACF54B6400DE60EE2723E5BF65E1A6DCD0613C757BCC34AE32A"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧬️schema/📸️snapshot/🦀️.rs",
+      "bytes": 781,
+      "sha256": "0A82ACBAC71BF905110337C15980FA5A8D33B607A23B9D9114EFF131CC37F113"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "bytes": 17119,
+      "sha256": "2E7E1EDCA10CE1BF7CC6AE838B6310F56723C0DE3A3D22F300CD14965877AC0B"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json",
+      "bytes": 15286,
+      "sha256": "4D3F0F0D8D9775BA0D516F95C1B03518D58CB872CBB6B543637E944F0320045B"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧬️schema/📸️snapshot/🪶️sqlite/🗄️.sql",
+      "bytes": 10016,
+      "sha256": "D5B008ECE8DC68661B0A62CA822A17253951D6D293FA65F738FCDA303979F4F9"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "bytes": 32743,
+      "sha256": "36E23316AB5DFE85F9B26F00E96A90BCFD32F91AC223016B525A9406B57F2B7D"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧬️schema/🔀️diff/🔣️.json",
+      "bytes": 494,
+      "sha256": "88474EFAC1E2F6D39F5F0E0A78E881B33E3FE0AF84F88138C4A558EE0C456B60"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧬️schema/🔀️diff/🟦️.ts",
+      "bytes": 4910,
+      "sha256": "5DAF3F5FB336BD95FE7C6C8F65BD743BC77CF9A05518FC4423320E1B5D338D4F"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧬️schema/🔀️diff/🦀️.rs",
+      "bytes": 7347,
+      "sha256": "ABD7D76477A72D1D1112BEC79AA93CAE4C73CB7C3050A5D00F841C73E0019D21"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧬️schema/🔣️.json",
+      "bytes": 1591487,
+      "sha256": "045A015FA5E12521D32D0BA87E70F938424E853548B6E323720EC407B10A38BA"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧬️schema/🧬️mutations/📦️codec/🦀️.rs",
+      "bytes": 1311,
+      "sha256": "77B0E572E27B6C46A08B8856D931513330C2C9378963FEC1CB2BBBB01E350CBE"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧬️schema/🧬️mutations/🔣️.json",
+      "bytes": 445,
+      "sha256": "E45A28C298C67C13ABAFE6CA5AC4E09B4E6EE30345D2D43018CAE3EAC4BC3358"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧬️schema/🧬️mutations/🟦️.ts",
+      "bytes": 1852,
+      "sha256": "5731A4203352C98A23FCCB3B46F2D5CE798B57A380F508DA59EF2927DB135415"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧬️schema/🧬️mutations/🦀️.rs",
+      "bytes": 4281,
+      "sha256": "3D92B2CDEEF6E533D6B3EBAB4D0C3537F6EA23C7680A9B9D36C32A380B94BBF6"
+    }
+  ]
+}

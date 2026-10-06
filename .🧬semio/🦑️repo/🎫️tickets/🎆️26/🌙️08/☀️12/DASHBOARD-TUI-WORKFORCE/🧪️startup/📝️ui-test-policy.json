@@ -1,0 +1,3 @@
+[
+ {"path":".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/DASHBOARD-TUI-WORKFORCE/🧪️startup/📜️script.ts","replace":[{"from":" if(operation===\"native\"){const installation=","to":" if(operation===\"ui\"){process.env.NX_WORKSPACE_ROOT=workspace;const library=await import(path(\"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟦️.ts\"));env.SEMIO_CARGO_TEST_POLICY=JSON.stringify(library.repositoryCargoTestPolicyV1(path(\"🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/Cargo.toml\"),workspace,env));}\n if(operation===\"native\"){const installation="}]}
+]

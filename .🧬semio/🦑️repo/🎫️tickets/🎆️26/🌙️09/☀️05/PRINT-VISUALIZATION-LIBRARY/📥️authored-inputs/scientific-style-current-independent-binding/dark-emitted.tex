@@ -1,0 +1,112 @@
+\documentclass[type=paper,language=de,theme=dark]{semio}
+\usepackage{semio-viz-probe}
+\usepackage{semio-viz}
+\title{Scientific Viewports}
+\author{Semio}
+\date{}
+\errorcontextlines=200
+\ExplSyntaxOn
+\tl_new:N \l_semio_viz_test_canvas_case_tl
+\cs_new_eq:NN \semio_viz_test_canvas_frame: \semio_viz_sci_frame:
+\cs_set_protected:Npn \semio_viz_sci_frame: { \exp_args:Nx \special {pdf:literal~direct~/SemioVizChrome\tl_use:N \l_semio_viz_test_canvas_case_tl \c_space_tl BMC} \semio_viz_test_canvas_frame: \special{pdf:literal~direct~EMC} }
+\cs_if_exist:NT \semio_viz_sci_physical_begin: {
+\cs_new_eq:NN \semio_viz_test_canvas_begin: \semio_viz_sci_physical_begin:
+\cs_new_eq:NN \semio_viz_test_canvas_end: \semio_viz_sci_physical_end:
+\cs_set_protected:Npn \semio_viz_sci_physical_begin: { \semio_viz_test_canvas_begin: \exp_args:Nx \special{pdf:literal~direct~/SemioVizBody\tl_use:N \l_semio_viz_test_canvas_case_tl \c_space_tl BMC} }
+\cs_set_protected:Npn \semio_viz_sci_physical_end: { \special{pdf:literal~direct~EMC} \semio_viz_test_canvas_end: }
+}
+\ExplSyntaxOff
+\begin{document}
+\SemioVizProbeBegin{scientific-relation-styles}{dark}
+\SemioVizProbeOn
+\SemioVizProbePage
+\clearpage\ExplSyntaxOn\tl_set:Nn\l_semio_viz_test_canvas_case_tl{Rsarrow}\ExplSyntaxOff\SemioVizProbeBegin{scientific-relation-styles}{arrow}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{de}\ExplSyntaxOff
+\begin{VizFigure}[width=80,height=48,title={}]
+\draw[line width=.01mm] (0,0) rectangle (80,48);
+\SemioVizTheme{default}[appearance=dark]
+\SemioVizChart{commutative-diagram}[axes={false},edges={a/b/arrow/},grid={false},height={48},mode={commutative},nodeShape={none},nodes={a/0/0/,b/1/0/},title={},unit={20},width={80},xlabel={},ylabel={}]
+% 80mm × 48mm, dark appearance
+\end{VizFigure}
+\endgroup
+
+\clearpage\ExplSyntaxOn\tl_set:Nn\l_semio_viz_test_canvas_case_tl{Rshook}\ExplSyntaxOff\SemioVizProbeBegin{scientific-relation-styles}{hook}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{de}\ExplSyntaxOff
+\begin{VizFigure}[width=80,height=48,title={}]
+\draw[line width=.01mm] (0,0) rectangle (80,48);
+\SemioVizTheme{default}[appearance=dark]
+\SemioVizChart{commutative-diagram}[axes={false},edges={a/b/hook/},grid={false},height={48},mode={commutative},nodeShape={none},nodes={a/0/0/,b/1/0/},title={},unit={20},width={80},xlabel={},ylabel={}]
+% 80mm × 48mm, dark appearance
+\end{VizFigure}
+\endgroup
+
+\clearpage\ExplSyntaxOn\tl_set:Nn\l_semio_viz_test_canvas_case_tl{Rsdouble}\ExplSyntaxOff\SemioVizProbeBegin{scientific-relation-styles}{double}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{de}\ExplSyntaxOff
+\begin{VizFigure}[width=80,height=48,title={}]
+\draw[line width=.01mm] (0,0) rectangle (80,48);
+\SemioVizTheme{default}[appearance=dark]
+\SemioVizChart{commutative-diagram}[axes={false},edges={a/b/double/},grid={false},height={48},mode={commutative},nodeShape={none},nodes={a/0/0/,b/1/0/},title={},unit={20},width={80},xlabel={},ylabel={}]
+% 80mm × 48mm, dark appearance
+\end{VizFigure}
+\endgroup
+
+\clearpage\ExplSyntaxOn\tl_set:Nn\l_semio_viz_test_canvas_case_tl{Rsdashed}\ExplSyntaxOff\SemioVizProbeBegin{scientific-relation-styles}{dashed}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{de}\ExplSyntaxOff
+\begin{VizFigure}[width=80,height=48,title={}]
+\draw[line width=.01mm] (0,0) rectangle (80,48);
+\SemioVizTheme{default}[appearance=dark]
+\SemioVizChart{commutative-diagram}[axes={false},edges={a/b/dashed/},grid={false},height={48},mode={commutative},nodeShape={none},nodes={a/0/0/,b/1/0/},title={},unit={20},width={80},xlabel={},ylabel={}]
+% 80mm × 48mm, dark appearance
+\end{VizFigure}
+\endgroup
+
+\clearpage\ExplSyntaxOn\tl_set:Nn\l_semio_viz_test_canvas_case_tl{Rswire}\ExplSyntaxOff\SemioVizProbeBegin{scientific-relation-styles}{wire}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{de}\ExplSyntaxOff
+\begin{VizFigure}[width=80,height=48,title={}]
+\draw[line width=.01mm] (0,0) rectangle (80,48);
+\SemioVizTheme{default}[appearance=dark]
+\SemioVizChart{commutative-diagram}[axes={false},edges={a/b/wire/},grid={false},height={48},mode={commutative},nodeShape={none},nodes={a/0/0/,b/1/0/},title={},unit={20},width={80},xlabel={},ylabel={}]
+% 80mm × 48mm, dark appearance
+\end{VizFigure}
+\endgroup
+
+\clearpage\ExplSyntaxOn\tl_set:Nn\l_semio_viz_test_canvas_case_tl{Rsleg}\ExplSyntaxOff\SemioVizProbeBegin{scientific-relation-styles}{leg}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{de}\ExplSyntaxOff
+\begin{VizFigure}[width=80,height=48,title={}]
+\draw[line width=.01mm] (0,0) rectangle (80,48);
+\SemioVizTheme{default}[appearance=dark]
+\SemioVizChart{commutative-diagram}[axes={false},edges={a/b/leg/},grid={false},height={48},mode={commutative},nodeShape={none},nodes={a/0/0/,b/1/0/},title={},unit={20},width={80},xlabel={},ylabel={}]
+% 80mm × 48mm, dark appearance
+\end{VizFigure}
+\endgroup
+
+\clearpage\ExplSyntaxOn\tl_set:Nn\l_semio_viz_test_canvas_case_tl{Rsorder}\ExplSyntaxOff\SemioVizProbeBegin{scientific-relation-styles}{order}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{de}\ExplSyntaxOff
+\begin{VizFigure}[width=80,height=48,title={}]
+\draw[line width=.01mm] (0,0) rectangle (80,48);
+\SemioVizTheme{default}[appearance=dark]
+\SemioVizChart{commutative-diagram}[axes={false},edges={a/b/order/},grid={false},height={48},mode={commutative},nodeShape={none},nodes={a/0/0/,b/1/0/},title={},unit={20},width={80},xlabel={},ylabel={}]
+% 80mm × 48mm, dark appearance
+\end{VizFigure}
+\endgroup
+
+\clearpage\ExplSyntaxOn\tl_set:Nn\l_semio_viz_test_canvas_case_tl{Rsdynkin-double}\ExplSyntaxOff\SemioVizProbeBegin{scientific-relation-styles}{dynkin-double}
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{de}\ExplSyntaxOff
+\begin{VizFigure}[width=80,height=48,title={}]
+\draw[line width=.01mm] (0,0) rectangle (80,48);
+\SemioVizTheme{default}[appearance=dark]
+\SemioVizChart{commutative-diagram}[axes={false},edges={a/b/dynkin-double/},grid={false},height={48},mode={commutative},nodeShape={none},nodes={a/0/0/,b/1/0/},title={},unit={20},width={80},xlabel={},ylabel={}]
+% 80mm × 48mm, dark appearance
+\end{VizFigure}
+\endgroup
+
+\SemioVizProbeEnd
+\end{document}

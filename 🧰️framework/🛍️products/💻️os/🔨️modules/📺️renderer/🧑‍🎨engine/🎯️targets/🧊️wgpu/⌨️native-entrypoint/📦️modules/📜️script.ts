@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
+import { readGeneratedCatalogProjection } from "../../../../../../🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts";
 import { COMPONENT_MODULE_DIRECTORIES } from "../../../../../../🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts";
-import { readFileSync } from "node:fs";
 import { isAbsolute, join, relative, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { BundleScript, ScriptRouter } from "../../../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
@@ -19,7 +19,7 @@ class PublishScript extends BundleScript {
     nativeRuntimeDirectory(".", variant, profile);
     process.once("SIGINT", cancel); process.once("SIGTERM", cancel);
     try {
-      const catalog = JSON.parse(readFileSync(join(repo, registryPath, "🤖️generated/🔌️plugins.json"), "utf8"));
+      const catalog = readGeneratedCatalogProjection(join(repo,registryPath,"dist/sessions",variant)).entries;
       const session = (await import(pathToFileURL(join(repo, registryPath, "dist/sessions", variant, "🎮️playground-session/🟦️.ts")).href)).PLAYGROUND_SESSION;
       if (session.variant !== variant || !Array.isArray(session.plugins)) throw new Error("Native session identity mismatch");
       const modules = session.plugins.map((plugin: { pluginId: string }) => {

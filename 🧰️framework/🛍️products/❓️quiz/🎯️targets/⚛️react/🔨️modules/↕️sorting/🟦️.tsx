@@ -156,6 +156,7 @@ export function SortingTaskView(props: TaskViewProps<SheetSortingTask, SortingAn
           const described = describedBy(hintId, lockedId);
           return (
             <li
+              data-icon-host=""
               key={id}
               className="quiz-sort border border-normal bg-background px-single py-single"
               data-quiz-item={id}
@@ -170,7 +171,7 @@ export function SortingTaskView(props: TaskViewProps<SheetSortingTask, SortingAn
                 {keys === undefined ? null : <span className="sr-only">{text("quiz.sorting.place", { position: index + 1, value: keyText(index) })}</span>}
               </span>
               <span className="quiz-sort-label quiz-row-label min-w-0 text-sm">
-                <IconLabel icon={task.items.find((item) => item.id === id)?.icon} order={index}>
+                <IconLabel icon={task.items.find((item) => item.id === id)?.icon}>
                   {label(id)}
                 </IconLabel>
                 {hint === undefined || hintId === undefined ? null : (

@@ -1,0 +1,80 @@
+{
+  "id": "api-path-geo-planar",
+  "scope": "semio / viz / geo / planar",
+  "source": {
+    "file": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-geo-symbols.sty",
+    "sha256": "4a786c211d4476302c1cb905399414a4aaf956716a53c6c6ccf109d3923223f1"
+  },
+  "keys": [
+    {
+      "key": "width",
+      "type": "number",
+      "default": "76",
+      "setter": "fp",
+      "description": {
+        "en": "Maximum fitted display width in millimetres. Raw planar coordinates are scaled uniformly.",
+        "de": "Maximale angepasste Darstellungsbreite in Millimetern. Rohe planare Koordinaten werden gleichmäßig skaliert."
+      }
+    },
+    {
+      "key": "height",
+      "type": "number",
+      "default": "44",
+      "setter": "fp",
+      "description": {
+        "en": "Maximum fitted display height in millimetres. Raw planar coordinates are scaled uniformly.",
+        "de": "Maximale angepasste Darstellungshöhe in Millimetern. Rohe planare Koordinaten werden gleichmäßig skaliert."
+      }
+    },
+    {
+      "key": "palette",
+      "type": "string",
+      "default": "sequential",
+      "setter": "tl",
+      "description": {
+        "en": "Colour ramp used for binned values or density levels.",
+        "de": "Farbverlauf für gebündelte Werte oder Dichteniveaus."
+      }
+    },
+    {
+      "key": "stroke",
+      "type": "string",
+      "default": "semio-chrome-border-emphasized",
+      "setter": "tl",
+      "description": {
+        "en": "Hexagon outline colour as a native colour expression. Density and heat outlines use their palette colour.",
+        "de": "Umrissfarbe der Sechsecke als nativer Farbausdruck. Dichte- und Wärmeumrisse nutzen ihre Palettenfarbe."
+      }
+    },
+    {
+      "key": "lineWidth",
+      "type": "string",
+      "default": "semio@stroke@hairline",
+      "setter": "tl",
+      "description": {
+        "en": "Hexagon and density outline width as a TeX dimension from the theme hairline token.",
+        "de": "Umrissbreite der Sechsecke und Dichteflächen als TeX-Dimension aus dem Haarlinienwert des Themas."
+      }
+    },
+    {
+      "key": "opacity",
+      "type": "number",
+      "default": "1",
+      "setter": "fp",
+      "description": {
+        "en": "Drawing and filling opacity from zero to one.",
+        "de": "Zeichen- und Füllungsdeckkraft von null bis eins."
+      }
+    },
+    {
+      "key": "paletteSteps",
+      "type": "integer",
+      "default": "5",
+      "setter": "int",
+      "description": {
+        "en": "Positive number of final colour-ramp levels. One level uses the palette midpoint.",
+        "de": "Positive Anzahl endgültiger Farbverlaufsstufen. Eine Stufe nutzt die Palettenmitte."
+      }
+    }
+  ]
+}

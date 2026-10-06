@@ -1,0 +1,71 @@
+export function nativeControlPdfPaint(operators:Awaited<ReturnType<PDFPageProxy["getOperatorList"]>>,canvas:number[],marker:string,excluded:readonly string[]=[]):{paths:NativeControlPdfPath[];glyphs:{text:string;bounds?:number[];origin?:number[];advance?:number[];fill?:number[];fillOpacity?:number;strokeOpacity?:number;textMode?:number}[];images:{operator:number;corners:number[][];opacity:number;resource?:string;sourceWidth?:number;sourceHeight?:number}[]}{
+  const mm=72/25.4,paths:NativeControlPdfPath[]=[],glyphs:{text:string;bounds?:number[];origin?:number[];advance?:number[];fill?:number[];fillOpacity?:number;strokeOpacity?:number;textMode?:number}[]=[],images:{operator:number;corners:number[][];opacity:number;resource?:string;sourceWidth?:number;sourceHeight?:number}[]=[],markers:string[]=[],stack:{matrix:number[];width:number;opacity:number;fillOpacity:number;stroke:number[];fill:number[];dash:number[];dashPhase:number}[]=[];
+  let matrix=[1,0,0,1,0,0],width=1,opacity=1,fillOpacity=1,stroke=[0,0,0],fill=[0,0,0],dash:number[]=[],dashPhase=0,reference:number[]|undefined,matched=false;
+  let textMatrix=[1,0,0,1,0,0],lineMatrix=[...textMatrix],fontSize=0,horizontalScale=1,charSpacing=0,wordSpacing=0,rise=0,leading=0,textMode=0;
+  const rgbValue=(args:unknown[]):number[]=>typeof args[0]==="string"?/^#[\da-f]{6}$/i.test(args[0])?[1,3,5].map(index=>parseInt((args[0] as string).slice(index,index+2),16)/255):[]:Array.from(args[0] instanceof Uint8Array?args[0]:args.length===1&&Array.isArray(args[0])?args[0]:args,Number).map(value=>value>1?value/255:value);
+  for(const[index,id]of operators.fnArray.entries()){
+    const args=operators.argsArray[index];
+    if(id===OPS.save||id===OPS.paintFormXObjectBegin){stack.push({matrix:[...matrix],width,opacity,fillOpacity,stroke:[...stroke],fill:[...fill],dash:[...dash],dashPhase});if(id===OPS.paintFormXObjectBegin&&args[0])matrix=Util.transform(matrix,args[0]);}
+    else if(id===OPS.restore||id===OPS.paintFormXObjectEnd){const state=stack.pop();if(!state)throw Error("Control PDF graphics stack underflow");({matrix,width,opacity,fillOpacity,stroke,fill,dash,dashPhase}=state);}
+    else if(id===OPS.transform)matrix=Util.transform(matrix,args);
+    else if(id===OPS.setLineWidth)width=Number(args[0]);
+    else if(id===OPS.setDash){dash=Array.from(args[0],Number);dashPhase=Number(args[1]);}
+    else if(id===OPS.setStrokeRGBColor)stroke=rgbValue(args);
+    else if(id===OPS.setFillRGBColor)fill=rgbValue(args);
+    else if(id===OPS.setGState){for(const state of args[0]){if(state[0]==="LW")width=Number(state[1]);if(state[0]==="CA")opacity=Number(state[1]);if(state[0]==="ca")fillOpacity=Number(state[1]);}}
+    else if(id===OPS.beginMarkedContent||id===OPS.beginMarkedContentProps){const name=typeof args[0]==="string"?args[0]:args[0]?.name??"";markers.push(name);if(name===marker)matched=true;}
+    else if(id===OPS.endMarkedContent){if(!markers.length)throw Error("Control PDF marked-content stack underflow");markers.pop();}
+    else if(id===OPS.beginText){textMatrix=[1,0,0,1,0,0];lineMatrix=[...textMatrix];}
+    else if(id===OPS.setFont)fontSize=Number(args[1]);
+    else if(id===OPS.setHScale)horizontalScale=Number(args[0])/100;
+    else if(id===OPS.setCharSpacing)charSpacing=Number(args[0]);
+    else if(id===OPS.setWordSpacing)wordSpacing=Number(args[0]);
+    else if(id===OPS.setTextRise)rise=Number(args[0]);
+    else if(id===OPS.setLeading)leading=Number(args[0]);
+    else if(id===OPS.setTextRenderingMode)textMode=Number(args[0]);
+    else if(id===OPS.setTextMatrix){textMatrix=Array.from(args,Number);lineMatrix=[...textMatrix];}
+    else if(id===OPS.moveText||id===OPS.setLeadingMoveText||id===OPS.nextLine){const x=id===OPS.nextLine?0:Number(args[0]),y=id===OPS.nextLine?-leading:Number(args[1]);if(id===OPS.setLeadingMoveText)leading=-y;lineMatrix=Util.transform(lineMatrix,[1,0,0,1,x,y]);textMatrix=[...lineMatrix];}
+    else if(id===OPS.showText){
+      const values=args[0] as ({unicode?:string;width?:number;isSpace?:boolean}|number)[],text=values.filter(value=>typeof value==="object").map(value=>(value as{unicode?:string}).unicode??"").join(""),advance=values.reduce<number>((sum,value)=>sum+(typeof value==="number"?-value*fontSize/1000:(Number(value.width??0)*fontSize/1000+charSpacing+(value.isSpace?wordSpacing:0)))*horizontalScale,0);
+      if(text&&markers.includes(marker)&&!excluded.some(name=>markers.includes(name))&&reference&&(([0,2,4,6].includes(textMode)&&fillOpacity>0)||([1,2,5,6].includes(textMode)&&opacity>0))){
+        const relative=Util.transform(Util.inverseTransform(reference),Util.transform(matrix,textMatrix)),transform=(point:number[])=>{Util.applyTransform(point,relative);return point.map(value=>value/mm);},origin=transform([0,rise]),end=transform([advance,rise]),corners=[[0,rise],[advance,rise],[0,rise+Math.abs(fontSize)],[advance,rise+Math.abs(fontSize)]].map(transform);
+        glyphs.push({text,origin,fill:[...fill],fillOpacity,strokeOpacity:opacity,textMode,advance:end.map((value,axis)=>value-origin[axis]!),bounds:[Math.min(...corners.map(point=>point[0]!)),Math.min(...corners.map(point=>point[1]!)),Math.max(...corners.map(point=>point[0]!)),Math.max(...corners.map(point=>point[1]!))]});
+      }
+      textMatrix=Util.transform(textMatrix,[1,0,0,1,advance,0]);
+    }
+    else if([OPS.paintImageXObject,OPS.paintInlineImageXObject,OPS.paintImageMaskXObject].includes(id)&&markers.includes(marker)&&!excluded.some(name=>markers.includes(name))){
+      if(!reference)throw Error("Control PDF image precedes canvas reference");
+      const relative=Util.transform(Util.inverseTransform(reference),matrix),corners=[[0,0],[1,0],[1,1],[0,1]].map(point=>{Util.applyTransform(point,relative);return point.map(value=>value/mm);}),source=typeof args[0]==="object"?args[0]:undefined;
+      images.push({operator:id,corners,opacity:fillOpacity,...typeof args[0]==="string"?{resource:args[0]}:{},sourceWidth:Number(source?.width??args[1])||undefined,sourceHeight:Number(source?.height??args[2])||undefined});
+    }
+    else if(id===OPS.constructPath&&args[2]){
+      const bounds=Array.from(args[2],Number),packed=Array.from(args[1]?.[0]??[],Number),isReference=args[0]===OPS.stroke&&Math.abs(width-.01*mm)<.002&&bounds.every((value,axis)=>Math.abs(value-[0,0,canvas[0]!*mm,canvas[1]!*mm][axis]!)<.03);
+      if(isReference&&!markers.includes(marker)){if(reference)throw Error("Control PDF duplicate canvas reference");reference=[...matrix];continue;}
+      if(!markers.includes(marker)||excluded.some(name=>markers.includes(name)))continue;
+      if(!reference)throw Error("Control PDF paint precedes canvas reference");
+      const stroked=[OPS.stroke,OPS.closeStroke,OPS.fillStroke,OPS.eoFillStroke,OPS.closeFillStroke,OPS.closeEOFillStroke].includes(args[0]),filled=[OPS.fill,OPS.eoFill,OPS.fillStroke,OPS.eoFillStroke,OPS.closeFillStroke,OPS.closeEOFillStroke].includes(args[0]);
+      if((!stroked||opacity<=0)&&(!filled||fillOpacity<=0))continue;
+      const relative=Util.transform(Util.inverseTransform(reference),matrix),transform=(point:number[])=>{const value=[...point];Util.applyTransform(value,relative);return value.map(coordinate=>coordinate/mm);};
+      let cursor=0,current:number[]|undefined,first:number[]|undefined,points:number[][]=[],extrema:number[][]=[],closed=false;
+      const publish=()=>{if(points.length){const values=extrema.length?extrema:points;paths.push({paint:args[0],closed,points,bounds:[Math.min(...values.map(value=>value[0]!)),Math.min(...values.map(value=>value[1]!)),Math.max(...values.map(value=>value[0]!)),Math.max(...values.map(value=>value[1]!))],width:width/mm*Math.sqrt(Math.abs(relative[0]!*relative[3]!-relative[1]!*relative[2]!)),opacity,fillOpacity,stroke:[...stroke],fill:[...fill],dash:[...dash],dashPhase});}points=[];extrema=[];closed=false;};
+      while(cursor<packed.length){
+        const command=packed[cursor++]!;
+        if(command===0){publish();current=transform([packed[cursor++]!,packed[cursor++]!]);first=[...current];points.push(current);extrema.push(current);}
+        else if(command===1){current=transform([packed[cursor++]!,packed[cursor++]!]);points.push(current);extrema.push(current);}
+        else if(command===2){
+          if(!current)throw Error("Control PDF cubic without start");
+          const curve=[current,transform([packed[cursor++]!,packed[cursor++]!]),transform([packed[cursor++]!,packed[cursor++]!]),transform([packed[cursor++]!,packed[cursor++]!])],at=(t:number)=>[0,1].map(axis=>(1-t)**3*curve[0]![axis]!+3*(1-t)**2*t*curve[1]![axis]!+3*(1-t)*t*t*curve[2]![axis]!+t**3*curve[3]![axis]!);
+          for(let sample=1;sample<=128;sample++)points.push(at(sample/128));
+          extrema.push(curve[0]!,curve[3]!);
+          for(let axis=0;axis<2;axis++){const[p0,p1,p2,p3]=curve.map(point=>point[axis]!),a=-p0!+3*p1!-3*p2!+p3!,b=2*(p0!-2*p1!+p2!),c=p1!-p0!,discriminant=b*b-4*a*c,roots=Math.abs(a)<1e-12?Math.abs(b)<1e-12?[]:[-c/b]:discriminant<0?[]:[(-b+Math.sqrt(discriminant))/(2*a),(-b-Math.sqrt(discriminant))/(2*a)];for(const t of roots)if(t>0&&t<1)extrema.push(at(t));}
+          current=curve[3]!;
+        }else if(command===4){closed=true;if(first)current=first;}
+        else throw Error("Unsupported owned PDF path command "+command);
+      }
+      publish();
+    }
+  }
+  if(stack.length||markers.length)throw Error("Control PDF unbalanced graphics or ownership stack");
+  if(!reference||!matched)throw Error("Control PDF canvas or ownership marker missing: "+marker);
+  return{paths,glyphs,images};
+}

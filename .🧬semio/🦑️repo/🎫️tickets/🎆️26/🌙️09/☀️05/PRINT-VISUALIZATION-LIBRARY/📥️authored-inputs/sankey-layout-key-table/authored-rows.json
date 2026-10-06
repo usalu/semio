@@ -1,0 +1,72 @@
+[
+  [
+    "node-width",
+    "number",
+    "24",
+    "Width of each node rectangle in layout units.",
+    "Breite jedes Knotenrechtecks in Layouteinheiten."
+  ],
+  [
+    "node-padding",
+    "number",
+    "8",
+    "Vertical gap between nodes in a column. Parallel sets presets zero before authored options.",
+    "Senkrechter Abstand zwischen Knoten einer Spalte. Parallelmengen setzen vor den Aufruferoptionen null als Vorgabe."
+  ],
+  [
+    "node-align",
+    "string",
+    "justify",
+    "Column assignment: left, right, center or justify. Alluvial and parallel sets preset left before authored options.",
+    "Spaltenzuweisung: left, right, center oder justify. Alluvial und Parallelmengen setzen vor den Aufruferoptionen left als Vorgabe."
+  ],
+  [
+    "node-sort",
+    "string",
+    "auto",
+    "auto reorders each column by node position; none preserves input order. Alluvial and parallel sets preset none.",
+    "auto ordnet jede Spalte nach der Knotenposition; none erhält die Eingabereihenfolge. Alluvial und Parallelmengen verwenden none als Vorgabe."
+  ],
+  [
+    "link-sort",
+    "string",
+    "auto",
+    "auto orders incident links by their partner node positions; none preserves input link order.",
+    "auto ordnet anliegende Kanten nach den Positionen ihrer Partnerknoten; none erhält die Eingabereihenfolge der Kanten."
+  ],
+  [
+    "iterations",
+    "integer",
+    "6",
+    "Number of vertical relaxation passes.",
+    "Anzahl senkrechter Relaxationsdurchläufe."
+  ],
+  [
+    "x0",
+    "number",
+    "0",
+    "Left boundary of the layout extent.",
+    "Linke Grenze der Layoutausdehnung."
+  ],
+  [
+    "y0",
+    "number",
+    "0",
+    "Lower numeric vertical boundary of the layout extent.",
+    "Untere numerische Vertikalgrenze der Layoutausdehnung."
+  ],
+  [
+    "x1",
+    "number",
+    "1",
+    "Right boundary of the layout extent.",
+    "Rechte Grenze der Layoutausdehnung."
+  ],
+  [
+    "y1",
+    "number",
+    "1",
+    "Upper numeric vertical boundary of the layout extent.",
+    "Obere numerische Vertikalgrenze der Layoutausdehnung."
+  ]
+]

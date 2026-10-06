@@ -1,0 +1,906 @@
+{
+  "schema": {
+    "type": "object",
+    "required": [
+      "nodes",
+      "edges",
+      "cases",
+      "palette",
+      "size",
+      "toleranceMm"
+    ],
+    "additionalProperties": false,
+    "properties": {
+      "nodes": {
+        "type": "array",
+        "minItems": 6,
+        "items": {
+          "type": "object",
+          "required": [
+            "id",
+            "parent",
+            "group",
+            "value"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "parent": {
+              "type": "string"
+            },
+            "group": {
+              "type": "string"
+            },
+            "value": {
+              "type": "number"
+            }
+          }
+        }
+      },
+      "edges": {
+        "type": "array",
+        "minItems": 5,
+        "items": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "cases": {
+        "type": "array",
+        "minItems": 9,
+        "items": {
+          "type": "object",
+          "required": [
+            "id",
+            "layout",
+            "order",
+            "columns",
+            "iterations",
+            "forces",
+            "charge",
+            "linkDistance",
+            "seed",
+            "initial",
+            "groups",
+            "root",
+            "sweeps",
+            "orientation",
+            "edges",
+            "parents",
+            "initialType"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "layout": {
+              "enum": [
+                "grid",
+                "circular",
+                "force",
+                "random",
+                "partite",
+                "radial",
+                "layered"
+              ]
+            },
+            "order": {
+              "enum": [
+                "index",
+                "name"
+              ]
+            },
+            "columns": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "iterations": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "forces": {
+              "type": "array",
+              "items": {
+                "enum": [
+                  "link",
+                  "many-body",
+                  "center"
+                ]
+              }
+            },
+            "charge": {
+              "type": "number"
+            },
+            "linkDistance": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "seed": {
+              "type": "number"
+            },
+            "initial": {
+              "type": "array",
+              "maxItems": 6,
+              "items": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2,
+                "items": {
+                  "type": "number"
+                }
+              }
+            },
+            "groups": {
+              "type": "array",
+              "maxItems": 6,
+              "items": {
+                "type": "string"
+              }
+            },
+            "root": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 6
+            },
+            "sweeps": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "orientation": {
+              "enum": [
+                "horizontal",
+                "vertical"
+              ]
+            },
+            "edges": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2,
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "parents": {
+              "type": "array",
+              "maxItems": 6,
+              "items": {
+                "type": "string"
+              }
+            },
+            "initialType": {
+              "enum": [
+                "number",
+                "string"
+              ]
+            }
+          }
+        }
+      },
+      "palette": {
+        "type": "array",
+        "minItems": 6,
+        "items": {
+          "type": "string"
+        }
+      },
+      "size": {
+        "type": "number",
+        "exclusiveMinimum": 0
+      },
+      "toleranceMm": {
+        "type": "number",
+        "exclusiveMinimum": 0
+      }
+    }
+  },
+  "vectors": {
+    "nodes": [
+      {
+        "id": "Z",
+        "parent": "",
+        "group": "G0",
+        "value": 1
+      },
+      {
+        "id": "A",
+        "parent": "Z",
+        "group": "G1",
+        "value": 2
+      },
+      {
+        "id": "E",
+        "parent": "Z",
+        "group": "G2",
+        "value": 3
+      },
+      {
+        "id": "B",
+        "parent": "A",
+        "group": "G3",
+        "value": 4
+      },
+      {
+        "id": "D",
+        "parent": "E",
+        "group": "G4",
+        "value": 5
+      },
+      {
+        "id": "C",
+        "parent": "B",
+        "group": "G5",
+        "value": 6
+      }
+    ],
+    "edges": [
+      [
+        "Z",
+        "A"
+      ],
+      [
+        "Z",
+        "E"
+      ],
+      [
+        "A",
+        "B"
+      ],
+      [
+        "E",
+        "D"
+      ],
+      [
+        "B",
+        "C"
+      ],
+      [
+        "D",
+        "C"
+      ]
+    ],
+    "palette": [
+      "#cc3300",
+      "#0077cc",
+      "#339933",
+      "#aa33bb",
+      "#cc9900",
+      "#33aaaa"
+    ],
+    "size": 1.3,
+    "toleranceMm": 0.04,
+    "cases": [
+      {
+        "id": "grid2",
+        "layout": "grid",
+        "order": "index",
+        "columns": 2,
+        "iterations": 24,
+        "forces": [
+          "link",
+          "many-body",
+          "center"
+        ],
+        "charge": -30,
+        "linkDistance": 30,
+        "seed": 1,
+        "initial": [],
+        "groups": [],
+        "root": 1,
+        "sweeps": 4,
+        "orientation": "horizontal",
+        "edges": [],
+        "parents": [],
+        "initialType": "number"
+      },
+      {
+        "id": "grid3",
+        "layout": "grid",
+        "order": "index",
+        "columns": 3,
+        "iterations": 24,
+        "forces": [
+          "link",
+          "many-body",
+          "center"
+        ],
+        "charge": -30,
+        "linkDistance": 30,
+        "seed": 1,
+        "initial": [],
+        "groups": [],
+        "root": 1,
+        "sweeps": 4,
+        "orientation": "horizontal",
+        "edges": [],
+        "parents": [],
+        "initialType": "number"
+      },
+      {
+        "id": "circle-index",
+        "layout": "circular",
+        "order": "index",
+        "columns": 2,
+        "iterations": 24,
+        "forces": [
+          "link",
+          "many-body",
+          "center"
+        ],
+        "charge": -30,
+        "linkDistance": 30,
+        "seed": 1,
+        "initial": [],
+        "groups": [],
+        "root": 1,
+        "sweeps": 4,
+        "orientation": "horizontal",
+        "edges": [],
+        "parents": [],
+        "initialType": "number"
+      },
+      {
+        "id": "circle-name",
+        "layout": "circular",
+        "order": "name",
+        "columns": 2,
+        "iterations": 24,
+        "forces": [
+          "link",
+          "many-body",
+          "center"
+        ],
+        "charge": -30,
+        "linkDistance": 30,
+        "seed": 1,
+        "initial": [],
+        "groups": [],
+        "root": 1,
+        "sweeps": 4,
+        "orientation": "horizontal",
+        "edges": [],
+        "parents": [],
+        "initialType": "number"
+      },
+      {
+        "id": "force-base",
+        "layout": "force",
+        "order": "index",
+        "columns": 2,
+        "iterations": 24,
+        "forces": [
+          "link",
+          "many-body",
+          "center"
+        ],
+        "charge": -30,
+        "linkDistance": 30,
+        "seed": 1,
+        "initial": [],
+        "groups": [],
+        "root": 1,
+        "sweeps": 4,
+        "orientation": "horizontal",
+        "edges": [],
+        "parents": [],
+        "initialType": "number"
+      },
+      {
+        "id": "force-iterations",
+        "layout": "force",
+        "order": "index",
+        "columns": 2,
+        "iterations": 1,
+        "forces": [
+          "link",
+          "many-body",
+          "center"
+        ],
+        "charge": -30,
+        "linkDistance": 30,
+        "seed": 1,
+        "initial": [],
+        "groups": [],
+        "root": 1,
+        "sweeps": 4,
+        "orientation": "horizontal",
+        "edges": [],
+        "parents": [],
+        "initialType": "number"
+      },
+      {
+        "id": "force-forces",
+        "layout": "force",
+        "order": "index",
+        "columns": 2,
+        "iterations": 24,
+        "forces": [
+          "link",
+          "center"
+        ],
+        "charge": -30,
+        "linkDistance": 30,
+        "seed": 1,
+        "initial": [],
+        "groups": [],
+        "root": 1,
+        "sweeps": 4,
+        "orientation": "horizontal",
+        "edges": [],
+        "parents": [],
+        "initialType": "number"
+      },
+      {
+        "id": "force-charge",
+        "layout": "force",
+        "order": "index",
+        "columns": 2,
+        "iterations": 24,
+        "forces": [
+          "link",
+          "many-body",
+          "center"
+        ],
+        "charge": -90,
+        "linkDistance": 30,
+        "seed": 1,
+        "initial": [],
+        "groups": [],
+        "root": 1,
+        "sweeps": 4,
+        "orientation": "horizontal",
+        "edges": [],
+        "parents": [],
+        "initialType": "number"
+      },
+      {
+        "id": "force-distance",
+        "layout": "force",
+        "order": "index",
+        "columns": 2,
+        "iterations": 24,
+        "forces": [
+          "link",
+          "many-body",
+          "center"
+        ],
+        "charge": -30,
+        "linkDistance": 12,
+        "seed": 1,
+        "initial": [],
+        "groups": [],
+        "root": 1,
+        "sweeps": 4,
+        "orientation": "horizontal",
+        "edges": [],
+        "parents": [],
+        "initialType": "number"
+      },
+      {
+        "id": "force-seed1",
+        "layout": "force",
+        "order": "index",
+        "columns": 2,
+        "iterations": 8,
+        "forces": [
+          "link",
+          "center"
+        ],
+        "charge": -30,
+        "linkDistance": 30,
+        "seed": 1,
+        "initial": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "groups": [],
+        "root": 1,
+        "sweeps": 4,
+        "orientation": "horizontal",
+        "edges": [],
+        "parents": [],
+        "initialType": "number"
+      },
+      {
+        "id": "force-seed1000",
+        "layout": "force",
+        "order": "index",
+        "columns": 2,
+        "iterations": 8,
+        "forces": [
+          "link",
+          "center"
+        ],
+        "charge": -30,
+        "linkDistance": 30,
+        "seed": 1000,
+        "initial": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "groups": [],
+        "root": 1,
+        "sweeps": 4,
+        "orientation": "horizontal",
+        "edges": [],
+        "parents": [],
+        "initialType": "number"
+      },
+      {
+        "id": "random-seed1",
+        "layout": "random",
+        "order": "index",
+        "columns": 2,
+        "iterations": 24,
+        "forces": [
+          "link",
+          "many-body",
+          "center"
+        ],
+        "charge": -30,
+        "linkDistance": 30,
+        "seed": 1,
+        "initial": [],
+        "groups": [],
+        "root": 1,
+        "sweeps": 4,
+        "orientation": "horizontal",
+        "edges": [],
+        "parents": [],
+        "initialType": "number"
+      },
+      {
+        "id": "random-seed1000",
+        "layout": "random",
+        "order": "index",
+        "columns": 2,
+        "iterations": 24,
+        "forces": [
+          "link",
+          "many-body",
+          "center"
+        ],
+        "charge": -30,
+        "linkDistance": 30,
+        "seed": 1000,
+        "initial": [],
+        "groups": [],
+        "root": 1,
+        "sweeps": 4,
+        "orientation": "horizontal",
+        "edges": [],
+        "parents": [],
+        "initialType": "number"
+      },
+      {
+        "id": "partite-groups",
+        "layout": "partite",
+        "order": "index",
+        "columns": 2,
+        "iterations": 24,
+        "forces": [
+          "link",
+          "many-body",
+          "center"
+        ],
+        "charge": -30,
+        "linkDistance": 30,
+        "seed": 1,
+        "initial": [],
+        "groups": [
+          "G0",
+          "G1",
+          "G0",
+          "G1",
+          "G0",
+          "G1"
+        ],
+        "root": 1,
+        "sweeps": 4,
+        "orientation": "horizontal",
+        "edges": [],
+        "parents": [],
+        "initialType": "number"
+      },
+      {
+        "id": "radial-root1",
+        "layout": "radial",
+        "order": "index",
+        "columns": 2,
+        "iterations": 24,
+        "forces": [
+          "link",
+          "many-body",
+          "center"
+        ],
+        "charge": -30,
+        "linkDistance": 30,
+        "seed": 1,
+        "initial": [],
+        "groups": [],
+        "root": 1,
+        "sweeps": 4,
+        "orientation": "horizontal",
+        "edges": [],
+        "parents": [],
+        "initialType": "number"
+      },
+      {
+        "id": "radial-root4",
+        "layout": "radial",
+        "order": "index",
+        "columns": 2,
+        "iterations": 24,
+        "forces": [
+          "link",
+          "many-body",
+          "center"
+        ],
+        "charge": -30,
+        "linkDistance": 30,
+        "seed": 1,
+        "initial": [],
+        "groups": [],
+        "root": 4,
+        "sweeps": 4,
+        "orientation": "horizontal",
+        "edges": [],
+        "parents": [],
+        "initialType": "number"
+      },
+      {
+        "id": "layered-sweeps0",
+        "layout": "layered",
+        "order": "index",
+        "columns": 2,
+        "iterations": 24,
+        "forces": [
+          "link",
+          "many-body",
+          "center"
+        ],
+        "charge": -30,
+        "linkDistance": 30,
+        "seed": 1,
+        "initial": [],
+        "groups": [],
+        "root": 1,
+        "sweeps": 0,
+        "orientation": "horizontal",
+        "edges": [
+          [
+            "Z",
+            "D"
+          ],
+          [
+            "A",
+            "B"
+          ],
+          [
+            "E",
+            "C"
+          ],
+          [
+            "Z",
+            "B"
+          ],
+          [
+            "A",
+            "C"
+          ]
+        ],
+        "parents": [
+          "",
+          "",
+          "",
+          "A",
+          "Z",
+          "E"
+        ],
+        "initialType": "number"
+      },
+      {
+        "id": "layered-sweeps4",
+        "layout": "layered",
+        "order": "index",
+        "columns": 2,
+        "iterations": 24,
+        "forces": [
+          "link",
+          "many-body",
+          "center"
+        ],
+        "charge": -30,
+        "linkDistance": 30,
+        "seed": 1,
+        "initial": [],
+        "groups": [],
+        "root": 1,
+        "sweeps": 4,
+        "orientation": "horizontal",
+        "edges": [
+          [
+            "Z",
+            "D"
+          ],
+          [
+            "A",
+            "B"
+          ],
+          [
+            "E",
+            "C"
+          ],
+          [
+            "Z",
+            "B"
+          ],
+          [
+            "A",
+            "C"
+          ]
+        ],
+        "parents": [
+          "",
+          "",
+          "",
+          "A",
+          "Z",
+          "E"
+        ],
+        "initialType": "number"
+      },
+      {
+        "id": "layered-vertical",
+        "layout": "layered",
+        "order": "index",
+        "columns": 2,
+        "iterations": 24,
+        "forces": [
+          "link",
+          "many-body",
+          "center"
+        ],
+        "charge": -30,
+        "linkDistance": 30,
+        "seed": 1,
+        "initial": [],
+        "groups": [],
+        "root": 1,
+        "sweeps": 4,
+        "orientation": "vertical",
+        "edges": [
+          [
+            "Z",
+            "D"
+          ],
+          [
+            "A",
+            "B"
+          ],
+          [
+            "E",
+            "C"
+          ],
+          [
+            "Z",
+            "B"
+          ],
+          [
+            "A",
+            "C"
+          ]
+        ],
+        "parents": [
+          "",
+          "",
+          "",
+          "A",
+          "Z",
+          "E"
+        ],
+        "initialType": "number"
+      },
+      {
+        "id": "force-string-initial",
+        "layout": "force",
+        "order": "index",
+        "columns": 2,
+        "iterations": 8,
+        "forces": [
+          "link",
+          "center"
+        ],
+        "charge": -30,
+        "linkDistance": 30,
+        "seed": 1000,
+        "initial": [
+          [
+            -1.25,
+            2
+          ],
+          [
+            0,
+            -0.25
+          ],
+          [
+            1.5,
+            0.3
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            1e-07,
+            2e-07
+          ],
+          [
+            0.5,
+            -2
+          ]
+        ],
+        "groups": [],
+        "root": 1,
+        "sweeps": 4,
+        "orientation": "horizontal",
+        "edges": [],
+        "parents": [],
+        "initialType": "string"
+      }
+    ]
+  }
+}

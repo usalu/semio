@@ -48,7 +48,7 @@ describe("explicit deployment inventory", () => {
         cratePath: `future/${pluginId}/📦️packages/🦀️rust`, wasmOut: `future_${pluginId}.wasm`, role: "plugin",
         capabilities: [], contributes: [], consumes: [], dependsOn: [], activationEvents: [], extensionPoints: [], executionMode: "isolated", hashes: {"wasmSha256": "0000000000000000000000000000000000000000000000000000000000000000", "coreWasmSha256": "0000000000000000000000000000000000000000000000000000000000000000", "descriptorSha256": "0000000000000000000000000000000000000000000000000000000000000000"},
       }));
-      const source = emitTypeScript(entries);
+      const source = emitTypeScript(entries, entries.map(({pluginId,directoryName}) => ({pluginId,directoryName})));
       const assertion = `\nif(JSON.stringify(COMPONENT_MODULE_DIRECTORIES)!==${JSON.stringify(JSON.stringify(row.input.modules))})throw Error("Inventory drift");\nlet actual=null;try{actual=pluginModuleUrl(${JSON.stringify(row.query)})}catch{}\nif(actual!==${JSON.stringify(row.expected === null ? null : `/🔌️plugin-modules/${row.expected}/🌉️bridge.js`)})throw Error("Owner route drift");\nconsole.log("[DEBUG] Independent generated inventory ${row.id}");`;
       const executable = source.replace('"../../📦️deployment/🟦️.ts"', JSON.stringify(runtimePath)).replace("\"../../../../../../../🔨️modules/🪪️identity/📁️installation/🟦️.ts\"", JSON.stringify(resolve(resolveDir, "../../../../../../../🔨️modules/🪪️identity/📁️installation/🟦️.ts"))) + assertion;
       const actual = Bun.spawnSync(["bun", "run", "-"], { stdin: Buffer.from(executable), stdout: "pipe", stderr: "pipe" });

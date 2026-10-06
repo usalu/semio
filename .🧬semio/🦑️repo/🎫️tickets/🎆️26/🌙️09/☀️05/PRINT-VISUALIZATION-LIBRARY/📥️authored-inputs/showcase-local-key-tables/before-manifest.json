@@ -1,0 +1,42 @@
+{
+  "source": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-api/🔓️viz-api.tex",
+  "beforeSha256": "47427AD9E4FC9F9D6D8C8991D43CB7CFF266F158713A71D5BA9E56E68E9EFAA0",
+  "sections": [
+    {
+      "family": "namespace",
+      "body": "\\ApiText{This family takes no options beyond \\Key{variant} and \\Key{data}.}{Diese Familie nimmt außer \\Key{variant} und \\Key{data} keine Optionen.}"
+    },
+    {
+      "family": "figure",
+      "body": "\\ApiText{This family takes no options beyond \\Key{variant} and \\Key{data}.}{Diese Familie nimmt außer \\Key{variant} und \\Key{data} keine Optionen.}"
+    },
+    {
+      "family": "grammar",
+      "body": "\\ApiText{This family takes no options beyond \\Key{variant} and \\Key{data}.}{Diese Familie nimmt außer \\Key{variant} und \\Key{data} keine Optionen.}"
+    },
+    {
+      "family": "encoding",
+      "body": "\\ApiText{This family takes no options beyond \\Key{variant} and \\Key{data}.}{Diese Familie nimmt außer \\Key{variant} und \\Key{data} keine Optionen.}"
+    },
+    {
+      "family": "scale",
+      "body": "\\SemioTableLong[text-size=8pt]{\\Key{scale}}{0.20,0.13,0.15,0.52}{\\ApiKey & \\ApiType & \\ApiDefault & \\ApiMeaning}{%\n  \\SemioTableRow{\\Key{domain} & \\Key{string} & --- & \\ApiText{Input domain 'min,max' of the scale or function.}{Eingabebereich 'min,max' der Skala bzw. Funktion.}}\n  \\SemioTableRow{\\Key{nice} & \\Key{string} & --- & \\ApiText{Extend the domain to round tick values.}{Den Wertebereich auf runde Teilstrichwerte erweitern.}}\n  \\SemioTableRow{\\Key{range} & \\Key{string} & --- & \\ApiText{Output range 'min,max' of the scale or sweep.}{Ausgabebereich 'min,max' der Skala bzw. des Durchlaufs.}}\n}"
+    },
+    {
+      "family": "shape",
+      "body": "\\ApiText{This family takes no options beyond \\Key{variant} and \\Key{data}.}{Diese Familie nimmt außer \\Key{variant} und \\Key{data} keine Optionen.}"
+    },
+    {
+      "family": "layout-algorithm",
+      "body": "\\ApiText{This family takes no options beyond \\Key{variant} and \\Key{data}.}{Diese Familie nimmt außer \\Key{variant} und \\Key{data} keine Optionen.}"
+    },
+    {
+      "family": "analytical",
+      "body": "\\ApiText{This family takes no options beyond \\Key{variant} and \\Key{data}.}{Diese Familie nimmt außer \\Key{variant} und \\Key{data} keine Optionen.}"
+    },
+    {
+      "family": "transform-data",
+      "body": "\\ApiText{This family takes no options beyond \\Key{variant} and \\Key{data}.}{Diese Familie nimmt außer \\Key{variant} und \\Key{data} keine Optionen.}"
+    }
+  ]
+}

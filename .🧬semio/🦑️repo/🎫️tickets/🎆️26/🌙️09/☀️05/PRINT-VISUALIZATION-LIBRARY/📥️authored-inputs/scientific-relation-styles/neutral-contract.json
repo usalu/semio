@@ -1,0 +1,138 @@
+{
+  "schema": {
+    "type": "object",
+    "required": [
+      "canvas",
+      "unit",
+      "cases"
+    ],
+    "additionalProperties": false,
+    "properties": {
+      "canvas": {
+        "type": "array",
+        "minItems": 2,
+        "maxItems": 2,
+        "items": {
+          "type": "number"
+        }
+      },
+      "unit": {
+        "type": "number",
+        "exclusiveMinimum": 0
+      },
+      "cases": {
+        "type": "array",
+        "minItems": 8,
+        "maxItems": 8,
+        "items": {
+          "type": "object",
+          "required": [
+            "style",
+            "directed",
+            "hook",
+            "double",
+            "dashPt"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "style": {
+              "enum": [
+                "arrow",
+                "hook",
+                "double",
+                "dashed",
+                "wire",
+                "leg",
+                "order",
+                "dynkin-double"
+              ]
+            },
+            "directed": {
+              "type": "boolean"
+            },
+            "hook": {
+              "type": "boolean"
+            },
+            "double": {
+              "type": "boolean"
+            },
+            "dashPt": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "vectors": {
+    "canvas": [
+      80,
+      48
+    ],
+    "unit": 20,
+    "cases": [
+      {
+        "style": "arrow",
+        "directed": true,
+        "hook": false,
+        "double": false,
+        "dashPt": []
+      },
+      {
+        "style": "hook",
+        "directed": true,
+        "hook": true,
+        "double": false,
+        "dashPt": []
+      },
+      {
+        "style": "double",
+        "directed": true,
+        "hook": false,
+        "double": true,
+        "dashPt": []
+      },
+      {
+        "style": "dashed",
+        "directed": true,
+        "hook": false,
+        "double": false,
+        "dashPt": [
+          1.4,
+          1.2
+        ]
+      },
+      {
+        "style": "wire",
+        "directed": false,
+        "hook": false,
+        "double": false,
+        "dashPt": []
+      },
+      {
+        "style": "leg",
+        "directed": false,
+        "hook": false,
+        "double": false,
+        "dashPt": []
+      },
+      {
+        "style": "order",
+        "directed": false,
+        "hook": false,
+        "double": false,
+        "dashPt": []
+      },
+      {
+        "style": "dynkin-double",
+        "directed": false,
+        "hook": false,
+        "double": true,
+        "dashPt": []
+      }
+    ]
+  }
+}

@@ -1,0 +1,160 @@
+{
+  "valid": [
+    {
+      "type": "attach",
+      "client_id": "developer"
+    },
+    {
+      "type": "spawn",
+      "session_id": "test",
+      "command": {
+        "cmd": "bun",
+        "args": [
+          "nx",
+          "run",
+          "workspace:test"
+        ],
+        "cwd": ".",
+        "env": [
+          [
+            "SEMIO_TEST_LEVEL",
+            "quick"
+          ]
+        ],
+        "cols": 80,
+        "rows": 24
+      }
+    },
+    {
+      "type": "input",
+      "session_id": "test",
+      "data": [
+        3
+      ]
+    },
+    {
+      "type": "resize",
+      "session_id": "test",
+      "cols": 120,
+      "rows": 32
+    },
+    {
+      "type": "stop",
+      "session_id": "test"
+    },
+    {
+      "type": "kill",
+      "session_id": "test"
+    },
+    {
+      "type": "restart",
+      "session_id": "test"
+    },
+    {
+      "type": "list"
+    },
+    {
+      "type": "shutdown"
+    },
+    {
+      "type": "detach"
+    },
+    {
+      "type": "ping"
+    },
+    {
+      "type": "attached",
+      "daemon_pid": 1
+    },
+    {
+      "type": "sessions",
+      "sessions": []
+    },
+    {
+      "type": "session_changed",
+      "session": {
+        "session_id": "test",
+        "command": {
+          "cmd": "bun",
+          "args": [
+            "nx",
+            "run",
+            "workspace:test"
+          ],
+          "cwd": ".",
+          "env": [],
+          "cols": 80,
+          "rows": 24
+        },
+        "status": "running",
+        "pid": 2,
+        "code": null
+      }
+    },
+    {
+      "type": "replay_complete"
+    },
+    {
+      "type": "error",
+      "message": "Unknown session"
+    },
+    {
+      "type": "pong"
+    }
+  ],
+  "invalid": [
+    {
+      "type": "spawn",
+      "session_id": "test"
+    },
+    {
+      "type": "kill"
+    },
+    {
+      "type": "resize",
+      "session_id": "test",
+      "cols": 0,
+      "rows": 24
+    },
+    {
+      "type": "input",
+      "session_id": "test",
+      "data": [
+        256
+      ]
+    },
+    {
+      "type": "attached"
+    },
+    {
+      "type": "unknown"
+    },
+    {
+      "type": "ping",
+      "session_id": "foreign"
+    },
+    {
+      "rows": 24,
+      "type": "resize",
+      "cols": 65535,
+      "session_id": "test"
+    },
+    {
+      "type": "session_changed",
+      "session": {
+        "status": "running",
+        "code": null,
+        "pid": 0,
+        "command": {
+          "cmd": "bun",
+          "env": [],
+          "args": [],
+          "cols": 80,
+          "cwd": ".",
+          "rows": 24
+        },
+        "session_id": "test"
+      }
+    }
+  ]
+}

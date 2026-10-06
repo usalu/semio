@@ -1,0 +1,14 @@
+/// 🗺️ Authored structured spatial carriers require valid replay and native geometry emission in both languages.
+#[test]
+fn canonical_spatial_data_mutation_vectors(){
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧬️native-chart-grammar/🔣️.json")).unwrap();let source=&fixture["nativeSpatialData"];let mut failures=Vec::new();
+ for language in ["en","de"]{for(case,bad)in source["cases"].as_array().unwrap().iter().map(|case|(case,None)).chain(source["badCases"].as_array().unwrap().iter().map(|bad|(source["cases"].as_array().unwrap().iter().find(|case|case["id"]==bad["caseId"]).unwrap(),Some(bad)))){
+  let id=format!("spatial-{}-{language}",bad.unwrap_or(case)["id"].as_str().unwrap());let mut authored=source["snapshot"].clone();authored["chart"]["language"]=serde_json::Value::String(language.into());let before=ChartSnapshot::from_value(DslValue::from(authored)).unwrap();let mut current=before.clone();let mut setup=true;
+  let mutations=[serde_json::json!({"path":["tables"],"value":[case["table"].clone()]}),serde_json::json!({"path":["presets"],"value":[case["preset"].clone()]})];
+  for value in mutations.iter().chain(bad.map(|bad|&bad["mutation"])) {let mutation=ChangeChartValue::from_value(DslValue::from(value.clone())).unwrap();let outcome=mutation.diff(&current);if !outcome.messages().is_empty(){failures.push(format!("{id}: structured mutation refused {:?}",outcome.messages()));setup=false;break;}let next=outcome.diff().apply(&current).unwrap();assert_eq!(outcome.diff().inverse(&current).apply(&next).unwrap(),current);current=next;}
+  if !setup{continue;}let result=ChartInference::infer(&current).unwrap();let valid=bad.is_none();if result.complete!=valid{failures.push(format!("{id}: inferred {}, expected {valid}, {:?}",result.complete,result.diagnostics));}
+  if valid&&result.complete{if let Some(root)=std::env::var_os("PRINT_NATIVE_SPATIAL_TIKZ"){std::fs::create_dir_all(&root).unwrap();std::fs::write(std::path::Path::new(&root).join(format!("{id}.tex")),result.tikz).unwrap();}}
+  assert_eq!(before.chart.get("tables"),None);
+ }}
+ assert!(failures.is_empty(),"{}",failures.join("\n"));eprintln!("[DEBUG] Native spatial Rust: 6 valid and11 invalid carriers in en/de passed canonical mutation/inverse/inference; emitted valid source awaits native D3/PDF adjudication");
+}

@@ -1,0 +1,47 @@
+{
+  "capturedAt": "2026-10-05T06:51:20.5600249Z",
+  "scope": "Post retention repair/build/read-only transport source comparison; enclosing native and162PDF consumers remain separate pending gates.",
+  "capsules": [
+    {
+      "path": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/📥️authored-inputs/final-native-grammar-current045/prospective-source-capsule.json",
+      "paths": 765,
+      "drift": [
+        {
+          "path": ".vscode/launch.json",
+          "before": "9402F2BCB165D056150AC38AB7A8D59870BA7834BD00A576CAAE997E04966079",
+          "current": "21A3F674014B12D4DFA75021FC78D6D34DF7533622A935A51D96A30933820D26"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📓️print/🎮️commands/🧪️print-pipeline-verification/🧪️tests/🖨️pipeline/🟦️.ts",
+          "before": "D4B7877EE71158464E4036A0043BC0B9ED9A93AEA10337CD3E5753177D6AD8F4",
+          "current": "223ADC5F8470F487A4E5EFE244D5508EB3454750687F08EDD313AF6B144DCD82"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📓️print/🎮️commands/🧪️print-pipeline-verification/🧫️fixtures/🔓️api-freshness.json",
+          "before": "6CFAB48366D5FEC349302683E0B8C2AF0898C00BC0D6F294BD565A8D3C08F922",
+          "current": "E15D4C045E18ED92A78F15FA4AFB8F1EE9431939C9ACA942545A2BE6924193F1"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📓️print/🎮️commands/🧪️print-pipeline-verification/🟦️.ts",
+          "before": "7203423FFAEB23086A40A7A3D230F8343125598655F959D09A205B6BBA91F667",
+          "current": "39EADA7C6EAE72D89F1BA4EE94F9EFE07BDE78D4E0FEAC2C7F29D273D3727AD3"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📓️print/🔨️modules/📊️visualization-gallery/🟦️.ts",
+          "before": "5199A47A06D306EDF32C752D133AC74B986EEEF838B008CFDEC06A08C426F48D",
+          "current": "A43EA912A7FCF2EC76FD5EA32A228C6F249EAAECBFFEF1CEC447F995C7AC5830"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-api/🔓️viz-api.tex",
+          "before": "ADE4F49ED1FEBE6A4E769E400D45449E3EB0621462950642D607D5D16CF4ECDB",
+          "current": "9C6D90382466CC513B76F0055D1ED16E8D8F9EE037EA9C868CEEF573CDD68DB7"
+        }
+      ]
+    },
+    {
+      "path": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/📥️authored-inputs/final-native-grammar-current045/prospective-rust-context-capsule.json",
+      "paths": 826,
+      "drift": []
+    }
+  ]
+}

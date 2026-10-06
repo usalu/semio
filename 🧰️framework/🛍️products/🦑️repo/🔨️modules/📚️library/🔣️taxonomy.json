@@ -26627,6 +26627,30 @@
       ],
       "reason": "The dedicated no-write compiler preview owns only its semantic HTML, hashed bundle partition and exact input/output manifest; copied public namespaces remain separate authorities"
     },
+    "draw-drawing-graph": {
+      "ownership": "owned",
+      "ownerPath": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/📦️packages/🦀️rust",
+      "target": "@semio-tech/draw-drawing-rs:graph-generate",
+      "previewTarget": "@semio-tech/draw-drawing-rs:preview-generated",
+      "nativeConsumers": [
+        "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/📦️packages/🦀️rust"
+      ],
+      "inputPatterns": [
+        "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/**/*manifest.json",
+        "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/📦️packages/🦀️rust/📋️project.json",
+        "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/📦️packages/🦀️rust/📜️script.ts",
+        "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🛂️manifest/📇️outputs.json",
+        "🧰️framework/🔨️modules/🏃️process/🧭️routing/**/*.ts",
+        "🧰️framework/🔨️modules/🕸️graph/🛂️manifest/**/*"
+      ],
+      "outputRoots": [
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🤖️generated",
+          "inclusion": "ignored"
+        }
+      ],
+      "reason": "Every native and transitive component consumer prepares this graph owner before compilation"
+    },
     "external-cargo-locks": {
       "ownership": "external",
       "ownerPath": null,
@@ -27062,6 +27086,30 @@
       ],
       "reason": "The validated actor-network ledger deterministically renders four tracked LaTeX fragments; PDF compilation consumes the owned generator outputs"
     },
+    "rewriting-graph-catalog": {
+      "ownership": "owned",
+      "ownerPath": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🦀️rust",
+      "target": "@semio-tech/trinity-rewriting-rs:graph-generate",
+      "previewTarget": "@semio-tech/trinity-rewriting-rs:preview-generated",
+      "nativeConsumers": [
+        "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🦀️rust"
+      ],
+      "inputPatterns": [
+        "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/**/*manifest.json",
+        "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🦀️rust/📋️project.json",
+        "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🦀️rust/📜️script.ts",
+        "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🛂️manifest/📇️outputs.json",
+        "🧰️framework/🔨️modules/🏃️process/🧭️routing/**/*.ts",
+        "🧰️framework/🔨️modules/🕸️graph/🛂️manifest/**/*"
+      ],
+      "outputRoots": [
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🤖️generated",
+          "inclusion": "ignored"
+        }
+      ],
+      "reason": "Every native and transitive component consumer prepares this graph owner before compilation"
+    },
     "scale-fixture": {
       "ownership": "owned",
       "ownerPath": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
@@ -27114,6 +27162,150 @@
         }
       ],
       "reason": "The neutral schema catalog owns exact TypeScript and Rust projections; products contribute their own native projections"
+    },
+    "semio-s-artifact-puzzle-2d-graph-catalog": {
+      "ownership": "owned",
+      "ownerPath": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/📦️packages/🦀️rust",
+      "target": "@semio-tech/puzzle-2d-rs:graph-generate",
+      "previewTarget": "@semio-tech/puzzle-2d-rs:preview-generated",
+      "nativeConsumers": [
+        "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/📦️packages/🦀️rust"
+      ],
+      "inputPatterns": [
+        "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/**/*manifest.json",
+        "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/📦️packages/🦀️rust/📋️project.json",
+        "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/📦️packages/🦀️rust/📜️script.ts",
+        "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🛂️manifest/📇️outputs.json",
+        "🧰️framework/🔨️modules/🏃️process/🧭️routing/**/*.ts",
+        "🧰️framework/🔨️modules/🕸️graph/🛂️manifest/**/*"
+      ],
+      "outputRoots": [
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🤖️generated",
+          "inclusion": "ignored"
+        }
+      ],
+      "reason": "Every native and transitive component consumer prepares this graph owner before compilation"
+    },
+    "semio-s-artifact-puzzle-3d-graph-catalog": {
+      "ownership": "owned",
+      "ownerPath": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/📦️packages/🦀️rust",
+      "target": "@semio-tech/puzzle-3d-rs:graph-generate",
+      "previewTarget": "@semio-tech/puzzle-3d-rs:preview-generated",
+      "nativeConsumers": [
+        "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/📦️packages/🦀️rust"
+      ],
+      "inputPatterns": [
+        "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/**/*manifest.json",
+        "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/📦️packages/🦀️rust/📋️project.json",
+        "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/📦️packages/🦀️rust/📜️script.ts",
+        "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🛂️manifest/📇️outputs.json",
+        "🧰️framework/🔨️modules/🏃️process/🧭️routing/**/*.ts",
+        "🧰️framework/🔨️modules/🕸️graph/🛂️manifest/**/*"
+      ],
+      "outputRoots": [
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🤖️generated",
+          "inclusion": "ignored"
+        }
+      ],
+      "reason": "Every native and transitive component consumer prepares this graph owner before compilation"
+    },
+    "semio-s-artifact-puzzle-5d-graph-catalog": {
+      "ownership": "owned",
+      "ownerPath": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📦️packages/🦀️rust",
+      "target": "@semio-tech/puzzle-5d-rs:graph-generate",
+      "previewTarget": "@semio-tech/puzzle-5d-rs:preview-generated",
+      "nativeConsumers": [
+        "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📦️packages/🦀️rust"
+      ],
+      "inputPatterns": [
+        "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/**/*manifest.json",
+        "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📦️packages/🦀️rust/📋️project.json",
+        "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📦️packages/🦀️rust/📜️script.ts",
+        "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🛂️manifest/📇️outputs.json",
+        "🧰️framework/🔨️modules/🏃️process/🧭️routing/**/*.ts",
+        "🧰️framework/🔨️modules/🕸️graph/🛂️manifest/**/*"
+      ],
+      "outputRoots": [
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🤖️generated",
+          "inclusion": "ignored"
+        }
+      ],
+      "reason": "Every native and transitive component consumer prepares this graph owner before compilation"
+    },
+    "semio-s-artifact-reasoning-wires-graph-catalog": {
+      "ownership": "owned",
+      "ownerPath": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/📦️packages/🦀️rust",
+      "target": "@semio-tech/reasoning-wires-rs:graph-generate",
+      "previewTarget": "@semio-tech/reasoning-wires-rs:preview-generated",
+      "nativeConsumers": [
+        "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/📦️packages/🦀️rust"
+      ],
+      "inputPatterns": [
+        "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/**/*manifest.json",
+        "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/📦️packages/🦀️rust/📋️project.json",
+        "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/📦️packages/🦀️rust/📜️script.ts",
+        "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🛂️manifest/📇️outputs.json",
+        "🧰️framework/🔨️modules/🏃️process/🧭️routing/**/*.ts",
+        "🧰️framework/🔨️modules/🕸️graph/🛂️manifest/**/*"
+      ],
+      "outputRoots": [
+        {
+          "path": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🤖️generated",
+          "inclusion": "ignored"
+        }
+      ],
+      "reason": "Every native and transitive component consumer prepares this graph owner before compilation"
+    },
+    "semio-s-artifact-trinity-jack-graph-catalog": {
+      "ownership": "owned",
+      "ownerPath": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust",
+      "target": "@semio-tech/trinity-jack-rs:graph-generate",
+      "previewTarget": "@semio-tech/trinity-jack-rs:preview-generated",
+      "nativeConsumers": [
+        "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust"
+      ],
+      "inputPatterns": [
+        "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/**/*manifest.json",
+        "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust/📋️project.json",
+        "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust/📜️script.ts",
+        "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🛂️manifest/📇️outputs.json",
+        "🧰️framework/🔨️modules/🏃️process/🧭️routing/**/*.ts",
+        "🧰️framework/🔨️modules/🕸️graph/🛂️manifest/**/*"
+      ],
+      "outputRoots": [
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🤖️generated",
+          "inclusion": "ignored"
+        }
+      ],
+      "reason": "Every native and transitive component consumer prepares this graph owner before compilation"
+    },
+    "semio-s-artifact-writer-writer-graph-catalog": {
+      "ownership": "owned",
+      "ownerPath": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust",
+      "target": "@semio-tech/writer-writer-rs:graph-generate",
+      "previewTarget": "@semio-tech/writer-writer-rs:preview-generated",
+      "nativeConsumers": [
+        "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust"
+      ],
+      "inputPatterns": [
+        "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/**/*manifest.json",
+        "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust/📋️project.json",
+        "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust/📜️script.ts",
+        "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🛂️manifest/📇️outputs.json",
+        "🧰️framework/🔨️modules/🏃️process/🧭️routing/**/*.ts",
+        "🧰️framework/🔨️modules/🕸️graph/🛂️manifest/**/*"
+      ],
+      "outputRoots": [
+        {
+          "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🤖️generated",
+          "inclusion": "ignored"
+        }
+      ],
+      "reason": "Every native and transitive component consumer prepares this graph owner before compilation"
     },
     "shell-typegen": {
       "ownership": "owned",

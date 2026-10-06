@@ -1,0 +1,36 @@
+\cs_new_protected:Npn \semio_viz_math_diagram_nodes:
+  {
+    \clist_map_inline:Nn \l_semio_viz_math_nodes_clist
+      {
+        \semio_viz_math_record:n {##1}
+        \str_case:VnF \l_semio_viz_math_nodeshape_tl
+          {
+            { circle }
+              {
+                \node [ semio~sci~glyph , circle , inner~sep=0.6mm ,
+                        font=\c_semio_viz_theme_font_label_tl , text=semio-chrome-foreground ]
+                  at ( \fp_eval:n { \l_semio_viz_math_unit_fp * \semio_viz_math_field:n { 2 } } ,
+                       \fp_eval:n { \l_semio_viz_math_unit_fp * \semio_viz_math_field:n { 3 } } )
+                  { \semio_viz_math_field:n { 4 } } ;
+              }
+            { box }
+              {
+                \node [ semio~sci~box , inner~sep=0.8mm ,
+                        font=\c_semio_viz_theme_font_label_tl , text=semio-chrome-foreground ]
+                  at ( \fp_eval:n { \l_semio_viz_math_unit_fp * \semio_viz_math_field:n { 2 } } ,
+                       \fp_eval:n { \l_semio_viz_math_unit_fp * \semio_viz_math_field:n { 3 } } )
+                  { \semio_viz_math_field:n { 4 } } ;
+              }
+          }
+          {
+            \node [ font=\c_semio_viz_theme_font_title_tl , text=semio-chrome-foreground ,
+                    inner~sep=0.6mm , fill=semio-chrome-base ]
+              at ( \fp_eval:n { \l_semio_viz_math_unit_fp * \semio_viz_math_field:n { 2 } } ,
+                   \fp_eval:n { \l_semio_viz_math_unit_fp * \semio_viz_math_field:n { 3 } } )
+              { \semio_viz_math_field:n { 4 } } ;
+          }
+        \semio_viz_sci_report_values:nn { diagram/node }
+          { \fp_to_decimal:n { \l_semio_viz_math_unit_fp * \semio_viz_math_field:n { 2 } } ,
+            \fp_to_decimal:n { \l_semio_viz_math_unit_fp * \semio_viz_math_field:n { 3 } } }
+      }
+  }

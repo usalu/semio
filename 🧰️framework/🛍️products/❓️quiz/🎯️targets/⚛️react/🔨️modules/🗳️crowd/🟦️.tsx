@@ -346,8 +346,8 @@ export function AnswerFigure(props: AnswerFigureInput & { readonly name: string;
               <th {...TABLE.column} className="quiz-plot-item">
                 {text("quiz.results.item")}
               </th>
-              {figure.columns.map((column, place) => (
-                <th key={column.key} {...TABLE.column}>
+              {figure.columns.map((column) => (
+                <th key={column.key} {...TABLE.column} data-icon-host="">
                   {sorting ? (
                     <>
                       <span className="sr-only">{text("quiz.crowd.place", { place: column.label })}</span>
@@ -355,7 +355,7 @@ export function AnswerFigure(props: AnswerFigureInput & { readonly name: string;
                     </>
                   ) : (
                     <>
-                      <IconLabel icon={column.icon} order={place}>
+                      <IconLabel icon={column.icon}>
                         {column.label}
                       </IconLabel>
                       {figure.unit === undefined ? null : <span className="sr-only">{withUnit("", figure.unit)}</span>}
@@ -367,10 +367,10 @@ export function AnswerFigure(props: AnswerFigureInput & { readonly name: string;
             </tr>
           </thead>
           <tbody {...TABLE.group}>
-            {figure.rows.map((row, place) => (
+            {figure.rows.map((row) => (
               <tr key={row.item} {...TABLE.row} data-crowd-item={row.item} data-answers={row.answers}>
-                <th {...TABLE.name} className="quiz-plot-item">
-                  <IconLabel icon={row.icon} order={place}>
+                <th {...TABLE.name} data-icon-host="" className="quiz-plot-item">
+                  <IconLabel icon={row.icon}>
                     {row.label}
                   </IconLabel>
                 </th>

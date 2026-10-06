@@ -1,0 +1,5 @@
+# Spatial Vector Step Control Coupling Independent Audit
+
+Actual vector parser geo-routes431–432 applies the same authored option list to geo/base then spatial-vector-field. Both namespaces install integer steps: base stores geo_f_steps (reset5) and vector stores georte_steps (reset24). The base value is consumed in geo_ramp_quant2492–2502; the vector value controls RK4 int_step loop630. Quiver arrow510 and integrated streamline stroke661 both call the ramp, so changing authored steps couples palette quantization and integration length.
+
+Current canonical spatial-vector-field option inventory contains only steps, with no distinct palette-level or integration-step selector. The exact twelve geo/base declarations likewise contain no independent alias. Omitted defaults remain separate5/24, but caller customization cannot independently change either count through the existing shared list. This is a concrete source/control gap, not a hypothetical warning; root was notified for source-owned neutral repair. No product modification or compiler duplicate was performed.

@@ -1,0 +1,13 @@
+{
+  "scope": "semio / viz / family / geo-hexbin",
+  "family": "geo-hexbin",
+  "keys": [
+    { "key": "gridWidth", "type": "integer", "syntax": "expression", "default": 16, "minimum": 1, "setter": "int", "description": { "en": "Positive number of Gaussian sampling grid columns.", "de": "Positive Anzahl der Spalten des Gaußschen Abtastgitters." } },
+    { "key": "gridHeight", "type": "integer", "syntax": "expression", "default": 11, "minimum": 1, "setter": "int", "description": { "en": "Positive number of Gaussian sampling grid rows.", "de": "Positive Anzahl der Zeilen des Gaußschen Abtastgitters." } },
+    { "key": "gridOrigin", "type": "string", "syntax": "number-list", "default": "0,0", "setter": "clist", "description": { "en": "Two raw planar coordinates of the Gaussian sampling grid origin.", "de": "Zwei rohe planare Koordinaten des Ursprungs des Gaußschen Abtastgitters." } },
+    { "key": "gridCell", "type": "number", "syntax": "expression", "default": 5, "exclusiveMinimum": 0, "setter": "fp", "description": { "en": "Positive sampling cell spacing in raw planar units; contour positions use the same spacing.", "de": "Positiver Abstand der Abtastzellen in rohen planaren Einheiten; Höhenlinienpositionen nutzen denselben Abstand." } },
+    { "key": "hexScale", "type": "number", "syntax": "expression", "default": 0.92, "exclusiveMinimum": 0, "setter": "fp", "description": { "en": "Positive visible hexagon radius factor relative to the raw binning radius; bin membership is unchanged.", "de": "Positiver Faktor des sichtbaren Sechseckradius relativ zum rohen Bündelungsradius; die Zellzuordnung bleibt unverändert." } },
+    { "key": "heatOpacity", "type": "number", "syntax": "expression", "default": 0.3, "minimum": 0, "maximum": 1, "setter": "fp", "description": { "en": "Heat fill opacity factor from zero to one, multiplied by the authored drawing opacity.", "de": "Deckkraftfaktor der Wärmefüllung von null bis eins, multipliziert mit der verfassten Zeichendeckkraft." } },
+    { "key": "thresholds", "type": "string", "syntax": "number-list", "default": "", "setter": "clist", "description": { "en": "Optional finite contour thresholds, sorted numerically; an empty list uses the requested level count.", "de": "Optionale endliche Höhenlinienschwellen, numerisch sortiert; eine leere Liste nutzt die angeforderte Niveauanzahl." } }
+  ]
+}

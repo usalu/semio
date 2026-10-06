@@ -1,0 +1,16 @@
+{
+  "file": "C:/git/semio/🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-api/🔓️viz-api.tex",
+  "before": "868AA7158366E7C98C3258FF14BD87225016AFD336BD08C9EF967A36158FE323",
+  "after": "1D7B1867B94B79F1CD50316822D92DC924EAC7479000D7C5E4B9F1B0C0FC4AA7",
+  "source": {
+    "file": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-geo-contours.sty",
+    "hash": "ED810FF0CF1A7CC3ADF2E0CDDCC8FBB479774C53DD596FA8DACB3F3C39802467",
+    "declarations": [
+      30,
+      51
+    ],
+    "reset": 99
+  },
+  "rows": 10,
+  "anchor": "%endregion 🔖️GeoSpatialSharedKeyTables"
+}

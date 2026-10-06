@@ -1,0 +1,492 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-viz-charts-timeline}[2026/09/05 v0.3.0 semio viz namespace charts-timeline families]
+
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+\RequirePackage{semio-viz-charts-line}
+
+\ExplSyntaxOn
+
+%region 🔖️Keys
+% 🔑 semio / viz / family / timeline — the temporal layouts of taxonomy §2, §54, §62 and §65.
+%   mode      (event|milestone|interval|state|swimlane|spiral|radial|calendar|cycle|seasonal|
+%              fan|forecast, default interval)
+%   lane      (column, default lane)      the swimlane / row key
+%   start     (column, default start)     interval start
+%   end       (column, default end)       interval end
+%   state     (column, default state)     categorical state colouring
+%   columns   (integer, default 7)        cells per row of the calendar mode
+%   turns     (number, default 2.5)       revolutions of the spiral mode
+%   split     (number, default 4)         where forecast and fan modes leave the observed data
+\tl_new:N \l_semio_viz_tl_mode_tl
+\tl_new:N \l_semio_viz_tl_lane_tl
+\tl_new:N \l_semio_viz_tl_start_tl
+\tl_new:N \l_semio_viz_tl_end_tl
+\tl_new:N \l_semio_viz_tl_state_tl
+\int_new:N \l_semio_viz_tl_columns_int
+\fp_new:N \l_semio_viz_tl_turns_fp
+\fp_new:N \l_semio_viz_tl_split_fp
+
+\semio_viz_cart_family_keys:n { semio / viz / family / timeline }
+% 🔑 The timeline's own keys, on top of the cartesian family keys inherited above.
+\keys_define:nn { semio / viz / family / timeline } {
+  mode    .tl_set:N = \l_semio_viz_tl_mode_tl,
+  lane    .tl_set:N = \l_semio_viz_tl_lane_tl,
+  start   .tl_set:N = \l_semio_viz_tl_start_tl,
+  end     .tl_set:N = \l_semio_viz_tl_end_tl,
+  state   .tl_set:N = \l_semio_viz_tl_state_tl,
+  columns .int_set:N = \l_semio_viz_tl_columns_int,
+  turns   .fp_set:N = \l_semio_viz_tl_turns_fp,
+  split   .fp_set:N = \l_semio_viz_tl_split_fp,
+}
+
+% 🔑 semio / viz / family / narrative — the storytelling layouts of taxonomy §72.
+%   mode   (storyline|arc|story-map|scene-graph|sequence|panels|before-after|reveal,
+%           default storyline)
+%   panels (integer, default 4)   panels of the panel/reveal/sequence modes
+\tl_new:N \l_semio_viz_narr_mode_tl
+\int_new:N \l_semio_viz_narr_panels_int
+
+\semio_viz_cart_family_keys:n { semio / viz / family / narrative }
+% 🔑 The narrative's own keys, on top of the cartesian family keys inherited above.
+\keys_define:nn { semio / viz / family / narrative } {
+  mode   .tl_set:N = \l_semio_viz_narr_mode_tl,
+  panels .int_set:N = \l_semio_viz_narr_panels_int,
+}
+%endregion 🔖️Keys
+
+%region 🔖️Families
+% 🗓️ timeline — event, interval, state, swimlane, calendar, cycle, spiral and forecast layouts.
+\seq_new:N \l_semio_viz_tl_lanes_seq
+\seq_new:N \l_semio_viz_tl_states_seq
+\tl_new:N \l_semio_viz_tl_cell_tl
+\tl_new:N \l_semio_viz_tl_lcell_tl
+\tl_new:N \l_semio_viz_tl_scell_tl
+\fp_new:N \l_semio_viz_tl_s_fp
+\fp_new:N \l_semio_viz_tl_e_fp
+\fp_new:N \l_semio_viz_tl_lane_h_fp
+
+\cs_new_protected:Npn \semio_viz_tl_keys_reset: {
+  \semio_viz_cart_keys_reset:
+  \tl_set:Nn \l_semio_viz_cart_data_tl { demo-lane }
+  \tl_set:Nn \l_semio_viz_tl_mode_tl { interval }
+  \tl_set:Nn \l_semio_viz_tl_lane_tl { lane }
+  \tl_set:Nn \l_semio_viz_tl_start_tl { start }
+  \tl_set:Nn \l_semio_viz_tl_end_tl { end }
+  \tl_set:Nn \l_semio_viz_tl_state_tl { state }
+  \tl_set:Nn \l_semio_viz_cart_label_tl { label }
+  \int_set:Nn \l_semio_viz_tl_columns_int { 7 }
+  \fp_set:Nn \l_semio_viz_tl_turns_fp { 2.5 }
+  \fp_set:Nn \l_semio_viz_tl_split_fp { 4 }
+  \fp_set:Nn \l_semio_viz_cart_pad_l_fp { 14 }
+}
+
+% 📏 The time axis: `cart-x` over the union of the start and end columns.
+\cs_new_protected:Npn \semio_viz_tl_axis: {
+  \semio_viz_cart_extent:VVNN \l_semio_viz_cart_data_tl \l_semio_viz_tl_start_tl
+    \l_semio_viz_cart_xmin_fp \l_semio_viz_cart_a_fp
+  \semio_viz_cart_extent:VVNN \l_semio_viz_cart_data_tl \l_semio_viz_tl_end_tl
+    \l_semio_viz_cart_b_fp \l_semio_viz_cart_xmax_fp
+  \semio_viz_cart_scale_x:n { linear }
+}
+
+% 🎨 Colour of one row: by state when a state column is present, else by lane index.
+\cs_new_protected:Npn \semio_viz_tl_row_color: {
+  \int_zero:N \l_semio_viz_cart_j_int
+  \seq_map_indexed_inline:Nn \l_semio_viz_tl_states_seq {
+    \str_if_eq:VnT \l_semio_viz_tl_scell_tl {##2} { \int_set:Nn \l_semio_viz_cart_j_int {##1} }
+  }
+  \int_compare:nNnT { \l_semio_viz_cart_j_int } = { 0 } { \int_set:Nn \l_semio_viz_cart_j_int { 1 } }
+  \semio_viz_cart_color:VN \l_semio_viz_cart_j_int \l_semio_viz_cart_fill_tl
+  \tl_set_eq:NN \l_semio_viz_cart_stroke_tl \l_semio_viz_cart_fill_tl
+}
+
+% 📥 Reads data row #1 into the drawing variables: lane, start, end, state and label, the lane's
+% band on the categorical axis, and the two ends already mapped onto the time axis.
+\cs_new_protected:Npn \semio_viz_tl_read:n #1 {
+  \semio_viz_table_cell:nnVN { \l_semio_viz_cart_data_tl } {#1} \l_semio_viz_tl_lane_tl
+    \l_semio_viz_tl_lcell_tl
+  \semio_viz_table_cell:nnVN { \l_semio_viz_cart_data_tl } {#1} \l_semio_viz_tl_start_tl
+    \l_semio_viz_tl_cell_tl
+  \fp_set:Nn \l_semio_viz_tl_s_fp { \l_semio_viz_tl_cell_tl }
+  \semio_viz_table_cell:nnVN { \l_semio_viz_cart_data_tl } {#1} \l_semio_viz_tl_end_tl
+    \l_semio_viz_tl_cell_tl
+  \fp_set:Nn \l_semio_viz_tl_e_fp { \l_semio_viz_tl_cell_tl }
+  \semio_viz_table_cell:nnVN { \l_semio_viz_cart_data_tl } {#1} \l_semio_viz_tl_state_tl
+    \l_semio_viz_tl_scell_tl
+  \semio_viz_table_cell:nnVN { \l_semio_viz_cart_data_tl } {#1} \l_semio_viz_cart_label_tl
+    \l_semio_viz_bar_lbl_tl
+  \semio_viz_tl_row_color:
+  \semio_viz_scale_band_edges:nVNN { cart-band } \l_semio_viz_tl_lcell_tl
+    \l_semio_viz_bar_band_lo_fp \l_semio_viz_bar_band_hi_fp
+  \fp_set:Nn \l_semio_viz_cart_a_fp
+    { ( \l_semio_viz_bar_band_lo_fp + \l_semio_viz_bar_band_hi_fp ) / 2 }
+  \fp_set:Nn \l_semio_viz_tl_lane_h_fp
+    { abs( \l_semio_viz_bar_band_hi_fp - \l_semio_viz_bar_band_lo_fp ) * 0.5 }
+  \semio_viz_cart_xmap:VN \l_semio_viz_tl_s_fp \l_semio_viz_cart_c_fp
+  \semio_viz_cart_xmap:VN \l_semio_viz_tl_e_fp \l_semio_viz_cart_d_fp
+}
+
+% ▭ The lane modes: one mark per data row, laid on the row's own lane.
+\cs_new_protected:Npn \semio_viz_tl_bars_run: {
+  \int_step_inline:nn { \l_semio_viz_cart_nrows_int } {
+    \semio_viz_tl_read:n {##1}
+    \semio_viz_tl_bar_one:
+  }
+}
+
+% 🕰️ The mark the current row gets: a dot for an event, a diamond for a milestone, a bar for an
+% interval, a state block or a swimlane bar — the shape is what distinguishes these §54 layouts.
+\cs_new_protected:Npn \semio_viz_tl_bar_one: {
+  \str_case:VnF \l_semio_viz_tl_mode_tl {
+    { event } {
+      \semio_viz_cart_draw_dot:nnn { \fp_eval:n { \l_semio_viz_cart_c_fp } }
+        { \fp_eval:n { \l_semio_viz_cart_a_fp } } { 1.4 }
+    }
+    { milestone } {
+      \fill [ \l_semio_viz_cart_fill_tl ]
+        ( \fp_eval:n { \l_semio_viz_cart_c_fp } , \fp_eval:n { \l_semio_viz_cart_a_fp + 1.8 } )
+        -- ( \fp_eval:n { \l_semio_viz_cart_c_fp + 1.8 } , \fp_eval:n { \l_semio_viz_cart_a_fp } )
+        -- ( \fp_eval:n { \l_semio_viz_cart_c_fp } , \fp_eval:n { \l_semio_viz_cart_a_fp - 1.8 } )
+        -- ( \fp_eval:n { \l_semio_viz_cart_c_fp - 1.8 } , \fp_eval:n { \l_semio_viz_cart_a_fp } )
+        -- cycle ;
+      \semio_viz_probe_geometry:nx { glyph }
+        { \fp_eval:n { round( \l_semio_viz_cart_c_fp , 4 ) } ,
+          \fp_eval:n { round( \l_semio_viz_cart_a_fp , 4 ) } }
+      \semio_viz_cart_probe_paint:n { \l_semio_viz_cart_fill_tl }
+    }
+    { state } {
+      \semio_viz_cart_draw_rect:nnnn { \fp_eval:n { \l_semio_viz_cart_c_fp } }
+        { \fp_eval:n { \l_semio_viz_cart_a_fp - \l_semio_viz_tl_lane_h_fp * 0.9 } }
+        { \fp_eval:n { \l_semio_viz_cart_d_fp - \l_semio_viz_cart_c_fp } }
+        { \fp_eval:n { \l_semio_viz_tl_lane_h_fp * 1.8 } }
+    }
+    { swimlane } {
+      \semio_viz_cart_draw_rect:nnnn { \fp_eval:n { \l_semio_viz_cart_c_fp } }
+        { \fp_eval:n { \l_semio_viz_cart_a_fp - \l_semio_viz_tl_lane_h_fp / 3 } }
+        { \fp_eval:n { \l_semio_viz_cart_d_fp - \l_semio_viz_cart_c_fp } }
+        { \fp_eval:n { 2 * \l_semio_viz_tl_lane_h_fp / 3 } }
+      \semio_viz_cart_text:nnnn { \fp_eval:n { \l_semio_viz_cart_c_fp + 0.8 } }
+        { \fp_eval:n { \l_semio_viz_cart_a_fp } } { west } { \l_semio_viz_bar_lbl_tl }
+    }
+  } {
+    \fp_set:Nn \l_semio_viz_cart_corner_fp { 0.6 }
+    \semio_viz_cart_draw_rect:nnnn { \fp_eval:n { \l_semio_viz_cart_c_fp } }
+      { \fp_eval:n { \l_semio_viz_cart_a_fp - \l_semio_viz_tl_lane_h_fp / 2 } }
+      { \fp_eval:n { \l_semio_viz_cart_d_fp - \l_semio_viz_cart_c_fp } }
+      { \fp_eval:n { \l_semio_viz_tl_lane_h_fp } }
+    \fp_zero:N \l_semio_viz_cart_corner_fp
+  }
+}
+
+% 🌀 Spiral and radial placement of the same intervals around the plot centre.
+\cs_new_protected:Npn \semio_viz_tl_spiral_run: {
+  \fp_set:Nn \l_semio_viz_cart_b_fp
+    { ( \l_semio_viz_cart_xlo_fp + \l_semio_viz_cart_xhi_fp ) / 2 }
+  \fp_set:Nn \l_semio_viz_cart_e_fp
+    { ( \l_semio_viz_cart_ylo_fp + \l_semio_viz_cart_yhi_fp ) / 2 }
+  \fp_set:Nn \l_semio_viz_bar_band_lo_fp
+    { min( \l_semio_viz_cart_xhi_fp - \l_semio_viz_cart_xlo_fp ,
+           \l_semio_viz_cart_yhi_fp - \l_semio_viz_cart_ylo_fp ) / 2 }
+  \int_step_inline:nn { \l_semio_viz_cart_nrows_int } {
+    \semio_viz_table_cell:nnVN { \l_semio_viz_cart_data_tl } {##1} \l_semio_viz_tl_start_tl
+      \l_semio_viz_tl_cell_tl
+    \fp_set:Nn \l_semio_viz_tl_s_fp { \l_semio_viz_tl_cell_tl }
+    \semio_viz_table_cell:nnVN { \l_semio_viz_cart_data_tl } {##1} \l_semio_viz_tl_state_tl
+      \l_semio_viz_tl_scell_tl
+    \semio_viz_tl_row_color:
+    \semio_viz_tl_spiral_point:
+  }
+}
+
+% 🌀 The current row's place on the spiral or radial clock: its share of the time axis becomes an
+% angle over `turns` revolutions, and its lane becomes the radius.
+\cs_new_protected:Npn \semio_viz_tl_spiral_point: {
+  \fp_set:Nn \l_semio_viz_cart_v_fp
+    { ( \l_semio_viz_tl_s_fp - \l_semio_viz_cart_xmin_fp )
+      / ( \l_semio_viz_cart_xmax_fp - \l_semio_viz_cart_xmin_fp ) }
+  \fp_set:Nn \l_semio_viz_cart_d_fp { 360 * \l_semio_viz_tl_turns_fp * \l_semio_viz_cart_v_fp }
+  \str_if_eq:VnT \l_semio_viz_tl_mode_tl { radial }
+    { \fp_set:Nn \l_semio_viz_bar_band_hi_fp { \l_semio_viz_bar_band_lo_fp * 0.8 } }
+  \str_if_eq:VnF \l_semio_viz_tl_mode_tl { radial }
+    { \fp_set:Nn \l_semio_viz_bar_band_hi_fp
+        { \l_semio_viz_bar_band_lo_fp * ( 0.25 + 0.7 * \l_semio_viz_cart_v_fp ) } }
+  \semio_viz_cart_draw_dot:nnn
+    { \fp_eval:n { \l_semio_viz_cart_b_fp
+      + \l_semio_viz_bar_band_hi_fp * cosd( \l_semio_viz_cart_d_fp ) } }
+    { \fp_eval:n { \l_semio_viz_cart_e_fp
+      + \l_semio_viz_bar_band_hi_fp * sind( \l_semio_viz_cart_d_fp ) } }
+    { 1.3 }
+}
+
+% 📅 Calendar: one cell per period, wrapped into rows of `columns` cells.
+\cs_new_protected:Npn \semio_viz_tl_calendar_run: {
+  \fp_set:Nn \l_semio_viz_cart_v_fp
+    { ( \l_semio_viz_cart_xhi_fp - \l_semio_viz_cart_xlo_fp ) / \l_semio_viz_tl_columns_int }
+  \int_step_inline:nn { \l_semio_viz_cart_nrows_int } {
+    \semio_viz_table_cell:nnVN { \l_semio_viz_cart_data_tl } {##1} \l_semio_viz_tl_start_tl
+      \l_semio_viz_tl_cell_tl
+    \semio_viz_table_cell:nnVN { \l_semio_viz_cart_data_tl } {##1} \l_semio_viz_tl_end_tl
+      \l_semio_viz_tl_lcell_tl
+    \semio_viz_cart_shade:nxN { \semio_viz_theme_color:n { 0 } }
+      { \fp_eval:n { ( \l_semio_viz_tl_lcell_tl - \l_semio_viz_tl_cell_tl )
+        / max( 1 , \l_semio_viz_cart_xmax_fp - \l_semio_viz_cart_xmin_fp ) } }
+      \l_semio_viz_cart_fill_tl
+    \semio_viz_cart_draw_rect:nnnn
+      { \fp_eval:n { \l_semio_viz_cart_xlo_fp
+        + \int_mod:nn { ##1 - 1 } { \l_semio_viz_tl_columns_int } * \l_semio_viz_cart_v_fp } }
+      { \fp_eval:n { \l_semio_viz_cart_yhi_fp
+        - ( \int_div_truncate:nn { ##1 - 1 } { \l_semio_viz_tl_columns_int } + 1 )
+          * \l_semio_viz_cart_v_fp } }
+      { \fp_eval:n { \l_semio_viz_cart_v_fp * 0.82 } }
+      { \fp_eval:n { \l_semio_viz_cart_v_fp * 0.82 } }
+  }
+}
+
+% 🔁 Cycle and seasonal plots: one short series per lane, laid out side by side.
+\cs_new_protected:Npn \semio_viz_tl_cycle_run: {
+  \int_set:Nn \l_semio_viz_cart_n_int { \seq_count:N \l_semio_viz_tl_lanes_seq }
+  \seq_map_indexed_inline:Nn \l_semio_viz_tl_lanes_seq {
+    \int_set:Nn \l_semio_viz_bar_gi_int {##1}
+    \tl_set:Nn \l_semio_viz_tl_lcell_tl {##2}
+    \semio_viz_cart_color:VN \l_semio_viz_bar_gi_int \l_semio_viz_cart_stroke_tl
+    \tl_set_eq:NN \l_semio_viz_cart_fill_tl \l_semio_viz_cart_stroke_tl
+    \semio_viz_tl_cycle_series:
+  }
+}
+
+% 🔁 One cycle of the cycle and seasonal modes: its own slot of the frame, the series inside it,
+% and the hairline that separates it from the next cycle.
+\cs_new_protected:Npn \semio_viz_tl_cycle_series: {
+  \seq_clear:N \l_semio_viz_cart_pts_seq
+  \fp_set:Nn \l_semio_viz_cart_b_fp
+    { \l_semio_viz_cart_xlo_fp + ( \l_semio_viz_bar_gi_int - 1 )
+      * ( \l_semio_viz_cart_xhi_fp - \l_semio_viz_cart_xlo_fp ) / \l_semio_viz_cart_n_int }
+  \fp_set:Nn \l_semio_viz_cart_e_fp
+    { ( \l_semio_viz_cart_xhi_fp - \l_semio_viz_cart_xlo_fp )
+      / \l_semio_viz_cart_n_int * 0.82 }
+  \semio_viz_tl_cycle_points_run:
+  \semio_viz_cart_draw_path:N \l_semio_viz_cart_pts_seq
+  \str_if_eq:VnT \l_semio_viz_tl_mode_tl { seasonal } {
+    \seq_set_eq:NN \l_semio_viz_cart_map_b_seq \l_semio_viz_cart_pts_seq
+    \semio_viz_line_markers_run:
+  }
+  \tl_set:Nn \l_semio_viz_cart_stroke_tl { semio-chrome-border-normal }
+  \semio_viz_cart_draw_hair:nnnn { \fp_eval:n { \l_semio_viz_cart_b_fp } }
+    { \fp_eval:n { \l_semio_viz_cart_ylo_fp } } { \fp_eval:n { \l_semio_viz_cart_b_fp } }
+    { \fp_eval:n { \l_semio_viz_cart_yhi_fp } }
+}
+
+% 🔎 Collects the points of the cycle being drawn: every data row whose lane is the current one.
+\cs_new_protected:Npn \semio_viz_tl_cycle_points_run: {
+  \int_zero:N \l_semio_viz_cart_k_int
+  \int_step_inline:nn { \l_semio_viz_cart_nrows_int } {
+    \semio_viz_table_cell:nnVN { \l_semio_viz_cart_data_tl } {##1} \l_semio_viz_tl_lane_tl
+      \l_semio_viz_cart_cell_tl
+    \tl_if_eq:NNT \l_semio_viz_cart_cell_tl \l_semio_viz_tl_lcell_tl
+      { \semio_viz_tl_cycle_point:n {##1} }
+  }
+}
+
+% 📌 One point of the cycle: row #1's value on the ordinate, at its position inside the slot.
+\cs_new_protected:Npn \semio_viz_tl_cycle_point:n #1 {
+  \int_incr:N \l_semio_viz_cart_k_int
+  \semio_viz_table_cell:nnVN { \l_semio_viz_cart_data_tl } {#1} \l_semio_viz_tl_end_tl
+    \l_semio_viz_tl_cell_tl
+  \semio_viz_cart_ymap:VN \l_semio_viz_tl_cell_tl \l_semio_viz_cart_d_fp
+  \seq_put_right:Nx \l_semio_viz_cart_pts_seq {
+    \fp_eval:n { \l_semio_viz_cart_b_fp
+      + \l_semio_viz_cart_e_fp * ( \l_semio_viz_cart_k_int - 0.5 ) / 2 } ,
+    \fp_eval:n { \l_semio_viz_cart_d_fp }
+  }
+}
+
+% 🎏 Fan and forecast: the observed part solid, the projected part a widening band.
+\cs_new_protected:Npn \semio_viz_tl_fan_run: {
+  \seq_clear:N \l_semio_viz_cart_pts_seq
+  \seq_clear:N \l_semio_viz_cart_pts_b_seq
+  \seq_clear:N \l_semio_viz_cart_map_seq
+  \int_step_variable:nNn { 13 } \l_semio_viz_cart_i_int {
+    \fp_set:Nn \l_semio_viz_cart_v_fp { ( \l_semio_viz_cart_i_int - 1 ) / 12 }
+    \fp_set:Nn \l_semio_viz_cart_b_fp
+      { \l_semio_viz_cart_xlo_fp + \l_semio_viz_cart_v_fp
+        * ( \l_semio_viz_cart_xhi_fp - \l_semio_viz_cart_xlo_fp ) }
+    \fp_set:Nn \l_semio_viz_cart_d_fp
+      { \l_semio_viz_cart_ylo_fp + ( 0.35 + 0.4 * \l_semio_viz_cart_v_fp )
+        * ( \l_semio_viz_cart_yhi_fp - \l_semio_viz_cart_ylo_fp ) }
+    \fp_set:Nn \l_semio_viz_cart_e_fp
+      { max( 0 , \l_semio_viz_cart_v_fp - \l_semio_viz_tl_split_fp / 12 ) * 22 }
+    \seq_put_right:Nx \l_semio_viz_cart_pts_seq
+      { \fp_eval:n { \l_semio_viz_cart_b_fp } , \fp_eval:n { \l_semio_viz_cart_d_fp } }
+    \seq_put_right:Nx \l_semio_viz_cart_pts_b_seq
+      { \fp_eval:n { \l_semio_viz_cart_b_fp } ,
+        \fp_eval:n { \l_semio_viz_cart_d_fp + \l_semio_viz_cart_e_fp } }
+    \seq_put_right:Nx \l_semio_viz_cart_map_seq
+      { \fp_eval:n { \l_semio_viz_cart_b_fp } ,
+        \fp_eval:n { \l_semio_viz_cart_d_fp - \l_semio_viz_cart_e_fp } }
+  }
+  \semio_viz_cart_color:nN { 2 } \l_semio_viz_cart_fill_tl
+  \seq_set_eq:NN \l_semio_viz_cart_map_b_seq \l_semio_viz_cart_map_seq
+  \semio_viz_cart_draw_band:NN \l_semio_viz_cart_pts_b_seq \l_semio_viz_cart_map_b_seq
+  \semio_viz_cart_color:nN { 1 } \l_semio_viz_cart_stroke_tl
+  \semio_viz_cart_draw_path:N \l_semio_viz_cart_pts_seq
+}
+
+% ▶️ The whole family run: defaults, the option list #1, the frame, then the branch `mode` selects.
+\cs_new_protected:Npn \semio_viz_tl_render:n #1 {
+  \semio_viz_frame_require:n { SemioVizRunFamily }
+  \semio_viz_tl_keys_reset:
+  \keys_set:nn { semio / viz / family / timeline } {#1}
+  \semio_viz_cart_rect_compute:
+  \semio_viz_table_nrows:VN \l_semio_viz_cart_data_tl \l_semio_viz_cart_nrows_int
+  \semio_viz_cart_cats:VVN \l_semio_viz_cart_data_tl \l_semio_viz_tl_lane_tl
+    \l_semio_viz_tl_lanes_seq
+  \semio_viz_cart_cats:VVN \l_semio_viz_cart_data_tl \l_semio_viz_tl_state_tl
+    \l_semio_viz_tl_states_seq
+  \semio_viz_tl_axis:
+  \semio_viz_cart_scale_bandy:Nn \l_semio_viz_tl_lanes_seq { cart-band }
+  \semio_viz_cart_extent:VVNN \l_semio_viz_cart_data_tl \l_semio_viz_tl_end_tl
+    \l_semio_viz_cart_ymin_fp \l_semio_viz_cart_ymax_fp
+  \semio_viz_cart_scale_value:nn { linear } { v }
+  \semio_viz_cart_axis_frame:
+  \str_case:VnF \l_semio_viz_tl_mode_tl {
+    { spiral } { \semio_viz_tl_spiral_run: }
+    { radial } { \semio_viz_tl_spiral_run: }
+    { calendar } { \semio_viz_tl_calendar_run: }
+    { cycle } { \semio_viz_tl_cycle_run: }
+    { seasonal } { \semio_viz_tl_cycle_run: }
+    { fan } { \semio_viz_tl_fan_run: }
+    { forecast } { \semio_viz_tl_fan_run: }
+  } {
+    \semio_viz_tl_bars_run:
+    \semio_viz_cart_axis_labels_bandy:Nn \l_semio_viz_tl_lanes_seq { cart-band }
+  }
+}
+
+% 🕰️ §2, §54, §62 and §65: the twelve temporal layouts, selected by `mode`.
+\SemioVizFamily { timeline } { \semio_viz_tl_render:n {#1} }
+
+% 📖 narrative — the storytelling layouts of taxonomy §72.
+\cs_new_protected:Npn \semio_viz_narr_keys_reset: {
+  \semio_viz_tl_keys_reset:
+  \tl_set:Nn \l_semio_viz_narr_mode_tl { storyline }
+  \int_set:Nn \l_semio_viz_narr_panels_int { 4 }
+}
+
+% 🧵 Storyline: one braided thread per lane, converging where the intervals overlap.
+\cs_new_protected:Npn \semio_viz_narr_threads_run: {
+  \seq_map_indexed_inline:Nn \l_semio_viz_tl_lanes_seq {
+    \int_set:Nn \l_semio_viz_bar_gi_int {##1}
+    \tl_set:Nn \l_semio_viz_tl_lcell_tl {##2}
+    \semio_viz_cart_color:VN \l_semio_viz_bar_gi_int \l_semio_viz_cart_stroke_tl
+    \tl_set_eq:NN \l_semio_viz_cart_fill_tl \l_semio_viz_cart_stroke_tl
+    \semio_viz_narr_thread:
+  }
+}
+
+% 🧵 One storyline thread: the character's lane sampled across every panel boundary, so threads
+% braid and separate where the story does.
+\cs_new_protected:Npn \semio_viz_narr_thread: {
+  \seq_clear:N \l_semio_viz_cart_pts_seq
+  \semio_viz_scale_band_edges:nVNN { cart-band } \l_semio_viz_tl_lcell_tl
+    \l_semio_viz_bar_band_lo_fp \l_semio_viz_bar_band_hi_fp
+  \fp_set:Nn \l_semio_viz_cart_a_fp
+    { ( \l_semio_viz_bar_band_lo_fp + \l_semio_viz_bar_band_hi_fp ) / 2 }
+  \int_step_variable:nNn { 2 * \l_semio_viz_narr_panels_int + 1 } \l_semio_viz_cart_i_int {
+    \fp_set:Nn \l_semio_viz_cart_v_fp
+      { ( \l_semio_viz_cart_i_int - 1 ) / ( 2 * \l_semio_viz_narr_panels_int ) }
+    \seq_put_right:Nx \l_semio_viz_cart_pts_seq {
+      \fp_eval:n { \l_semio_viz_cart_xlo_fp + \l_semio_viz_cart_v_fp
+        * ( \l_semio_viz_cart_xhi_fp - \l_semio_viz_cart_xlo_fp ) } ,
+      \fp_eval:n { \l_semio_viz_cart_a_fp
+        + 3 * sin( 6.2832 * \l_semio_viz_cart_v_fp + \l_semio_viz_bar_gi_int ) }
+    }
+  }
+  \tl_set:Nn \l_semio_viz_cart_curve_tl { catmull-rom }
+  \semio_viz_cart_draw_path:N \l_semio_viz_cart_pts_seq
+}
+
+% 🎞️ Panels: equal frames left to right, each holding a miniature of the same series.
+\cs_new_protected:Npn \semio_viz_narr_panels_run: {
+  \fp_set:Nn \l_semio_viz_cart_e_fp
+    { ( \l_semio_viz_cart_xhi_fp - \l_semio_viz_cart_xlo_fp ) / \l_semio_viz_narr_panels_int }
+  \int_step_variable:nNn { \l_semio_viz_narr_panels_int } \l_semio_viz_cart_i_int {
+    \fp_set:Nn \l_semio_viz_cart_b_fp
+      { \l_semio_viz_cart_xlo_fp + ( \l_semio_viz_cart_i_int - 1 ) * \l_semio_viz_cart_e_fp }
+    \tl_set:Nn \l_semio_viz_cart_stroke_tl { semio-chrome-border-normal }
+    \semio_viz_cart_draw_hair:nnnn { \fp_eval:n { \l_semio_viz_cart_b_fp } }
+      { \fp_eval:n { \l_semio_viz_cart_ylo_fp } } { \fp_eval:n { \l_semio_viz_cart_b_fp } }
+      { \fp_eval:n { \l_semio_viz_cart_yhi_fp } }
+    \semio_viz_cart_shade:nxN { \semio_viz_theme_color:n { 0 } }
+      { \fp_eval:n { \l_semio_viz_cart_i_int / \l_semio_viz_narr_panels_int } }
+      \l_semio_viz_cart_fill_tl
+    \semio_viz_cart_draw_rect:nnnn
+      { \fp_eval:n { \l_semio_viz_cart_b_fp + \l_semio_viz_cart_e_fp * 0.12 } }
+      { \fp_eval:n { \l_semio_viz_cart_ylo_fp + 1 } }
+      { \fp_eval:n { \l_semio_viz_cart_e_fp * 0.76 } }
+      { \fp_eval:n { ( \l_semio_viz_cart_yhi_fp - \l_semio_viz_cart_ylo_fp )
+        * ( 0.25 + 0.6 * \l_semio_viz_cart_i_int / \l_semio_viz_narr_panels_int ) } }
+  }
+}
+
+% 🌈 Story arc: a single rising-and-falling curve with marked turning points.
+\cs_new_protected:Npn \semio_viz_narr_arc_run: {
+  \seq_clear:N \l_semio_viz_cart_pts_seq
+  \int_step_variable:nNn { 4 * \l_semio_viz_narr_panels_int + 1 } \l_semio_viz_cart_i_int {
+    \fp_set:Nn \l_semio_viz_cart_v_fp
+      { ( \l_semio_viz_cart_i_int - 1 ) / ( 4 * \l_semio_viz_narr_panels_int ) }
+    \seq_put_right:Nx \l_semio_viz_cart_pts_seq {
+      \fp_eval:n { \l_semio_viz_cart_xlo_fp + \l_semio_viz_cart_v_fp
+        * ( \l_semio_viz_cart_xhi_fp - \l_semio_viz_cart_xlo_fp ) } ,
+      \fp_eval:n { \l_semio_viz_cart_ylo_fp
+        + ( 0.15 + 0.8 * \l_semio_viz_cart_v_fp ^ 2 * ( 1.2 - \l_semio_viz_cart_v_fp ) )
+        * ( \l_semio_viz_cart_yhi_fp - \l_semio_viz_cart_ylo_fp ) }
+    }
+  }
+  \tl_set:Nn \l_semio_viz_cart_curve_tl { catmull-rom }
+  \semio_viz_cart_color:nN { 1 } \l_semio_viz_cart_stroke_tl
+  \tl_set_eq:NN \l_semio_viz_cart_fill_tl \l_semio_viz_cart_stroke_tl
+  \semio_viz_cart_draw_path:N \l_semio_viz_cart_pts_seq
+  \seq_set_eq:NN \l_semio_viz_cart_map_b_seq \l_semio_viz_cart_pts_seq
+  \semio_viz_line_markers_run:
+}
+
+% ▶️ The whole family run: defaults, the option list #1, the frame, then the panel or thread mode.
+\cs_new_protected:Npn \semio_viz_narr_render:n #1 {
+  \semio_viz_frame_require:n { SemioVizRunFamily }
+  \semio_viz_narr_keys_reset:
+  \keys_set:nn { semio / viz / family / narrative } {#1}
+  \semio_viz_cart_rect_compute:
+  \semio_viz_table_nrows:VN \l_semio_viz_cart_data_tl \l_semio_viz_cart_nrows_int
+  \semio_viz_cart_cats:VVN \l_semio_viz_cart_data_tl \l_semio_viz_tl_lane_tl
+    \l_semio_viz_tl_lanes_seq
+  \semio_viz_cart_cats:VVN \l_semio_viz_cart_data_tl \l_semio_viz_tl_state_tl
+    \l_semio_viz_tl_states_seq
+  \semio_viz_tl_axis:
+  \semio_viz_cart_scale_bandy:Nn \l_semio_viz_tl_lanes_seq { cart-band }
+  \semio_viz_cart_extent:VVNN \l_semio_viz_cart_data_tl \l_semio_viz_tl_end_tl
+    \l_semio_viz_cart_ymin_fp \l_semio_viz_cart_ymax_fp
+  \semio_viz_cart_scale_value:nn { linear } { v }
+  \semio_viz_cart_axis_frame:
+  \str_case:VnF \l_semio_viz_narr_mode_tl {
+    { arc } { \semio_viz_narr_arc_run: }
+    { panels } { \semio_viz_narr_panels_run: }
+    { reveal } { \semio_viz_narr_panels_run: }
+    { sequence } { \semio_viz_tl_bars_run: }
+    { before-after } { \semio_viz_narr_panels_run: }
+    { story-map } {
+      \semio_viz_tl_bars_run:
+      \semio_viz_cart_axis_labels_bandy:Nn \l_semio_viz_tl_lanes_seq { cart-band }
+    }
+    { scene-graph } {
+      \semio_viz_narr_threads_run:
+      \semio_viz_cart_axis_labels_bandy:Nn \l_semio_viz_tl_lanes_seq { cart-band }
+    }
+  } { \semio_viz_narr_threads_run: }
+}
+
+% 📖 §72: the storytelling layouts — storyline threads, panels, reveals and sequences.
+\SemioVizFamily { narrative } { \semio_viz_narr_render:n {#1} }
+%endregion 🔖️Families
+
+\ExplSyntaxOff

@@ -1,0 +1,14 @@
+[
+ {"path":"dashboard/🌀️daemon/🧪️tests/🔬️unit/🦀️.rs","replace":[
+ {"from":"for trial in 0..4 {\n        let wrapper = trial == 3;","to":"for trial in 0..5 {\n        let wrapper = trial >= 3;\n        let actual_workspace = trial == 4;\n        let workspace_text = workspace.display().to_string();\n        let launch_root = if actual_workspace { &workspace_text } else { &root_text };"},
+ {"from":"let native_args = [\"--root\", &root_text, \"--config\", &config];\n        let wrapper_args = [\"run\", \"dashboard\", \"--\", \"--root\", &root_text, \"--config\", &config];","to":"let native_args = [\"--root\", launch_root, \"--config\", &config];\n        let wrapper_args = [\"run\", \"dashboard\", \"--\", \"--root\", launch_root, \"--config\", &config];"},
+ {"from":"wrapper={wrapper} native_us={micros}","to":"wrapper={wrapper} actual_workspace={actual_workspace} native_us={micros}"},
+ {"from":"let connection = loop { match client::Connection::connect(&root)","to":"let connection_root = if actual_workspace { workspace } else { &root };\n        let connection = loop { match client::Connection::connect(connection_root)"},
+ {"from":"        view.write_all(b\"\\0eq\").unwrap();","to":"        if actual_workspace {\n            view.write_all(b\"\\0p\").unwrap();\n            let deadline = Instant::now() + Duration::from_secs(2);\n            while Instant::now() < deadline && !terminal_text(&screen).contains(\"Sprache: de\") { let count = view.try_read(&mut page).unwrap_or(0); screen.feed(&page[..count]); std::thread::sleep(Duration::from_millis(5)); }\n            assert!(terminal_text(&screen).contains(\"Sprache: de\"), \"workspace discovery must keep settings responsive: {}\", terminal_text(&screen));\n            println!(\"[DEBUG] actual workspace settings stayed responsive during background discovery\");\n        }\n        view.write_all(b\"\\0eq\").unwrap();"}
+ ]},
+ {"path":".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/DASHBOARD-TUI-WORKFORCE/🧪️startup/📜️script.ts","replace":[
+ {"from":"[\"install\",\"unit\",\"native\",\"execution\"]","to":"[\"install\",\"unit\",\"native\",\"execution\",\"ui\"]"},
+ {"from":"const args=operation===\"install\"?","to":"const args=operation===\"ui\"?[path(\"🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/📜️script.ts\"),\"test\",\"quick\",\"backend::native_windows::tests\"]:operation===\"install\"?"},
+ {"from":"\"--include-ignored\",\"--nocapture\"","to":"\"--include-ignored\",\"--nocapture\",\"--test-threads=1\""}
+ ]}
+]

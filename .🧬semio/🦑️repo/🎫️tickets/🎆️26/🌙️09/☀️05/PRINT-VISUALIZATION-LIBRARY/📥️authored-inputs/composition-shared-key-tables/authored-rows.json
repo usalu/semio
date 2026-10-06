@@ -1,0 +1,570 @@
+{
+  "groups": [
+    {
+      "id": "api-path-layer",
+      "scope": "semio / viz / layer",
+      "en": "Layer options",
+      "de": "Ebenenoptionen",
+      "source": "semio-viz-composition.sty",
+      "rows": [
+        {
+          "key": "name",
+          "type": "string",
+          "defaultValue": "",
+          "en": "Name recorded in the geometry probe; empty records a dash.",
+          "de": "Im Geometrieprotokoll aufgezeichneter Name; leer zeichnet einen Strich auf."
+        },
+        {
+          "key": "opacity",
+          "type": "number",
+          "defaultValue": "1",
+          "en": "Opacity of the enclosing TikZ scope, shared by all its drawing operations.",
+          "de": "Deckkraft des umgebenden TikZ-Bereichs für alle seine Zeichenoperationen."
+        },
+        {
+          "key": "style",
+          "type": "string",
+          "defaultValue": "",
+          "en": "Additional TikZ scope style key list.",
+          "de": "Zusätzliche TikZ-Stilschlüsselliste des Bereichs."
+        }
+      ]
+    },
+    {
+      "id": "api-path-concat",
+      "scope": "semio / viz / concat",
+      "en": "Concatenation options",
+      "de": "Verkettungsoptionen",
+      "source": "semio-viz-composition.sty",
+      "rows": [
+        {
+          "key": "direction",
+          "type": "string",
+          "defaultValue": "horizontal",
+          "en": "Items advance horizontally or vertically from the parent frame origin.",
+          "de": "Elemente rücken horizontal oder vertikal vom Ursprung des Elternrahmens vor."
+        },
+        {
+          "key": "gap",
+          "type": "number",
+          "defaultValue": "4",
+          "en": "Gap between consecutive items in millimetres.",
+          "de": "Abstand zwischen aufeinanderfolgenden Elementen in Millimetern."
+        }
+      ]
+    },
+    {
+      "id": "api-path-concat-item",
+      "scope": "semio / viz / concat / item",
+      "en": "Concatenation item options",
+      "de": "Optionen der Verkettungselemente",
+      "source": "semio-viz-composition.sty",
+      "rows": [
+        {
+          "key": "width",
+          "type": "string",
+          "defaultValue": "",
+          "en": "Width expression in millimetres; horizontal items default to half the parent width. Vertical items always use the parent width.",
+          "de": "Breitenausdruck in Millimetern; horizontale Elemente verwenden standardmäßig die halbe Elternbreite. Vertikale Elemente verwenden immer die Elternbreite."
+        },
+        {
+          "key": "height",
+          "type": "string",
+          "defaultValue": "",
+          "en": "Height expression in millimetres; vertical items default to half the parent height, horizontal items to the full parent height.",
+          "de": "Höhenausdruck in Millimetern; vertikale Elemente verwenden standardmäßig die halbe Elternhöhe, horizontale Elemente die volle Elternhöhe."
+        }
+      ]
+    },
+    {
+      "id": "api-path-dashboard",
+      "scope": "semio / viz / dashboard",
+      "en": "Dashboard options",
+      "de": "Dashboardoptionen",
+      "source": "semio-viz-composition.sty",
+      "rows": [
+        {
+          "key": "columns",
+          "type": "integer",
+          "defaultValue": "3",
+          "en": "Number of dashboard grid columns; use a positive count.",
+          "de": "Anzahl der Spalten des Dashboardgitters; eine positive Anzahl verwenden."
+        },
+        {
+          "key": "rows",
+          "type": "integer",
+          "defaultValue": "2",
+          "en": "Number of dashboard grid rows; use a positive count.",
+          "de": "Anzahl der Zeilen des Dashboardgitters; eine positive Anzahl verwenden."
+        },
+        {
+          "key": "gap",
+          "type": "number",
+          "defaultValue": "3",
+          "en": "Gap between neighbouring grid cells in millimetres.",
+          "de": "Abstand zwischen benachbarten Gitterzellen in Millimetern."
+        }
+      ]
+    },
+    {
+      "id": "api-path-dashboard-cell",
+      "scope": "semio / viz / dashboard / cell",
+      "en": "Dashboard cell options",
+      "de": "Optionen der Dashboardzellen",
+      "source": "semio-viz-composition.sty",
+      "rows": [
+        {
+          "key": "colspan",
+          "type": "integer",
+          "defaultValue": "1",
+          "en": "Columns claimed by this cell; the running cursor advances by this count.",
+          "de": "Von dieser Zelle beanspruchte Spalten; der laufende Zeiger rückt um diese Anzahl vor."
+        },
+        {
+          "key": "rowspan",
+          "type": "integer",
+          "defaultValue": "1",
+          "en": "Rows claimed by this cell, extending its rectangle downwards.",
+          "de": "Von dieser Zelle beanspruchte Zeilen; ihr Rechteck wird nach unten erweitert."
+        }
+      ]
+    },
+    {
+      "id": "api-path-inset",
+      "scope": "semio / viz / inset",
+      "en": "Inset options",
+      "de": "Ausschnittoptionen",
+      "source": "semio-viz-composition.sty",
+      "rows": [
+        {
+          "key": "at",
+          "type": "list",
+          "defaultValue": "0,0",
+          "en": "Lower-left placement in parent-frame millimetres as x,y.",
+          "de": "Platzierung der unteren linken Ecke in Millimetern des Elternrahmens als x,y."
+        },
+        {
+          "key": "frame",
+          "type": "boolean",
+          "defaultValue": "true",
+          "en": "Draw the inset frame.",
+          "de": "Rahmen des Ausschnitts zeichnen."
+        },
+        {
+          "key": "height",
+          "type": "string",
+          "defaultValue": "",
+          "en": "Inset height expression in millimetres; empty uses one third of the parent height.",
+          "de": "Höhenausdruck des Ausschnitts in Millimetern; leer verwendet ein Drittel der Elternhöhe."
+        },
+        {
+          "key": "link",
+          "type": "boolean",
+          "defaultValue": "true",
+          "en": "Connect the upper-right zoom corner to the upper-left inset corner when zoom has four entries.",
+          "de": "Die obere rechte Vergrößerungsecke mit der oberen linken Ausschnittecke verbinden, wenn zoom vier Einträge enthält."
+        },
+        {
+          "key": "pad",
+          "type": "number",
+          "defaultValue": "4",
+          "en": "Inset content padding in millimetres.",
+          "de": "Innenabstand des Ausschnittinhalts in Millimetern."
+        },
+        {
+          "key": "width",
+          "type": "string",
+          "defaultValue": "",
+          "en": "Inset width expression in millimetres; empty uses one third of the parent width.",
+          "de": "Breitenausdruck des Ausschnitts in Millimetern; leer verwendet ein Drittel der Elternbreite."
+        },
+        {
+          "key": "zoom",
+          "type": "list",
+          "defaultValue": "",
+          "en": "Parent-frame region x0,y0,x1,y1 in millimetres; exactly four entries draw its outline and optional connector.",
+          "de": "Bereich des Elternrahmens x0,y0,x1,y1 in Millimetern; genau vier Einträge zeichnen dessen Umriss und optionale Verbindung."
+        }
+      ]
+    },
+    {
+      "id": "api-path-diagram",
+      "scope": "semio / viz / diagram",
+      "en": "Diagram kernel options",
+      "de": "Optionen des Diagrammkerns",
+      "source": "semio-viz-diagram-flowchart.sty",
+      "noteEn": "Defaults belong to the diagram kernel before family presets. Table and column bindings are identifiers. Dimensions are millimetres and bend angles are degrees.",
+      "noteDe": "Die Vorgaben gehören zum Diagrammkern vor den Familienvorgaben. Tabellen- und Spaltenbindungen sind Kennungen. Maße sind Millimeter und Krümmungswinkel sind Grad.",
+      "rows": [
+        {
+          "key": "arrow",
+          "type": "string",
+          "defaultValue": "to",
+          "en": "Edge arrow ends: to, from, both or none.",
+          "de": "Pfeilenden der Kanten: to, from, both oder none."
+        },
+        {
+          "key": "bend",
+          "type": "number",
+          "defaultValue": "22",
+          "en": "Bend angle for curved routing in degrees.",
+          "de": "Krümmungswinkel der gebogenen Kantenführung in Grad."
+        },
+        {
+          "key": "col",
+          "type": "string",
+          "defaultValue": "col",
+          "en": "Node column containing the grid column index.",
+          "de": "Knotenspalte mit dem Gitterspaltenindex."
+        },
+        {
+          "key": "col-gap",
+          "type": "number",
+          "defaultValue": "4",
+          "en": "Horizontal gap between grid cells in millimetres.",
+          "de": "Waagerechter Abstand zwischen Gitterzellen in Millimetern."
+        },
+        {
+          "key": "data",
+          "type": "string",
+          "defaultValue": "demo-diagram-flow",
+          "en": "Node table binding; aliases nodes, so the last supplied binding wins.",
+          "de": "Bindung der Knotentabelle; Alias von nodes, daher gilt die zuletzt angegebene Bindung."
+        },
+        {
+          "key": "default-shape",
+          "type": "string",
+          "defaultValue": "process",
+          "en": "Shape used when the node row has no shape; process is a rectangle.",
+          "de": "Form für Knotenreihen ohne Form; process ist ein Rechteck."
+        },
+        {
+          "key": "direction",
+          "type": "string",
+          "defaultValue": "down",
+          "en": "Primary grid growth direction: down or right.",
+          "de": "Primäre Wachstumsrichtung des Gitters: down oder right."
+        },
+        {
+          "key": "edge-kind",
+          "type": "string",
+          "defaultValue": "kind",
+          "en": "Edge column containing routing or edge-kind information.",
+          "de": "Kantenspalte mit Informationen zur Führung oder Kantenart."
+        },
+        {
+          "key": "edge-label",
+          "type": "string",
+          "defaultValue": "label",
+          "en": "Edge column containing the visible edge caption.",
+          "de": "Kantenspalte mit der sichtbaren Kantenbeschriftung."
+        },
+        {
+          "key": "edges",
+          "type": "string",
+          "defaultValue": "demo-diagram-flow-edges",
+          "en": "Edge table name.",
+          "de": "Name der Kantentabelle."
+        },
+        {
+          "key": "frame",
+          "type": "boolean",
+          "defaultValue": "false",
+          "en": "Draw the diagram bounding frame.",
+          "de": "Begrenzungsrahmen des Diagramms zeichnen."
+        },
+        {
+          "key": "group",
+          "type": "string",
+          "defaultValue": "group",
+          "en": "Node column identifying group membership.",
+          "de": "Knotenspalte mit der Gruppenzugehörigkeit."
+        },
+        {
+          "key": "groups",
+          "type": "boolean",
+          "defaultValue": "false",
+          "en": "Draw dashed frames around distinct node groups.",
+          "de": "Gestrichelte Rahmen um verschiedene Knotengruppen zeichnen."
+        },
+        {
+          "key": "height",
+          "type": "number",
+          "defaultValue": null,
+          "en": "Diagram height; inherits the enclosing figure height, with a 48 mm fallback.",
+          "de": "Diagrammhöhe; übernimmt die Höhe der umgebenden Figur mit 48 mm als Ersatz."
+        },
+        {
+          "key": "id",
+          "type": "string",
+          "defaultValue": "id",
+          "en": "Node identifier column used to resolve edge endpoints.",
+          "de": "Spalte der Knotenkennungen zur Auflösung der Kantenendpunkte."
+        },
+        {
+          "key": "label",
+          "type": "string",
+          "defaultValue": "label",
+          "en": "Node caption column.",
+          "de": "Spalte der Knotenbeschriftungen."
+        },
+        {
+          "key": "labels",
+          "type": "boolean",
+          "defaultValue": "true",
+          "en": "Draw node caption text.",
+          "de": "Text der Knotenbeschriftungen zeichnen."
+        },
+        {
+          "key": "lane",
+          "type": "string",
+          "defaultValue": "lane",
+          "en": "Node column identifying a lane.",
+          "de": "Knotenspalte mit der Bahnkennung."
+        },
+        {
+          "key": "lane-title",
+          "type": "string",
+          "defaultValue": "",
+          "en": "Stored lane header text; the current lane renderer does not consume this key.",
+          "de": "Gespeicherter Bahnüberschrifttext; der derzeitige Bahnrenderer verwendet diesen Schlüssel nicht."
+        },
+        {
+          "key": "lanes",
+          "type": "string",
+          "defaultValue": "none",
+          "en": "Lane bands: none, row or column.",
+          "de": "Bahnbänder: none, row oder column."
+        },
+        {
+          "key": "legend",
+          "type": "string",
+          "defaultValue": "",
+          "en": "Comma-separated literal legend captions; each receives the next theme hue. Assignment-like entries are printed literally.",
+          "de": "Kommagetrennte wörtliche Legendenbeschriftungen; jede erhält den nächsten Themenfarbton. Zuweisungsartige Einträge werden wörtlich ausgegeben."
+        },
+        {
+          "key": "node-height",
+          "type": "string",
+          "defaultValue": "auto",
+          "en": "auto leaves the current height; a numeric expression sets it. Automatic width currently recalculates both dimensions and overrides this height.",
+          "de": "auto erhält die aktuelle Höhe; ein numerischer Ausdruck setzt sie. Automatische Breite berechnet derzeit beide Maße neu und überschreibt diese Höhe."
+        },
+        {
+          "key": "node-width",
+          "type": "string",
+          "defaultValue": "auto",
+          "en": "auto fits both node dimensions into the grid; a numeric expression sets width and disables both automatic dimensions.",
+          "de": "auto passt beide Knotenmaße in das Gitter ein; ein numerischer Ausdruck setzt die Breite und deaktiviert beide automatischen Maße."
+        },
+        {
+          "key": "nodes",
+          "type": "string",
+          "defaultValue": "demo-diagram-flow",
+          "en": "Node table name; aliases data.",
+          "de": "Name der Knotentabelle; Alias von data."
+        },
+        {
+          "key": "pad",
+          "type": "number",
+          "defaultValue": "3",
+          "en": "Grid inset from the diagram frame in millimetres.",
+          "de": "Einzug des Gitters vom Diagrammrahmen in Millimetern."
+        },
+        {
+          "key": "routing",
+          "type": "string",
+          "defaultValue": "orthogonal",
+          "en": "Edge routing: orthogonal, straight or curved.",
+          "de": "Kantenführung: orthogonal, straight oder curved."
+        },
+        {
+          "key": "row",
+          "type": "string",
+          "defaultValue": "row",
+          "en": "Node column containing the grid row index.",
+          "de": "Knotenspalte mit dem Gitterzeilenindex."
+        },
+        {
+          "key": "row-gap",
+          "type": "number",
+          "defaultValue": "4",
+          "en": "Vertical gap between grid cells in millimetres.",
+          "de": "Senkrechter Abstand zwischen Gitterzellen in Millimetern."
+        },
+        {
+          "key": "shape",
+          "type": "string",
+          "defaultValue": "shape",
+          "en": "Node column containing the glyph shape name.",
+          "de": "Knotenspalte mit dem Namen der Zeichenform."
+        },
+        {
+          "key": "source",
+          "type": "string",
+          "defaultValue": "from",
+          "en": "Edge column containing the source node identifier.",
+          "de": "Kantenspalte mit der Kennung des Quellknotens."
+        },
+        {
+          "key": "target",
+          "type": "string",
+          "defaultValue": "to",
+          "en": "Edge column containing the target node identifier.",
+          "de": "Kantenspalte mit der Kennung des Zielknotens."
+        },
+        {
+          "key": "title",
+          "type": "string",
+          "defaultValue": "",
+          "en": "Optional literal caption above the diagram.",
+          "de": "Optionale wörtliche Beschriftung über dem Diagramm."
+        },
+        {
+          "key": "tone",
+          "type": "string",
+          "defaultValue": "tone",
+          "en": "Node column containing its palette or semantic tone.",
+          "de": "Knotenspalte mit ihrem Paletten- oder semantischen Farbton."
+        },
+        {
+          "key": "variant",
+          "type": "string",
+          "defaultValue": null,
+          "en": "Catalogue kind slug forwarded by the registry; the diagram reset leaves it unchanged.",
+          "de": "Vom Katalog weitergegebener Arten-Slug; der Diagrammreset erhält ihn."
+        },
+        {
+          "key": "width",
+          "type": "number",
+          "defaultValue": null,
+          "en": "Diagram width; inherits the enclosing figure width, with an 80 mm fallback.",
+          "de": "Diagrammbreite; übernimmt die Breite der umgebenden Figur mit 80 mm als Ersatz."
+        }
+      ]
+    },
+    {
+      "id": "api-path-geo-fromtable",
+      "scope": "semio / viz / geo / fromtable",
+      "en": "Geographic table options",
+      "de": "Optionen geografischer Tabellen",
+      "source": "semio-viz-data.sty",
+      "rows": [
+        {
+          "key": "lat",
+          "type": "string",
+          "defaultValue": "lat",
+          "en": "Latitude column in geographic degrees.",
+          "de": "Breitengradspalte in geografischen Grad."
+        },
+        {
+          "key": "lon",
+          "type": "string",
+          "defaultValue": "lon",
+          "en": "Longitude column in geographic degrees.",
+          "de": "Längengradspalte in geografischen Grad."
+        },
+        {
+          "key": "ring",
+          "type": "string",
+          "defaultValue": "ring",
+          "en": "Ring identity column; consecutive rows sharing an identity form one polygon part.",
+          "de": "Spalte der Ringkennungen; aufeinanderfolgende Reihen gleicher Kennung bilden einen Polygonteil."
+        },
+        {
+          "key": "value",
+          "type": "string",
+          "defaultValue": "",
+          "en": "Optional feature value column; empty assigns value one to every polygon part.",
+          "de": "Optionale Spalte der Merkmalswerte; leer weist jedem Polygonteil den Wert eins zu."
+        }
+      ]
+    }
+  ],
+  "local": {
+    "id": "composition",
+    "scope": "semio / viz / family / composition",
+    "en": "Composition family options",
+    "de": "Optionen der Kompositionsfamilie",
+    "source": "semio-viz-composition.sty",
+    "rows": [
+      {
+        "key": "variant",
+        "type": "string",
+        "defaultValue": "layer",
+        "en": "Composition catalogue kind; the registry selects its preset.",
+        "de": "Kompositionsart des Katalogs; die Registrierung wählt deren Vorgaben."
+      },
+      {
+        "key": "data",
+        "type": "string",
+        "defaultValue": "demo",
+        "en": "Table used by the mini plots.",
+        "de": "Von den kleinen Diagrammen verwendete Tabelle."
+      },
+      {
+        "key": "x",
+        "type": "string",
+        "defaultValue": "cat",
+        "en": "Horizontal channel column.",
+        "de": "Spalte des waagerechten Kanals."
+      },
+      {
+        "key": "y",
+        "type": "string",
+        "defaultValue": "val",
+        "en": "First quantitative column.",
+        "de": "Erste quantitative Spalte."
+      },
+      {
+        "key": "y2",
+        "type": "string",
+        "defaultValue": "val2",
+        "en": "Second quantitative column used by overlay, concatenation and inset variants.",
+        "de": "Zweite quantitative Spalte für Überlagerungs-, Verkettungs- und Ausschnittvarianten."
+      },
+      {
+        "key": "groups",
+        "type": "list",
+        "defaultValue": "A,B,C,D",
+        "en": "Facet group values supplied to the facet kernel.",
+        "de": "Dem Facettenkern übergebene Gruppierungswerte."
+      },
+      {
+        "key": "columns",
+        "type": "integer",
+        "defaultValue": "2",
+        "en": "Facet grid column count.",
+        "de": "Spaltenanzahl des Facettengitters."
+      },
+      {
+        "key": "gap",
+        "type": "number",
+        "defaultValue": "4",
+        "en": "Gap between adjacent parts in millimetres.",
+        "de": "Abstand zwischen benachbarten Teilen in Millimetern."
+      },
+      {
+        "key": "ticks",
+        "type": "integer",
+        "defaultValue": "3",
+        "en": "Target tick count on mini-plot axes.",
+        "de": "Angestrebte Teilstrichanzahl der Achsen kleiner Diagramme."
+      },
+      {
+        "key": "panels",
+        "type": "integer",
+        "defaultValue": "6",
+        "en": "Number of panels in grid and dashboard variants.",
+        "de": "Anzahl der Tafeln in Gitter- und Dashboardvarianten."
+      },
+      {
+        "key": "panelColumns",
+        "type": "integer",
+        "defaultValue": "3",
+        "en": "Columns of the panel grid or dashboard.",
+        "de": "Spalten des Tafelgitters oder Dashboards."
+      }
+    ]
+  }
+}

@@ -392,6 +392,7 @@ import {
   serializeUiTheme,
   setActiveUiTheme,
   ShellBrandLogo,
+  ResponsiveLabel,
   shellChromeTitleClassName,
   type ShellScope,
   ShellScopeProvider,
@@ -12490,7 +12491,7 @@ function FrameworkOsShellInner({
       <div key="logoAndTitle" className="flex min-w-0 shrink-0 items-center gap-single">
         {brand?.logoSvg ? <ShellBrandLogo svg={brand.logoSvg} className="size-workbench shrink-0" /> : <SemioLogo className="size-workbench shrink-0" />}
         <span data-slot="app-name" className={cn("px-single", shellChromeTitleClassName)}>
-          {brand?.windowTitle ?? appBreadcrumb(resolveAppBreadcrumb(session.app, uiTerminology))}
+          <ResponsiveLabel full={brand?.windowTitle ?? appBreadcrumb(resolveAppBreadcrumb(session.app, uiTerminology))} short={brand?.shortWindowTitle} />
         </span>
         {/* 👁️✏️ Window title chip / read-only badge (contract freeze §5) — role read off the resolved
          * `session.app.role`, never parsed out of `session.app.id`. */}

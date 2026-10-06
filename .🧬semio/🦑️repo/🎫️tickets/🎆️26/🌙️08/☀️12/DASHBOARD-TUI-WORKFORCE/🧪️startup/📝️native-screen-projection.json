@@ -1,0 +1,32 @@
+[
+  {
+    "path": "dashboard/🌀️daemon/🧪️tests/🔬️unit/🦀️.rs",
+    "replace": [
+      {
+        "from": "let mut bytes = Vec::new(); let mut page = [0u8; 16384];",
+        "to": "let mut bytes = Vec::new(); let mut page = [0u8; 16384];\n        let mut screen = ui_tui::tui::vt::VtScreen::new(ui_tui::tui::geom::Size { width: 180, height: 48 }, 0);"
+      },
+      {
+        "from": "let count = view.try_read(&mut page).unwrap_or(0); bytes.extend_from_slice(&page[..count]);",
+        "to": "let count = view.try_read(&mut page).unwrap_or(0); bytes.extend_from_slice(&page[..count]); screen.feed(&page[..count]);",
+        "all": true
+      },
+      {
+        "from": "while Instant::now() < deadline && !String::from_utf8_lossy(&bytes).contains(\"Language: en\")",
+        "to": "while Instant::now() < deadline && !terminal_text(&screen).contains(\"Language: en\")"
+      },
+      {
+        "from": "assert!(String::from_utf8_lossy(&bytes).contains(\"Language: en\"), \"settings must be optional and accessible\");",
+        "to": "assert!(terminal_text(&screen).contains(\"Language: en\"), \"settings must be optional and accessible: {}\", terminal_text(&screen));"
+      },
+      {
+        "from": "while Instant::now() < deadline && !root.join(\"preferences.jsonl\").is_file() { std::thread::sleep(Duration::from_millis(10)); }",
+        "to": "while Instant::now() < deadline && crate::preferences::replay(&root.join(\"preferences.jsonl\"), &mut crate::preferences::Preferences::default()).ok() != Some(1) { std::thread::sleep(Duration::from_millis(10)); }"
+      },
+      {
+        "from": "fn control_root(name: &str) -> PathBuf {",
+        "to": "fn terminal_text(screen: &ui_tui::tui::vt::VtScreen) -> String {\n    (0..screen.size.height).map(|y| (0..screen.size.width).filter_map(|x| screen.cell_at(x, y).map(|cell| cell.ch)).collect::<String>()).collect::<Vec<_>>().join(\"\\n\")\n}\n\nfn control_root(name: &str) -> PathBuf {"
+      }
+    ]
+  }
+]

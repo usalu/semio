@@ -41,10 +41,11 @@ pub fn catalog_view(catalog: &Catalog, quizzes: &[Quiz]) -> CatalogView {
     CatalogView {
         id: catalog.id.clone(),
         title: catalog.title.clone(),
+        short: catalog.short.clone(),
         introduction: catalog.introduction.clone(),
         quizzes: quizzes
             .iter()
-            .map(|quiz| CatalogQuizView { id: quiz.id.clone(), emoji: quiz.emoji.clone(), title: quiz.title.clone(), description: quiz.description.clone(), tasks: quiz.tasks.iter().map(|task| CatalogTaskView { id: task.id().clone(), kind: task.kind(), title: task.title().clone(), icon: task.icon().cloned() }).collect() })
+            .map(|quiz| CatalogQuizView { id: quiz.id.clone(), emoji: quiz.emoji.clone(), title: quiz.title.clone(), short: quiz.short.clone(), description: quiz.description.clone(), tasks: quiz.tasks.iter().map(|task| CatalogTaskView { id: task.id().clone(), kind: task.kind(), title: task.title().clone(), icon: task.icon().cloned() }).collect() })
             .collect(),
         badges: catalog.badges.iter().map(|badge| CatalogBadgeView { id: badge.id.clone(), emoji: badge.emoji.clone(), label: badge.label.clone(), description: badge.description.clone() }).collect(),
     }

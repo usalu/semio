@@ -1031,7 +1031,7 @@ function componentTargets(root, workspaceRoot, commandInputs) {
   const describe = {
     executor: DEFAULT_EXECUTOR,
     cache: false,
-    dependsOn: ["component-dev"],
+    dependsOn: ["component-dev", "@semio-tech/os-plugin-describe-rs:build"],
     outputs: [`{workspaceRoot}/${ownerRoot}/🛂️.descriptor.semio`, `{workspaceRoot}/${ownerRoot}/🔣️.json`],
     options: { cwd: ".", command: `bun ${JSON.stringify("🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust/📜️script.ts")} component --manifest ${JSON.stringify(nxPath(relative(workspaceRoot, path)))}` },
   };
@@ -1100,23 +1100,24 @@ function pluginSiteTargetsForCrate(root, allPlaygrounds, stagingProjectRoot) {
 
 /** 🎮️ Gives each Cargo-declared playground session an independent generated artifact. */
 function playgroundSessionTargets(configFiles, workspaceRoot) {
-  const variants = new Set();
+  const components = new Map(), playgrounds = new Map();
   for (const file of configFiles) {
-    if (!file.endsWith("Cargo.toml") || file.includes("\uFFFD") || file.includes(".🧬semio") || file.startsWith("compose/") || file.startsWith("temp/compose/") || POLICY.generatedDirectories.some((directory) => file.split("/").includes(directory))) continue;
-    const metadata = readToml(join(workspaceRoot, file)).package?.metadata;
-    if (!metadata?.component?.package || !["plugin", "extension"].includes(metadata.semio?.["component-kind"])) continue;
-    for (const playground of metadata.semio.playground ?? []) {
-      const variant = playground.variant;
-      if (typeof variant !== "string" || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(variant) || variants.has(variant)) throw new Error(`Invalid or duplicate playground variant in ${file}: ${variant}`);
-      variants.add(variant);
+    if (!file.endsWith("Cargo.toml") || file.includes("\uFFFD") || file.includes(".🧬semio") || file.startsWith("compose/") || file.startsWith("temp/compose/") || POLICY.generatedDirectories.some(directory => file.split("/").includes(directory))) continue;
+    const manifest=readToml(join(workspaceRoot,file)), metadata=manifest.package?.metadata;
+    if(!metadata?.component?.package || !["plugin","extension"].includes(metadata.semio?.["component-kind"])) continue;
+    const pluginId=metadata.component.package.slice(6), root=nxPath(dirname(file)), projectFile=join(workspaceRoot,root,PROJECT_BASENAME);
+    components.set(pluginId,{...metadata.semio,pluginId,project:existsSync(projectFile)?JSON.parse(readFileSync(projectFile,"utf8")).name:manifest.package.name,dependsOn:[...(metadata.semio.extends?[metadata.semio.extends]:[]),...(metadata.semio["depends-on"]??[])]});
+    for(const row of metadata.semio.playground??[]) {
+      if(typeof row.variant!=="string" || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(row.variant) || playgrounds.has(row.variant)) throw new Error("Invalid or duplicate playground variant in "+file);
+      playgrounds.set(row.variant,{...row,pluginId});
     }
   }
-  return Object.fromEntries([...variants].sort().map((variant) => [`session-${variant}`, {
-    cache: true,
-    inputs: ["default", { dependentTasksOutputFiles: "**/*" }],
-    dependsOn: ["generate"],
-    outputs: [`{projectRoot}/dist/sessions/${variant}`],
-    options: { command: `bun ./📜️script.ts session ${variant}` },
+  return Object.fromEntries([...playgrounds].sort(([a],[b])=>a.localeCompare(b)).map(([variant,row])=>["session-"+variant,{
+    cache:true,
+    inputs:["default",{dependentTasksOutputFiles:"**/*",transitive:true}],
+    dependsOn:["generate",...[...runtimeComponentClosure([...components.values()],[{id:row.pluginId,appScoped:row.app!==undefined}])].sort().map(id=>components.get(id).project+":describe")],
+    outputs:["{projectRoot}/dist/sessions/"+variant],
+    options:{command:"bun ./📜️script.ts session "+variant},
   }]));
 }
 
@@ -1147,6 +1148,8 @@ function playgroundPreparationTargets(configFiles, workspaceRoot, projectRoot) {
 
   const wgpuRoot = nxPath("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"), wgpuProject = projectAt(wgpuRoot);
   if (!wgpuProject?.name || !wgpuProject.targets?.wasm || !wgpuProject.targets?.["wasm-release"]) throw new Error(`WGPU renderer must name both authored wasm profile producers: ${wgpuRoot}`);
+  const flowRoot="🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust", flowProject=projectAt(flowRoot);
+  if(!flowProject?.name || !flowProject.targets?.wasm)throw new Error(`Flow must name its authored browser producer: ${flowRoot}`);
   const nativeHostView={kind:(path)=>{try{const stat=lstatSync(join(workspaceRoot,path));return stat.isSymbolicLink()?"symlink":stat.isDirectory()?"directory":stat.isFile()?"file":null;}catch(error){if(error.code==="ENOENT")return null;throw error;}},readText:(path)=>readFileSync(join(workspaceRoot,path),"utf8")};
   const result = {};
   for (const playground of playgrounds) {
@@ -1185,9 +1188,9 @@ function playgroundPreparationTargets(configFiles, workspaceRoot, projectRoot) {
         options: { command: `bun ../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/📦️modules/📜️script.ts publish ${playground.variant} ${profile}`, forwardAllArgs: false },
       };
       for (const operation of ["run", "smoke"]) result[`${operation}-${playground.variant}-native-${profile}`] = {
-        cache: false, continuous: operation === "run", outputs: [],
+        cache: false, continuous: false, outputs: [],
         dependsOn: [`prepare-${playground.variant}-native-${profile}`, `${nativeHost?.project??wgpuProject.name}:${nativeHost?.target??"native-build"}${profile === "release" ? "-release" : ""}`],
-        options: { command: `${nativeScript} run ${playground.variant} ${profile}${operation === "smoke" ? " --smoke" : ""}`, forwardAllArgs: false },
+        options: { command: `${nativeScript} run ${playground.variant} ${profile}${operation === "smoke" ? " --smoke" : ""}`, forwardAllArgs: true },
       };
       // ⚡ `serve` must not wait on activate: warm `served` boots from already-staged modules (content-hash
       // freshness inside ServeScript) in seconds. `dev` still depends on boot-only activate so the host is
@@ -1206,7 +1209,7 @@ function playgroundPreparationTargets(configFiles, workspaceRoot, projectRoot) {
       cache: true,
       outputs: [],
       inputs: [{ dependentTasksOutputFiles: "**/*", transitive: true }],
-      dependsOn: [`@semio-tech/plugin-registry:session-${playground.variant}`, `@semio-tech/framework-plugin-web:support-${profile}`, "semio-framework-os-infinite:fonts", ...engines, ...[...bootSelected].sort().map((id) => `${components.get(id).project}:materialize-${profile}`)],
+      dependsOn: [`@semio-tech/plugin-registry:session-${playground.variant}`, `@semio-tech/framework-plugin-web:support-${profile}`, "semio-framework-os-infinite:fonts", `${flowProject.name}:wasm`, ...engines, ...[...bootSelected].sort().map((id) => `${components.get(id).project}:materialize-${profile}`)],
       options: { command: `bun ./📜️script.ts prepare ${playground.variant} react ${profile}` },
       };
       for (const command of ["serve", "dev"]) result[`${command}-${playground.variant}-wgpu-${profile}`] = { cache: false, continuous: true, outputs: [], dependsOn: [`activate-${playground.variant}-wgpu-${profile}`], options: { command: `bun ../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️server/📜️script.ts serve ${playground.variant} ${profile}` } };
@@ -1221,7 +1224,7 @@ function playgroundPreparationTargets(configFiles, workspaceRoot, projectRoot) {
       cache: true,
       outputs: [],
       inputs: [{ dependentTasksOutputFiles: "**/*", transitive: true }],
-      dependsOn: [`@semio-tech/plugin-registry:session-${playground.variant}`, `@semio-tech/framework-plugin-web:support-${profile}`, "semio-framework-os-infinite:fonts", `${wgpuProject.name}:${profile === "release" ? "wasm-release" : "wasm"}`, `${wgpuProject.name}:generate-browser-boot`, `${wgpuProject.name}:generate-frame-worker`, `${wgpuProject.name}:generate-renderer-boot`, ...[...bootSelected].sort().map((id) => `${components.get(id).project}:materialize-${profile}`)],
+      dependsOn: [`@semio-tech/plugin-registry:session-${playground.variant}`, `@semio-tech/framework-plugin-web:support-${profile}`, "semio-framework-os-infinite:fonts", `${flowProject.name}:wasm`, `${wgpuProject.name}:${profile === "release" ? "wasm-release" : "wasm"}`, `${wgpuProject.name}:generate-browser-boot`, `${wgpuProject.name}:generate-frame-worker`, `${wgpuProject.name}:generate-renderer-boot`, ...[...bootSelected].sort().map((id) => `${components.get(id).project}:materialize-${profile}`)],
       options: { command: `bun ./📜️script.ts prepare ${playground.variant} wgpu ${profile}` },
       };
     }
@@ -1235,7 +1238,7 @@ function playgroundPreparationTargets(configFiles, workspaceRoot, projectRoot) {
       // only by which hub they sign in against are DIFFERENT artifacts. Without these env inputs the
       // cache key ignores them and a cached bundle silently answers for the wrong hub.
       inputs: ["production", "^production", { dependentTasksOutputFiles: "**/*", transitive: true }, { env: "S_HUB_URL" }, { env: "S_DATA_DIR" }, { runtime: `bun ${JSON.stringify(nxPath(relative(workspaceRoot, resolve(workspaceRoot, projectRoot, "../../🚚️distribution/📜️script.ts"))))} inputs` }],
-      dependsOn: [`@semio-tech/plugin-registry:session-${playground.variant}`, `@semio-tech/framework-plugin-web:support-release`, "semio-framework-os-infinite:fonts", ...engines, ...[...selected].sort().map((id) => `${components.get(id).project}:materialize-release`), "@semio-tech/assets:build"],
+      dependsOn: [`@semio-tech/plugin-registry:session-${playground.variant}`, `@semio-tech/framework-plugin-web:support-release`, "semio-framework-os-infinite:fonts", `${flowProject.name}:wasm`, ...engines, ...[...selected].sort().map((id) => `${components.get(id).project}:materialize-release`), "@semio-tech/assets:build"],
       options: { command: `bun ../../🚚️distribution/📜️script.ts build ${playground.variant} react release`, forwardAllArgs: true },
     };
   }
@@ -1644,4 +1647,4 @@ export default {
 
 export { libraryBootstrap };
 
-export const cacheInternals = { async declaredSourceInputs(...args) { await libraryBootstrap; return declaredSourceInputs(...args); }, nativeLockInputs, withWasmTooling, get runtimeComponentClosure() { return runtimeComponentClosure; }, playgroundPreparationTargets, collectPlaygroundCatalog, pluginSiteTargetsForCrate, bunLockGraph, printDocumentTargets, targetPolicy, matchesUncached, cacheableFamily, mutatingName, liveName, verifyCommand, nativeDependencies, nativeDependencyRoots, nativePreparation, withNativePreparation, cargoTargets, goDependencies, rustSourceFiles, createRustSourceCache, relativeScriptInputs, nativeTargetCommandInputs, targetScriptClosure, genericTargetCommandInputs, genericCommandFallbackInputs, generatorContractInputs, outputRootInputs, resolveOutputPath, generatorOutputCouplingInputs, projectInputs, rootCommandTargets, createDependenciesImplementation, importTargetsFromSource, collectImportEdges, projectFilesToProcess, moduleSourceFactCacheRoot, nxTrackedSourceFile, walkCargoToml };
+export const cacheInternals = { async declaredSourceInputs(...args) { await libraryBootstrap; return declaredSourceInputs(...args); }, nativeLockInputs, withWasmTooling, get runtimeComponentClosure() { return runtimeComponentClosure; }, async componentTargets(...args) { await libraryBootstrap; return componentTargets(...args); }, async playgroundSessionTargets(...args) { await libraryBootstrap; return playgroundSessionTargets(...args); }, playgroundPreparationTargets, collectPlaygroundCatalog, pluginSiteTargetsForCrate, bunLockGraph, printDocumentTargets, targetPolicy, matchesUncached, cacheableFamily, mutatingName, liveName, verifyCommand, nativeDependencies, nativeDependencyRoots, nativePreparation, withNativePreparation, cargoTargets, goDependencies, rustSourceFiles, createRustSourceCache, relativeScriptInputs, nativeTargetCommandInputs, targetScriptClosure, genericTargetCommandInputs, genericCommandFallbackInputs, generatorContractInputs, outputRootInputs, resolveOutputPath, generatorOutputCouplingInputs, projectInputs, rootCommandTargets, createDependenciesImplementation, importTargetsFromSource, collectImportEdges, projectFilesToProcess, moduleSourceFactCacheRoot, nxTrackedSourceFile, walkCargoToml };

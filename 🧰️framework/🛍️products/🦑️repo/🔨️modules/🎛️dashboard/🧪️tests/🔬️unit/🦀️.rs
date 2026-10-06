@@ -51,10 +51,10 @@ fn parse_lock_all_is_case_insensitive() {
 }
 
 //#region 🔖️CatalogConsumer
-/// 🧪️ Unique scratch dir under the OS temp root, cleaned up by the caller when done.
+/// 🧪️ Unique scratch dir under the configured artifact root, cleaned up by the caller.
 fn temp_root(name: &str) -> std::path::PathBuf {
     let nanos = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
-    let dir = std::env::temp_dir().join(format!("semio-repo-dashboard-test-{name}-{nanos}"));
+    let dir = std::env::var_os("SEMIO_TEST_ARTIFACT_DIR").map_or_else(std::env::temp_dir, std::path::PathBuf::from).join(format!("semio-repo-dashboard-test-{name}-{nanos}"));
     std::fs::create_dir_all(&dir).expect("create temp root");
     dir
 }
@@ -75,7 +75,7 @@ fn playgrounds_json_text_passes_generated_content_through_verbatim() {
     let root = temp_root("json-text-present");
     let out = generated_dir_under(&root);
     std::fs::create_dir_all(&out).unwrap();
-    std::fs::write(out.join("🔣️playgrounds.json"), "[{\"variant\":\"x\"}]\n").unwrap();
+    std::fs::write(out.join("🚀️playgrounds.json"), "[{\"variant\":\"x\"}]\n").unwrap();
     assert_eq!(playgrounds_json_text(&root), "[{\"variant\":\"x\"}]\n");
     std::fs::remove_dir_all(&root).ok();
 }
@@ -86,13 +86,13 @@ fn playgrounds_json_text_passes_generated_content_through_verbatim() {
 fn ipc_frame_roundtrip_and_output_codec() {
     use crate::ipc::{self, ClientMsg, ServerMsg};
     let mut buf = Vec::new();
-    let msg = ClientMsg::Ping;
+    let msg = ClientMsg::Ping {};
     ipc::write_control(&mut buf, &msg).unwrap();
     let mut cursor = std::io::Cursor::new(buf);
     let (kind, payload) = ipc::read_frame(&mut cursor).unwrap();
     assert_eq!(kind, ipc::KIND_CONTROL);
     let decoded: ClientMsg = ipc::decode_control(&payload).unwrap();
-    assert_eq!(decoded, ClientMsg::Ping);
+    assert_eq!(decoded, ClientMsg::Ping {});
 
     let out = ipc::encode_output("s1", b"hi");
     let (id, data) = ipc::decode_output(&out).unwrap();
@@ -100,7 +100,7 @@ fn ipc_frame_roundtrip_and_output_codec() {
     assert_eq!(data, b"hi");
 
     let mut buf = Vec::new();
-    ipc::write_control(&mut buf, &ServerMsg::Pong).unwrap();
+    ipc::write_control(&mut buf, &ServerMsg::Pong {}).unwrap();
     assert!(!buf.is_empty());
 }
 
@@ -108,16 +108,16 @@ fn ipc_frame_roundtrip_and_output_codec() {
 fn ipc_nonblocking_decoder_preserves_fragmented_and_concatenated_frames() {
     use crate::ipc::{self, ClientMsg};
     let mut encoded = Vec::new();
-    ipc::write_control(&mut encoded, &ClientMsg::Ping).unwrap();
-    ipc::write_control(&mut encoded, &ClientMsg::Detach).unwrap();
+    ipc::write_control(&mut encoded, &ClientMsg::Ping {}).unwrap();
+    ipc::write_control(&mut encoded, &ClientMsg::Detach {}).unwrap();
     let split = 3usize;
     let mut buffered = encoded[..split].to_vec();
     assert_eq!(ipc::try_decode_frame(&mut buffered).unwrap(), None);
     buffered.extend_from_slice(&encoded[split..]);
     let (_, first) = ipc::try_decode_frame(&mut buffered).unwrap().expect("first frame");
     let (_, second) = ipc::try_decode_frame(&mut buffered).unwrap().expect("second frame");
-    assert_eq!(ipc::decode_control::<ClientMsg>(&first).unwrap(), ClientMsg::Ping);
-    assert_eq!(ipc::decode_control::<ClientMsg>(&second).unwrap(), ClientMsg::Detach);
+    assert_eq!(ipc::decode_control::<ClientMsg>(&first).unwrap(), ClientMsg::Ping {});
+    assert_eq!(ipc::decode_control::<ClientMsg>(&second).unwrap(), ClientMsg::Detach {});
     assert!(buffered.is_empty());
 }
 
@@ -131,7 +131,7 @@ fn ipc_nonblocking_decoder_rejects_oversized_prefix_without_allocating() {
 }
 
 #[test]
-fn daemon_supervisor_ping_appends_event_log() {
+fn daemon_supervisor_queries_do_not_append_lifecycle_events() {
     use crate::daemon::supervisor::{self as daemon, Supervisor};
     use crate::ipc::{self, ClientMsg, ServerMsg};
     let root = temp_root("daemon-sup");
@@ -144,13 +144,12 @@ fn daemon_supervisor_ping_appends_event_log() {
     assert_eq!(kind, ipc::KIND_CONTROL);
     let msg: ServerMsg = ipc::decode_control(&payload).unwrap();
     assert!(matches!(msg, ServerMsg::Attached { .. }));
-    daemon::handle_one_for_test(&mut sup, ClientMsg::Ping).unwrap();
+    daemon::handle_one_for_test(&mut sup, ClientMsg::Ping {}).unwrap();
     let (kind, payload) = ipc::read_frame(&mut b).unwrap();
     assert_eq!(kind, ipc::KIND_CONTROL);
     let msg: ServerMsg = ipc::decode_control(&payload).unwrap();
-    assert_eq!(msg, ServerMsg::Pong);
-    let log = std::fs::read_to_string(ipc::event_log_path(&root)).unwrap();
-    assert!(log.contains("pong") || log.contains("Pong") || log.contains("\"type\":\"pong\""));
+    assert_eq!(msg, ServerMsg::Pong {});
+    assert!(!ipc::event_log_path(&root).exists());
     std::fs::remove_dir_all(&root).ok();
 }
 
@@ -182,9 +181,9 @@ fn daemon_nonblocking_connection_cursor_serves_ping_end_to_end() {
     client.set_read_timeout(Some(Duration::from_secs(2))).unwrap();
     let (_, attached) = ipc::read_frame(&mut client).expect("attached frame");
     assert!(matches!(ipc::decode_control::<ServerMsg>(&attached).unwrap(), ServerMsg::Attached { .. }));
-    ipc::write_control(&mut client, &ClientMsg::Ping).unwrap();
+    ipc::write_control(&mut client, &ClientMsg::Ping {}).unwrap();
     let (_, pong) = ipc::read_frame(&mut client).expect("pong frame");
-    assert_eq!(ipc::decode_control::<ServerMsg>(&pong).unwrap(), ServerMsg::Pong);
+    assert_eq!(ipc::decode_control::<ServerMsg>(&pong).unwrap(), ServerMsg::Pong {});
     running.store(false, Ordering::SeqCst);
     server.join().expect("daemon thread must not panic").expect("daemon must stop cleanly");
     std::fs::remove_dir_all(&root).ok();

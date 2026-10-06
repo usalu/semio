@@ -1,7 +1,12 @@
 {
   "title": "Dashboard Tui Workforce",
-  "emoji": "\ud83c\udfab\ufe0f",
-  "status": "open",
+  "emoji": "🎫️",
+  "status": "closed",
   "description": "Turn semio into a detachable PTY-multiplexed dashboard daemon+client and workforce control plane.",
-  "goal": "🎯runningframework🎯runningproducts🎯runningrepo"
+  "summary": "Completed the native developer dashboard and final startup/usability goal. Installed startup uses a clean Rust executable without provisioning, graph construction, catalog walking or rebuilding before its usable frame. Defaults ask no language or terminology questions; durable local/shared settings, searchable direct commands, layouts, appearance and renderer preferences are available through Ctrl+B controls. One daemon retains full task lifecycle/output, cancellation, descendant termination and detach/reattach. Starts selected before connection remain in a bounded cancellable queue. Final native PTY checks passed across five starts, including the actual workspace: native frame 18.808ms and wrapper-to-frame 854ms. The actual searchable launcher ran Nx builds and rendered output through both native wrapper paths. 53 Rust dashboard tests, 6 independent Bun oracles, 3 installed-binary runtime tests, 4 Windows terminal ownership tests and 2 installation/launch tests passed. Earlier real renderer/lifecycle evidence remains in this ticket. Current acceptance, exact scope and platform limits are in 📓️native-startup.md. Authored investigation inputs/reports are retained and generated outputs are removed. No modifying Git commands, worktrees, AGENTS.md edits or repository goal-management changes were used.",
+  "goal": "🎯runningframework🎯runningproducts🎯runningrepo",
+  "sessions": [
+    "⚪15284af70ca043c8a084446659afcf18",
+    "⚪910020a5db7344c997802200bb0dc048"
+  ]
 }

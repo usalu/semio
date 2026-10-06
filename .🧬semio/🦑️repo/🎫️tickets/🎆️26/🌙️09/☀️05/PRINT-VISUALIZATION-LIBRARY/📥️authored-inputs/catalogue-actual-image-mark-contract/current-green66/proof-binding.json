@@ -1,0 +1,18 @@
+[
+  {
+    "theme": "light",
+    "session": 93448,
+    "exitCode": 0,
+    "pages": 33,
+    "pdfSha256": "6b02a5bbc7b84071dab988739a0f39a65fbc4dc261c1bfc8bc3c8919a5bddbac",
+    "markSha256": "96e728b24ed6cf5a9d7bd9ec75338a1b481c336ebe90e0fc8d754c34d619c246"
+  },
+  {
+    "theme": "dark",
+    "session": 93448,
+    "exitCode": 0,
+    "pages": 33,
+    "pdfSha256": "0d0ea78cb8da6fd72703b3a90652152fd196a5710adb3c56c42598e1c18f64ee",
+    "markSha256": "96e728b24ed6cf5a9d7bd9ec75338a1b481c336ebe90e0fc8d754c34d619c246"
+  }
+]

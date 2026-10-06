@@ -25712,7 +25712,7 @@ const (
 	ticketOversizedFolderBytes = 10 << 20
 )
 
-// 🧹️purgeOversizedTicketArtifacts deletes files above 5 MiB and subfolders above 10 MiB inside a closed ticket folder.
+// 🧺️purgeOversizedTicketArtifacts removes only oversized direct generated ticket output and preserves authored inputs.
 func purgeOversizedTicketArtifacts(ticketDir string) error {
 	ticketDir = strings.TrimSpace(ticketDir)
 	if ticketDir == "" {
@@ -25732,6 +25732,15 @@ func purgeOversizedTicketArtifacts(ticketDir string) error {
 	if !info.IsDir() {
 		return fmt.Errorf("ticket path is not a directory: %s", absDir)
 	}
+
+	absDir = filepath.Join(absDir, "🗑️generated")
+	info, err = os.Lstat(absDir)
+	if err != nil {
+		if os.IsNotExist(err) { return nil }
+		return err
+	}
+	if info.Mode()&fs.ModeSymlink != 0 { return nil }
+	if !info.IsDir() { return fmt.Errorf("generated ticket output is not a directory: %s", absDir) }
 
 	type fileEntry struct {
 		path string

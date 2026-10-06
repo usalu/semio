@@ -1,0 +1,25 @@
+{
+  "chart": {
+    "width": 40,
+    "height": 30,
+    "language": "en",
+    "layers": [],
+    "margin": {
+      "left": 0,
+      "right": 0,
+      "top": 0,
+      "bottom": 0
+    },
+    "presets": [
+      {
+        "kind": "streamline-plot",
+        "options": {
+          "render": "streamline",
+          "field": "vortex",
+          "seeds": 2,
+          "cell": 3
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,30 @@
+    {
+      "name": "⚖️test📓️print🎛️family-customization",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "family-customization"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.037125
+      }
+    },
+    {
+      "name": "⚖️test📓️print✨️scale-options",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "scale-options"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.037126
+      }
+    },

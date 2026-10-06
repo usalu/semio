@@ -1,0 +1,5 @@
+# Sankey Layout Key Table
+
+The existing Flow layouts chapter already had an unnamed seven-row table for the ten native controls. Replaced that exact table with the explicit api-path-sankey source scope and ten bilingual rows, splitting the combined extent row into x0/y0/x1/y1. The three token-list choices are strings; node dimensions and extents are numbers; iterations is integer. All ten defaults come from the literal native defaults constant, and the text states alluvial/parallel-sets presets precede authored options. Both auto and none ordering behavior is described. No redundant shared table, native runtime change or unrelated API byte change was introduced. Full before/after API, exact table replacement, source snapshot, rows and bindings are retained. Independent reversal/default/type audit and Catalogue final primitive admission/publication remain pending.
+
+Independent source audit confirms exact replacement reversal toF6DD0F, current flow0E79 source agreement, all10 declared keys/types/defaults, and common reset→named layout preset→caller precedence. Comprehensive printed admission remains pending.

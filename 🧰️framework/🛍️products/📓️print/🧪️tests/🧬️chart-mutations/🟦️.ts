@@ -34,14 +34,8 @@ async function browserInference(): Promise<readonly unknown[]> {
   const bundles = await Promise.all(entries.map(entry => Bun.build({ entrypoints: [decodeURIComponent(entry).replace(/^\/(?=[A-Za-z]:)/, "")], target: "browser" })));
   for (const bundle of bundles) if (!bundle.success) throw new Error(bundle.logs.map(String).join("\n"));
   const [main, worker] = await Promise.all(bundles.map(bundle => bundle.outputs[0]!.text()));
-  const { chromium } = await import("playwright");
   const server = Bun.serve({ hostname: "127.0.0.1", port: 0, fetch: request => new Response(new URL(request.url).pathname === "/main.js" ? main : new URL(request.url).pathname.endsWith(".ts") ? worker : "", { headers: { "Content-Type": "text/javascript" } }) });
-  let browser: Awaited<ReturnType<typeof chromium.launch>> | undefined;
-  try {
-    browser = await chromium.launch({ headless: true });
-    const page = await browser.newPage();
-    await page.goto(server.url.href);
-    return await page.evaluate(async ({ url, snapshot }) => {
+  const replay = async ({ url, snapshot }: { url: string; snapshot: VizChartSnapshot }) => {
       const { inferVizChart: infer } = await import(url);
       const valid = await infer(snapshot);
       const controller = new AbortController();
@@ -51,8 +45,14 @@ async function browserInference(): Promise<readonly unknown[]> {
         const result = await infer(expensive, { signal: controller.signal, onProgress: () => { if (!started) { started = true; timer = setTimeout(() => { fired = true; controller.abort(); }, 0); } } });
         return [valid.complete, valid.plan.items.filter((item: { kind: string }) => item.kind === "circle").map((item: { cx: number; cy: number }) => [item.cx, item.cy]), started, fired, result.complete, result.tikz === "", result.plan === undefined, result.scene === undefined, result.diagnostics[0]?.code];
       } finally { if (timer !== undefined) clearTimeout(timer); }
-    }, { url: new URL("main.js", server.url).href, snapshot: base });
-  } finally { await browser?.close(); await server.stop(true); }
+  };
+  const source = `(async()=>{const {chromium}=await import("playwright"),browser=await chromium.launch({headless:true,timeout:30000});try{const page=await browser.newPage();await page.goto(${JSON.stringify(server.url.href)});const result=await page.evaluate(async({source,input})=>await(0,eval)("("+source+")")(input),${JSON.stringify({ source: replay.toString(), input: { url: new URL("main.js", server.url).href, snapshot: base } })});console.log(JSON.stringify(result));}finally{await browser.close();}})().catch(error=>{console.error(error);process.exitCode=1;});`;
+  try {
+    const controller = Bun.spawn(["node", "-e", source], { cwd: import.meta.dir, stdout: "pipe", stderr: "pipe" });
+    const [stdout, stderr, status] = await Promise.all([new Response(controller.stdout).text(), new Response(controller.stderr).text(), controller.exited]);
+    if (status !== 0) throw new Error(`browser controller exited ${status}: ${stderr}`);
+    return JSON.parse(stdout.trim());
+  } finally { await server.stop(true); }
 }
 
 export function chartMutationInferenceChecks(): readonly Check[] {

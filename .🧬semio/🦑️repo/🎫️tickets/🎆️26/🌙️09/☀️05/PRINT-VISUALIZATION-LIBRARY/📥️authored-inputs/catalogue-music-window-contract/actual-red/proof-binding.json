@@ -1,0 +1,54 @@
+{
+  "session": 61366,
+  "exitCode": 1,
+  "actualFailures": 6,
+  "passingCases": 18,
+  "themes": {
+    "light": {
+      "pdf": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\mu1\\music-window-controls\\light\\🧪️probe-out\\light.pdf",
+      "sha256": "cb6cfe99d9f150fd12601b40985b2a3756e323cfd7fb02d16f19a597061ec499",
+      "firstActualNoteBounds": [
+        0,
+        13.33342252307468,
+        11.428652106391057,
+        14.444549253251816
+      ],
+      "expectedBounds": [
+        0,
+        13.333333333333334,
+        11.428571428571429,
+        13.88888888888889
+      ]
+    },
+    "dark": {
+      "pdf": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\mu1\\music-window-controls\\dark\\🧪️probe-out\\dark.pdf",
+      "sha256": "757df966c2fbb597864c7c107062258ba7d0b7becf36770b5d8d427c2f152ce7",
+      "firstActualNoteBounds": [
+        0,
+        13.33342252307468,
+        11.428652106391057,
+        14.444549253251816
+      ],
+      "expectedBounds": [
+        0,
+        13.333333333333334,
+        11.428571428571429,
+        13.88888888888889
+      ]
+    }
+  },
+  "sources": {
+    "light.tex": "c9a2653691e9a348441054b65df4e1c6a8139752f540e5d90f20107d2acc747e",
+    "light-semio-viz-scientific-signal.sty": "d31e8214211faf4737fc5534e0f4d73aa02b6c5f447ceeb94cf57a7eddd7c713",
+    "light-semio-viz-scientific-field.sty": "745cf1244ecde64a3da82d5d653a4a1d042029a817b7e785b1258b69e0a07ee8",
+    "dark.tex": "91c19a530ac1c6cb2487a211834cb7a631829211fd4daf1df05c1c88ea5cea34",
+    "dark-semio-viz-scientific-signal.sty": "d31e8214211faf4737fc5534e0f4d73aa02b6c5f447ceeb94cf57a7eddd7c713",
+    "dark-semio-viz-scientific-field.sty": "745cf1244ecde64a3da82d5d653a4a1d042029a817b7e785b1258b69e0a07ee8",
+    "neutral.json": "0eea13765471e3d1da89a89df44dbd5d8ec766190d98731adb6bcfc53699f4ec",
+    "helper.txt": "18c0bf2ab6c0a3900f18a982484bf8ebfdd4c286ef574536c31eeee26882f447"
+  },
+  "log": {
+    "path": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\catalogue-music-window-native-red.log",
+    "sha256": "5c1854adb9c97cc3d3e909e91ab127178d9027394ad996cecbfd618a270d7c65"
+  }
+}

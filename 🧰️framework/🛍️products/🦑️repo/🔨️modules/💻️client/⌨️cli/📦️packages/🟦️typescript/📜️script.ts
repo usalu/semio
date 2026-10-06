@@ -60,7 +60,9 @@ class BuildScript extends BundleScript {
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { level, rest } = resolveTestLevel(segments);
-    (await import("../../🧪️tests/🃏️glob/🟦️.ts")).verifyFixtureGlobOracle();
+    const oracle = await import("../../🧪️tests/🃏️glob/🟦️.ts");
+    oracle.verifyFixtureGlobOracle();
+    oracle.verifyTicketRetentionOracle();
     await runCanonicalGoTests(join(this.repoRoot, REPO_CLI_GO), [...goLevelTestArgs(level), ...rest], {
       env: { ...process.env, GOWORK: join(this.repoRoot, "go.work") },
     });

@@ -104,6 +104,12 @@ class TestScript extends BundleScript {
       await runRepositoryTestCommand(process.execPath, ["test", join(domain, "🟦️.ts"), join(domain, "🏘️execution/🟦️.ts")], { cwd: this.repoRoot, env: repoTestArtifactEnvironment(this.repoRoot, "rust-runtime-path-direction"), budgetMs: 30_000 });
       return;
     }
+    if (segments[0] === "cargo-library-search-path") {
+      if(segments.length!==1)throw Error("Expected test cargo-library-search-path");
+      const source=join(this.repoRoot,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/📚️library-search-path/🟦️.ts");
+      await runRepositoryTestCommand(process.execPath,["test",source],{cwd:this.repoRoot,env:repoTestArtifactEnvironment(this.repoRoot,"cargo-library-search-path"),budgetMs:150000});
+      return;
+    }
     if (segments[0] === "nx-project-inference") {
       const revision = segments.length === 2 && segments[1] === "revision";
       const imports = segments.length === 2 && segments[1] === "imports";

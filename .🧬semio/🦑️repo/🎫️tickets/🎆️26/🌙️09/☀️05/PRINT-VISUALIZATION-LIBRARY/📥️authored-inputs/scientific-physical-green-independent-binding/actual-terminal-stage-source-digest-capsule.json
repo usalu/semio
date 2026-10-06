@@ -1,0 +1,1761 @@
+{
+  "scope": "Actual terminal 38664 bounded physical36 source/PDF binding, not final whole-library freeze",
+  "actualTerminalReportedByRoot": 38664,
+  "actualTerminalExitReportedByRoot": 0,
+  "terminalLog": {
+    "path": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/scientific-physical-viewport-green-corrected-tags.log",
+    "sha256": "002CA1064ACEAEA0D8F4E25D7B6AD74DE6B8986F8D16763136B251F130810DC7",
+    "lastLine": "[DEBUG] Scientific canvas 216 canonical cases and 17628 actual body paths matched independent D3 affine paint and isolated chrome"
+  },
+  "fixture": {
+    "path": "C:/git/semio/🧰️framework/🛍️products/📓️print/🧪️tests/🧬️native-chart-grammar/🔣️.json",
+    "sha256": "0286316D592A96114D3CDA738448844B1E9C280C5311F50266C821FE016E3245",
+    "families": 36
+  },
+  "ownerNames": [
+    "semio-viz-scientific-3d.sty",
+    "semio-viz-scientific-biology.sty",
+    "semio-viz-scientific-chemistry.sty",
+    "semio-viz-scientific-engineering.sty",
+    "semio-viz-scientific-field.sty",
+    "semio-viz-scientific-geometry.sty",
+    "semio-viz-scientific-mathematics.sty",
+    "semio-viz-scientific-physics.sty",
+    "semio-viz-scientific-signal.sty"
+  ],
+  "rows": [
+    {
+      "theme": "light",
+      "name": "semio-components.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-components.sty",
+      "sha256": "B604034E18005F13206430F59C32B05E89DC47DCE89559B847476DD0A9FA795C",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-components.sty",
+      "currentSha256": "B604034E18005F13206430F59C32B05E89DC47DCE89559B847476DD0A9FA795C",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-core.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-core.sty",
+      "sha256": "654FD134F3B08D7964C405DF4627B2BA5F73953C1528FC69B55F3981BD99BCFF",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-core.sty",
+      "currentSha256": "654FD134F3B08D7964C405DF4627B2BA5F73953C1528FC69B55F3981BD99BCFF",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-fonts.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-fonts.sty",
+      "sha256": "33355D4403FBB0168B87763CE345E83EFE3F146F152C9316925CF7A73887174F",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-fonts.sty",
+      "currentSha256": "33355D4403FBB0168B87763CE345E83EFE3F146F152C9316925CF7A73887174F",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-graph.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-graph.sty",
+      "sha256": "F33D5F16EDAD2B842ED95FE37B6DD5CC5347DCC2C0AF025D51153812502F1A63",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-graph.sty",
+      "currentSha256": "642FD78CEC301AA3C5060D3F1AA22F05FB6C9437BFF5A6F27132292997F3726F",
+      "matchesCurrent": false
+    },
+    {
+      "theme": "light",
+      "name": "semio-logo.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-logo.sty",
+      "sha256": "80B767D33294A478CC4DFDBAFC998ACF085A826D6161191A5E79ED458AE122BF",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-logo.sty",
+      "currentSha256": "80B767D33294A478CC4DFDBAFC998ACF085A826D6161191A5E79ED458AE122BF",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-phd.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-phd.sty",
+      "sha256": "FD2EB7E7C52B3476FB0C13FC90FAD3E312BDDA2A82C674738B39CA5824FF55F3",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-phd.sty",
+      "currentSha256": "FD2EB7E7C52B3476FB0C13FC90FAD3E312BDDA2A82C674738B39CA5824FF55F3",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-table.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-table.sty",
+      "sha256": "B40AD60C74855589FA4A942A00943DABC9ABAEDAD124DEA545AA9AC43FFA4EEE",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-table.sty",
+      "currentSha256": "B40AD60C74855589FA4A942A00943DABC9ABAEDAD124DEA545AA9AC43FFA4EEE",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-tokens.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-tokens.sty",
+      "sha256": "DC7308B3D41914374591A3F1988523DA89869AC9FD349A4058DE4A601673795E",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-tokens.sty",
+      "currentSha256": "DC7308B3D41914374591A3F1988523DA89869AC9FD349A4058DE4A601673795E",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-tree.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-tree.sty",
+      "sha256": "2905B9C2C71837989C128DB0EDCB3D2DCB9E0FC8284A19890356B04071CF9B4C",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-tree.sty",
+      "currentSha256": "2905B9C2C71837989C128DB0EDCB3D2DCB9E0FC8284A19890356B04071CF9B4C",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-annotation.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-annotation.sty",
+      "sha256": "39F9C80D4D58268C299A3DDBB73F02E6A90F040CD2AD185469AE4166EB593C4D",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-annotation.sty",
+      "currentSha256": "39F9C80D4D58268C299A3DDBB73F02E6A90F040CD2AD185469AE4166EB593C4D",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-catalog-labels.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-catalog-labels.sty",
+      "sha256": "33ED2921DEA258AA88C198592D5174B4C1B0533334DCB5BA35133C8E43F45031",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-catalog-labels.sty",
+      "currentSha256": "33ED2921DEA258AA88C198592D5174B4C1B0533334DCB5BA35133C8E43F45031",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-catalog.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-catalog.sty",
+      "sha256": "7E28C3747846F80D6C73EA3255537C3C498FFAB3AB475B866D05E68FC01A0A8C",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-catalog.sty",
+      "currentSha256": "7E28C3747846F80D6C73EA3255537C3C498FFAB3AB475B866D05E68FC01A0A8C",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-charts-area.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-charts-area.sty",
+      "sha256": "4945C6618A591E5A6E7D0969CCDF09268B5B6D1BA6193E09AC50EF7678121315",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-charts-area.sty",
+      "currentSha256": "4945C6618A591E5A6E7D0969CCDF09268B5B6D1BA6193E09AC50EF7678121315",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-charts-bar.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-charts-bar.sty",
+      "sha256": "77C2CE15B70B2C72A962B508B7817E62ECEC3F191C3CBD70C062C39655C0222C",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-charts-bar.sty",
+      "currentSha256": "77C2CE15B70B2C72A962B508B7817E62ECEC3F191C3CBD70C062C39655C0222C",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-charts-dashboard.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-charts-dashboard.sty",
+      "sha256": "8F5B99F43ECB6EF312844466B83AD54917840D4B38E7FA8970AA490E391476E0",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-charts-dashboard.sty",
+      "currentSha256": "8F5B99F43ECB6EF312844466B83AD54917840D4B38E7FA8970AA490E391476E0",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-charts-distribution.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-charts-distribution.sty",
+      "sha256": "A588D5821EE0F9C21EE3AC2C4459EBECB811255F3440C65DE1E5F85FD246DCB9",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-charts-distribution.sty",
+      "currentSha256": "A588D5821EE0F9C21EE3AC2C4459EBECB811255F3440C65DE1E5F85FD246DCB9",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-charts-financial.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-charts-financial.sty",
+      "sha256": "2DDA8FC1E0715CFDCF656417A52256FF381F2489CC60D58626375992BB0FD1AB",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-charts-financial.sty",
+      "currentSha256": "2DDA8FC1E0715CFDCF656417A52256FF381F2489CC60D58626375992BB0FD1AB",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-charts-funnel.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-charts-funnel.sty",
+      "sha256": "90383F1167415A98CAEB06F9173BE0D300591AFA576AA62FFA2BADC296EA61A7",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-charts-funnel.sty",
+      "currentSha256": "90383F1167415A98CAEB06F9173BE0D300591AFA576AA62FFA2BADC296EA61A7",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-charts-line.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-charts-line.sty",
+      "sha256": "DF0C798F99428DA7FB0896CE36EA39157E0D047B3DDD93BE872BAF6C7FA7CBD7",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-charts-line.sty",
+      "currentSha256": "DF0C798F99428DA7FB0896CE36EA39157E0D047B3DDD93BE872BAF6C7FA7CBD7",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-charts-polar.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-charts-polar.sty",
+      "sha256": "638387DD41DBE5ED3061FF5F17518D47BC9837B4A49CB803E4AECB40EAE60C65",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-charts-polar.sty",
+      "currentSha256": "638387DD41DBE5ED3061FF5F17518D47BC9837B4A49CB803E4AECB40EAE60C65",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-charts-scatter.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-charts-scatter.sty",
+      "sha256": "D93C27F2FE2C6023DFC91C82F588AD85655288AFE745E2EE8B0589D3558C8EE0",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-charts-scatter.sty",
+      "currentSha256": "D93C27F2FE2C6023DFC91C82F588AD85655288AFE745E2EE8B0589D3558C8EE0",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-charts-statistical.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-charts-statistical.sty",
+      "sha256": "F64893AF051C4C93633142C90AB6858AAA5CF593F71A0BFA38297B43922F30FC",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-charts-statistical.sty",
+      "currentSha256": "F64893AF051C4C93633142C90AB6858AAA5CF593F71A0BFA38297B43922F30FC",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-charts-timeline.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-charts-timeline.sty",
+      "sha256": "08D1BC5989F5B1D382200A4FD9A77B24FBF5EC5D73CA1DF3333C9DA3DCEAA3CA",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-charts-timeline.sty",
+      "currentSha256": "08D1BC5989F5B1D382200A4FD9A77B24FBF5EC5D73CA1DF3333C9DA3DCEAA3CA",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-composition.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-composition.sty",
+      "sha256": "29CDC68523EF187F40D3F0D2FE561C9BED08120F88371E14451BBFD45D0584BE",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-composition.sty",
+      "currentSha256": "29CDC68523EF187F40D3F0D2FE561C9BED08120F88371E14451BBFD45D0584BE",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-coordinate.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-coordinate.sty",
+      "sha256": "0DD15CDB805EF48189498DFE8803828BFFC670DE3048B9CC006FB704259F223E",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-coordinate.sty",
+      "currentSha256": "0DD15CDB805EF48189498DFE8803828BFFC670DE3048B9CC006FB704259F223E",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-data.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-data.sty",
+      "sha256": "EFB5E5D397AF1B6BD21AEB4C70F61141AAFF42DC1F2F03532CA7D4379CFB2CFC",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-data.sty",
+      "currentSha256": "EFB5E5D397AF1B6BD21AEB4C70F61141AAFF42DC1F2F03532CA7D4379CFB2CFC",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-diagram-architecture.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-diagram-architecture.sty",
+      "sha256": "7D4F4191A32852BCEB324795206289E0932B3E345D5E25EB999A50D51DCB2BD9",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-diagram-architecture.sty",
+      "currentSha256": "7D4F4191A32852BCEB324795206289E0932B3E345D5E25EB999A50D51DCB2BD9",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-diagram-concept.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-diagram-concept.sty",
+      "sha256": "EA3FAB89FF2B5D7D135A3F9B65BFC4E6FB0BDC7BFE9CFEDD82EA895E0AA587AE",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-diagram-concept.sty",
+      "currentSha256": "EA3FAB89FF2B5D7D135A3F9B65BFC4E6FB0BDC7BFE9CFEDD82EA895E0AA587AE",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-diagram-flowchart.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-diagram-flowchart.sty",
+      "sha256": "57C62803AD40E20B58E4D7609E2EB8217862ECBBC29F5AE8722C6B2471F6D6B7",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-diagram-flowchart.sty",
+      "currentSha256": "57C62803AD40E20B58E4D7609E2EB8217862ECBBC29F5AE8722C6B2471F6D6B7",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-diagram-process.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-diagram-process.sty",
+      "sha256": "B7EDC5544C7117C1C5933E8BD866CA3D412FF97F04EE465D1DAC259BE0B4E6A0",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-diagram-process.sty",
+      "currentSha256": "B7EDC5544C7117C1C5933E8BD866CA3D412FF97F04EE465D1DAC259BE0B4E6A0",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-diagram-uml.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-diagram-uml.sty",
+      "sha256": "2EAB88A18DD518ACD44D799D8E35DFD1600DB8793A27678D28746995B7EDAAE0",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-diagram-uml.sty",
+      "currentSha256": "2EAB88A18DD518ACD44D799D8E35DFD1600DB8793A27678D28746995B7EDAAE0",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-domain.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-domain.sty",
+      "sha256": "BD618F13AA245A71747636759E3D3F562CFC91D015477F506BF2C0E97E338513",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-domain.sty",
+      "currentSha256": "1A5FF24E58E2D59926229DB43217EB29999EA766D69E002B1F8D57841AF3C478",
+      "matchesCurrent": false
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-facet.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-facet.sty",
+      "sha256": "D5FF45272EED07B444775153C07991D297762093545453A7DB6E9CCD9A31304B",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-facet.sty",
+      "currentSha256": "D5FF45272EED07B444775153C07991D297762093545453A7DB6E9CCD9A31304B",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-family.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-family.sty",
+      "sha256": "D7C8BAB330D4BE95008D9BFEF75E01F2D3C1CD38AA9A1536A24D465272F01F53",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-family.sty",
+      "currentSha256": "D7C8BAB330D4BE95008D9BFEF75E01F2D3C1CD38AA9A1536A24D465272F01F53",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-flow-alluvial.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-flow-alluvial.sty",
+      "sha256": "FD26AEBF9AE306FFD64B574542168C9949801E5F0CDC1F59B38AD8D7532090F0",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-flow-alluvial.sty",
+      "currentSha256": "FD26AEBF9AE306FFD64B574542168C9949801E5F0CDC1F59B38AD8D7532090F0",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-flow-parallelsets.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-flow-parallelsets.sty",
+      "sha256": "06F25750E0BCDBF4369040F9F1CDB0DFD8916DD30DC62FB024C9A93FFFC656AA",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-flow-parallelsets.sty",
+      "currentSha256": "06F25750E0BCDBF4369040F9F1CDB0DFD8916DD30DC62FB024C9A93FFFC656AA",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-flow-sankey.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-flow-sankey.sty",
+      "sha256": "B734B8AA5DB1165687AECAA38A7ACC236B39A579106CD7C47DE2437F9AB7D32F",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-flow-sankey.sty",
+      "currentSha256": "B734B8AA5DB1165687AECAA38A7ACC236B39A579106CD7C47DE2437F9AB7D32F",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-flow.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-flow.sty",
+      "sha256": "0E79C84406EB9EC79E9D82628A7EBBA9F63B9351B64A8C2E1A3F96AFD32411F9",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-flow.sty",
+      "currentSha256": "0E79C84406EB9EC79E9D82628A7EBBA9F63B9351B64A8C2E1A3F96AFD32411F9",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-format.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-format.sty",
+      "sha256": "A9F078195E8C051382044C79D2E2489AC5CCD49D2FE8A4EC90A5D1F92B5892E6",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-format.sty",
+      "currentSha256": "A9F078195E8C051382044C79D2E2489AC5CCD49D2FE8A4EC90A5D1F92B5892E6",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-geo-choropleth.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-geo-choropleth.sty",
+      "sha256": "B27BFFF38A8910BB0516818C09262C57B52D4C960EFED47849400933CDACE949",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-geo-choropleth.sty",
+      "currentSha256": "B27BFFF38A8910BB0516818C09262C57B52D4C960EFED47849400933CDACE949",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-geo-contours.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-geo-contours.sty",
+      "sha256": "ED810FF0CF1A7CC3ADF2E0CDDCC8FBB479774C53DD596FA8DACB3F3C39802467",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-geo-contours.sty",
+      "currentSha256": "ED810FF0CF1A7CC3ADF2E0CDDCC8FBB479774C53DD596FA8DACB3F3C39802467",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-geo-map.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-geo-map.sty",
+      "sha256": "01BC451D6FF129FD92F89F3CC18F8E239D917CDC84210B249CF90F5DE79748BB",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-geo-map.sty",
+      "currentSha256": "01BC451D6FF129FD92F89F3CC18F8E239D917CDC84210B249CF90F5DE79748BB",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-geo-projection.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-geo-projection.sty",
+      "sha256": "A36860B72454C1CEC15AD5BE5E4919968710F65784A9883104DFA55D64FE0BF0",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-geo-projection.sty",
+      "currentSha256": "A36860B72454C1CEC15AD5BE5E4919968710F65784A9883104DFA55D64FE0BF0",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-geo-routes.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-geo-routes.sty",
+      "sha256": "434E42F1AE4C623B81DD2478E98CD85C196AD99E99C8FEA8AE2F569998BBA3C9",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-geo-routes.sty",
+      "currentSha256": "434E42F1AE4C623B81DD2478E98CD85C196AD99E99C8FEA8AE2F569998BBA3C9",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-geo-symbols.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-geo-symbols.sty",
+      "sha256": "329A8E8E9695F2B594B35D605A94155B1A417D4823DE1A1AAE32C3C7893591AC",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-geo-symbols.sty",
+      "currentSha256": "329A8E8E9695F2B594B35D605A94155B1A417D4823DE1A1AAE32C3C7893591AC",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-geo.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-geo.sty",
+      "sha256": "04A45F0CF3C7B9AE61FB76B805C0E8F1ADBFD5A44A3D7A78597A67F6ADF0CC66",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-geo.sty",
+      "currentSha256": "04A45F0CF3C7B9AE61FB76B805C0E8F1ADBFD5A44A3D7A78597A67F6ADF0CC66",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-guide.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-guide.sty",
+      "sha256": "623D4F9EE92C09983F784E484978D01776EC4FF8CF4C4A55712FBE3C93A053ED",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-guide.sty",
+      "currentSha256": "623D4F9EE92C09983F784E484978D01776EC4FF8CF4C4A55712FBE3C93A053ED",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-hierarchy-dendrogram.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-hierarchy-dendrogram.sty",
+      "sha256": "97AC79953B9D2EB1B70CCBB483C92266E338214B236FBA20994EC7AB0A8FF67E",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-hierarchy-dendrogram.sty",
+      "currentSha256": "97AC79953B9D2EB1B70CCBB483C92266E338214B236FBA20994EC7AB0A8FF67E",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-hierarchy-pack.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-hierarchy-pack.sty",
+      "sha256": "E0B1D7C81159572BA2EB11C14BAC96792B5F7F4052D2B1BD8760D6C7B2930AF1",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-hierarchy-pack.sty",
+      "currentSha256": "E0B1D7C81159572BA2EB11C14BAC96792B5F7F4052D2B1BD8760D6C7B2930AF1",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-hierarchy-packing.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-hierarchy-packing.sty",
+      "sha256": "6F67BC3E106174AD8051B2A80DE305D2788C7258B7EAED2ED787505C0CE8EB54",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-hierarchy-packing.sty",
+      "currentSha256": "6F67BC3E106174AD8051B2A80DE305D2788C7258B7EAED2ED787505C0CE8EB54",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-hierarchy-partition.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-hierarchy-partition.sty",
+      "sha256": "BA1EC24EDDFE51C70AA47FE0D5597C87C3D47A342480904D425D55476C5ED5C7",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-hierarchy-partition.sty",
+      "currentSha256": "BA1EC24EDDFE51C70AA47FE0D5597C87C3D47A342480904D425D55476C5ED5C7",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-hierarchy-tiling.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-hierarchy-tiling.sty",
+      "sha256": "B0532C5779F3245601061EAF0B0ECC63E7224B7C296E652A8D7789893777736F",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-hierarchy-tiling.sty",
+      "currentSha256": "B0532C5779F3245601061EAF0B0ECC63E7224B7C296E652A8D7789893777736F",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-hierarchy-tree.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-hierarchy-tree.sty",
+      "sha256": "BE9451F30F8942822B3FF4773CA387AF92546C3C949934AA2CD064FB8C32CECA",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-hierarchy-tree.sty",
+      "currentSha256": "BE9451F30F8942822B3FF4773CA387AF92546C3C949934AA2CD064FB8C32CECA",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-hierarchy-treemap.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-hierarchy-treemap.sty",
+      "sha256": "88E428B6D798AFBE04675A7955400B0EDB2091C0FAC8F19CACAFD109174B4656",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-hierarchy-treemap.sty",
+      "currentSha256": "88E428B6D798AFBE04675A7955400B0EDB2091C0FAC8F19CACAFD109174B4656",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-hierarchy.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-hierarchy.sty",
+      "sha256": "D9A893C219295791BB657810ADD0D367EFAA419FD21F7D3E1AA81352DCB43BAD",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-hierarchy.sty",
+      "currentSha256": "D9A893C219295791BB657810ADD0D367EFAA419FD21F7D3E1AA81352DCB43BAD",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-infographic.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-infographic.sty",
+      "sha256": "AE1C0D5B4C592BE5FB8627B2B5556406AF531E1BCE315A98F2755E8C4EDF83F8",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-infographic.sty",
+      "currentSha256": "AE1C0D5B4C592BE5FB8627B2B5556406AF531E1BCE315A98F2755E8C4EDF83F8",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-interactionstate.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-interactionstate.sty",
+      "sha256": "4AD31C86ED4101E31745679B716FEEC1F3EB98C95F25282824B9044BD51BFB87",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-interactionstate.sty",
+      "currentSha256": "4AD31C86ED4101E31745679B716FEEC1F3EB98C95F25282824B9044BD51BFB87",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-label.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-label.sty",
+      "sha256": "7E2C72C66B927C5388CE45F7B517E686EEF531085FDF2A54B69ED026F44E8F63",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-label.sty",
+      "currentSha256": "7E2C72C66B927C5388CE45F7B517E686EEF531085FDF2A54B69ED026F44E8F63",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-layout.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-layout.sty",
+      "sha256": "859BFBE993414A5024C1F19518BD15D81684D7E46354924AE69CF756FEE0197A",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-layout.sty",
+      "currentSha256": "859BFBE993414A5024C1F19518BD15D81684D7E46354924AE69CF756FEE0197A",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-mark.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-mark.sty",
+      "sha256": "90FF0671AE5C3CBC9581CCFD1E286FF39C5A923C74B48AAEE55BB23D125AC446",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-mark.sty",
+      "currentSha256": "90FF0671AE5C3CBC9581CCFD1E286FF39C5A923C74B48AAEE55BB23D125AC446",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-matrix-correlation.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-matrix-correlation.sty",
+      "sha256": "035E8B6E458C7C24EA57AE9178B54464FD629372DDEF2EF0A11B4DE9F8870F86",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-matrix-correlation.sty",
+      "currentSha256": "035E8B6E458C7C24EA57AE9178B54464FD629372DDEF2EF0A11B4DE9F8870F86",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-matrix-heatmap.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-matrix-heatmap.sty",
+      "sha256": "9C917700563E570F5FE83212630E395910FB7A1DD49ADBE76B2E59BFAEE1D397",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-matrix-heatmap.sty",
+      "currentSha256": "9C917700563E570F5FE83212630E395910FB7A1DD49ADBE76B2E59BFAEE1D397",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-network-arc.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-network-arc.sty",
+      "sha256": "67E16AD2F93F6B009B114C7C61C1445CAF5A22487E2EEA81306ADA688CCB348E",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-network-arc.sty",
+      "currentSha256": "67E16AD2F93F6B009B114C7C61C1445CAF5A22487E2EEA81306ADA688CCB348E",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-network-bundling.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-network-bundling.sty",
+      "sha256": "E9055A5656E105EB26B8C648D0BF169D7422680723AE4E1104CE61108118967D",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-network-bundling.sty",
+      "currentSha256": "E9055A5656E105EB26B8C648D0BF169D7422680723AE4E1104CE61108118967D",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-network-chord.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-network-chord.sty",
+      "sha256": "D379FF729DCD0F9392B2AD70A320233854332D5B499154C79E871F0E08DB4137",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-network-chord.sty",
+      "currentSha256": "D379FF729DCD0F9392B2AD70A320233854332D5B499154C79E871F0E08DB4137",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-network-graph.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-network-graph.sty",
+      "sha256": "25A2117FC2CBA1265B44E7F84745DF9DEEE01BB39DCEAC2AA8EF515223CEA2D1",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-network-graph.sty",
+      "currentSha256": "25A2117FC2CBA1265B44E7F84745DF9DEEE01BB39DCEAC2AA8EF515223CEA2D1",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-network-matrix.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-network-matrix.sty",
+      "sha256": "E907ECA8A0E9D065B59BB94DC145E49B9DE5583FD28C8F364A288825F09D11F0",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-network-matrix.sty",
+      "currentSha256": "E907ECA8A0E9D065B59BB94DC145E49B9DE5583FD28C8F364A288825F09D11F0",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-network.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-network.sty",
+      "sha256": "75B03BE67391F39304F5AB1DEE06013B9B6C23D49F9ECECC5DA11B0E8A82697A",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-network.sty",
+      "currentSha256": "75B03BE67391F39304F5AB1DEE06013B9B6C23D49F9ECECC5DA11B0E8A82697A",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-plot.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-plot.sty",
+      "sha256": "34B46A9D6272E2D6471F82C15F6C713834D828E4B1A0576B2C33B1E9E90F08D1",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-plot.sty",
+      "currentSha256": "34B46A9D6272E2D6471F82C15F6C713834D828E4B1A0576B2C33B1E9E90F08D1",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-probe.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-probe.sty",
+      "sha256": "A1B444BBB1433A629E0DB51ED05914EDC4D568275373E14D4150C06309B7CA3B",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-probe.sty",
+      "currentSha256": "A1B444BBB1433A629E0DB51ED05914EDC4D568275373E14D4150C06309B7CA3B",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-scale.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-scale.sty",
+      "sha256": "6D7A3A1573129790321A00FE0B1CF7B1E16127FB8DF2F063AB2A0E764B51068A",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-scale.sty",
+      "currentSha256": "6D7A3A1573129790321A00FE0B1CF7B1E16127FB8DF2F063AB2A0E764B51068A",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-scientific-3d.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-scientific-3d.sty",
+      "sha256": "DB8C99134B447B9871B4F733B80C759FD6DA58F27D3973728EDC99299B53C4D2",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-scientific-3d.sty",
+      "currentSha256": "DB8C99134B447B9871B4F733B80C759FD6DA58F27D3973728EDC99299B53C4D2",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-scientific-biology.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-scientific-biology.sty",
+      "sha256": "E3D7C9724BB414438B409EEDD3CD962940BE3990B1F13221E38FE846E0AFDD8F",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-scientific-biology.sty",
+      "currentSha256": "E3D7C9724BB414438B409EEDD3CD962940BE3990B1F13221E38FE846E0AFDD8F",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-scientific-chemistry.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-scientific-chemistry.sty",
+      "sha256": "400790EF14012A69491C5B2904A8CCFD60B5E4E9185742E4C55818720A934A3F",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-scientific-chemistry.sty",
+      "currentSha256": "400790EF14012A69491C5B2904A8CCFD60B5E4E9185742E4C55818720A934A3F",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-scientific-engineering.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-scientific-engineering.sty",
+      "sha256": "5D75CACDBF06C517DD7F75B5040ABEBB552A2EC1FDF233C4107DE3B61636AA9B",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-scientific-engineering.sty",
+      "currentSha256": "5D75CACDBF06C517DD7F75B5040ABEBB552A2EC1FDF233C4107DE3B61636AA9B",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-scientific-field.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-scientific-field.sty",
+      "sha256": "63E76C197A48A17E07DAF81DF97426E03A9B8A9FEBE861D1ECD90A27F1F1F899",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-scientific-field.sty",
+      "currentSha256": "63E76C197A48A17E07DAF81DF97426E03A9B8A9FEBE861D1ECD90A27F1F1F899",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-scientific-geometry.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-scientific-geometry.sty",
+      "sha256": "E25D8BF406A7D9E088C1C5E9B3C0B2C1E281C62A66BD03D5683B84EFE81311B7",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-scientific-geometry.sty",
+      "currentSha256": "E25D8BF406A7D9E088C1C5E9B3C0B2C1E281C62A66BD03D5683B84EFE81311B7",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-scientific-mathematics.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-scientific-mathematics.sty",
+      "sha256": "A6496CABE1778687ACD2AE7AAEBA8329A33749C8AF8B5ED1C7F1F52198FB2F54",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-scientific-mathematics.sty",
+      "currentSha256": "A6496CABE1778687ACD2AE7AAEBA8329A33749C8AF8B5ED1C7F1F52198FB2F54",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-scientific-physics.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-scientific-physics.sty",
+      "sha256": "164C84AF065FB7B3B0057D96DD1400587F15BB40FFEB5368172C87F35F0A18DD",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-scientific-physics.sty",
+      "currentSha256": "164C84AF065FB7B3B0057D96DD1400587F15BB40FFEB5368172C87F35F0A18DD",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-scientific-signal.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-scientific-signal.sty",
+      "sha256": "D31E8214211FAF4737FC5534E0F4D73AA02B6C5F447CEEB94CF57A7EDDD7C713",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-scientific-signal.sty",
+      "currentSha256": "D31E8214211FAF4737FC5534E0F4D73AA02B6C5F447CEEB94CF57A7EDDD7C713",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-scientific-surface.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-scientific-surface.sty",
+      "sha256": "A04790A75B05F2FC945CA7A783A336ADC5EA29F7097A3205B0B90BEC819D3018",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-scientific-surface.sty",
+      "currentSha256": "A04790A75B05F2FC945CA7A783A336ADC5EA29F7097A3205B0B90BEC819D3018",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-shape.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-shape.sty",
+      "sha256": "19920A1A055AAC012213AFBD54444346957D329D6FCA6892B7688015B3AD6918",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-shape.sty",
+      "currentSha256": "19920A1A055AAC012213AFBD54444346957D329D6FCA6892B7688015B3AD6918",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-showcase.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-showcase.sty",
+      "sha256": "1BB88854093FB4957BFF161CC172AE6F42B1BB13854199EF4532C5BD9ACD3532",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-showcase.sty",
+      "currentSha256": "1BB88854093FB4957BFF161CC172AE6F42B1BB13854199EF4532C5BD9ACD3532",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-spatial.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-spatial.sty",
+      "sha256": "39A6AA0F9DA9E755A46D04B86A060A11C8B621191114A8BBA82DB47BA23A3B73",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-spatial.sty",
+      "currentSha256": "39A6AA0F9DA9E755A46D04B86A060A11C8B621191114A8BBA82DB47BA23A3B73",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-table.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-table.sty",
+      "sha256": "A7AD5BB51125962D08424748D55DB3008D8825D18E3945AA4353D1D03D9FD342",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-table.sty",
+      "currentSha256": "A7AD5BB51125962D08424748D55DB3008D8825D18E3945AA4353D1D03D9FD342",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-text.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-text.sty",
+      "sha256": "264764603D704381BA40C8BE5ECF14767E85108A764F5E4D6DDD461551599939",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-text.sty",
+      "currentSha256": "264764603D704381BA40C8BE5ECF14767E85108A764F5E4D6DDD461551599939",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-theme.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-theme.sty",
+      "sha256": "9414969ACB929ACD2F597FB984BD8C77FC30020F8339F65BE948DC2D17D6DD30",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-theme.sty",
+      "currentSha256": "9414969ACB929ACD2F597FB984BD8C77FC30020F8339F65BE948DC2D17D6DD30",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz-transform.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-transform.sty",
+      "sha256": "B810EE303DA1A44DC8C8939009FA04E24E106DFC4CA6DDFD5FB449BD482650D9",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-transform.sty",
+      "currentSha256": "B810EE303DA1A44DC8C8939009FA04E24E106DFC4CA6DDFD5FB449BD482650D9",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-viz.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz.sty",
+      "sha256": "F2277314E69747B06F8FECE032CA71AF7CD1A3C0765BDDE6A9A52489F80C852C",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz.sty",
+      "currentSha256": "F2277314E69747B06F8FECE032CA71AF7CD1A3C0765BDDE6A9A52489F80C852C",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "light",
+      "name": "semio-window.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\light\\🧪️probe-source\\.semio-library\\semio-latex\\semio-window.sty",
+      "sha256": "9027901E660FEDBD311E801F0E970A08954146B5EA6F2FBF3AF096D408BFDA8D",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-window.sty",
+      "currentSha256": "9027901E660FEDBD311E801F0E970A08954146B5EA6F2FBF3AF096D408BFDA8D",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-components.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-components.sty",
+      "sha256": "B604034E18005F13206430F59C32B05E89DC47DCE89559B847476DD0A9FA795C",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-components.sty",
+      "currentSha256": "B604034E18005F13206430F59C32B05E89DC47DCE89559B847476DD0A9FA795C",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-core.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-core.sty",
+      "sha256": "654FD134F3B08D7964C405DF4627B2BA5F73953C1528FC69B55F3981BD99BCFF",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-core.sty",
+      "currentSha256": "654FD134F3B08D7964C405DF4627B2BA5F73953C1528FC69B55F3981BD99BCFF",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-fonts.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-fonts.sty",
+      "sha256": "33355D4403FBB0168B87763CE345E83EFE3F146F152C9316925CF7A73887174F",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-fonts.sty",
+      "currentSha256": "33355D4403FBB0168B87763CE345E83EFE3F146F152C9316925CF7A73887174F",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-graph.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-graph.sty",
+      "sha256": "F33D5F16EDAD2B842ED95FE37B6DD5CC5347DCC2C0AF025D51153812502F1A63",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-graph.sty",
+      "currentSha256": "642FD78CEC301AA3C5060D3F1AA22F05FB6C9437BFF5A6F27132292997F3726F",
+      "matchesCurrent": false
+    },
+    {
+      "theme": "dark",
+      "name": "semio-logo.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-logo.sty",
+      "sha256": "80B767D33294A478CC4DFDBAFC998ACF085A826D6161191A5E79ED458AE122BF",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-logo.sty",
+      "currentSha256": "80B767D33294A478CC4DFDBAFC998ACF085A826D6161191A5E79ED458AE122BF",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-phd.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-phd.sty",
+      "sha256": "FD2EB7E7C52B3476FB0C13FC90FAD3E312BDDA2A82C674738B39CA5824FF55F3",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-phd.sty",
+      "currentSha256": "FD2EB7E7C52B3476FB0C13FC90FAD3E312BDDA2A82C674738B39CA5824FF55F3",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-table.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-table.sty",
+      "sha256": "B40AD60C74855589FA4A942A00943DABC9ABAEDAD124DEA545AA9AC43FFA4EEE",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-table.sty",
+      "currentSha256": "B40AD60C74855589FA4A942A00943DABC9ABAEDAD124DEA545AA9AC43FFA4EEE",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-tokens.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-tokens.sty",
+      "sha256": "DC7308B3D41914374591A3F1988523DA89869AC9FD349A4058DE4A601673795E",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-tokens.sty",
+      "currentSha256": "DC7308B3D41914374591A3F1988523DA89869AC9FD349A4058DE4A601673795E",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-tree.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-tree.sty",
+      "sha256": "2905B9C2C71837989C128DB0EDCB3D2DCB9E0FC8284A19890356B04071CF9B4C",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-tree.sty",
+      "currentSha256": "2905B9C2C71837989C128DB0EDCB3D2DCB9E0FC8284A19890356B04071CF9B4C",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-annotation.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-annotation.sty",
+      "sha256": "39F9C80D4D58268C299A3DDBB73F02E6A90F040CD2AD185469AE4166EB593C4D",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-annotation.sty",
+      "currentSha256": "39F9C80D4D58268C299A3DDBB73F02E6A90F040CD2AD185469AE4166EB593C4D",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-catalog-labels.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-catalog-labels.sty",
+      "sha256": "33ED2921DEA258AA88C198592D5174B4C1B0533334DCB5BA35133C8E43F45031",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-catalog-labels.sty",
+      "currentSha256": "33ED2921DEA258AA88C198592D5174B4C1B0533334DCB5BA35133C8E43F45031",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-catalog.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-catalog.sty",
+      "sha256": "7E28C3747846F80D6C73EA3255537C3C498FFAB3AB475B866D05E68FC01A0A8C",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-catalog.sty",
+      "currentSha256": "7E28C3747846F80D6C73EA3255537C3C498FFAB3AB475B866D05E68FC01A0A8C",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-charts-area.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-charts-area.sty",
+      "sha256": "4945C6618A591E5A6E7D0969CCDF09268B5B6D1BA6193E09AC50EF7678121315",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-charts-area.sty",
+      "currentSha256": "4945C6618A591E5A6E7D0969CCDF09268B5B6D1BA6193E09AC50EF7678121315",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-charts-bar.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-charts-bar.sty",
+      "sha256": "77C2CE15B70B2C72A962B508B7817E62ECEC3F191C3CBD70C062C39655C0222C",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-charts-bar.sty",
+      "currentSha256": "77C2CE15B70B2C72A962B508B7817E62ECEC3F191C3CBD70C062C39655C0222C",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-charts-dashboard.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-charts-dashboard.sty",
+      "sha256": "8F5B99F43ECB6EF312844466B83AD54917840D4B38E7FA8970AA490E391476E0",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-charts-dashboard.sty",
+      "currentSha256": "8F5B99F43ECB6EF312844466B83AD54917840D4B38E7FA8970AA490E391476E0",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-charts-distribution.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-charts-distribution.sty",
+      "sha256": "A588D5821EE0F9C21EE3AC2C4459EBECB811255F3440C65DE1E5F85FD246DCB9",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-charts-distribution.sty",
+      "currentSha256": "A588D5821EE0F9C21EE3AC2C4459EBECB811255F3440C65DE1E5F85FD246DCB9",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-charts-financial.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-charts-financial.sty",
+      "sha256": "2DDA8FC1E0715CFDCF656417A52256FF381F2489CC60D58626375992BB0FD1AB",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-charts-financial.sty",
+      "currentSha256": "2DDA8FC1E0715CFDCF656417A52256FF381F2489CC60D58626375992BB0FD1AB",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-charts-funnel.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-charts-funnel.sty",
+      "sha256": "90383F1167415A98CAEB06F9173BE0D300591AFA576AA62FFA2BADC296EA61A7",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-charts-funnel.sty",
+      "currentSha256": "90383F1167415A98CAEB06F9173BE0D300591AFA576AA62FFA2BADC296EA61A7",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-charts-line.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-charts-line.sty",
+      "sha256": "DF0C798F99428DA7FB0896CE36EA39157E0D047B3DDD93BE872BAF6C7FA7CBD7",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-charts-line.sty",
+      "currentSha256": "DF0C798F99428DA7FB0896CE36EA39157E0D047B3DDD93BE872BAF6C7FA7CBD7",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-charts-polar.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-charts-polar.sty",
+      "sha256": "638387DD41DBE5ED3061FF5F17518D47BC9837B4A49CB803E4AECB40EAE60C65",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-charts-polar.sty",
+      "currentSha256": "638387DD41DBE5ED3061FF5F17518D47BC9837B4A49CB803E4AECB40EAE60C65",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-charts-scatter.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-charts-scatter.sty",
+      "sha256": "D93C27F2FE2C6023DFC91C82F588AD85655288AFE745E2EE8B0589D3558C8EE0",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-charts-scatter.sty",
+      "currentSha256": "D93C27F2FE2C6023DFC91C82F588AD85655288AFE745E2EE8B0589D3558C8EE0",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-charts-statistical.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-charts-statistical.sty",
+      "sha256": "F64893AF051C4C93633142C90AB6858AAA5CF593F71A0BFA38297B43922F30FC",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-charts-statistical.sty",
+      "currentSha256": "F64893AF051C4C93633142C90AB6858AAA5CF593F71A0BFA38297B43922F30FC",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-charts-timeline.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-charts-timeline.sty",
+      "sha256": "08D1BC5989F5B1D382200A4FD9A77B24FBF5EC5D73CA1DF3333C9DA3DCEAA3CA",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-charts-timeline.sty",
+      "currentSha256": "08D1BC5989F5B1D382200A4FD9A77B24FBF5EC5D73CA1DF3333C9DA3DCEAA3CA",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-composition.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-composition.sty",
+      "sha256": "29CDC68523EF187F40D3F0D2FE561C9BED08120F88371E14451BBFD45D0584BE",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-composition.sty",
+      "currentSha256": "29CDC68523EF187F40D3F0D2FE561C9BED08120F88371E14451BBFD45D0584BE",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-coordinate.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-coordinate.sty",
+      "sha256": "0DD15CDB805EF48189498DFE8803828BFFC670DE3048B9CC006FB704259F223E",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-coordinate.sty",
+      "currentSha256": "0DD15CDB805EF48189498DFE8803828BFFC670DE3048B9CC006FB704259F223E",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-data.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-data.sty",
+      "sha256": "EFB5E5D397AF1B6BD21AEB4C70F61141AAFF42DC1F2F03532CA7D4379CFB2CFC",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-data.sty",
+      "currentSha256": "EFB5E5D397AF1B6BD21AEB4C70F61141AAFF42DC1F2F03532CA7D4379CFB2CFC",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-diagram-architecture.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-diagram-architecture.sty",
+      "sha256": "7D4F4191A32852BCEB324795206289E0932B3E345D5E25EB999A50D51DCB2BD9",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-diagram-architecture.sty",
+      "currentSha256": "7D4F4191A32852BCEB324795206289E0932B3E345D5E25EB999A50D51DCB2BD9",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-diagram-concept.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-diagram-concept.sty",
+      "sha256": "EA3FAB89FF2B5D7D135A3F9B65BFC4E6FB0BDC7BFE9CFEDD82EA895E0AA587AE",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-diagram-concept.sty",
+      "currentSha256": "EA3FAB89FF2B5D7D135A3F9B65BFC4E6FB0BDC7BFE9CFEDD82EA895E0AA587AE",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-diagram-flowchart.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-diagram-flowchart.sty",
+      "sha256": "57C62803AD40E20B58E4D7609E2EB8217862ECBBC29F5AE8722C6B2471F6D6B7",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-diagram-flowchart.sty",
+      "currentSha256": "57C62803AD40E20B58E4D7609E2EB8217862ECBBC29F5AE8722C6B2471F6D6B7",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-diagram-process.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-diagram-process.sty",
+      "sha256": "B7EDC5544C7117C1C5933E8BD866CA3D412FF97F04EE465D1DAC259BE0B4E6A0",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-diagram-process.sty",
+      "currentSha256": "B7EDC5544C7117C1C5933E8BD866CA3D412FF97F04EE465D1DAC259BE0B4E6A0",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-diagram-uml.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-diagram-uml.sty",
+      "sha256": "2EAB88A18DD518ACD44D799D8E35DFD1600DB8793A27678D28746995B7EDAAE0",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-diagram-uml.sty",
+      "currentSha256": "2EAB88A18DD518ACD44D799D8E35DFD1600DB8793A27678D28746995B7EDAAE0",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-domain.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-domain.sty",
+      "sha256": "1A5FF24E58E2D59926229DB43217EB29999EA766D69E002B1F8D57841AF3C478",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-domain.sty",
+      "currentSha256": "1A5FF24E58E2D59926229DB43217EB29999EA766D69E002B1F8D57841AF3C478",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-facet.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-facet.sty",
+      "sha256": "D5FF45272EED07B444775153C07991D297762093545453A7DB6E9CCD9A31304B",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-facet.sty",
+      "currentSha256": "D5FF45272EED07B444775153C07991D297762093545453A7DB6E9CCD9A31304B",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-family.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-family.sty",
+      "sha256": "D7C8BAB330D4BE95008D9BFEF75E01F2D3C1CD38AA9A1536A24D465272F01F53",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-family.sty",
+      "currentSha256": "D7C8BAB330D4BE95008D9BFEF75E01F2D3C1CD38AA9A1536A24D465272F01F53",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-flow-alluvial.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-flow-alluvial.sty",
+      "sha256": "FD26AEBF9AE306FFD64B574542168C9949801E5F0CDC1F59B38AD8D7532090F0",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-flow-alluvial.sty",
+      "currentSha256": "FD26AEBF9AE306FFD64B574542168C9949801E5F0CDC1F59B38AD8D7532090F0",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-flow-parallelsets.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-flow-parallelsets.sty",
+      "sha256": "06F25750E0BCDBF4369040F9F1CDB0DFD8916DD30DC62FB024C9A93FFFC656AA",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-flow-parallelsets.sty",
+      "currentSha256": "06F25750E0BCDBF4369040F9F1CDB0DFD8916DD30DC62FB024C9A93FFFC656AA",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-flow-sankey.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-flow-sankey.sty",
+      "sha256": "B734B8AA5DB1165687AECAA38A7ACC236B39A579106CD7C47DE2437F9AB7D32F",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-flow-sankey.sty",
+      "currentSha256": "B734B8AA5DB1165687AECAA38A7ACC236B39A579106CD7C47DE2437F9AB7D32F",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-flow.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-flow.sty",
+      "sha256": "0E79C84406EB9EC79E9D82628A7EBBA9F63B9351B64A8C2E1A3F96AFD32411F9",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-flow.sty",
+      "currentSha256": "0E79C84406EB9EC79E9D82628A7EBBA9F63B9351B64A8C2E1A3F96AFD32411F9",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-format.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-format.sty",
+      "sha256": "A9F078195E8C051382044C79D2E2489AC5CCD49D2FE8A4EC90A5D1F92B5892E6",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-format.sty",
+      "currentSha256": "A9F078195E8C051382044C79D2E2489AC5CCD49D2FE8A4EC90A5D1F92B5892E6",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-geo-choropleth.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-geo-choropleth.sty",
+      "sha256": "B27BFFF38A8910BB0516818C09262C57B52D4C960EFED47849400933CDACE949",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-geo-choropleth.sty",
+      "currentSha256": "B27BFFF38A8910BB0516818C09262C57B52D4C960EFED47849400933CDACE949",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-geo-contours.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-geo-contours.sty",
+      "sha256": "ED810FF0CF1A7CC3ADF2E0CDDCC8FBB479774C53DD596FA8DACB3F3C39802467",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-geo-contours.sty",
+      "currentSha256": "ED810FF0CF1A7CC3ADF2E0CDDCC8FBB479774C53DD596FA8DACB3F3C39802467",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-geo-map.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-geo-map.sty",
+      "sha256": "01BC451D6FF129FD92F89F3CC18F8E239D917CDC84210B249CF90F5DE79748BB",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-geo-map.sty",
+      "currentSha256": "01BC451D6FF129FD92F89F3CC18F8E239D917CDC84210B249CF90F5DE79748BB",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-geo-projection.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-geo-projection.sty",
+      "sha256": "A36860B72454C1CEC15AD5BE5E4919968710F65784A9883104DFA55D64FE0BF0",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-geo-projection.sty",
+      "currentSha256": "A36860B72454C1CEC15AD5BE5E4919968710F65784A9883104DFA55D64FE0BF0",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-geo-routes.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-geo-routes.sty",
+      "sha256": "434E42F1AE4C623B81DD2478E98CD85C196AD99E99C8FEA8AE2F569998BBA3C9",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-geo-routes.sty",
+      "currentSha256": "434E42F1AE4C623B81DD2478E98CD85C196AD99E99C8FEA8AE2F569998BBA3C9",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-geo-symbols.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-geo-symbols.sty",
+      "sha256": "329A8E8E9695F2B594B35D605A94155B1A417D4823DE1A1AAE32C3C7893591AC",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-geo-symbols.sty",
+      "currentSha256": "329A8E8E9695F2B594B35D605A94155B1A417D4823DE1A1AAE32C3C7893591AC",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-geo.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-geo.sty",
+      "sha256": "04A45F0CF3C7B9AE61FB76B805C0E8F1ADBFD5A44A3D7A78597A67F6ADF0CC66",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-geo.sty",
+      "currentSha256": "04A45F0CF3C7B9AE61FB76B805C0E8F1ADBFD5A44A3D7A78597A67F6ADF0CC66",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-guide.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-guide.sty",
+      "sha256": "623D4F9EE92C09983F784E484978D01776EC4FF8CF4C4A55712FBE3C93A053ED",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-guide.sty",
+      "currentSha256": "623D4F9EE92C09983F784E484978D01776EC4FF8CF4C4A55712FBE3C93A053ED",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-hierarchy-dendrogram.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-hierarchy-dendrogram.sty",
+      "sha256": "97AC79953B9D2EB1B70CCBB483C92266E338214B236FBA20994EC7AB0A8FF67E",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-hierarchy-dendrogram.sty",
+      "currentSha256": "97AC79953B9D2EB1B70CCBB483C92266E338214B236FBA20994EC7AB0A8FF67E",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-hierarchy-pack.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-hierarchy-pack.sty",
+      "sha256": "E0B1D7C81159572BA2EB11C14BAC96792B5F7F4052D2B1BD8760D6C7B2930AF1",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-hierarchy-pack.sty",
+      "currentSha256": "E0B1D7C81159572BA2EB11C14BAC96792B5F7F4052D2B1BD8760D6C7B2930AF1",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-hierarchy-packing.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-hierarchy-packing.sty",
+      "sha256": "6F67BC3E106174AD8051B2A80DE305D2788C7258B7EAED2ED787505C0CE8EB54",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-hierarchy-packing.sty",
+      "currentSha256": "6F67BC3E106174AD8051B2A80DE305D2788C7258B7EAED2ED787505C0CE8EB54",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-hierarchy-partition.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-hierarchy-partition.sty",
+      "sha256": "BA1EC24EDDFE51C70AA47FE0D5597C87C3D47A342480904D425D55476C5ED5C7",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-hierarchy-partition.sty",
+      "currentSha256": "BA1EC24EDDFE51C70AA47FE0D5597C87C3D47A342480904D425D55476C5ED5C7",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-hierarchy-tiling.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-hierarchy-tiling.sty",
+      "sha256": "B0532C5779F3245601061EAF0B0ECC63E7224B7C296E652A8D7789893777736F",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-hierarchy-tiling.sty",
+      "currentSha256": "B0532C5779F3245601061EAF0B0ECC63E7224B7C296E652A8D7789893777736F",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-hierarchy-tree.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-hierarchy-tree.sty",
+      "sha256": "BE9451F30F8942822B3FF4773CA387AF92546C3C949934AA2CD064FB8C32CECA",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-hierarchy-tree.sty",
+      "currentSha256": "BE9451F30F8942822B3FF4773CA387AF92546C3C949934AA2CD064FB8C32CECA",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-hierarchy-treemap.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-hierarchy-treemap.sty",
+      "sha256": "88E428B6D798AFBE04675A7955400B0EDB2091C0FAC8F19CACAFD109174B4656",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-hierarchy-treemap.sty",
+      "currentSha256": "88E428B6D798AFBE04675A7955400B0EDB2091C0FAC8F19CACAFD109174B4656",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-hierarchy.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-hierarchy.sty",
+      "sha256": "D9A893C219295791BB657810ADD0D367EFAA419FD21F7D3E1AA81352DCB43BAD",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-hierarchy.sty",
+      "currentSha256": "D9A893C219295791BB657810ADD0D367EFAA419FD21F7D3E1AA81352DCB43BAD",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-infographic.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-infographic.sty",
+      "sha256": "AE1C0D5B4C592BE5FB8627B2B5556406AF531E1BCE315A98F2755E8C4EDF83F8",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-infographic.sty",
+      "currentSha256": "AE1C0D5B4C592BE5FB8627B2B5556406AF531E1BCE315A98F2755E8C4EDF83F8",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-interactionstate.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-interactionstate.sty",
+      "sha256": "4AD31C86ED4101E31745679B716FEEC1F3EB98C95F25282824B9044BD51BFB87",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-interactionstate.sty",
+      "currentSha256": "4AD31C86ED4101E31745679B716FEEC1F3EB98C95F25282824B9044BD51BFB87",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-label.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-label.sty",
+      "sha256": "7E2C72C66B927C5388CE45F7B517E686EEF531085FDF2A54B69ED026F44E8F63",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-label.sty",
+      "currentSha256": "7E2C72C66B927C5388CE45F7B517E686EEF531085FDF2A54B69ED026F44E8F63",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-layout.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-layout.sty",
+      "sha256": "859BFBE993414A5024C1F19518BD15D81684D7E46354924AE69CF756FEE0197A",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-layout.sty",
+      "currentSha256": "859BFBE993414A5024C1F19518BD15D81684D7E46354924AE69CF756FEE0197A",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-mark.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-mark.sty",
+      "sha256": "90FF0671AE5C3CBC9581CCFD1E286FF39C5A923C74B48AAEE55BB23D125AC446",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-mark.sty",
+      "currentSha256": "90FF0671AE5C3CBC9581CCFD1E286FF39C5A923C74B48AAEE55BB23D125AC446",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-matrix-correlation.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-matrix-correlation.sty",
+      "sha256": "035E8B6E458C7C24EA57AE9178B54464FD629372DDEF2EF0A11B4DE9F8870F86",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-matrix-correlation.sty",
+      "currentSha256": "035E8B6E458C7C24EA57AE9178B54464FD629372DDEF2EF0A11B4DE9F8870F86",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-matrix-heatmap.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-matrix-heatmap.sty",
+      "sha256": "9C917700563E570F5FE83212630E395910FB7A1DD49ADBE76B2E59BFAEE1D397",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-matrix-heatmap.sty",
+      "currentSha256": "9C917700563E570F5FE83212630E395910FB7A1DD49ADBE76B2E59BFAEE1D397",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-network-arc.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-network-arc.sty",
+      "sha256": "67E16AD2F93F6B009B114C7C61C1445CAF5A22487E2EEA81306ADA688CCB348E",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-network-arc.sty",
+      "currentSha256": "67E16AD2F93F6B009B114C7C61C1445CAF5A22487E2EEA81306ADA688CCB348E",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-network-bundling.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-network-bundling.sty",
+      "sha256": "E9055A5656E105EB26B8C648D0BF169D7422680723AE4E1104CE61108118967D",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-network-bundling.sty",
+      "currentSha256": "E9055A5656E105EB26B8C648D0BF169D7422680723AE4E1104CE61108118967D",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-network-chord.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-network-chord.sty",
+      "sha256": "D379FF729DCD0F9392B2AD70A320233854332D5B499154C79E871F0E08DB4137",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-network-chord.sty",
+      "currentSha256": "D379FF729DCD0F9392B2AD70A320233854332D5B499154C79E871F0E08DB4137",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-network-graph.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-network-graph.sty",
+      "sha256": "25A2117FC2CBA1265B44E7F84745DF9DEEE01BB39DCEAC2AA8EF515223CEA2D1",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-network-graph.sty",
+      "currentSha256": "25A2117FC2CBA1265B44E7F84745DF9DEEE01BB39DCEAC2AA8EF515223CEA2D1",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-network-matrix.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-network-matrix.sty",
+      "sha256": "E907ECA8A0E9D065B59BB94DC145E49B9DE5583FD28C8F364A288825F09D11F0",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-network-matrix.sty",
+      "currentSha256": "E907ECA8A0E9D065B59BB94DC145E49B9DE5583FD28C8F364A288825F09D11F0",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-network.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-network.sty",
+      "sha256": "75B03BE67391F39304F5AB1DEE06013B9B6C23D49F9ECECC5DA11B0E8A82697A",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-network.sty",
+      "currentSha256": "75B03BE67391F39304F5AB1DEE06013B9B6C23D49F9ECECC5DA11B0E8A82697A",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-plot.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-plot.sty",
+      "sha256": "34B46A9D6272E2D6471F82C15F6C713834D828E4B1A0576B2C33B1E9E90F08D1",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-plot.sty",
+      "currentSha256": "34B46A9D6272E2D6471F82C15F6C713834D828E4B1A0576B2C33B1E9E90F08D1",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-probe.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-probe.sty",
+      "sha256": "A1B444BBB1433A629E0DB51ED05914EDC4D568275373E14D4150C06309B7CA3B",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-probe.sty",
+      "currentSha256": "A1B444BBB1433A629E0DB51ED05914EDC4D568275373E14D4150C06309B7CA3B",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-scale.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-scale.sty",
+      "sha256": "6D7A3A1573129790321A00FE0B1CF7B1E16127FB8DF2F063AB2A0E764B51068A",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-scale.sty",
+      "currentSha256": "6D7A3A1573129790321A00FE0B1CF7B1E16127FB8DF2F063AB2A0E764B51068A",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-scientific-3d.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-scientific-3d.sty",
+      "sha256": "DB8C99134B447B9871B4F733B80C759FD6DA58F27D3973728EDC99299B53C4D2",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-scientific-3d.sty",
+      "currentSha256": "DB8C99134B447B9871B4F733B80C759FD6DA58F27D3973728EDC99299B53C4D2",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-scientific-biology.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-scientific-biology.sty",
+      "sha256": "E3D7C9724BB414438B409EEDD3CD962940BE3990B1F13221E38FE846E0AFDD8F",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-scientific-biology.sty",
+      "currentSha256": "E3D7C9724BB414438B409EEDD3CD962940BE3990B1F13221E38FE846E0AFDD8F",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-scientific-chemistry.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-scientific-chemistry.sty",
+      "sha256": "400790EF14012A69491C5B2904A8CCFD60B5E4E9185742E4C55818720A934A3F",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-scientific-chemistry.sty",
+      "currentSha256": "400790EF14012A69491C5B2904A8CCFD60B5E4E9185742E4C55818720A934A3F",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-scientific-engineering.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-scientific-engineering.sty",
+      "sha256": "5D75CACDBF06C517DD7F75B5040ABEBB552A2EC1FDF233C4107DE3B61636AA9B",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-scientific-engineering.sty",
+      "currentSha256": "5D75CACDBF06C517DD7F75B5040ABEBB552A2EC1FDF233C4107DE3B61636AA9B",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-scientific-field.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-scientific-field.sty",
+      "sha256": "63E76C197A48A17E07DAF81DF97426E03A9B8A9FEBE861D1ECD90A27F1F1F899",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-scientific-field.sty",
+      "currentSha256": "63E76C197A48A17E07DAF81DF97426E03A9B8A9FEBE861D1ECD90A27F1F1F899",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-scientific-geometry.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-scientific-geometry.sty",
+      "sha256": "E25D8BF406A7D9E088C1C5E9B3C0B2C1E281C62A66BD03D5683B84EFE81311B7",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-scientific-geometry.sty",
+      "currentSha256": "E25D8BF406A7D9E088C1C5E9B3C0B2C1E281C62A66BD03D5683B84EFE81311B7",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-scientific-mathematics.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-scientific-mathematics.sty",
+      "sha256": "A6496CABE1778687ACD2AE7AAEBA8329A33749C8AF8B5ED1C7F1F52198FB2F54",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-scientific-mathematics.sty",
+      "currentSha256": "A6496CABE1778687ACD2AE7AAEBA8329A33749C8AF8B5ED1C7F1F52198FB2F54",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-scientific-physics.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-scientific-physics.sty",
+      "sha256": "164C84AF065FB7B3B0057D96DD1400587F15BB40FFEB5368172C87F35F0A18DD",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-scientific-physics.sty",
+      "currentSha256": "164C84AF065FB7B3B0057D96DD1400587F15BB40FFEB5368172C87F35F0A18DD",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-scientific-signal.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-scientific-signal.sty",
+      "sha256": "D31E8214211FAF4737FC5534E0F4D73AA02B6C5F447CEEB94CF57A7EDDD7C713",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-scientific-signal.sty",
+      "currentSha256": "D31E8214211FAF4737FC5534E0F4D73AA02B6C5F447CEEB94CF57A7EDDD7C713",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-scientific-surface.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-scientific-surface.sty",
+      "sha256": "A04790A75B05F2FC945CA7A783A336ADC5EA29F7097A3205B0B90BEC819D3018",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-scientific-surface.sty",
+      "currentSha256": "A04790A75B05F2FC945CA7A783A336ADC5EA29F7097A3205B0B90BEC819D3018",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-shape.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-shape.sty",
+      "sha256": "19920A1A055AAC012213AFBD54444346957D329D6FCA6892B7688015B3AD6918",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-shape.sty",
+      "currentSha256": "19920A1A055AAC012213AFBD54444346957D329D6FCA6892B7688015B3AD6918",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-showcase.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-showcase.sty",
+      "sha256": "1BB88854093FB4957BFF161CC172AE6F42B1BB13854199EF4532C5BD9ACD3532",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-showcase.sty",
+      "currentSha256": "1BB88854093FB4957BFF161CC172AE6F42B1BB13854199EF4532C5BD9ACD3532",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-spatial.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-spatial.sty",
+      "sha256": "39A6AA0F9DA9E755A46D04B86A060A11C8B621191114A8BBA82DB47BA23A3B73",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-spatial.sty",
+      "currentSha256": "39A6AA0F9DA9E755A46D04B86A060A11C8B621191114A8BBA82DB47BA23A3B73",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-table.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-table.sty",
+      "sha256": "A7AD5BB51125962D08424748D55DB3008D8825D18E3945AA4353D1D03D9FD342",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-table.sty",
+      "currentSha256": "A7AD5BB51125962D08424748D55DB3008D8825D18E3945AA4353D1D03D9FD342",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-text.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-text.sty",
+      "sha256": "264764603D704381BA40C8BE5ECF14767E85108A764F5E4D6DDD461551599939",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-text.sty",
+      "currentSha256": "264764603D704381BA40C8BE5ECF14767E85108A764F5E4D6DDD461551599939",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-theme.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-theme.sty",
+      "sha256": "9414969ACB929ACD2F597FB984BD8C77FC30020F8339F65BE948DC2D17D6DD30",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-theme.sty",
+      "currentSha256": "9414969ACB929ACD2F597FB984BD8C77FC30020F8339F65BE948DC2D17D6DD30",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz-transform.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz-transform.sty",
+      "sha256": "B810EE303DA1A44DC8C8939009FA04E24E106DFC4CA6DDFD5FB449BD482650D9",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-transform.sty",
+      "currentSha256": "B810EE303DA1A44DC8C8939009FA04E24E106DFC4CA6DDFD5FB449BD482650D9",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-viz.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-viz.sty",
+      "sha256": "F2277314E69747B06F8FECE032CA71AF7CD1A3C0765BDDE6A9A52489F80C852C",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz.sty",
+      "currentSha256": "F2277314E69747B06F8FECE032CA71AF7CD1A3C0765BDDE6A9A52489F80C852C",
+      "matchesCurrent": true
+    },
+    {
+      "theme": "dark",
+      "name": "semio-window.sty",
+      "stage": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️05\\PRINT-VISUALIZATION-LIBRARY\\🗑️generated\\scientific-physical-viewport-green-corrected-tags\\scientific-canvas\\dark\\🧪️probe-source\\.semio-library\\semio-latex\\semio-window.sty",
+      "sha256": "9027901E660FEDBD311E801F0E970A08954146B5EA6F2FBF3AF096D408BFDA8D",
+      "current": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-window.sty",
+      "currentSha256": "9027901E660FEDBD311E801F0E970A08954146B5EA6F2FBF3AF096D408BFDA8D",
+      "matchesCurrent": true
+    }
+  ],
+  "outputs": [
+    {
+      "path": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/scientific-physical-viewport-green-corrected-tags/scientific-canvas/light/🧪️probe-out/light.pdf",
+      "sha256": "15BEB1E4AF48DE82B3475FD99961BD76A94FDC3ABE6AD93F56EE561BF25ACCD9",
+      "bytes": 363466
+    },
+    {
+      "path": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/scientific-physical-viewport-green-corrected-tags/scientific-canvas/light/🧪️probe-out/light.log",
+      "sha256": "C89AA5DD92939464DD586772099A5EAB01348B237E63912914F9BD503ACBC9FC",
+      "bytes": 84839
+    },
+    {
+      "path": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/scientific-physical-viewport-green-corrected-tags/scientific-canvas/light/🧪️probe-out/light.probe.jsonl",
+      "sha256": "0A6FEAAC0E6726026112E14D2DA686E8036973F2EE3F8DE1B5BE017F3B75CB49",
+      "bytes": 96312
+    },
+    {
+      "path": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/scientific-physical-viewport-green-corrected-tags/scientific-canvas/dark/🧪️probe-out/dark.pdf",
+      "sha256": "8F43AE80E7D40A2CE997C4F16B7AF2F7DEFB4C0ACF6B9A8898EE034C71ABCDCB",
+      "bytes": 363380
+    },
+    {
+      "path": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/scientific-physical-viewport-green-corrected-tags/scientific-canvas/dark/🧪️probe-out/dark.log",
+      "sha256": "603DCC243A79A0537E83A27126C779946E3EBB37F1777CDC54D5965897A1D4FF",
+      "bytes": 84854
+    },
+    {
+      "path": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/PRINT-VISUALIZATION-LIBRARY/🗑️generated/scientific-physical-viewport-green-corrected-tags/scientific-canvas/dark/🧪️probe-out/dark.probe.jsonl",
+      "sha256": "0A6FEAAC0E6726026112E14D2DA686E8036973F2EE3F8DE1B5BE017F3B75CB49",
+      "bytes": 96312
+    }
+  ],
+  "pdfMarkers": {
+    "light": {
+      "pages": 112,
+      "eachModeEachControlBodyChrome": 36,
+      "distinct": 324,
+      "duplicates": 0
+    },
+    "dark": {
+      "pages": 112,
+      "eachModeEachControlBodyChrome": 36,
+      "distinct": 324,
+      "duplicates": 0
+    }
+  },
+  "coverage": {
+    "cases": 216,
+    "chromeOff": 72,
+    "chromePositive": 144,
+    "bodyPathComparisons": 17628
+  },
+  "independentRawChromeOperatorCounts": [
+    {
+      "theme": "light",
+      "modes": [
+        {
+          "mode": 0,
+          "count": 36,
+          "paintMin": 0,
+          "paintMax": 0,
+          "textMin": 0,
+          "textMax": 0
+        },
+        {
+          "mode": 1,
+          "count": 36,
+          "paintMin": 7,
+          "paintMax": 7,
+          "textMin": 9,
+          "textMax": 9
+        },
+        {
+          "mode": 2,
+          "count": 36,
+          "paintMin": 13,
+          "paintMax": 13,
+          "textMin": 15,
+          "textMax": 15
+        }
+      ]
+    },
+    {
+      "theme": "dark",
+      "modes": [
+        {
+          "mode": 0,
+          "count": 36,
+          "paintMin": 0,
+          "paintMax": 0,
+          "textMin": 0,
+          "textMax": 0
+        },
+        {
+          "mode": 1,
+          "count": 36,
+          "paintMin": 7,
+          "paintMax": 7,
+          "textMin": 9,
+          "textMax": 9
+        },
+        {
+          "mode": 2,
+          "count": 36,
+          "paintMin": 13,
+          "paintMax": 13,
+          "textMin": 15,
+          "textMax": 15
+        }
+      ]
+    }
+  ],
+  "auditCompletedUtc": "2026-10-05T15:20:57.4248967Z"
+}

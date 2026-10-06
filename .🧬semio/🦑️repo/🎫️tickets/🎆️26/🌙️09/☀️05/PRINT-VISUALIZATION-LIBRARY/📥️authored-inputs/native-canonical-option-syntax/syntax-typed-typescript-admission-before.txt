@@ -1,0 +1,93 @@
+/** 📚️ Catalogue kinds are inferred into the same figure as custom numerical layers. */
+import { vizParseColor } from "../🎨theme/🟦️.ts";
+import catalog from "../../../🖼️assets/🔣️viz-catalog.json";
+import schema from "../../🔣️.json";
+import type { VizSchemaDocument, VizOptionSyntaxDescriptor } from "../../🟦️.ts";
+import type { VizChartSpecification, VizOptionValue } from "../../📸️snapshot/📊️chart/🟦️.ts";
+
+const KINDS = new Map(catalog.kinds.map((entry) => [entry.slug, entry]));
+const escape = (value: string): string => value.replace(/[\\{}%#$&_^~]/g, (character) => ({ "\\": "\\textbackslash{}", "{": "\\{", "}": "\\}", "%": "\\%", "#": "\\#", "$": "\\$", "&": "\\&", "_": "\\_", "^": "\\textasciicircum{}", "~": "\\textasciitilde{}" })[character]!);
+function token(value: string): string { if (!/^[A-Za-z0-9_.:/-]+$/.test(value)) throw new Error(`invalid grammar identifier ${JSON.stringify(value)}`); return value; }
+type Paint = { readonly hex: string; readonly alpha: number; readonly name: string };
+function color(value: string): Paint | undefined { try { const rgba = vizParseColor(value), hex = rgba.slice(0, 3).map(channel => Math.round(channel).toString(16).padStart(2, "0")).join("").toUpperCase(), alpha = rgba[3] / 255; return { hex, alpha, name: `semio-print-color-${hex}${alpha === 1 ? "" : `-A${String(alpha).replace(".", "p")}`}` }; } catch { return undefined; } }
+const METADATA = schema as VizSchemaDocument;
+type OptionValue = VizOptionValue | null | readonly (VizOptionValue | null)[];
+function scalar(value: VizOptionValue | null | undefined): string { if (value === null || value === undefined) return ""; if (typeof value === "number" && !Number.isFinite(value)) throw new Error("grammar numbers must be finite"); return typeof value === "string" ? escape(value) : String(value); }
+function rowScalar(value: VizOptionValue | null | undefined): string { return value === undefined ? "\\SemioVizUndefined{}" : value === null ? "\\SemioVizNull{}" : typeof value === "string" ? `\\SemioVizString{${escape(value)}}` : typeof value === "boolean" ? `\\SemioVizBoolean{${value}}` : scalar(value); }
+function paint(value: VizOptionValue | null | undefined): string {
+ if(typeof value!=="string")return scalar(value);
+ const parsed=color(value);if(parsed)return parsed.name;
+ const named=(name:string)=>name==="."||/^[A-Za-z][A-Za-z0-9_-]*$/.test(name),parts=value.split("!");if(named(parts[0]!)&&parts.slice(1).every((part,index)=>index%2===0?part.trim()!==""&&Number.isFinite(Number(part))&&Number(part)>=0&&Number(part)<=100:named(part)))return value;
+ throw Error(`Invalid native or CSS paint ${JSON.stringify(value)}`);
+}
+function recordItems(value:string):string[]{
+ const items:string[]=[];let start=0,depth=0;
+ for(let index=0;index<value.length;index++){const character=value[index];if(character==="\\"){index++;continue;}if(character==="{")depth++;else if(character==="}"&&--depth<0)throw Error("Unbalanced native records");else if(character===","&&depth===0){items.push(value.slice(start,index).trim());start=index+1;}}
+ if(depth)throw Error("Unbalanced native records");items.push(value.slice(start).trim());return items.map(item=>item.startsWith("{")&&item.endsWith("}")?item.slice(1,-1):item);
+}
+function nativeOption(value:OptionValue,descriptor:VizOptionSyntaxDescriptor,paintResult=false):string{
+ const raw=()=>{const item=(value:VizOptionValue|null)=>{if(value===null)throw Error("Native grammar requires strings, finite scalar values or scalar lists");return typeof value==="string"?value:scalar(value);};return Array.isArray(value)?value.map(item).join(","):item(value as VizOptionValue|null);};
+ switch(descriptor.syntax){
+  case "text":if(typeof value!=="string")throw Error("Literal option text must be a string");return escape(value);
+  case "identifier":return raw();
+  case "expression":case "key-list":case "style":return raw();
+  case "records":return descriptor.items?recordItems(raw()).map(item=>`{${descriptor.items==="text"?escape(item):token(item)}}`).join(","):raw();
+  case "number-list":return raw();
+  case "scalar":if(typeof value!=="boolean"&&typeof value!=="number")throw Error("Scalar options require a number or boolean");return scalar(value);
+  case "value":return Array.isArray(value)?value.map(rowScalar).join(","):paintResult&&typeof value==="string"?paint(value):rowScalar(value as VizOptionValue|null);
+  case "paint":if(Array.isArray(value)){if(value.some(item=>typeof item!=="string"))throw Error("Paint lists require strings");return value.map(paint).join(",");}if(typeof value!=="string")throw Error("Paint options require strings or paint lists");return color(value)?.name??recordItems(value).map(paint).join(",");
+  default:throw Error("Unknown source-owned option syntax");
+ }
+}
+function options(owner:string,value:Readonly<Record<string,OptionValue>>={},family=false,paintResult=false):string{
+ const descriptors=family?METADATA["x-semio-family-options"][owner]?.options:METADATA["x-semio-option-syntax"][owner];
+ if(!descriptors)throw Error(`Missing native syntax owner ${owner}`);
+ return Object.keys(value).sort().map(key=>{const descriptor=descriptors[key];if(!descriptor)throw Error(`Undeclared native option ${owner}/${key}`);return `${token(key)}={${nativeOption(value[key]!,descriptor,paintResult)}}`;}).join(",");
+}
+
+
+export function inferVizPresetTikz(spec: VizChartSpecification, layeredTikz: string, checkpoint:()=>void=()=>{}): string {
+  checkpoint();
+  const presets = spec.presets ?? [];
+  if (presets.length === 0) return layeredTikz;
+  if (spec.language !== "en" && spec.language !== "de") throw new Error("catalogue inference requires explicit language");
+  const lines = ["\\begingroup", `\\ExplSyntaxOn\\tl_set:Nn\\l_semio_language_tl{${spec.language}}\\ExplSyntaxOff`, `\\begin{VizFigure}[width=${spec.width},height=${spec.height},title={${escape(spec.title?.[spec.language] ?? "")}}]`];
+  const colors = new Map<string, Paint>(), stack: unknown[] = [spec];
+  let visited = 0;
+  while (stack.length) { if (++visited % 256 === 0) checkpoint(); const value = stack.pop(); if (typeof value === "string") { const paint = color(value); if (paint) colors.set(paint.name, paint); } else if (value && typeof value === "object") stack.push(...Object.values(value)); }
+  for (const paint of [...colors.values()].sort((a, b) => a.name.localeCompare(b.name))) { lines.push(`\\definecolor{${paint.name}}{HTML}{${paint.hex}}`); if (paint.alpha !== 1) lines.push(`\\SemioVizPaintAlpha{${paint.name}}{${paint.alpha}}`); }
+  const tables = new Set<string>();
+  for (const table of spec.tables ?? []) {
+    checkpoint();
+    const name = token(table.name);
+    if (tables.has(name)) throw new Error(`duplicate table ${name}`);
+    tables.add(name);
+    lines.push(`\\SemioVizTable{${name}}{${table.columns.map(token).join(",")}}`);
+    for (const row of table.rows) {checkpoint();lines.push(`\\SemioVizRow{${name}}{${table.columns.map((column) => `{${rowScalar(row[column])}}`).join(",")}}`);}
+  }
+  const paintScales=new Set(spec.layers.flatMap(layer=>[layer.encodings?.fill?.scale,layer.encodings?.stroke?.scale]).filter((name):name is string=>name!==undefined));
+  for (const scale of spec.scales ?? []) {
+    checkpoint();
+    const scaleOptions = scale.options ?? {};
+    lines.push(`\\SemioVizScale{${token(scale.name)}}{${token(scale.kind)}}{${scale.domain.map(["ordinal","band","point"].includes(scale.kind)?rowScalar:scalar).join(",")}}{${scale.range.map(paintScales.has(scale.name)?paint:scalar).join(",")}}[${options("scale",scaleOptions,false,paintScales.has(scale.name))}]`);
+  }
+  if (spec.theme) {
+    const name = spec.theme.name === "semio" || spec.theme.name === undefined ? "default" : token(spec.theme.name);
+    lines.push(`\\SemioVizTheme{${name}}[appearance=${spec.theme.appearance ?? "light"}]`);
+    if (spec.theme.palette) lines.push(`\\SemioVizThemeSet[colors={${spec.theme.palette.map(paint).join(",")}}]`);
+  }
+  for (const preset of presets) {
+    checkpoint();
+    const kind = token(preset.kind), entry = KINDS.get(kind);
+    if (!entry) throw new Error(`unknown catalogue kind ${kind}`);
+    const data = preset.data;
+    if (data !== undefined && data !== "demo" && data !== entry.data && !tables.has(data)) throw new Error(`unknown preset table ${data}`);
+    const settings = options(entry.family,preset.options,true);
+    lines.push(`\\SemioVizChart{${kind}}[${settings}${data===undefined?"":`${settings?",":""}data=${token(data)}`}]`);
+  }
+  const begin = layeredTikz.indexOf("\n");
+  const end = layeredTikz.lastIndexOf("\\end{tikzpicture}");
+  if (begin < 0 || end < 0) throw new Error("layer inference did not emit a complete TikZ picture");
+  lines.push(layeredTikz.slice(begin + 1, end).trimEnd(), "\\end{VizFigure}", "\\endgroup");
+  return `${lines.join("\n")}\n`;
+}

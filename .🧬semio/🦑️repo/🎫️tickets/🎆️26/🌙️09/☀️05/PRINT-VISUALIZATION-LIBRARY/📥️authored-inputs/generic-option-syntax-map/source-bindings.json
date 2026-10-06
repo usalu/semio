@@ -1,0 +1,50 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-scale.sty",
+    "sha256": "8C3A8022CA7E0289FE9AC84F2AB9C50167A6E3E1940DA73BF7C70A37CFC30B97"
+  },
+  {
+    "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-coordinate.sty",
+    "sha256": "0DD15CDB805EF48189498DFE8803828BFFC670DE3048B9CC006FB704259F223E"
+  },
+  {
+    "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-transform.sty",
+    "sha256": "B810EE303DA1A44DC8C8939009FA04E24E106DFC4CA6DDFD5FB449BD482650D9"
+  },
+  {
+    "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-layout.sty",
+    "sha256": "859BFBE993414A5024C1F19518BD15D81684D7E46354924AE69CF756FEE0197A"
+  },
+  {
+    "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-plot.sty",
+    "sha256": "34B46A9D6272E2D6471F82C15F6C713834D828E4B1A0576B2C33B1E9E90F08D1"
+  },
+  {
+    "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-mark.sty",
+    "sha256": "ADECBA7FB5226DE2ABD1B3901E392C178EC0B8ED8FB6B12F34751B3EB5D2EE66"
+  },
+  {
+    "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-guide.sty",
+    "sha256": "623D4F9EE92C09983F784E484978D01776EC4FF8CF4C4A55712FBE3C93A053ED"
+  },
+  {
+    "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-hierarchy.sty",
+    "sha256": "D9A893C219295791BB657810ADD0D367EFAA419FD21F7D3E1AA81352DCB43BAD"
+  },
+  {
+    "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-network.sty",
+    "sha256": "2131298AC89CFDCDCB2D697E1DBBEEEE67BAE3895F7AE808850B5EE3F1370B5C"
+  },
+  {
+    "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-flow.sty",
+    "sha256": "0E79C84406EB9EC79E9D82628A7EBBA9F63B9351B64A8C2E1A3F96AFD32411F9"
+  },
+  {
+    "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-spatial.sty",
+    "sha256": "9F15CB7679AD20D6EDA26A79D334A38391B361F8E9B9CB9D21716900936CFD1E"
+  },
+  {
+    "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-geo.sty",
+    "sha256": "C50E1030BCC2A4F0C9CBE9F27BB187B34947B5BEA3B8D4D85097EDFC3E0589E5"
+  }
+]

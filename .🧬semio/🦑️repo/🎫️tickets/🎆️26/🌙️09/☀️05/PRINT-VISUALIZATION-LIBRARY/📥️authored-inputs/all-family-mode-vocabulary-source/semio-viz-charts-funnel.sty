@@ -1,0 +1,192 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-viz-charts-funnel}[2026/09/05 v0.3.0 semio viz namespace charts-funnel families]
+
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+\RequirePackage{semio-viz-charts-line}
+
+\ExplSyntaxOn
+
+%region 🔖️Keys
+% 🔑 semio / viz / family / funnel — the conversion shapes of taxonomy §19.
+%   mode      (funnel|inverted|pyramid|drop-off|stage-flow|sankey, default funnel)
+%   stage     (column, default stage)   the stage label column
+%   value     (column, default value)   the stage size column
+%   gap       (mm, default 1)           space between two stages
+%   labels    (none|value|category, inherited)
+%   dropoff   (boolean, default false)  render the lost share of every stage as well
+\tl_new:N \l_semio_viz_funnel_mode_tl
+\tl_new:N \l_semio_viz_funnel_stage_tl
+\tl_new:N \l_semio_viz_funnel_value_tl
+\fp_new:N \l_semio_viz_funnel_gap_fp
+\bool_new:N \l_semio_viz_funnel_drop_bool
+
+\semio_viz_cart_family_keys:n { semio / viz / family / funnel }
+% 🔑 The funnel's own keys, on top of the cartesian family keys inherited above.
+\keys_define:nn { semio / viz / family / funnel } {
+  mode    .tl_set:N = \l_semio_viz_funnel_mode_tl,
+  stage   .tl_set:N = \l_semio_viz_funnel_stage_tl,
+  value   .tl_set:N = \l_semio_viz_funnel_value_tl,
+  gap     .fp_set:N = \l_semio_viz_funnel_gap_fp,
+  dropoff .bool_set:N = \l_semio_viz_funnel_drop_bool,
+}
+%endregion 🔖️Keys
+
+%region 🔖️Families
+% 🔻 funnel — funnel, inverted funnel, pyramid, drop-off and stage-flow shapes of taxonomy §19.
+\seq_new:N \l_semio_viz_funnel_stages_seq
+\seq_new:N \l_semio_viz_funnel_values_seq
+\fp_new:N \l_semio_viz_funnel_max_fp
+\fp_new:N \l_semio_viz_funnel_h_fp
+\fp_new:N \l_semio_viz_funnel_wa_fp
+\fp_new:N \l_semio_viz_funnel_wb_fp
+\fp_new:N \l_semio_viz_funnel_ya_fp
+\fp_new:N \l_semio_viz_funnel_yb_fp
+\fp_new:N \l_semio_viz_funnel_cx_fp
+\tl_new:N \l_semio_viz_funnel_cell_tl
+
+\cs_new_protected:Npn \semio_viz_funnel_keys_reset: {
+  \semio_viz_cart_keys_reset:
+  \tl_set:Nn \l_semio_viz_cart_data_tl { demo-stage }
+  \tl_set:Nn \l_semio_viz_funnel_mode_tl { funnel }
+  \tl_set:Nn \l_semio_viz_funnel_stage_tl { stage }
+  \tl_set:Nn \l_semio_viz_funnel_value_tl { value }
+  \fp_set:Nn \l_semio_viz_funnel_gap_fp { 1 }
+  \bool_set_false:N \l_semio_viz_funnel_drop_bool
+  \bool_set_false:N \l_semio_viz_cart_axes_bool
+  \fp_set:Nn \l_semio_viz_cart_pad_l_fp { 4 }
+  \fp_set:Nn \l_semio_viz_cart_pad_r_fp { 4 }
+}
+
+% 📥 Reads the stage and value columns into two parallel sequences and remembers the largest value.
+\cs_new_protected:Npn \semio_viz_funnel_load_run: {
+  \seq_clear:N \l_semio_viz_funnel_stages_seq
+  \seq_clear:N \l_semio_viz_funnel_values_seq
+  \fp_set:Nn \l_semio_viz_funnel_max_fp { 1 }
+  \int_step_inline:nn { \l_semio_viz_cart_nrows_int } {
+    \semio_viz_table_cell:nnVN { \l_semio_viz_cart_data_tl } {##1} \l_semio_viz_funnel_stage_tl
+      \l_semio_viz_funnel_cell_tl
+    \seq_put_right:NV \l_semio_viz_funnel_stages_seq \l_semio_viz_funnel_cell_tl
+    \semio_viz_table_cell:nnVN { \l_semio_viz_cart_data_tl } {##1} \l_semio_viz_funnel_value_tl
+      \l_semio_viz_funnel_cell_tl
+    \seq_put_right:NV \l_semio_viz_funnel_values_seq \l_semio_viz_funnel_cell_tl
+    \fp_set:Nn \l_semio_viz_funnel_max_fp
+      { max( \l_semio_viz_funnel_max_fp , \l_semio_viz_funnel_cell_tl ) }
+  }
+}
+
+% 📐 Half-width of a stage as a fraction of the plot width, per the shape the mode asks for.
+\cs_new_protected:Npn \semio_viz_funnel_halfwidth:nN #1#2 {
+  \str_case:VnF \l_semio_viz_funnel_mode_tl {
+    { pyramid } {
+      \fp_set:Nn #2 { ( \l_semio_viz_cart_xhi_fp - \l_semio_viz_cart_xlo_fp ) / 2
+        * ( (#1) - 1 ) / max( 1 , \l_semio_viz_cart_n_int - 1 ) }
+    }
+    { inverted } {
+      \fp_set:Nn #2 { ( \l_semio_viz_cart_xhi_fp - \l_semio_viz_cart_xlo_fp ) / 2
+        * \seq_item:Nn \l_semio_viz_funnel_values_seq
+            { \int_eval:n { \int_max:nn { 1 } { \l_semio_viz_cart_n_int - (#1) + 1 } } }
+        / \l_semio_viz_funnel_max_fp }
+    }
+  } {
+    \fp_set:Nn #2 { ( \l_semio_viz_cart_xhi_fp - \l_semio_viz_cart_xlo_fp ) / 2
+      * \seq_item:Nn \l_semio_viz_funnel_values_seq { \int_eval:n { \int_min:nn { #1 } { \l_semio_viz_cart_n_int } } }
+      / \l_semio_viz_funnel_max_fp }
+    \str_if_eq:VnT \l_semio_viz_funnel_mode_tl { sankey }
+      { \fp_set:Nn #2 { #2 * 0.7 } }
+  }
+}
+
+% 🔻 One trapezoid between the widths of two consecutive stages.
+\cs_new_protected:Npn \semio_viz_funnel_band: {
+  \fill [ \l_semio_viz_cart_fill_tl ]
+    ( \fp_eval:n { \l_semio_viz_funnel_cx_fp - \l_semio_viz_funnel_wa_fp } ,
+      \fp_eval:n { \l_semio_viz_funnel_ya_fp - \l_semio_viz_funnel_gap_fp / 2 } )
+    -- ( \fp_eval:n { \l_semio_viz_funnel_cx_fp + \l_semio_viz_funnel_wa_fp } ,
+         \fp_eval:n { \l_semio_viz_funnel_ya_fp - \l_semio_viz_funnel_gap_fp / 2 } )
+    -- ( \fp_eval:n { \l_semio_viz_funnel_cx_fp + \l_semio_viz_funnel_wb_fp } ,
+         \fp_eval:n { \l_semio_viz_funnel_yb_fp + \l_semio_viz_funnel_gap_fp / 2 } )
+    -- ( \fp_eval:n { \l_semio_viz_funnel_cx_fp - \l_semio_viz_funnel_wb_fp } ,
+         \fp_eval:n { \l_semio_viz_funnel_yb_fp + \l_semio_viz_funnel_gap_fp / 2 } ) -- cycle ;
+  \semio_viz_probe_geometry:nx { trapezoid }
+    { \fp_eval:n { round( \l_semio_viz_funnel_ya_fp - \l_semio_viz_funnel_gap_fp / 2 , 4 ) } ,
+      \fp_eval:n { round( \l_semio_viz_funnel_yb_fp + \l_semio_viz_funnel_gap_fp / 2 , 4 ) } ,
+      \fp_eval:n { round( 2 * \l_semio_viz_funnel_wa_fp , 4 ) } ,
+      \fp_eval:n { round( 2 * \l_semio_viz_funnel_wb_fp , 4 ) } }
+}
+
+% 🧱 One horizontal bar per stage, used by the stage-flow and drop-off modes.
+\cs_new_protected:Npn \semio_viz_funnel_bar: {
+  \semio_viz_cart_draw_rect:nnnn
+    { \fp_eval:n { \l_semio_viz_cart_xlo_fp } }
+    { \fp_eval:n { \l_semio_viz_funnel_yb_fp + \l_semio_viz_funnel_gap_fp / 2 } }
+    { \fp_eval:n { 2 * \l_semio_viz_funnel_wa_fp } }
+    { \fp_eval:n { \l_semio_viz_funnel_ya_fp - \l_semio_viz_funnel_yb_fp
+      - \l_semio_viz_funnel_gap_fp } }
+  \bool_if:NT \l_semio_viz_funnel_drop_bool {
+    \tl_set:Nn \l_semio_viz_cart_fill_tl { semio-chrome-panel }
+    \semio_viz_cart_draw_rect:nnnn
+      { \fp_eval:n { \l_semio_viz_cart_xlo_fp + 2 * \l_semio_viz_funnel_wa_fp } }
+      { \fp_eval:n { \l_semio_viz_funnel_yb_fp + \l_semio_viz_funnel_gap_fp / 2 } }
+      { \fp_eval:n { \l_semio_viz_cart_xhi_fp - \l_semio_viz_cart_xlo_fp
+        - 2 * \l_semio_viz_funnel_wa_fp } }
+      { \fp_eval:n { \l_semio_viz_funnel_ya_fp - \l_semio_viz_funnel_yb_fp
+        - \l_semio_viz_funnel_gap_fp } }
+  }
+}
+
+% 🔻 Draws one band or bar per stage, from the top of the frame downwards, and labels it.
+\cs_new_protected:Npn \semio_viz_funnel_stage_run: {
+  \int_step_variable:nNn { \l_semio_viz_cart_n_int } \l_semio_viz_cart_i_int {
+    \fp_set:Nn \l_semio_viz_funnel_ya_fp
+      { \l_semio_viz_cart_yhi_fp
+        - ( \l_semio_viz_cart_i_int - 1 ) * \l_semio_viz_funnel_h_fp }
+    \fp_set:Nn \l_semio_viz_funnel_yb_fp
+      { \l_semio_viz_cart_yhi_fp - \l_semio_viz_cart_i_int * \l_semio_viz_funnel_h_fp }
+    \semio_viz_funnel_halfwidth:nN { \l_semio_viz_cart_i_int } \l_semio_viz_funnel_wa_fp
+    \semio_viz_funnel_halfwidth:nN { \l_semio_viz_cart_i_int + 1 } \l_semio_viz_funnel_wb_fp
+    \semio_viz_cart_color:VN \l_semio_viz_cart_i_int \l_semio_viz_cart_fill_tl
+    \str_case:VnF \l_semio_viz_funnel_mode_tl {
+      { stage-flow } { \semio_viz_funnel_bar: }
+      { drop-off } { \semio_viz_funnel_bar: }
+      { sankey } { \semio_viz_funnel_band: }
+    } { \semio_viz_funnel_band: }
+    \semio_viz_funnel_stage_label:
+  }
+}
+
+% 🏷️ The stage's label under `labels=category` on the left, its value under `labels=value` on the right.
+\cs_new_protected:Npn \semio_viz_funnel_stage_label: {
+  \str_if_eq:VnT \l_semio_viz_cart_labels_tl { category } {
+    \semio_viz_cart_text:nnnn { \fp_eval:n { \l_semio_viz_cart_xlo_fp + 1 } }
+      { \fp_eval:n { ( \l_semio_viz_funnel_ya_fp + \l_semio_viz_funnel_yb_fp ) / 2 } }
+      { west } { \seq_item:Nn \l_semio_viz_funnel_stages_seq { \l_semio_viz_cart_i_int } }
+  }
+  \str_if_eq:VnT \l_semio_viz_cart_labels_tl { value } {
+    \semio_viz_cart_text:nnnn { \fp_eval:n { \l_semio_viz_cart_xhi_fp - 1 } }
+      { \fp_eval:n { ( \l_semio_viz_funnel_ya_fp + \l_semio_viz_funnel_yb_fp ) / 2 } }
+      { east } { \seq_item:Nn \l_semio_viz_funnel_values_seq { \l_semio_viz_cart_i_int } }
+  }
+}
+
+% ▶️ The whole family run: defaults, the option list #1, the frame, the data and the stages.
+\cs_new_protected:Npn \semio_viz_funnel_render:n #1 {
+  \semio_viz_frame_require:n { SemioVizRunFamily }
+  \semio_viz_funnel_keys_reset:
+  \keys_set:nn { semio / viz / family / funnel } {#1}
+  \semio_viz_cart_rect_compute:
+  \semio_viz_table_nrows:VN \l_semio_viz_cart_data_tl \l_semio_viz_cart_nrows_int
+  \semio_viz_funnel_load_run:
+  \int_set:Nn \l_semio_viz_cart_n_int { \seq_count:N \l_semio_viz_funnel_stages_seq }
+  \fp_set:Nn \l_semio_viz_funnel_h_fp
+    { ( \l_semio_viz_cart_yhi_fp - \l_semio_viz_cart_ylo_fp ) / \l_semio_viz_cart_n_int }
+  \fp_set:Nn \l_semio_viz_funnel_cx_fp
+    { ( \l_semio_viz_cart_xlo_fp + \l_semio_viz_cart_xhi_fp ) / 2 }
+  \semio_viz_funnel_stage_run:
+}
+
+% 🔻 §19: funnel, inverted funnel, pyramid, drop-off, stage-flow and sankey conversion shapes.
+\SemioVizFamily { funnel } { \semio_viz_funnel_render:n {#1} }
+%endregion 🔖️Families
+
+\ExplSyntaxOff

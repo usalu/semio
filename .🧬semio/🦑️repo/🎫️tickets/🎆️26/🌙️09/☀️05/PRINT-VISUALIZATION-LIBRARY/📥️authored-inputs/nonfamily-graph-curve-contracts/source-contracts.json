@@ -1,0 +1,183 @@
+{
+  "sources": [
+    {
+      "file": "semio-viz-network.sty",
+      "sha": "75B03BE67391F39304F5AB1DEE06013B9B6C23D49F9ECECC5DA11B0E8A82697A"
+    },
+    {
+      "file": "semio-viz-mark.sty",
+      "sha": "5736881919461E54311E18F4F68B29DA713C2AA66E16888CEAE562B241E7112B"
+    },
+    {
+      "file": "semio-viz-scale.sty",
+      "sha": "6D7A3A1573129790321A00FE0B1CF7B1E16127FB8DF2F063AB2A0E764B51068A"
+    }
+  ],
+  "rows": [
+    {
+      "scope": "semio/viz/graph/bind",
+      "key": "nodes",
+      "type": "string",
+      "default": "table role, otherwise empty",
+      "en": "Graph binding for nodes; authored options override resolved table roles.",
+      "de": "Graphzuordnung für nodes; angegebene Optionen überschreiben aufgelöste Tabellenrollen.",
+      "declaration": "network.sty156–164",
+      "reset": "network.sty72–91 roles_read",
+      "consumer": "network.sty168–190 graph_build;110–132 cell reads"
+    },
+    {
+      "scope": "semio/viz/graph/bind",
+      "key": "edges",
+      "type": "string",
+      "default": "table role, otherwise input graph table",
+      "en": "Graph binding for edges; authored options override resolved table roles.",
+      "de": "Graphzuordnung für edges; angegebene Optionen überschreiben aufgelöste Tabellenrollen.",
+      "declaration": "network.sty156–164",
+      "reset": "network.sty72–91 roles_read",
+      "consumer": "network.sty168–190 graph_build;110–132 cell reads"
+    },
+    {
+      "scope": "semio/viz/graph/bind",
+      "key": "id",
+      "type": "string",
+      "default": "table role, otherwise id",
+      "en": "Graph binding for id; authored options override resolved table roles.",
+      "de": "Graphzuordnung für id; angegebene Optionen überschreiben aufgelöste Tabellenrollen.",
+      "declaration": "network.sty156–164",
+      "reset": "network.sty72–91 roles_read",
+      "consumer": "network.sty168–190 graph_build;110–132 cell reads"
+    },
+    {
+      "scope": "semio/viz/graph/bind",
+      "key": "source",
+      "type": "string",
+      "default": "table role, otherwise source",
+      "en": "Graph binding for source; authored options override resolved table roles.",
+      "de": "Graphzuordnung für source; angegebene Optionen überschreiben aufgelöste Tabellenrollen.",
+      "declaration": "network.sty156–164",
+      "reset": "network.sty72–91 roles_read",
+      "consumer": "network.sty168–190 graph_build;110–132 cell reads"
+    },
+    {
+      "scope": "semio/viz/graph/bind",
+      "key": "target",
+      "type": "string",
+      "default": "table role, otherwise target",
+      "en": "Graph binding for target; authored options override resolved table roles.",
+      "de": "Graphzuordnung für target; angegebene Optionen überschreiben aufgelöste Tabellenrollen.",
+      "declaration": "network.sty156–164",
+      "reset": "network.sty72–91 roles_read",
+      "consumer": "network.sty168–190 graph_build;110–132 cell reads"
+    },
+    {
+      "scope": "semio/viz/graph/bind",
+      "key": "weight",
+      "type": "string",
+      "default": "table role, otherwise weight",
+      "en": "Graph binding for weight; authored options override resolved table roles.",
+      "de": "Graphzuordnung für weight; angegebene Optionen überschreiben aufgelöste Tabellenrollen.",
+      "declaration": "network.sty156–164",
+      "reset": "network.sty72–91 roles_read",
+      "consumer": "network.sty168–190 graph_build;110–132 cell reads"
+    },
+    {
+      "scope": "semio/viz/graph/bind",
+      "key": "group",
+      "type": "string",
+      "default": "table role, otherwise group",
+      "en": "Graph binding for group; authored options override resolved table roles.",
+      "de": "Graphzuordnung für group; angegebene Optionen überschreiben aufgelöste Tabellenrollen.",
+      "declaration": "network.sty156–164",
+      "reset": "network.sty72–91 roles_read",
+      "consumer": "network.sty168–190 graph_build;110–132 cell reads"
+    },
+    {
+      "scope": "semio/viz/layout/chord",
+      "key": "pad-angle",
+      "type": "number",
+      "default": "0",
+      "en": "Angular gap between groups in radians.",
+      "de": "Winkelabstand zwischen Gruppen in Radiant.",
+      "declaration": "network.sty1619–1624",
+      "reset": "network.sty1626–1627 defaults;1754 entry",
+      "consumer": "network.sty1637–1639 mirror;1690–1691 subgroup sort;1782–1783 group sort"
+    },
+    {
+      "scope": "semio/viz/layout/chord",
+      "key": "sort-groups",
+      "type": "string",
+      "default": "none",
+      "en": "Group value ordering: none, ascending or descending.",
+      "de": "Wertreihenfolge der Gruppen: none, ascending oder descending.",
+      "declaration": "network.sty1619–1624",
+      "reset": "network.sty1626–1627 defaults;1754 entry",
+      "consumer": "network.sty1637–1639 mirror;1690–1691 subgroup sort;1782–1783 group sort"
+    },
+    {
+      "scope": "semio/viz/layout/chord",
+      "key": "sort-subgroups",
+      "type": "string",
+      "default": "none",
+      "en": "Subgroup value ordering: none, ascending or descending.",
+      "de": "Wertreihenfolge der Untergruppen: none, ascending oder descending.",
+      "declaration": "network.sty1619–1624",
+      "reset": "network.sty1626–1627 defaults;1754 entry",
+      "consumer": "network.sty1637–1639 mirror;1690–1691 subgroup sort;1782–1783 group sort"
+    },
+    {
+      "scope": "semio/viz/layout/chord",
+      "key": "symmetric",
+      "type": "boolean",
+      "default": "false",
+      "en": "Mirror edges into the transposed matrix cell.",
+      "de": "Kanten in die transponierte Matrixzelle spiegeln.",
+      "declaration": "network.sty1619–1624",
+      "reset": "network.sty1626–1627 defaults;1754 entry",
+      "consumer": "network.sty1637–1639 mirror;1690–1691 subgroup sort;1782–1783 group sort"
+    },
+    {
+      "scope": "semio/viz/curve",
+      "key": "tension",
+      "type": "number",
+      "default": "0",
+      "en": "Cardinal spline tension.",
+      "de": "Spannung der Cardinal-Spline.",
+      "declaration": "mark.sty331–335",
+      "reset": "mark.sty355–359",
+      "consumer": "mark.sty361 cardinal factor; Catmull–Rom/bundle selected curve branches"
+    },
+    {
+      "scope": "semio/viz/curve",
+      "key": "alpha",
+      "type": "number",
+      "default": "0.5",
+      "en": "Catmull–Rom parameterization exponent.",
+      "de": "Parametrisierungsexponent der Catmull–Rom-Kurve.",
+      "declaration": "mark.sty331–335",
+      "reset": "mark.sty355–359",
+      "consumer": "mark.sty361 cardinal factor; Catmull–Rom/bundle selected curve branches"
+    },
+    {
+      "scope": "semio/viz/curve",
+      "key": "beta",
+      "type": "number",
+      "default": "0.85",
+      "en": "Bundle curve interpolation strength.",
+      "de": "Interpolationsstärke der Bundle-Kurve.",
+      "declaration": "mark.sty331–335",
+      "reset": "mark.sty355–359",
+      "consumer": "mark.sty361 cardinal factor; Catmull–Rom/bundle selected curve branches"
+    },
+    {
+      "scope": "semio/viz/scale/solver",
+      "key": "niceIterations",
+      "type": "integer",
+      "default": "10",
+      "en": "Maximum interval-nicing iterations.",
+      "de": "Maximale Iterationen der Intervallanpassung.",
+      "declaration": "scale.sty986–987",
+      "reset": "scale.sty981–982 initialized, not reset by every scale",
+      "consumer": "scale.sty1006 nice_pair loop"
+    }
+  ]
+}

@@ -1,0 +1,149 @@
+{
+  "cases": [
+    {
+      "id": "siblings",
+      "rows": [
+        {
+          "id": "R",
+          "parent": "",
+          "value": 2,
+          "label": "  Root Payload  "
+        },
+        {
+          "id": "B",
+          "parent": "R",
+          "value": 3,
+          "label": "First Child"
+        },
+        {
+          "id": "A",
+          "parent": "R",
+          "value": 1,
+          "label": "a,b"
+        }
+      ],
+      "expected": {
+        "R": {
+          "depth": 1,
+          "subtree": 6
+        },
+        "B": {
+          "depth": 2,
+          "subtree": 3
+        },
+        "A": {
+          "depth": 2,
+          "subtree": 1
+        }
+      }
+    },
+    {
+      "id": "siblings-reversed",
+      "rows": [
+        {
+          "id": "A",
+          "parent": "R",
+          "value": 1,
+          "label": "a,b"
+        },
+        {
+          "id": "B",
+          "parent": "R",
+          "value": 3,
+          "label": "First Child"
+        },
+        {
+          "id": "R",
+          "parent": "",
+          "value": 2,
+          "label": "  Root Payload  "
+        }
+      ],
+      "expected": {
+        "R": {
+          "depth": 1,
+          "subtree": 6
+        },
+        "A": {
+          "depth": 2,
+          "subtree": 1
+        },
+        "B": {
+          "depth": 2,
+          "subtree": 3
+        }
+      }
+    },
+    {
+      "id": "zero-forest",
+      "rows": [
+        {
+          "id": "A",
+          "parent": "",
+          "value": 0,
+          "label": "A"
+        },
+        {
+          "id": "B",
+          "parent": "A",
+          "value": 0,
+          "label": "B"
+        },
+        {
+          "id": "C",
+          "parent": "",
+          "value": 0,
+          "label": "C"
+        }
+      ],
+      "expected": {
+        "A": {
+          "depth": 1,
+          "subtree": 0
+        },
+        "C": {
+          "depth": 1,
+          "subtree": 0
+        },
+        "B": {
+          "depth": 2,
+          "subtree": 0
+        }
+      }
+    },
+    {
+      "id": "sentinel-collision",
+      "rows": [
+        {
+          "id": "__neutral_forest__",
+          "parent": "",
+          "value": 2,
+          "label": "Authored Sentinel"
+        },
+        {
+          "id": "L",
+          "parent": "__neutral_forest__",
+          "value": 3,
+          "label": "Leaf"
+        }
+      ],
+      "expected": {
+        "__neutral_forest__": {
+          "depth": 1,
+          "subtree": 5
+        },
+        "L": {
+          "depth": 2,
+          "subtree": 3
+        }
+      }
+    }
+  ],
+  "oracle": {
+    "library": "d3-hierarchy",
+    "algorithm": "stratify,sum",
+    "sentinel": "fresh unique per fixture",
+    "computed": true
+  },
+  "zeroPaintPolicy": "Confirm native minimum .2mm width separately from zero mathematical partition span."
+}

@@ -1,0 +1,64 @@
+{
+  "receipts": [
+    {
+      "name": "cjk-source-metrics-generation-2026-10-06",
+      "completedUtc": "2026-10-06T00:28:49.3384602Z",
+      "exitCode": 0
+    },
+    {
+      "name": "cjk-font-metrics-neutral-green-2026-10-06",
+      "scope": "cjk-font-metrics-neutral-green-2026-10-06",
+      "completedUtc": "2026-10-06T00:41:14.5258674Z",
+      "exitCode": 0
+    },
+    {
+      "name": "root-cjk-font-stage-final-2026-10-06",
+      "completedUtc": "2026-10-06T00:41:23.3933262Z",
+      "exitCode": 0,
+      "scope": "root-cjk-font-stage-final-2026-10-06"
+    }
+  ],
+  "hashes": [
+    {
+      "file": "🔨️modules/🔤print-font-catalog/📜️script.ts",
+      "sha256": "67cd9777008bfbe516456e6e8e630f8ecdfb99200e5dd9ed7aff07ee683ec9eb"
+    },
+    {
+      "file": "🔨️modules/🔤print-font-catalog/🟦️.ts",
+      "sha256": "66510cf79b43b02a936b3bd70b2aba32ca396618a6fab72f053b00b523d78a96"
+    },
+    {
+      "file": "🔨️modules/🔤print-font-catalog/📏️metrics/🟦️.ts",
+      "sha256": "5259989b07842ffe5fb2fbb46b3bbf8bdca676a8152688c29c1eec5883fa2364"
+    },
+    {
+      "file": "🔨️modules/🔤print-font-catalog/📏️metrics/🌏️.json",
+      "sha256": "0d875f69c3449129e6512db553f9e383adb52b1ff2d859902c23da5b5f6bee05"
+    },
+    {
+      "file": "🔨️modules/🔤print-font-catalog/📏️metrics/🧬️schema/🔣️.json",
+      "sha256": "6e653880d85fed7c13e9ab2cd7ec4743812aedb91131a5250072829906bc7cd6"
+    },
+    {
+      "file": "🔨️modules/🔤print-font-catalog/📏️metrics/🧪️tests/🔣️.json",
+      "sha256": "1567b28caca386031b9582b9862bc6b342a637cbe64c4b39a359f11604d67330"
+    },
+    {
+      "file": "🔨️modules/🔤print-font-catalog/📏️metrics/🧪️tests/🟦️.ts",
+      "sha256": "5344b15708dd0c8fd0c499636cac4656548a7938ce2c7851bd3f65d056be5f53"
+    },
+    {
+      "file": "🖋️latex/semio-fonts.sty",
+      "sha256": "652634d20651133e775c0c7d5504fd4aef80c0afc8cbae4f98ac54649a6eac8b"
+    }
+  ],
+  "checks": 57,
+  "passed": 57,
+  "failed": 0,
+  "errors": 0,
+  "glyphCount": 65535,
+  "coveredScalars": 44810,
+  "unitsPerEm": 1000,
+  "sourceSha256": "2c76254f6fc379fddfce0a7e84fb5385bb135d3e399294f6eeb6680d0365b74b",
+  "note": "Source-bound horizontal CJK advances and deterministic runs; native same-caption dimensions/resource audit independently pending."
+}

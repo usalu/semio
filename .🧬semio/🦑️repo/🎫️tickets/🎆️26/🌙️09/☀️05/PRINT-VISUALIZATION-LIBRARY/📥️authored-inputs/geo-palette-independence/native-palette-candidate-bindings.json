@@ -1,0 +1,16 @@
+{
+  "file": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-geo.sty",
+  "before": "C50E1030BCC2A4F0C9CBE9F27BB187B34947B5BEA3B8D4D85097EDFC3E0589E5",
+  "renameCandidate": "B54C02DCD73DD51A3134AEA80E04E7E00B84C7146FA8B3B6FDFA0B00E4263828",
+  "candidate": "735EE60A114BFC98CFFD173C20457EF048ADE4AD322903F68CDE96056EB9DE92",
+  "variableOccurrences": 5,
+  "keyOld": "steps",
+  "keyNew": "paletteSteps",
+  "default": 5,
+  "minimum": 1,
+  "singleLevelPercentage": 59,
+  "status": "Applied after actual52724 native RED; target28997 ten-control GREEN pending.",
+  "countOneCandidate": "80FFCF35E4555C33967ED35C16D7ED243BD9D14BC720D6E876CCD75DFA1DFED9",
+  "applied": "735EE60A114BFC98CFFD173C20457EF048ADE4AD322903F68CDE96056EB9DE92",
+  "rounding": "floor(nonnegativeValue+0.5)"
+}

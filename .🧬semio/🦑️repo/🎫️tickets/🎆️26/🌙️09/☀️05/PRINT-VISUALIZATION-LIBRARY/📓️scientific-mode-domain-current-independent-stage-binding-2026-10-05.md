@@ -1,0 +1,11 @@
+# Scientific Mode Domain Current Independent Stage Binding
+
+Trusted parent terminal64887 actualexit0; independently read log and staged bytes without a compiler. Log SHA-256 E0F0F8F88C7E3D56095FAA76706A7149924A519AF00FAF0D139F28F48352B7D2, final DEBUG confirms92 closed mode predicates and16 hard compiler rejections against AJV eight-family vocabulary.
+
+Actual probe JSONL contains46 native/valid records per theme:38 allowed1 and8 refused0. Families are sci-pathway, sci-circuit, sci-abstract-diagram, sci-electrochem, sci-orbital, sci-phase-diagram, sci-optimization, sci-pitch. Each unknown mode also has an isolated actual rejecting compiler document in each theme (16); these intentional TeX errors are the guard evidence, not a failed aggregate run. Earlier baseline86508 exit1 is not the current result.
+
+Retained25 exact inputs under 📥️authored-inputs/scientific-mode-domain-current-independent-binding:18 actual emitted TeX inputs (two predicate documents plus16 hard-rejection documents),6 unique exact stage owner STYs deduplicated by SHA, and source-stage-binding-capsule.json. All108 document×six-owner stage bindings are recorded. Source owners field/biology/engineering/mathematics/chemistry/geometry have0 current SHA drift at the audit read, across all18 actual stages. These hashes are a bounded read observation; later edits can invalidate current-equivalence. Output hashes22 include18 compiler logs,2 predicate PDFs and2 probe JSONL; generated outputs are not copied into retained inputs.
+
+Current helper audit SHA E696313F719E7B1CC2059FC4FB84928B2E9097E369B64B4145F90A6B919648C2. This is a source read, not a transported producer receipt. Source1779–1797 validates neutral AJV case vocabulary, then evaluates real native mode-key predicates with redirected diagnostics and separately compiles unknowns with hard errors. It proves native mode admission for these eight families; it does not rerender every allowed mode, test all records/custom controls, bind TS/Rust outputs anew or close all94 public-mode descriptors. The domain-reference proposal separately addresses protected table roots and unknown relation lookups.
+
+Final owned union must include this report and all25 retained inputs. No lifecycle mutation, cleanup or extra compiler here.

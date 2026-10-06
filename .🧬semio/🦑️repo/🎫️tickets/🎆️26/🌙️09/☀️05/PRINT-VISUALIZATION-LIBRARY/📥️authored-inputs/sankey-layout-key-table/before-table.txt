@@ -1,0 +1,9 @@
+\SemioTableLong[text-size=8pt]{\ApiText{Sankey, alluvial and parallel-sets options}{Optionen von Sankey, Alluvial und Parallelmengen}}{0.20,0.16,0.16,0.48}{\ApiKey & \ApiType & \ApiDefault & \ApiMeaning}{%
+  \SemioTableRow{\Key{node-width} & \Key{number} & \Key{24} & \ApiText{Width of a node rectangle, in layout units.}{Breite eines Knotenrechtecks, in Layouteinheiten.}}
+  \SemioTableRow{\Key{node-padding} & \Key{number} & \Key{8} & \ApiText{Vertical gap between the nodes of one column.}{Senkrechter Abstand zwischen den Knoten einer Spalte.}}
+  \SemioTableRow{\Key{node-align} & \Key{name} & \Key{justify} & \ApiText{Column assignment: \Key{left}, \Key{right}, \Key{center} or \Key{justify}.}{Spaltenzuweisung: \Key{left}, \Key{right}, \Key{center} oder \Key{justify}.}}
+  \SemioTableRow{\Key{node-sort} & \Key{name} & \Key{auto} & \ApiText{\Key{auto} is d3's ordering of each column by its lower edge.}{\Key{auto} ist d3s Sortierung jeder Spalte nach ihrer Unterkante.}}
+  \SemioTableRow{\Key{link-sort} & \Key{name} & \Key{auto} & \ApiText{\Key{auto} is d3's link ordering by partner breadth.}{\Key{auto} ist d3s Kantensortierung nach der Breite des Partners.}}
+  \SemioTableRow{\Key{iterations} & \Key{integer} & \Key{6} & \ApiText{Relaxation passes.}{Entspannungsdurchläufe.}}
+  \SemioTableRow{\Key{x0}, \Key{y0}, \Key{x1}, \Key{y1} & \Key{number} & \Key{0}, \Key{0}, \Key{1}, \Key{1} & \ApiText{The extent the layout writes into.}{Die Ausdehnung, in die das Layout schreibt.}}
+}

@@ -1,0 +1,63 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-mark.sty",
+    "before": "\\tl_new:N \\l_semio_viz_fam_lower_tl",
+    "after": "\\tl_new:N \\l_semio_viz_fam_lower_tl\n\\tl_new:N \\l_semio_viz_fam_style_tl\n\\seq_new:N \\l_semio_viz_fam_positions_seq"
+  },
+  {
+    "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-mark.sty",
+    "before": "  unknown .code:n   = { \\exp_args:Nnx \\keys_set:nn { semio / viz / mark }\n                         { \\l_keys_key_str = { \\exp_not:n {#1} } } },",
+    "after": "  unknown .code:n   = {\n    \\tl_put_right:Nx \\l_semio_viz_fam_style_tl { \\l_keys_key_str = { \\exp_not:n {#1} } , }\n    \\exp_args:Nnx \\keys_set:nn { semio / viz / mark } { \\l_keys_key_str = { \\exp_not:n {#1} } }\n  },"
+  },
+  {
+    "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-mark.sty",
+    "before": "  \\fp_set_eq:NN \\l_semio_viz_fam_pad_fp \\l_semio_viz_pad_fp\n  \\keys_set:nn { semio / viz / family / mark } {#2}\n  \\exp_args:NV \\semio_viz_mark_defaults:n \\l_semio_viz_fam_variant_tl\n  \\keys_set:nn { semio / viz / family / mark } {#2}",
+    "after": "  \\fp_set_eq:NN \\l_semio_viz_fam_pad_fp \\l_semio_viz_pad_fp\n  \\tl_clear:N \\l_semio_viz_fam_style_tl\n  \\keys_set:nn { semio / viz / family / mark } {#2}\n  \\exp_args:NV \\semio_viz_mark_defaults:n \\l_semio_viz_fam_variant_tl\n  \\tl_clear:N \\l_semio_viz_fam_style_tl\n  \\keys_set:nn { semio / viz / family / mark } {#2}"
+  },
+  {
+    "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-mark.sty",
+    "before": "  \\tl_set_eq:NN \\l_semio_viz_mark_points_tl \\l_semio_viz_fam_points_tl\n  \\tl_set_eq:NN \\l_semio_viz_mark_points_alt_tl \\l_semio_viz_fam_lower_tl",
+    "after": "  \\seq_set_split:NnV \\l_semio_viz_fam_positions_seq { ; } \\l_semio_viz_fam_points_tl\n  \\tl_set_eq:NN \\l_semio_viz_mark_points_tl \\l_semio_viz_fam_points_tl\n  \\tl_set_eq:NN \\l_semio_viz_mark_points_alt_tl \\l_semio_viz_fam_lower_tl"
+  },
+  {
+    "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-mark.sty",
+    "before": "\\cs_new_protected:Npn \\semio_viz_fam_points_render: {\n  \\int_step_inline:nnnn { 1 } { 1 } { \\l_semio_viz_pt_n_int } {\n    \\semio_viz_mark_draw:Vxx \\l_semio_viz_fam_variant_tl\n      { points = { \\exp_not:V \\l_semio_viz_mark_points_tl } , \\exp_not:V \\l_semio_viz_fam_style_tl }\n      { \\semio_viz_px:n {##1} , \\semio_viz_py:n {##1} }\n  }\n}",
+    "after": "\\cs_new_protected:Npn \\semio_viz_fam_points_render: {\n  \\int_step_inline:nnnn { 1 } { 1 } { \\l_semio_viz_fam_rows_int } {\n    \\semio_viz_mark_draw:Vxx \\l_semio_viz_fam_variant_tl\n      { points = { \\exp_not:V \\l_semio_viz_fam_points_tl } , \\exp_not:V \\l_semio_viz_fam_style_tl }\n      { \\seq_item:Nn \\l_semio_viz_fam_positions_seq {##1} }\n  }\n}"
+  },
+  {
+    "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-mark.sty",
+    "start": "\\tl_new:N \\l_semio_viz_fam_style_tl\n% 🎨 The style the family collected, replayed onto each mark it draws.",
+    "end": "% 〰️ Path marks: one path through every row of the table.",
+    "after": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-mark.sty",
+    "before": "    { \\semio_viz_px:n { \\l_semio_viz_fam_peak_int } , \\semio_viz_py:n { \\l_semio_viz_fam_peak_int } }",
+    "after": "    { \\seq_item:Nn \\l_semio_viz_fam_positions_seq { \\l_semio_viz_fam_peak_int } }"
+  },
+  {
+    "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-mark.sty",
+    "before": "  \\semio_viz_fam_style:\n  \\str_case:nnF {#1}",
+    "after": "  \\str_case:nnF {#1}"
+  },
+  {
+    "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-network.sty",
+    "before": "%   seed             (number, default 1)    seed of the deterministic generator\n",
+    "after": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-network.sty",
+    "before": "  seed          .fp_set:N = \\l_semio_viz_network_seed_fp,\n",
+    "after": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-network-graph.sty",
+    "before": "          orientation = \\l_semio_viz_net_orientation_tl ,\n          seed = \\fp_use:N \\l_semio_viz_net_seed_fp",
+    "after": "          orientation = \\l_semio_viz_net_orientation_tl"
+  },
+  {
+    "path": "🧰️framework/🛍️products/📓️print/🧾️template/📊️viz-api/🔓️viz-api.tex",
+    "before": "  \\SemioTableRow{\\Key{seed} & \\Key{number} & \\ApiText{retained}{übernommen} & \\ApiText{Stored force seed shared with the force namespace; the placement reset does not initialise it, and current placement consumers do not read it.}{Gespeicherter Kraftstartwert, der mit dem Kräfteschlüsselbereich geteilt wird; der Platzierungsreset initialisiert ihn nicht und die derzeitigen Platzierungen lesen ihn nicht.}}\n",
+    "after": ""
+  }
+]

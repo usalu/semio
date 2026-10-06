@@ -1,0 +1,3140 @@
+{
+  "nativeScaleNice": {
+    "contract": {
+      "projection": "mutation-inference-nativeCompiler",
+      "oracle": "D3"
+    },
+    "snapshot": {
+      "chart": {
+        "width": 40,
+        "height": 20,
+        "language": "en",
+        "layers": [],
+        "scales": [
+          {
+            "name": "nice-control",
+            "kind": "linear",
+            "domain": [
+              0.13,
+              0.87
+            ],
+            "range": [
+              0,
+              10
+            ],
+            "options": {
+              "nice": 2
+            }
+          }
+        ],
+        "margin": {
+          "left": 0,
+          "right": 0,
+          "top": 0,
+          "bottom": 0
+        },
+        "tables": [
+          {
+            "name": "nice-data",
+            "columns": [
+              "t",
+              "val"
+            ],
+            "rows": [
+              {
+                "t": 0,
+                "val": 0
+              },
+              {
+                "t": 5,
+                "val": 5
+              },
+              {
+                "t": 10,
+                "val": 10
+              }
+            ]
+          }
+        ],
+        "presets": [
+          {
+            "kind": "circle",
+            "data": "nice-data",
+            "options": {
+              "size": 1
+            }
+          }
+        ]
+      }
+    },
+    "inputs": [
+      0.13,
+      0.5,
+      0.87
+    ],
+    "cases": [
+      {
+        "id": "disabled-en",
+        "language": "en",
+        "value": false
+      },
+      {
+        "id": "disabled-de",
+        "language": "de",
+        "value": false
+      },
+      {
+        "id": "omitted-en",
+        "language": "en"
+      },
+      {
+        "id": "omitted-de",
+        "language": "de"
+      },
+      {
+        "id": "true-en",
+        "language": "en",
+        "value": true
+      },
+      {
+        "id": "true-de",
+        "language": "de",
+        "value": true
+      },
+      {
+        "id": "count-en",
+        "language": "en",
+        "value": 4
+      },
+      {
+        "id": "count-de",
+        "language": "de",
+        "value": 4
+      },
+      {
+        "id": "fraction-en",
+        "language": "en",
+        "value": 2.5
+      },
+      {
+        "id": "fraction-de",
+        "language": "de",
+        "value": 2.5
+      }
+    ]
+  },
+  "familyCustomization": {
+    "contract": {
+      "projection": "mutation-inference-nativeCompiler",
+      "oracles": [
+        "D3",
+        "PDF.js"
+      ],
+      "themes": [
+        "light",
+        "dark"
+      ]
+    },
+    "cases": [
+      {
+        "id": "weighted-strength",
+        "snapshot": {
+          "chart": {
+            "width": 80,
+            "height": 48,
+            "language": "en",
+            "layers": [],
+            "tables": [
+              {
+                "name": "control-edges",
+                "columns": [
+                  "source",
+                  "target",
+                  "weight"
+                ],
+                "rows": [
+                  {
+                    "source": "a",
+                    "target": "b",
+                    "weight": 2
+                  },
+                  {
+                    "source": "b",
+                    "target": "c",
+                    "weight": 6
+                  },
+                  {
+                    "source": "c",
+                    "target": "a",
+                    "weight": 1
+                  }
+                ]
+              }
+            ],
+            "presets": [
+              {
+                "kind": "circular-graph",
+                "data": "control-edges",
+                "options": {
+                  "size": 2,
+                  "sizeBy": "none",
+                  "labels": false
+                }
+              }
+            ]
+          }
+        },
+        "mutations": [
+          {
+            "path": [
+              "presets",
+              "0",
+              "options",
+              "sizeBy"
+            ],
+            "value": "weight"
+          }
+        ],
+        "reference": {
+          "mode": "weight",
+          "weights": [
+            3,
+            8,
+            7
+          ],
+          "size": 2
+        }
+      },
+      {
+        "id": "weighted-signed-strength",
+        "snapshot": {
+          "chart": {
+            "width": 80,
+            "height": 48,
+            "language": "de",
+            "layers": [],
+            "tables": [
+              {
+                "name": "control-edges",
+                "columns": [
+                  "source",
+                  "target",
+                  "weight"
+                ],
+                "rows": [
+                  {
+                    "source": "a",
+                    "target": "b",
+                    "weight": -2
+                  },
+                  {
+                    "source": "b",
+                    "target": "c",
+                    "weight": -6
+                  },
+                  {
+                    "source": "c",
+                    "target": "a",
+                    "weight": -1
+                  }
+                ]
+              }
+            ],
+            "presets": [
+              {
+                "kind": "circular-graph",
+                "data": "control-edges",
+                "options": {
+                  "size": 2,
+                  "sizeBy": "none",
+                  "labels": false
+                }
+              }
+            ]
+          }
+        },
+        "mutations": [
+          {
+            "path": [
+              "presets",
+              "0",
+              "options",
+              "sizeBy"
+            ],
+            "value": "weight"
+          }
+        ],
+        "reference": {
+          "mode": "weight",
+          "weights": [
+            3,
+            8,
+            7
+          ],
+          "size": 2
+        }
+      },
+      {
+        "id": "matrix-unsplit",
+        "snapshot": {
+          "chart": {
+            "width": 60,
+            "height": 80,
+            "language": "en",
+            "layers": [],
+            "tables": [
+              {
+                "name": "control-edges",
+                "columns": [
+                  "source",
+                  "target",
+                  "weight"
+                ],
+                "rows": [
+                  {
+                    "source": "a",
+                    "target": "b",
+                    "weight": 2
+                  },
+                  {
+                    "source": "b",
+                    "target": "c",
+                    "weight": 6
+                  },
+                  {
+                    "source": "c",
+                    "target": "a",
+                    "weight": 1
+                  }
+                ]
+              }
+            ],
+            "presets": [
+              {
+                "kind": "node-link-matrix-hybrid",
+                "data": "control-edges",
+                "options": {
+                  "split": true,
+                  "order": "index",
+                  "labels": false,
+                  "cellGap": 0.15
+                }
+              }
+            ]
+          }
+        },
+        "mutations": [
+          {
+            "path": [
+              "presets",
+              "0",
+              "options",
+              "split"
+            ],
+            "value": false
+          }
+        ],
+        "reference": {
+          "mode": "matrix",
+          "split": false,
+          "nodeCount": 0,
+          "padding": 3,
+          "cellGap": 0.15
+        }
+      },
+      {
+        "id": "matrix-split",
+        "snapshot": {
+          "chart": {
+            "width": 60,
+            "height": 80,
+            "language": "de",
+            "layers": [],
+            "tables": [
+              {
+                "name": "control-edges",
+                "columns": [
+                  "source",
+                  "target",
+                  "weight"
+                ],
+                "rows": [
+                  {
+                    "source": "a",
+                    "target": "b",
+                    "weight": 2
+                  },
+                  {
+                    "source": "b",
+                    "target": "c",
+                    "weight": 6
+                  },
+                  {
+                    "source": "c",
+                    "target": "a",
+                    "weight": 1
+                  }
+                ]
+              }
+            ],
+            "presets": [
+              {
+                "kind": "node-link-matrix-hybrid",
+                "data": "control-edges",
+                "options": {
+                  "split": false,
+                  "order": "index",
+                  "labels": false,
+                  "cellGap": 0.15
+                }
+              }
+            ]
+          }
+        },
+        "mutations": [
+          {
+            "path": [
+              "presets",
+              "0",
+              "options",
+              "split"
+            ],
+            "value": true
+          }
+        ],
+        "reference": {
+          "mode": "matrix",
+          "split": true,
+          "nodeCount": 3,
+          "padding": 3,
+          "cellGap": 0.15
+        }
+      },
+      {
+        "id": "diagram-height-only",
+        "snapshot": {
+          "chart": {
+            "width": 80,
+            "height": 48,
+            "language": "en",
+            "layers": [],
+            "tables": [
+              {
+                "name": "control-nodes",
+                "columns": [
+                  "id",
+                  "label",
+                  "row",
+                  "col",
+                  "lane"
+                ],
+                "rows": [
+                  {
+                    "id": "a",
+                    "label": "Alpha",
+                    "row": 1,
+                    "col": 1,
+                    "lane": "Intake"
+                  },
+                  {
+                    "id": "b",
+                    "label": "Beta",
+                    "row": 2,
+                    "col": 2,
+                    "lane": "Review"
+                  }
+                ]
+              }
+            ],
+            "presets": [
+              {
+                "kind": "flowchart",
+                "data": "control-nodes",
+                "options": {
+                  "edges": "",
+                  "labels": false,
+                  "node-height": "auto",
+                  "node-width": "auto"
+                }
+              }
+            ]
+          }
+        },
+        "mutations": [
+          {
+            "path": [
+              "presets",
+              "0",
+              "options",
+              "node-height"
+            ],
+            "value": "8"
+          }
+        ],
+        "reference": {
+          "mode": "diagram",
+          "nodeWidth": null,
+          "nodeHeight": 8,
+          "padding": 3,
+          "gap": 4
+        }
+      },
+      {
+        "id": "diagram-width-only",
+        "snapshot": {
+          "chart": {
+            "width": 80,
+            "height": 48,
+            "language": "de",
+            "layers": [],
+            "tables": [
+              {
+                "name": "control-nodes",
+                "columns": [
+                  "id",
+                  "label",
+                  "row",
+                  "col",
+                  "lane"
+                ],
+                "rows": [
+                  {
+                    "id": "a",
+                    "label": "Alpha",
+                    "row": 1,
+                    "col": 1,
+                    "lane": "Intake"
+                  },
+                  {
+                    "id": "b",
+                    "label": "Beta",
+                    "row": 2,
+                    "col": 2,
+                    "lane": "Review"
+                  }
+                ]
+              }
+            ],
+            "presets": [
+              {
+                "kind": "flowchart",
+                "data": "control-nodes",
+                "options": {
+                  "edges": "",
+                  "labels": false,
+                  "node-height": "auto",
+                  "node-width": "auto"
+                }
+              }
+            ]
+          }
+        },
+        "mutations": [
+          {
+            "path": [
+              "presets",
+              "0",
+              "options",
+              "node-width"
+            ],
+            "value": "24"
+          }
+        ],
+        "reference": {
+          "mode": "diagram",
+          "nodeWidth": 24,
+          "nodeHeight": null,
+          "padding": 3,
+          "gap": 4
+        }
+      },
+      {
+        "id": "diagram-both-height-first",
+        "snapshot": {
+          "chart": {
+            "width": 80,
+            "height": 48,
+            "language": "en",
+            "layers": [],
+            "tables": [
+              {
+                "name": "control-nodes",
+                "columns": [
+                  "id",
+                  "label",
+                  "row",
+                  "col",
+                  "lane"
+                ],
+                "rows": [
+                  {
+                    "id": "a",
+                    "label": "Alpha",
+                    "row": 1,
+                    "col": 1,
+                    "lane": "Intake"
+                  },
+                  {
+                    "id": "b",
+                    "label": "Beta",
+                    "row": 2,
+                    "col": 2,
+                    "lane": "Review"
+                  }
+                ]
+              }
+            ],
+            "presets": [
+              {
+                "kind": "flowchart",
+                "data": "control-nodes",
+                "options": {
+                  "edges": "",
+                  "labels": false,
+                  "node-height": "auto",
+                  "node-width": "auto"
+                }
+              }
+            ]
+          }
+        },
+        "mutations": [
+          {
+            "path": [
+              "presets",
+              "0",
+              "options",
+              "node-height"
+            ],
+            "value": "8"
+          },
+          {
+            "path": [
+              "presets",
+              "0",
+              "options",
+              "node-width"
+            ],
+            "value": "24"
+          }
+        ],
+        "reference": {
+          "mode": "diagram",
+          "nodeWidth": 24,
+          "nodeHeight": 8,
+          "padding": 3,
+          "gap": 4
+        }
+      },
+      {
+        "id": "diagram-both-width-first",
+        "snapshot": {
+          "chart": {
+            "width": 80,
+            "height": 48,
+            "language": "de",
+            "layers": [],
+            "tables": [
+              {
+                "name": "control-nodes",
+                "columns": [
+                  "id",
+                  "label",
+                  "row",
+                  "col",
+                  "lane"
+                ],
+                "rows": [
+                  {
+                    "id": "a",
+                    "label": "Alpha",
+                    "row": 1,
+                    "col": 1,
+                    "lane": "Intake"
+                  },
+                  {
+                    "id": "b",
+                    "label": "Beta",
+                    "row": 2,
+                    "col": 2,
+                    "lane": "Review"
+                  }
+                ]
+              }
+            ],
+            "presets": [
+              {
+                "kind": "flowchart",
+                "data": "control-nodes",
+                "options": {
+                  "edges": "",
+                  "labels": false,
+                  "node-height": "auto",
+                  "node-width": "auto"
+                }
+              }
+            ]
+          }
+        },
+        "mutations": [
+          {
+            "path": [
+              "presets",
+              "0",
+              "options",
+              "node-width"
+            ],
+            "value": "24"
+          },
+          {
+            "path": [
+              "presets",
+              "0",
+              "options",
+              "node-height"
+            ],
+            "value": "8"
+          }
+        ],
+        "reference": {
+          "mode": "diagram",
+          "nodeWidth": 24,
+          "nodeHeight": 8,
+          "padding": 3,
+          "gap": 4
+        }
+      },
+      {
+        "id": "diagram-lane-heading-en",
+        "snapshot": {
+          "chart": {
+            "width": 80,
+            "height": 48,
+            "language": "en",
+            "layers": [],
+            "tables": [
+              {
+                "name": "control-nodes",
+                "columns": [
+                  "id",
+                  "label",
+                  "row",
+                  "col",
+                  "lane"
+                ],
+                "rows": [
+                  {
+                    "id": "a",
+                    "label": "Alpha",
+                    "row": 1,
+                    "col": 1,
+                    "lane": "Intake"
+                  },
+                  {
+                    "id": "b",
+                    "label": "Beta",
+                    "row": 2,
+                    "col": 2,
+                    "lane": "Review"
+                  }
+                ]
+              }
+            ],
+            "presets": [
+              {
+                "kind": "swimlane-flowchart",
+                "data": "control-nodes",
+                "options": {
+                  "edges": "",
+                  "labels": false,
+                  "lane-title": ""
+                }
+              }
+            ]
+          }
+        },
+        "mutations": [
+          {
+            "path": [
+              "presets",
+              "0",
+              "options",
+              "lane-title"
+            ],
+            "value": "Control EN//Steuerung DE"
+          },
+          {
+            "path": [
+              "presets",
+              "0",
+              "options",
+              "title"
+            ],
+            "value": "Diagram Title"
+          }
+        ],
+        "reference": {
+          "mode": "text",
+          "texts": [
+            "Control EN",
+            "Diagram Title"
+          ],
+          "absent": [
+            "Steuerung DE"
+          ]
+        }
+      },
+      {
+        "id": "diagram-lane-heading-de",
+        "snapshot": {
+          "chart": {
+            "width": 80,
+            "height": 48,
+            "language": "de",
+            "layers": [],
+            "tables": [
+              {
+                "name": "control-nodes",
+                "columns": [
+                  "id",
+                  "label",
+                  "row",
+                  "col",
+                  "lane"
+                ],
+                "rows": [
+                  {
+                    "id": "a",
+                    "label": "Alpha",
+                    "row": 1,
+                    "col": 1,
+                    "lane": "Intake"
+                  },
+                  {
+                    "id": "b",
+                    "label": "Beta",
+                    "row": 2,
+                    "col": 2,
+                    "lane": "Review"
+                  }
+                ]
+              }
+            ],
+            "presets": [
+              {
+                "kind": "swimlane-flowchart",
+                "data": "control-nodes",
+                "options": {
+                  "edges": "",
+                  "labels": false,
+                  "lane-title": ""
+                }
+              }
+            ]
+          }
+        },
+        "mutations": [
+          {
+            "path": [
+              "presets",
+              "0",
+              "options",
+              "lane-title"
+            ],
+            "value": "Control EN//Steuerung DE"
+          },
+          {
+            "path": [
+              "presets",
+              "0",
+              "options",
+              "title"
+            ],
+            "value": "Diagrammtitel"
+          }
+        ],
+        "reference": {
+          "mode": "text",
+          "texts": [
+            "Steuerung DE",
+            "Diagrammtitel"
+          ],
+          "absent": [
+            "Control EN"
+          ]
+        }
+      },
+      {
+        "id": "mark-enclosing-frame",
+        "snapshot": {
+          "chart": {
+            "width": 80,
+            "height": 40,
+            "language": "en",
+            "layers": [],
+            "tables": [
+              {
+                "name": "control-marks",
+                "columns": [
+                  "t",
+                  "val"
+                ],
+                "rows": [
+                  {
+                    "t": 0,
+                    "val": 0
+                  },
+                  {
+                    "t": 5,
+                    "val": 5
+                  },
+                  {
+                    "t": 10,
+                    "val": 10
+                  }
+                ]
+              }
+            ],
+            "presets": [
+              {
+                "kind": "circle",
+                "data": "control-marks",
+                "options": {}
+              }
+            ]
+          }
+        },
+        "mutations": [
+          {
+            "path": [
+              "width"
+            ],
+            "value": 120
+          },
+          {
+            "path": [
+              "height"
+            ],
+            "value": 60
+          }
+        ],
+        "reference": {
+          "mode": "mark",
+          "padding": 8
+        }
+      },
+      {
+        "id": "weighted-zero-strength",
+        "snapshot": {
+          "chart": {
+            "width": 80,
+            "height": 48,
+            "language": "en",
+            "layers": [],
+            "tables": [
+              {
+                "name": "control-edges",
+                "columns": [
+                  "source",
+                  "target",
+                  "weight"
+                ],
+                "rows": [
+                  {
+                    "source": "a",
+                    "target": "b",
+                    "weight": 0
+                  },
+                  {
+                    "source": "b",
+                    "target": "c",
+                    "weight": 0
+                  },
+                  {
+                    "source": "c",
+                    "target": "a",
+                    "weight": 0
+                  }
+                ]
+              }
+            ],
+            "presets": [
+              {
+                "kind": "circular-graph",
+                "data": "control-edges",
+                "options": {
+                  "size": 2,
+                  "sizeBy": "none",
+                  "labels": false
+                }
+              }
+            ]
+          }
+        },
+        "mutations": [
+          {
+            "path": [
+              "presets",
+              "0",
+              "options",
+              "sizeBy"
+            ],
+            "value": "weight"
+          }
+        ],
+        "reference": {
+          "mode": "weight",
+          "weights": [
+            0,
+            0,
+            0
+          ],
+          "size": 2
+        }
+      },
+      {
+        "id": "weighted-fractional-strength",
+        "snapshot": {
+          "chart": {
+            "width": 80,
+            "height": 48,
+            "language": "en",
+            "layers": [],
+            "tables": [
+              {
+                "name": "control-edges",
+                "columns": [
+                  "source",
+                  "target",
+                  "weight"
+                ],
+                "rows": [
+                  {
+                    "source": "a",
+                    "target": "b",
+                    "weight": 0.02
+                  },
+                  {
+                    "source": "b",
+                    "target": "c",
+                    "weight": 0.06
+                  },
+                  {
+                    "source": "c",
+                    "target": "a",
+                    "weight": 0.01
+                  }
+                ]
+              }
+            ],
+            "presets": [
+              {
+                "kind": "circular-graph",
+                "data": "control-edges",
+                "options": {
+                  "size": 2,
+                  "sizeBy": "none",
+                  "labels": false
+                }
+              }
+            ]
+          }
+        },
+        "mutations": [
+          {
+            "path": [
+              "presets",
+              "0",
+              "options",
+              "sizeBy"
+            ],
+            "value": "weight"
+          }
+        ],
+        "reference": {
+          "mode": "weight",
+          "weights": [
+            0.03,
+            0.08,
+            0.07
+          ],
+          "size": 2
+        }
+      },
+      {
+        "id": "weighted-self-loop",
+        "snapshot": {
+          "chart": {
+            "width": 80,
+            "height": 48,
+            "language": "en",
+            "layers": [],
+            "tables": [
+              {
+                "name": "control-edges",
+                "columns": [
+                  "source",
+                  "target",
+                  "weight"
+                ],
+                "rows": [
+                  {
+                    "source": "a",
+                    "target": "b",
+                    "weight": 2
+                  },
+                  {
+                    "source": "b",
+                    "target": "c",
+                    "weight": 6
+                  },
+                  {
+                    "source": "c",
+                    "target": "a",
+                    "weight": 1
+                  },
+                  {
+                    "source": "a",
+                    "target": "a",
+                    "weight": 1
+                  }
+                ]
+              }
+            ],
+            "presets": [
+              {
+                "kind": "circular-graph",
+                "data": "control-edges",
+                "options": {
+                  "size": 2,
+                  "sizeBy": "none",
+                  "labels": false
+                }
+              }
+            ]
+          }
+        },
+        "mutations": [
+          {
+            "path": [
+              "presets",
+              "0",
+              "options",
+              "sizeBy"
+            ],
+            "value": "weight"
+          }
+        ],
+        "reference": {
+          "mode": "weight",
+          "weights": [
+            5,
+            8,
+            7
+          ],
+          "size": 2
+        }
+      },
+      {
+        "id": "adjacency-unsplit",
+        "snapshot": {
+          "chart": {
+            "width": 60,
+            "height": 80,
+            "language": "en",
+            "layers": [],
+            "tables": [
+              {
+                "name": "control-edges",
+                "columns": [
+                  "source",
+                  "target",
+                  "weight"
+                ],
+                "rows": [
+                  {
+                    "source": "a",
+                    "target": "b",
+                    "weight": 2
+                  },
+                  {
+                    "source": "b",
+                    "target": "c",
+                    "weight": 6
+                  },
+                  {
+                    "source": "c",
+                    "target": "a",
+                    "weight": 1
+                  }
+                ]
+              }
+            ],
+            "presets": [
+              {
+                "kind": "adjacency-matrix",
+                "data": "control-edges",
+                "options": {
+                  "split": true,
+                  "order": "index",
+                  "labels": false,
+                  "cellGap": 0.15
+                }
+              }
+            ]
+          }
+        },
+        "mutations": [
+          {
+            "path": [
+              "presets",
+              "0",
+              "options",
+              "split"
+            ],
+            "value": false
+          }
+        ],
+        "reference": {
+          "mode": "matrix",
+          "split": false,
+          "nodeCount": 0,
+          "padding": 3,
+          "cellGap": 0.15
+        }
+      },
+      {
+        "id": "adjacency-split",
+        "snapshot": {
+          "chart": {
+            "width": 60,
+            "height": 80,
+            "language": "de",
+            "layers": [],
+            "tables": [
+              {
+                "name": "control-edges",
+                "columns": [
+                  "source",
+                  "target",
+                  "weight"
+                ],
+                "rows": [
+                  {
+                    "source": "a",
+                    "target": "b",
+                    "weight": 2
+                  },
+                  {
+                    "source": "b",
+                    "target": "c",
+                    "weight": 6
+                  },
+                  {
+                    "source": "c",
+                    "target": "a",
+                    "weight": 1
+                  }
+                ]
+              }
+            ],
+            "presets": [
+              {
+                "kind": "adjacency-matrix",
+                "data": "control-edges",
+                "options": {
+                  "split": false,
+                  "order": "index",
+                  "labels": false,
+                  "cellGap": 0.15
+                }
+              }
+            ]
+          }
+        },
+        "mutations": [
+          {
+            "path": [
+              "presets",
+              "0",
+              "options",
+              "split"
+            ],
+            "value": true
+          }
+        ],
+        "reference": {
+          "mode": "matrix",
+          "split": true,
+          "nodeCount": 3,
+          "padding": 3,
+          "cellGap": 0.15
+        }
+      },
+      {
+        "id": "diagram-height-reset-auto",
+        "snapshot": {
+          "chart": {
+            "width": 80,
+            "height": 48,
+            "language": "en",
+            "layers": [],
+            "tables": [
+              {
+                "name": "control-nodes",
+                "columns": [
+                  "id",
+                  "label",
+                  "row",
+                  "col",
+                  "lane"
+                ],
+                "rows": [
+                  {
+                    "id": "a",
+                    "label": "Alpha",
+                    "row": 1,
+                    "col": 1,
+                    "lane": "Intake"
+                  },
+                  {
+                    "id": "b",
+                    "label": "Beta",
+                    "row": 2,
+                    "col": 2,
+                    "lane": "Review"
+                  }
+                ]
+              }
+            ],
+            "presets": [
+              {
+                "kind": "flowchart",
+                "data": "control-nodes",
+                "options": {
+                  "edges": "",
+                  "labels": false,
+                  "node-height": "auto",
+                  "node-width": "auto"
+                }
+              }
+            ]
+          }
+        },
+        "mutations": [
+          {
+            "path": [
+              "presets",
+              "0",
+              "options",
+              "node-height"
+            ],
+            "value": "8"
+          },
+          {
+            "path": [
+              "presets",
+              "0",
+              "options",
+              "node-width"
+            ],
+            "value": "24"
+          },
+          {
+            "path": [
+              "presets",
+              "0",
+              "options",
+              "node-height"
+            ],
+            "value": "auto"
+          }
+        ],
+        "reference": {
+          "mode": "diagram",
+          "nodeWidth": 24,
+          "nodeHeight": null,
+          "padding": 3,
+          "gap": 4
+        }
+      },
+      {
+        "id": "diagram-width-reset-auto",
+        "snapshot": {
+          "chart": {
+            "width": 80,
+            "height": 48,
+            "language": "en",
+            "layers": [],
+            "tables": [
+              {
+                "name": "control-nodes",
+                "columns": [
+                  "id",
+                  "label",
+                  "row",
+                  "col",
+                  "lane"
+                ],
+                "rows": [
+                  {
+                    "id": "a",
+                    "label": "Alpha",
+                    "row": 1,
+                    "col": 1,
+                    "lane": "Intake"
+                  },
+                  {
+                    "id": "b",
+                    "label": "Beta",
+                    "row": 2,
+                    "col": 2,
+                    "lane": "Review"
+                  }
+                ]
+              }
+            ],
+            "presets": [
+              {
+                "kind": "flowchart",
+                "data": "control-nodes",
+                "options": {
+                  "edges": "",
+                  "labels": false,
+                  "node-height": "auto",
+                  "node-width": "auto"
+                }
+              }
+            ]
+          }
+        },
+        "mutations": [
+          {
+            "path": [
+              "presets",
+              "0",
+              "options",
+              "node-height"
+            ],
+            "value": "8"
+          },
+          {
+            "path": [
+              "presets",
+              "0",
+              "options",
+              "node-width"
+            ],
+            "value": "24"
+          },
+          {
+            "path": [
+              "presets",
+              "0",
+              "options",
+              "node-width"
+            ],
+            "value": "auto"
+          }
+        ],
+        "reference": {
+          "mode": "diagram",
+          "nodeWidth": null,
+          "nodeHeight": 8,
+          "padding": 3,
+          "gap": 4
+        }
+      },
+      {
+        "id": "mark-circle-rotated",
+        "snapshot": {
+          "chart": {
+            "width": 80,
+            "height": 40,
+            "language": "de",
+            "layers": [],
+            "tables": [
+              {
+                "name": "control-marks",
+                "columns": [
+                  "t",
+                  "val"
+                ],
+                "rows": [
+                  {
+                    "t": 0,
+                    "val": 0
+                  },
+                  {
+                    "t": 5,
+                    "val": 5
+                  },
+                  {
+                    "t": 10,
+                    "val": 10
+                  }
+                ]
+              }
+            ],
+            "presets": [
+              {
+                "kind": "circle",
+                "data": "control-marks",
+                "options": {
+                  "rotate": 0
+                }
+              }
+            ]
+          }
+        },
+        "mutations": [
+          {
+            "path": [
+              "width"
+            ],
+            "value": 120
+          },
+          {
+            "path": [
+              "height"
+            ],
+            "value": 60
+          },
+          {
+            "path": [
+              "presets",
+              "0",
+              "options",
+              "rotate"
+            ],
+            "value": 37
+          }
+        ],
+        "reference": {
+          "mode": "mark",
+          "padding": 8
+        }
+      },
+      {
+        "id": "mark-fullturn-offset",
+        "snapshot": {
+          "chart": {
+            "width": 80,
+            "height": 40,
+            "language": "en",
+            "layers": [],
+            "tables": [
+              {
+                "name": "control-marks",
+                "columns": [
+                  "t",
+                  "val"
+                ],
+                "rows": [
+                  {
+                    "t": 0,
+                    "val": 0
+                  },
+                  {
+                    "t": 5,
+                    "val": 5
+                  },
+                  {
+                    "t": 10,
+                    "val": 10
+                  }
+                ]
+              }
+            ],
+            "presets": [
+              {
+                "kind": "circle",
+                "data": "control-marks",
+                "options": {
+                  "variant": "circle",
+                  "radius": "1.5",
+                  "startAngle": 0,
+                  "endAngle": 6.283185307179586,
+                  "rotate": 0
+                }
+              }
+            ]
+          }
+        },
+        "mutations": [
+          {
+            "path": [
+              "width"
+            ],
+            "value": 120
+          },
+          {
+            "path": [
+              "height"
+            ],
+            "value": 60
+          },
+          {
+            "path": [
+              "presets",
+              "0",
+              "options",
+              "variant"
+            ],
+            "value": "circular-arc"
+          },
+          {
+            "path": [
+              "presets",
+              "0",
+              "options",
+              "radius"
+            ],
+            "value": "2"
+          },
+          {
+            "path": [
+              "presets",
+              "0",
+              "options",
+              "startAngle"
+            ],
+            "value": 0.7
+          },
+          {
+            "path": [
+              "presets",
+              "0",
+              "options",
+              "endAngle"
+            ],
+            "value": 6.983185307179586
+          },
+          {
+            "path": [
+              "presets",
+              "0",
+              "options",
+              "rotate"
+            ],
+            "value": -19
+          }
+        ],
+        "reference": {
+          "mode": "mark",
+          "padding": 8
+        }
+      }
+    ]
+  },
+  "language": "en",
+  "fontPoints": [
+    8,
+    12,
+    72.27
+  ],
+  "marks": [
+    "bar",
+    "rect",
+    "heatmap",
+    "point",
+    "circle",
+    "symbol",
+    "line",
+    "area",
+    "band",
+    "trail",
+    "arc",
+    "pie",
+    "text",
+    "rule",
+    "link",
+    "path",
+    "polygon",
+    "ribbon"
+  ],
+  "rows": [
+    [
+      0,
+      0,
+      "a"
+    ],
+    [
+      5,
+      5,
+      "b"
+    ],
+    [
+      10,
+      10,
+      "a"
+    ]
+  ],
+  "xDomain": [
+    0,
+    10
+  ],
+  "xRange": [
+    20,
+    60
+  ],
+  "yDomain": [
+    0,
+    10
+  ],
+  "yRange": [
+    30,
+    10
+  ],
+  "colorDomain": [
+    "a",
+    "b"
+  ],
+  "colorRange": [
+    "blue",
+    "red"
+  ],
+  "channels": [
+    "x",
+    "y",
+    "x2",
+    "y2",
+    "angle",
+    "endAngle",
+    "radius",
+    "innerRadius",
+    "size",
+    "shape",
+    "fill",
+    "stroke",
+    "strokeWidth",
+    "opacity",
+    "text",
+    "dash",
+    "width",
+    "order",
+    "detail",
+    "rotation"
+  ],
+  "coordinateFrame": {
+    "x0": 16,
+    "y0": 8,
+    "x1": 72,
+    "y1": 26
+  },
+  "coordinateRow": [
+    0.25,
+    0.75
+  ],
+  "coordinateOptions": {
+    "normalized": true,
+    "startAngle": 0.3,
+    "endAngle": 5.1,
+    "innerRadius": 2,
+    "outerRadius": 8,
+    "base": 10,
+    "axes": [
+      "a",
+      "b",
+      "c"
+    ]
+  },
+  "coordinates": [
+    "cartesian",
+    "polar",
+    "logpolar",
+    "ternary",
+    "barycentric",
+    "parallel",
+    "geographic"
+  ],
+  "groupRows": [
+    [
+      60,
+      10,
+      "a",
+      2
+    ],
+    [
+      50,
+      15,
+      "b",
+      2
+    ],
+    [
+      20,
+      30,
+      "a",
+      1
+    ],
+    [
+      30,
+      25,
+      "b",
+      1
+    ]
+  ],
+  "scales": [
+    {
+      "name": "piecewise",
+      "kind": "linear",
+      "domain": [
+        0,
+        2,
+        10
+      ],
+      "range": [
+        0,
+        20,
+        40
+      ],
+      "values": [
+        1,
+        6,
+        -2,
+        12
+      ]
+    },
+    {
+      "name": "descending",
+      "kind": "linear",
+      "domain": [
+        10,
+        2,
+        0
+      ],
+      "range": [
+        0,
+        20,
+        40
+      ],
+      "values": [
+        1,
+        6,
+        -2,
+        12
+      ]
+    },
+    {
+      "name": "reverse",
+      "kind": "linear",
+      "domain": [
+        0,
+        10
+      ],
+      "range": [
+        0,
+        40
+      ],
+      "values": [
+        2
+      ],
+      "options": {
+        "reverse": true
+      }
+    },
+    {
+      "name": "round",
+      "kind": "linear",
+      "domain": [
+        0,
+        10
+      ],
+      "range": [
+        0,
+        13
+      ],
+      "values": [
+        3
+      ],
+      "options": {
+        "round": true
+      }
+    },
+    {
+      "name": "constant",
+      "kind": "linear",
+      "domain": [
+        0,
+        10
+      ],
+      "range": [
+        7
+      ],
+      "values": [
+        3
+      ]
+    },
+    {
+      "name": "degenerate",
+      "kind": "linear",
+      "domain": [
+        3,
+        3
+      ],
+      "range": [
+        0,
+        40
+      ],
+      "values": [
+        3
+      ]
+    },
+    {
+      "name": "time-iso",
+      "kind": "temporal",
+      "domain": [
+        "2025-01-01T00:00:00Z",
+        "2025-01-03T00:00:00Z"
+      ],
+      "range": [
+        0,
+        40
+      ],
+      "values": [
+        "2025-01-02T00:00:00Z"
+      ],
+      "options": {
+        "interval": "day",
+        "ticks": 4
+      }
+    },
+    {
+      "name": "explicit-ticks",
+      "kind": "linear",
+      "domain": [
+        0,
+        10
+      ],
+      "range": [
+        0,
+        40
+      ],
+      "values": [
+        4
+      ],
+      "options": {
+        "tickValues": [
+          0,
+          3,
+          10
+        ],
+        "tickFormat": ".1f"
+      }
+    }
+  ],
+  "colorScales": [
+    {
+      "name": "color-pieces",
+      "kind": "linear",
+      "domain": [
+        0,
+        2,
+        10
+      ],
+      "range": [
+        "blue",
+        "white",
+        "red"
+      ],
+      "values": [
+        1,
+        6
+      ]
+    },
+    {
+      "name": "color-reverse",
+      "kind": "linear",
+      "domain": [
+        0,
+        10
+      ],
+      "range": [
+        "blue",
+        "red"
+      ],
+      "values": [
+        2
+      ],
+      "options": {
+        "reverse": true
+      }
+    },
+    {
+      "name": "color-outside",
+      "kind": "linear",
+      "domain": [
+        0,
+        10
+      ],
+      "range": [
+        "black",
+        "gray"
+      ],
+      "values": [
+        -2,
+        12
+      ]
+    },
+    {
+      "name": "color-diverging-down",
+      "kind": "diverging",
+      "domain": [
+        10,
+        2,
+        0
+      ],
+      "range": [
+        "blue",
+        "white",
+        "red"
+      ],
+      "values": [
+        6,
+        1
+      ]
+    },
+    {
+      "name": "color-lab",
+      "kind": "linear",
+      "domain": [
+        0,
+        10
+      ],
+      "range": [
+        "blue",
+        "red"
+      ],
+      "values": [
+        3
+      ],
+      "options": {
+        "interpolator": "lab"
+      }
+    },
+    {
+      "name": "color-hcl",
+      "kind": "linear",
+      "domain": [
+        0,
+        10
+      ],
+      "range": [
+        "blue",
+        "red"
+      ],
+      "values": [
+        3
+      ],
+      "options": {
+        "interpolator": "hcl"
+      }
+    },
+    {
+      "name": "color-oklab",
+      "kind": "linear",
+      "domain": [
+        0,
+        10
+      ],
+      "range": [
+        "blue",
+        "red"
+      ],
+      "values": [
+        3
+      ],
+      "options": {
+        "interpolator": "oklab"
+      }
+    }
+  ],
+  "paintAlpha": {
+    "fill": 0.25,
+    "stroke": 0.75,
+    "opacity": 0.6
+  },
+  "theme": {
+    "colors": [
+      "red",
+      "blue",
+      "yellow"
+    ],
+    "slots": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "brandCount": 7
+  },
+  "network": {
+    "order": "name",
+    "groups": [
+      [
+        "a",
+        "z"
+      ],
+      [
+        "b",
+        "b"
+      ],
+      [
+        "c",
+        "a"
+      ]
+    ],
+    "rows": [
+      [
+        "b",
+        "c",
+        1
+      ],
+      [
+        "c",
+        "a",
+        1
+      ]
+    ],
+    "kind": "commit-timeline"
+  },
+  "guide": {
+    "domain": [
+      0,
+      10
+    ],
+    "range": [
+      0,
+      100
+    ],
+    "ticks": [
+      0,
+      5,
+      10
+    ],
+    "subdivisions": 4,
+    "size": 0.7
+  },
+  "unknownScales": [
+    {
+      "name": "unknown-number",
+      "kind": "linear",
+      "domain": [
+        0,
+        10
+      ],
+      "range": [
+        0,
+        100
+      ],
+      "unknown": -5,
+      "inputs": [
+        "\\SemioVizNull{}",
+        "NaN",
+        "bad"
+      ]
+    },
+    {
+      "name": "unknown-color",
+      "kind": "linear",
+      "domain": [
+        0,
+        10
+      ],
+      "range": [
+        "blue",
+        "red"
+      ],
+      "unknown": "green",
+      "inputs": [
+        "\\SemioVizNull{}",
+        "NaN",
+        "bad"
+      ]
+    },
+    {
+      "name": "unknown-category",
+      "kind": "ordinal",
+      "domain": [
+        "a",
+        "b"
+      ],
+      "range": [
+        "red",
+        "blue"
+      ],
+      "unknown": "orange",
+      "inputs": [
+        "\\SemioVizNull{}",
+        "missing",
+        "NaN"
+      ]
+    },
+    {
+      "name": "unknown-time",
+      "kind": "temporal",
+      "domain": [
+        0,
+        86400000
+      ],
+      "range": [
+        0,
+        100
+      ],
+      "unknown": -9,
+      "inputs": [
+        "\\SemioVizNull{}",
+        "NaN",
+        "bad"
+      ]
+    }
+  ],
+  "missingRows": [
+    [
+      0,
+      0
+    ],
+    [
+      1,
+      1
+    ],
+    [
+      null,
+      2
+    ],
+    [
+      2,
+      3
+    ],
+    [
+      3,
+      4
+    ]
+  ],
+  "typedValues": [
+    null,
+    "",
+    true,
+    false,
+    "1",
+    "bad"
+  ],
+  "nativeGeoPalette": {
+  "snapshot": {
+    "chart": {
+      "width": 40,
+      "height": 30,
+      "language": "en",
+      "layers": [],
+      "margin": {
+        "left": 0,
+        "right": 0,
+        "top": 0,
+        "bottom": 0
+      },
+      "presets": [
+        {
+          "kind": "streamline-plot",
+          "options": {
+            "render": "streamline",
+            "field": "vortex",
+            "seeds": 2,
+            "cell": 3
+          }
+        }
+      ],
+      "theme": {
+        "name": "semio",
+        "appearance": "light",
+        "palette": [
+          "red",
+          "blue"
+        ]
+      }
+    }
+  },
+  "inputs": [
+    0,
+    0.125,
+    0.2,
+    0.25,
+    0.375,
+    0.4,
+    0.5,
+    0.625,
+    0.7,
+    0.75,
+    0.875,
+    1
+  ],
+  "cases": [
+    {
+      "id": "default-en",
+      "language": "en",
+      "expectedPaletteSteps": 5,
+      "expectedSteps": 24
+    },
+    {
+      "id": "palette-en",
+      "language": "en",
+      "paletteSteps": 3,
+      "expectedPaletteSteps": 3,
+      "expectedSteps": 24
+    },
+    {
+      "id": "single-en",
+      "language": "en",
+      "paletteSteps": 1,
+      "expectedPaletteSteps": 1,
+      "expectedSteps": 24
+    },
+    {
+      "id": "integration-en",
+      "language": "en",
+      "steps": 6,
+      "expectedPaletteSteps": 5,
+      "expectedSteps": 6
+    },
+    {
+      "id": "both-en",
+      "language": "en",
+      "paletteSteps": 4,
+      "steps": 8,
+      "expectedPaletteSteps": 4,
+      "expectedSteps": 8
+    },
+    {
+      "id": "default-de",
+      "language": "de",
+      "expectedPaletteSteps": 5,
+      "expectedSteps": 24
+    },
+    {
+      "id": "palette-de",
+      "language": "de",
+      "paletteSteps": 3,
+      "expectedPaletteSteps": 3,
+      "expectedSteps": 24
+    },
+    {
+      "id": "single-de",
+      "language": "de",
+      "paletteSteps": 1,
+      "expectedPaletteSteps": 1,
+      "expectedSteps": 24
+    },
+    {
+      "id": "integration-de",
+      "language": "de",
+      "steps": 6,
+      "expectedPaletteSteps": 5,
+      "expectedSteps": 6
+    },
+    {
+      "id": "both-de",
+      "language": "de",
+      "paletteSteps": 4,
+      "steps": 8,
+      "expectedPaletteSteps": 4,
+      "expectedSteps": 8
+    },
+    {
+      "id": "diverging-1-en",
+      "language": "en",
+      "palette": "diverging",
+      "paletteSteps": 1,
+      "expectedPaletteSteps": 1,
+      "expectedSteps": 24
+    },
+    {
+      "id": "diverging-3-en",
+      "language": "en",
+      "palette": "diverging",
+      "paletteSteps": 3,
+      "expectedPaletteSteps": 3,
+      "expectedSteps": 24
+    },
+    {
+      "id": "diverging-4-en",
+      "language": "en",
+      "palette": "diverging",
+      "paletteSteps": 4,
+      "expectedPaletteSteps": 4,
+      "expectedSteps": 24
+    },
+    {
+      "id": "diverging-1-de",
+      "language": "de",
+      "palette": "diverging",
+      "paletteSteps": 1,
+      "expectedPaletteSteps": 1,
+      "expectedSteps": 24
+    },
+    {
+      "id": "diverging-3-de",
+      "language": "de",
+      "palette": "diverging",
+      "paletteSteps": 3,
+      "expectedPaletteSteps": 3,
+      "expectedSteps": 24
+    },
+    {
+      "id": "diverging-4-de",
+      "language": "de",
+      "palette": "diverging",
+      "paletteSteps": 4,
+      "expectedPaletteSteps": 4,
+      "expectedSteps": 24
+    }
+  ],
+  "legendCases": [
+    {
+      "id": "diverging-one-legend-en",
+      "language": "en",
+      "preset": {
+        "kind": "choropleth-map",
+        "options": {
+          "palette": "diverging",
+          "paletteSteps": 1,
+          "legend": true
+        }
+      }
+    },
+    {
+      "id": "diverging-one-legend-de",
+      "language": "de",
+      "preset": {
+        "kind": "choropleth-map",
+        "options": {
+          "palette": "diverging",
+          "paletteSteps": 1,
+          "legend": true
+        }
+      }
+    }
+  ]
+},
+  "nativeSpatialData": {
+    "snapshot": {
+      "chart": {
+        "width": 80,
+        "height": 50,
+        "margin": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        },
+        "language": "en",
+        "layers": []
+      }
+    },
+    "zeroExtent": {
+      "table": {
+        "name": "constant-route",
+        "columns": [
+          "ring",
+          "lon",
+          "lat"
+        ],
+        "rows": [
+          {
+            "ring": "a",
+            "lon": -1,
+            "lat": 0
+          },
+          {
+            "ring": "a",
+            "lon": 1,
+            "lat": 0
+          }
+        ]
+      },
+      "preset": {
+        "kind": "route-map",
+        "data": "constant-route",
+        "options": {
+          "routes": "constant-route",
+          "basemap": false
+        }
+      },
+      "expected": 0.5
+    },
+    "cases": [
+      {
+        "id": "polygon",
+        "table": {
+          "name": "authored-shape",
+          "columns": [
+            "part",
+            "longitude",
+            "latitude",
+            "weight"
+          ],
+          "structure": {
+            "kind": "geometry",
+            "shape": "polygon",
+            "group": "part",
+            "longitude": "longitude",
+            "latitude": "latitude",
+            "value": "weight"
+          },
+          "rows": [
+            {
+              "part": "a",
+              "longitude": 0,
+              "latitude": 0,
+              "weight": 2
+            },
+            {
+              "part": "a",
+              "longitude": 2,
+              "latitude": 0,
+              "weight": 2
+            },
+            {
+              "part": "a",
+              "longitude": 0,
+              "latitude": 2,
+              "weight": 2
+            }
+          ]
+        },
+        "preset": {
+          "kind": "choropleth-map",
+          "data": "authored-shape",
+          "options": {
+            "geometry": "authored-shape",
+            "width": 60,
+            "height": 30,
+            "paletteSteps": 1,
+            "legend": true
+          }
+        },
+        "mutation": {
+          "path": [
+            "tables",
+            "0",
+            "rows",
+            "1",
+            "longitude"
+          ],
+          "value": 3
+        },
+        "command": "SemioVizGeoPolygon",
+        "expected": [
+          [
+            "polygon",
+            "2",
+            "0",
+            "0;3",
+            "0;0",
+            "2"
+          ]
+        ]
+      },
+      {
+        "id": "line",
+        "table": {
+          "name": "authored-shape",
+          "columns": [
+            "part",
+            "longitude",
+            "latitude",
+            "weight"
+          ],
+          "structure": {
+            "kind": "geometry",
+            "shape": "line",
+            "group": "part",
+            "longitude": "longitude",
+            "latitude": "latitude",
+            "value": "weight"
+          },
+          "rows": [
+            {
+              "part": "a",
+              "longitude": -1,
+              "latitude": 0,
+              "weight": 2
+            },
+            {
+              "part": "a",
+              "longitude": 1,
+              "latitude": 0,
+              "weight": 2
+            }
+          ]
+        },
+        "preset": {
+          "kind": "route-map",
+          "data": "authored-shape",
+          "options": {
+            "routes": "authored-shape",
+            "basemap": false,
+            "geometry": "authored-shape",
+            "width": 60,
+            "height": 30
+          }
+        },
+        "mutation": {
+          "path": [
+            "tables",
+            "0",
+            "rows",
+            "1",
+            "longitude"
+          ],
+          "value": 2
+        },
+        "command": "SemioVizGeoLine",
+        "expected": [
+          [
+            "line",
+            "2",
+            "-1",
+            "0;2",
+            "0"
+          ]
+        ]
+      },
+      {
+        "id": "point",
+        "table": {
+          "name": "authored-shape",
+          "columns": [
+            "part",
+            "longitude",
+            "latitude",
+            "weight"
+          ],
+          "structure": {
+            "kind": "geometry",
+            "shape": "point",
+            "group": "part",
+            "longitude": "longitude",
+            "latitude": "latitude",
+            "value": "weight"
+          },
+          "rows": [
+            {
+              "part": "a",
+              "longitude": 0,
+              "latitude": 0,
+              "weight": 1
+            },
+            {
+              "part": "b",
+              "longitude": 1,
+              "latitude": 1,
+              "weight": 5
+            }
+          ]
+        },
+        "preset": {
+          "kind": "proportional-symbol-map",
+          "data": "authored-shape",
+          "options": {
+            "geometry": "authored-shape",
+            "symbols": "authored-shape",
+            "basemap": false,
+            "maxSize": 2,
+            "width": 60,
+            "height": 30
+          }
+        },
+        "mutation": {
+          "path": [
+            "tables",
+            "0",
+            "rows",
+            "0",
+            "weight"
+          ],
+          "value": 4
+        },
+        "command": "SemioVizGeoPointPart",
+        "expected": [
+          [
+            "point",
+            "4",
+            "0",
+            "0"
+          ],
+          [
+            "point",
+            "5",
+            "1",
+            "1"
+          ]
+        ]
+      },
+      {
+        "id": "grid",
+        "table": {
+          "name": "authored-grid",
+          "columns": [
+            "c",
+            "r",
+            "z"
+          ],
+          "structure": {
+            "kind": "grid",
+            "column": "c",
+            "row": "r",
+            "value": "z"
+          },
+          "rows": [
+            {
+              "c": 1,
+              "r": 1,
+              "z": 3
+            },
+            {
+              "c": 0,
+              "r": 0,
+              "z": 0
+            },
+            {
+              "c": 1,
+              "r": 0,
+              "z": 1
+            },
+            {
+              "c": 0,
+              "r": 1,
+              "z": 2
+            }
+          ]
+        },
+        "preset": {
+          "kind": "contour-plot",
+          "data": "authored-grid",
+          "options": {
+            "grid": "authored-grid",
+            "surface": "heatmap",
+            "cell": 4
+          }
+        },
+        "mutation": {
+          "path": [
+            "tables",
+            "0",
+            "rows",
+            "1",
+            "z"
+          ],
+          "value": 4
+        },
+        "command": "SemioVizValueGrid",
+        "expected": [
+          [
+            "2",
+            "2",
+            "4",
+            "1",
+            "2",
+            "3"
+          ]
+        ]
+      },
+      {
+        "id": "points",
+        "table": {
+          "name": "authored-points",
+          "columns": [
+            "px",
+            "py"
+          ],
+          "structure": {
+            "kind": "points",
+            "x": "px",
+            "y": "py"
+          },
+          "rows": [
+            {
+              "px": 2,
+              "py": 2
+            },
+            {
+              "px": 10,
+              "py": 2
+            },
+            {
+              "px": 4,
+              "py": 10
+            }
+          ]
+        },
+        "preset": {
+          "kind": "delaunay-map",
+          "data": "authored-points",
+          "options": {
+            "points": "authored-points",
+            "extent": "0,0,20,20"
+          }
+        },
+        "mutation": {
+          "path": [
+            "tables",
+            "0",
+            "rows",
+            "2",
+            "px"
+          ],
+          "value": 8
+        },
+        "command": "SemioVizPointSet",
+        "expected": [
+          [
+            "2",
+            "2;10",
+            "2;8",
+            "10"
+          ]
+        ]
+      },
+      {
+        "id": "vector-field",
+        "table": {
+          "name": "authored-vectors",
+          "columns": [
+            "px",
+            "py",
+            "vx",
+            "vy"
+          ],
+          "structure": {
+            "kind": "vector-field",
+            "x": "px",
+            "y": "py",
+            "u": "vx",
+            "v": "vy"
+          },
+          "rows": [
+            {
+              "px": -1,
+              "py": -1,
+              "vx": -3,
+              "vy": 0
+            },
+            {
+              "px": 1,
+              "py": -1,
+              "vx": -1,
+              "vy": 2
+            },
+            {
+              "px": -1,
+              "py": 1,
+              "vx": 1,
+              "vy": -2
+            },
+            {
+              "px": 1,
+              "py": 1,
+              "vx": 3,
+              "vy": 0
+            }
+          ]
+        },
+        "preset": {
+          "kind": "direction-field",
+          "data": "authored-vectors",
+          "options": {
+            "field": "authored-vectors",
+            "columns": 2,
+            "rows": 2,
+            "cell": 4,
+            "arrow": 1
+          }
+        },
+        "mutation": {
+          "path": [
+            "tables",
+            "0",
+            "rows",
+            "0",
+            "vx"
+          ],
+          "value": 5
+        },
+        "command": "SemioVizVectorField",
+        "sample": [
+          0,
+          0
+        ],
+        "expected": [
+          [
+            "2",
+            "0"
+          ]
+        ]
+      },
+      {
+        "id": "vector-streamline",
+        "table": {
+          "name": "authored-vector-streamlines",
+          "columns": [
+            "px",
+            "py",
+            "vx",
+            "vy"
+          ],
+          "structure": {
+            "kind": "vector-field",
+            "x": "px",
+            "y": "py",
+            "u": "vx",
+            "v": "vy"
+          },
+          "rows": [
+            {
+              "px": -1,
+              "py": -1,
+              "vx": -3,
+              "vy": 0
+            },
+            {
+              "px": 1,
+              "py": -1,
+              "vx": -1,
+              "vy": 2
+            },
+            {
+              "px": -1,
+              "py": 1,
+              "vx": 1,
+              "vy": -2
+            },
+            {
+              "px": 1,
+              "py": 1,
+              "vx": 3,
+              "vy": 0
+            }
+          ]
+        },
+        "preset": {
+          "kind": "streamline-plot",
+          "data": "authored-vector-streamlines",
+          "options": {
+            "field": "authored-vector-streamlines",
+            "render": "streamline",
+            "columns": 2,
+            "rows": 2,
+            "cell": 4,
+            "steps": 3,
+            "dt": 0.2,
+            "seeds": 1
+          }
+        },
+        "mutation": {
+          "path": [
+            "tables",
+            "0",
+            "rows",
+            "0",
+            "vx"
+          ],
+          "value": 5
+        },
+        "command": "SemioVizVectorField",
+        "sample": [
+          0,
+          0
+        ],
+        "expected": [
+          [
+            "2",
+            "0"
+          ]
+        ]
+      }
+    ],
+    "badCases": [
+      {
+        "id": "polygon-value-conflict",
+        "caseId": "polygon",
+        "mutation": {
+          "path": [
+            "tables",
+            "0",
+            "rows",
+            "0",
+            "weight"
+          ],
+          "value": 7
+        }
+      },
+      {
+        "id": "polygon-vertex-count",
+        "caseId": "polygon",
+        "mutation": {
+          "path": [
+            "tables",
+            "0",
+            "rows"
+          ],
+          "value": [
+            {
+              "part": "a",
+              "longitude": 0,
+              "latitude": 0,
+              "weight": 2
+            },
+            {
+              "part": "a",
+              "longitude": 1,
+              "latitude": 0,
+              "weight": 2
+            }
+          ]
+        }
+      },
+      {
+        "id": "point-group-count",
+        "caseId": "point",
+        "mutation": {
+          "path": [
+            "tables",
+            "0",
+            "rows",
+            "1",
+            "part"
+          ],
+          "value": "a"
+        }
+      },
+      {
+        "id": "grid-negative",
+        "caseId": "grid",
+        "mutation": {
+          "path": [
+            "tables",
+            "0",
+            "rows",
+            "0",
+            "c"
+          ],
+          "value": -1
+        }
+      },
+      {
+        "id": "grid-fraction",
+        "caseId": "grid",
+        "mutation": {
+          "path": [
+            "tables",
+            "0",
+            "rows",
+            "0",
+            "c"
+          ],
+          "value": 0.5
+        }
+      },
+      {
+        "id": "grid-duplicate",
+        "caseId": "grid",
+        "mutation": {
+          "path": [
+            "tables",
+            "0",
+            "rows",
+            "0",
+            "c"
+          ],
+          "value": 0
+        }
+      },
+      {
+        "id": "grid-null-value",
+        "caseId": "grid",
+        "mutation": {
+          "path": [
+            "tables",
+            "0",
+            "rows",
+            "0",
+            "z"
+          ],
+          "value": null
+        }
+      },
+      {
+        "id": "vector-incomplete",
+        "caseId": "vector-field",
+        "mutation": {
+          "path": [
+            "tables",
+            "0",
+            "rows"
+          ],
+          "value": [
+            {
+              "px": -1,
+              "py": -1,
+              "vx": -3,
+              "vy": 0
+            },
+            {
+              "px": 1,
+              "py": -1,
+              "vx": -1,
+              "vy": 2
+            },
+            {
+              "px": -1,
+              "py": 1,
+              "vx": 1,
+              "vy": -2
+            }
+          ]
+        }
+      },
+      {
+        "id": "vector-null-component",
+        "caseId": "vector-field",
+        "mutation": {
+          "path": [
+            "tables",
+            "0",
+            "rows",
+            "0",
+            "vx"
+          ],
+          "value": null
+        }
+      },
+      {
+        "id": "points-text-coordinate",
+        "caseId": "points",
+        "mutation": {
+          "path": [
+            "tables",
+            "0",
+            "rows",
+            "0",
+            "px"
+          ],
+          "value": "2"
+        }
+      },
+      {
+        "id": "geometry-unknown-column",
+        "caseId": "polygon",
+        "mutation": {
+          "path": [
+            "tables",
+            "0",
+            "structure",
+            "longitude"
+          ],
+          "value": "missing"
+        }
+      }
+    ]
+  }
+}

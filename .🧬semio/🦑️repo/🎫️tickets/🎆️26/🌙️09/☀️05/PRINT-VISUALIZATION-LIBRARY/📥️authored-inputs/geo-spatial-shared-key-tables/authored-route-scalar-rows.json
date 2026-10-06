@@ -1,0 +1,88 @@
+[
+  {
+    "id": "api-path-family-geo-route",
+    "scope": "semio / viz / family / geo-route",
+    "en": "Shared geographic route controls",
+    "de": "Gemeinsame geografische Routensteuerung",
+    "rows": [
+      [
+        "basemap",
+        "boolean",
+        "true",
+        "Draw the geographic reference geometry beneath routes and flow bands.",
+        "Geografische Referenzgeometrie unter Routen und Flussbändern zeichnen."
+      ],
+      [
+        "mode",
+        "string",
+        "direct",
+        "Route geometry: direct, great-circle or octilinear.",
+        "Routengeometrie: direct, great-circle oder octilinear."
+      ],
+      [
+        "routeWidth",
+        "number",
+        "1.4",
+        "Maximum route stroke or flow-band width in millimetres.",
+        "Maximale Strichbreite der Route oder Bandbreite des Flusses in Millimetern."
+      ],
+      [
+        "routes",
+        "string",
+        "demo-geo-routes",
+        "Named line geometry collection supplying the routes and their values.",
+        "Benannte Liniengeometriesammlung für die Routen und ihre Werte."
+      ],
+      [
+        "samples",
+        "integer",
+        "20",
+        "Number of great-circle segments sampled for each route.",
+        "Anzahl der abgetasteten Großkreissegmente je Route."
+      ],
+      [
+        "stations",
+        "boolean",
+        "false",
+        "Draw station markers at route endpoints.",
+        "Stationsmarkierungen an den Routenenden zeichnen."
+      ]
+    ]
+  },
+  {
+    "id": "api-path-family-spatial-scalar-field",
+    "scope": "semio / viz / family / spatial-scalar-field",
+    "en": "Shared scalar surface controls",
+    "de": "Gemeinsame skalare Oberflächensteuerung",
+    "rows": [
+      [
+        "surface",
+        "string",
+        "contour",
+        "Scalar rendering: contour, filled, levelset, heatmap, wireframe, mesh, shaded, heightmap, waterfall, curtain or slice.",
+        "Skalare Darstellung: contour, filled, levelset, heatmap, wireframe, mesh, shaded, heightmap, waterfall, curtain oder slice."
+      ],
+      [
+        "tilt",
+        "number",
+        "30",
+        "Axonometric tilt of the sampled grid surface in degrees.",
+        "Axonometrische Neigung der abgetasteten Gitteroberfläche in Grad."
+      ],
+      [
+        "turn",
+        "number",
+        "30",
+        "Axonometric rotation of the sampled grid surface in degrees.",
+        "Axonometrische Drehung der abgetasteten Gitteroberfläche in Grad."
+      ],
+      [
+        "zScale",
+        "number",
+        "1.6",
+        "Millimetres per scalar grid value for surfaces and profiles.",
+        "Millimeter je skalarem Gitterwert für Oberflächen und Profile."
+      ]
+    ]
+  }
+]

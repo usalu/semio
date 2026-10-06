@@ -161,7 +161,7 @@
       "required": ["id", "relPath", "status", "document"]
     },
     "PurgeReport": {
-      "description": "🧹️ What an artifact purge removed. A file above 5 MiB and a subfolder whose files total above 10 MiB go; 🎫️ticket.json never does.",
+      "description": "🧹️ What an artifact purge removed. Only direct ticket 🗑️generated output is eligible: files above 5 MiB and subfolders above 10 MiB go. Authored inputs, scripts, configs and reports outside that output root are retained regardless of size.",
       "type": "object",
       "properties": {
         "removedDirectories": { "type": "array", "items": { "type": "string" } },
@@ -241,7 +241,7 @@
         "close": { "$ref": "#/$defs/TicketCloseRequest" },
         "reopen": { "$ref": "#/$defs/TicketReopenRequest" },
         "change": { "$ref": "#/$defs/TicketChangeRequest" },
-        "purge": { "type": "object", "properties": { "oversizedFile": { "type": "string" }, "smallFile": { "type": "string" } }, "required": ["oversizedFile", "smallFile"] }
+        "purge": { "type": "object", "properties": { "oversizedFile": { "type": "string" }, "smallFile": { "type": "string" }, "retention": { "type": "array", "items": { "type": "object", "additionalProperties": false, "properties": { "path": { "type": "string", "minLength": 1 }, "bytes": { "type": "integer", "minimum": 0 }, "retained": { "type": "boolean" } }, "required": ["path", "bytes", "retained"] } } }, "required": ["oversizedFile", "smallFile", "retention"] }
       },
       "required": ["repoMetaDir", "clock", "open", "close", "reopen", "change", "purge"]
     },

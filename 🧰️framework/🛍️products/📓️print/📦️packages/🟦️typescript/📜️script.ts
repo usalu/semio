@@ -49,7 +49,7 @@ class TestScript extends BundleScript {
   }
 }
 class CheckScript extends BundleScript{
- async run():Promise<void>{await runArtifactTypeScriptPackageMain(import.meta.dir,"@semio-tech/print",{suites:["🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts","🧪️tests/🧬️chart-mutations/🟦️.ts","🧪️tests/📜️chart-inference-result/🟦️.ts","🔨️modules/🏠️host/💡️inferences/🧵️worker/🟦️.ts"]});}
+ async run():Promise<void>{await runArtifactTypeScriptPackageMain(import.meta.dir,"@semio-tech/print",{suites:["🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts","🧪️tests/🧬️chart-mutations/🟦️.ts","🧪️tests/📜️chart-inference-result/🟦️.ts","🔨️modules/🏠️host/💡️inferences/🧵️worker/🟦️.ts","🎮️commands/🧪️print-pipeline-verification/🟦️.ts"]});}
 }
 //#endregion 🖨️RouterAdapters
 

@@ -35,7 +35,7 @@ import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { Page } from "@playwright/test";
-import { QUIZZES, answerRun, arrive, card, enter, expect, identify, pane, playQuiz, primary, readIntroduction, screen, submitRun, test, way, type Device, type Locale, type Text } from "../../🎭️e2e/🚶️learner/🟦️.ts";
+import { QUIZZES, answerRun, arrive, card, enter, expect, identify, pane, playQuiz, primary, readIntroduction, screen, submitRun, swipeTo, test, way, type Device, type Locale, type Text } from "../../🎭️e2e/🚶️learner/🟦️.ts";
 
 /** 🎟️ A cast as the ensemble authors it. */
 interface Cast {
@@ -1253,7 +1253,7 @@ test("a phone shows at most two small pets, on edges it shows and never on a con
     for (const pet of shown) expect(pet.size).toBe(0.8);
   };
   await enter(phone, { kind: "anonymous" });
-  await expect(page.locator("[data-layered-overview]")).toHaveAttribute("data-mode", "list");
+  await expect(page.locator("[data-layered-overview]")).toHaveAttribute("data-mode", "swipe");
   await expect(pets(phone)).not.toHaveCount(0, { timeout: APPEAR_MS });
   await expect.poll(() => misplaced(page), { timeout: RECAST_MS }).toEqual([]);
   await few();
@@ -1268,7 +1268,7 @@ test("a phone shows at most two small pets, on edges it shows and never on a con
 
   await page.keyboard.press("Escape");
   await expect(pane(page, quiz.id)).not.toHaveAttribute("data-opened", "");
-  await card(page, quiz.id).scrollIntoViewIfNeeded();
+  await swipeTo(phone, quiz.id);
   await playQuiz(phone, quiz.id);
   await expect.poll(() => misplaced(page), { timeout: RECAST_MS }).toEqual([]);
   await few();

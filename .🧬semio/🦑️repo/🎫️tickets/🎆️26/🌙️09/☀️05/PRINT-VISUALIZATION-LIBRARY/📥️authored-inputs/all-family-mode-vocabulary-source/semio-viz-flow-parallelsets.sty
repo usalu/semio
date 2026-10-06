@@ -1,0 +1,66 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-viz-flow-parallelsets}[2026/09/05 v0.3.0 semio viz namespace flow-parallelsets families]
+
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+\RequirePackage{semio-viz-flow-sankey}
+
+\ExplSyntaxOn
+
+%region 🔖️Keys
+% 🔑 semio / viz / family / parallel-sets — an alluvial whose axes are complete partitions of the
+% population (taxonomy §9): the renderer forces `nodePadding` to zero, so each axis is one unbroken
+% bar split into strata. Every key is the `sankey` key of the same name — the flow kernel's own
+% vocabulary on top of the network kernel's — and `iterations` and `curvature` are re-bound here.
+% variant      (tl)      the catalogue slug, recorded by the registry
+% data         (table)   ribbon table                                   default `demo-flow`
+% nodes        (table)   optional stratum table                         default empty
+% source       (column)  ribbon source stratum                          default empty (kernel `source`)
+% target       (column)  ribbon target stratum                          default empty (kernel `target`)
+% weight       (column)  ribbon value                                   default `value`
+% id           (column)  stratum identity of the stratum table          default empty (kernel `id`)
+% label        (column)  stratum caption                                default empty (kernel `label`)
+% group        (column)  stratum group, the colour slot                 default empty (kernel `group`)
+% layout       (tl)      layout the kernel runs                         default `force`, set to `sankey`
+% order        (tl)      node ordering rule of the kernel               default `index`
+% orientation  (choice `horizontal|vertical`) axis direction            default `horizontal`
+% root         (int)     index of the root stratum of a rooted ordering default 1
+% columns      (int)     axis count when no stratum table is given      default 0 (derived)
+% directed     (bool)    read the ribbon table as directed              default false
+% signed       (bool)    keep the sign of a negative ribbon value       default false
+% labels       (bool)    print the stratum captions                     default true
+% shape        (tl)      stratum glyph                                  default `circle`
+% size         (mm)      stratum glyph size                             default 1.5
+% sizeBy       (choice `none|weight|degree`) stratum thickness rule     default `none`
+% colorBy      (choice `source|target|group|value`) ribbon colour       default `source`
+% padding      (mm)      inset on all four sides of the drawing area    default 3
+% weightWidth  (bool)    ribbon thickness follows the ribbon value      default false
+% linkWidth    (mm)      ribbon thickness when `weightWidth` is false   default 0.16
+% linkDistance (mm)      force-kernel link distance, unused by sankey   default 30
+% charge       (fp)      force-kernel charge, unused by sankey          default -30
+% forces       (clist)   force-kernel force list, unused by sankey      default `link, many-body, center`
+% seed         (fp)      force-kernel seed, unused by sankey            default 1
+% sweeps       (int)     force-kernel sweeps, unused by sankey          default 4
+% nodeWidth    (mm)      stratum bar thickness                          default 4
+% nodePadding  (mm)      vertical gap between two strata, forced to 0   default 0
+% nodeAlign    (choice `left|right|center|justify`) axis placement      default `justify`
+% nodeSort     (choice `auto|none|ascending|descending`) strata order   default `auto`
+% linkSort     (choice `auto|none|ascending|descending`) ribbon order   default `auto`
+% labelWidth   (mm)      width reserved for the stratum captions        default 11
+% iterations   (int)     vertical relaxation passes                     default 6
+% curvature    (fp)      ribbon curvature, 0 straight, 1 fully bowed    default 0.5
+%endregion 🔖️Keys
+
+%region 🔖️ParallelSets
+\semio_viz_snk_keys_add:n { semio / viz / family / parallel-sets }
+% ⚙️ The two sankey keys the parallel-sets variant re-binds on its own name.
+\keys_define:nn { semio / viz / family / parallel-sets } {
+  iterations .int_set:N = \l_semio_viz_snk_iterations_int,
+  curvature  .fp_set:N = \l_semio_viz_snk_curv_fp,
+}
+% 🪢 Registers `parallel-sets`: the sankey renderer, run under the parallel-sets preset and key path.
+\SemioVizFamily { parallel-sets }
+  { \semio_viz_snk_render:nnn { parallel-sets } { parallel-sets } {#1} }
+%endregion 🔖️ParallelSets
+
+\ExplSyntaxOff

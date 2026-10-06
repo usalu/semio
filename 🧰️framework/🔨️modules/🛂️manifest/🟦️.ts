@@ -1552,6 +1552,8 @@ export type ShellFooterItem = {
 export type ShellBrand = {
   readonly id: string;
   readonly windowTitle: string;
+  /** 📱️ What the navbar shows below the tablet breakpoint instead of {@link windowTitle}; defaults to `windowTitle`. */
+  readonly shortWindowTitle?: string;
   readonly footerItems?: readonly ShellFooterItem[];
   readonly logoSvg?: string;
   readonly faviconIcoPath?: string;

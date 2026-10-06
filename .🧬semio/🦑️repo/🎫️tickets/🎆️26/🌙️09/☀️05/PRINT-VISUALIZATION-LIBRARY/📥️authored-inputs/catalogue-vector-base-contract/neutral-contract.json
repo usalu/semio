@@ -1,0 +1,100 @@
+{
+  "schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "arrow": {
+        "type": "number"
+      },
+      "cell": {
+        "type": "number"
+      },
+      "columns": {
+        "type": "integer"
+      },
+      "dt": {
+        "type": "number"
+      },
+      "field": {
+        "type": "string"
+      },
+      "lineWidth": {
+        "type": "string"
+      },
+      "opacity": {
+        "type": "number"
+      },
+      "palette": {
+        "type": "string"
+      },
+      "paletteSteps": {
+        "type": "integer"
+      },
+      "render": {
+        "type": "string"
+      },
+      "rows": {
+        "type": "integer"
+      },
+      "seeds": {
+        "type": "integer"
+      },
+      "steps": {
+        "type": "integer"
+      },
+      "stroke": {
+        "type": "string"
+      },
+      "variant": {
+        "type": "string"
+      }
+    }
+  },
+  "vectors": {
+    "accepted": {
+      "field": "source",
+      "cell": 5,
+      "columns": 2,
+      "rows": 2,
+      "stroke": "#e83b22",
+      "lineWidth": ".6mm",
+      "opacity": 0.4,
+      "palette": "sequential",
+      "paletteSteps": 3
+    },
+    "rejected": [
+      {
+        "key": "geometry",
+        "value": "demo-geo-regions"
+      },
+      {
+        "key": "fit",
+        "value": "world"
+      },
+      {
+        "key": "projection",
+        "value": "mercator"
+      },
+      {
+        "key": "parallels",
+        "value": "20,40"
+      },
+      {
+        "key": "rotate",
+        "value": "30,0,0"
+      },
+      {
+        "key": "width",
+        "value": 60
+      },
+      {
+        "key": "height",
+        "value": 30
+      }
+    ],
+    "languages": [
+      "en",
+      "de"
+    ]
+  }
+}

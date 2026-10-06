@@ -1,0 +1,16 @@
+
+    {
+      "name": "⚖️test📓️print🎨️geo-palette",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "PRINT_NATIVE_GRAMMAR_PHASE": "geo-palette"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.037127
+      }
+    },

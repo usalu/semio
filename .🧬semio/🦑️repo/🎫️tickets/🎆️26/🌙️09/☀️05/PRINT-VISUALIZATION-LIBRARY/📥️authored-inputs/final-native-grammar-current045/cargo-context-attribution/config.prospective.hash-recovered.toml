@@ -1,0 +1,68 @@
+# ⚡️ One shared compiler cache for every workspace, crate, profile, target, agent and dev. Intermediates live in
+# `build-dir`, uplifted deliverables in `target-dir`; both sit under the repo cache root, so disk is bounded by the
+# codebase and its build history (pruned by `bun nx run repo:cache-prune`) instead of by the
+# number of concurrent builders. `fine-grain-locking` locks per compilation unit instead of per directory, so
+# concurrent cargo invocations share every already-built unit and only wait on units another invocation is building.
+# `checksum-freshness` keys freshness on content, so Nx cache restores and checkouts that only touch mtimes rebuild nothing.
+# A private `CARGO_TARGET_DIR` only diverts the small uplifted deliverables; intermediates stay shared.
+# https://doc.rust-lang.org/nightly/cargo/reference/unstable.html#fine-grain-locking
+[build]
+target-dir = ".🧬semio/🦑️repo/⚡️cache/cargo/target"
+build-dir = ".🧬semio/🦑️repo/⚡️cache/cargo/build"
+rustflags = ["-Z", "threads=8"]
+
+[unstable]
+no-embed-metadata = true
+fine-grain-locking = true
+build-dir-new-layout = true
+checksum-freshness = true
+
+# 🧊️ The browser renderer's shadow stack. LLVM's wasm-ld default is 1 MiB, and a debug build of the wgpu
+# renderer overruns it during ordinary construction — `<UiSurfaceRegistry as Default>::default` alone
+# materialises `[Option<UiSurfaceSlot>; 64]` on the stack — which traps as a bare `RuntimeError: memory
+# access out of bounds` with no Rust panic, since the overflow writes below the stack rather than aborting.
+# Measured: every `semioWgpuWorkerBootstrap` died there until this flag was set. 16 MiB is double the
+# 8 MiB the plugin components carry (`[target.wasm32-wasip2]` below), because the renderer's debug
+# frames are far larger than a plugin's.
+[target.wasm32-unknown-unknown]
+rustflags = ['--cfg', 'getrandom_backend="wasm_js"', '-C', 'link-arg=-zstack-size=16777216']
+
+# 🪶️ REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT. Plugin components declare no memory `maximum`,
+# so V8 reserves the full 4GiB guard region per module per worker (~20 plugins/workers at boot).
+# 512MiB is uniform across all plugins on purpose — per-plugin rustflags would churn cargo
+# fingerprints across the shared dep graph on every sequential `cargo build -p` in the fleet.
+# Target-scoped rustflags REPLACE (not merge with) [build].rustflags, so `-Z threads=8` is repeated.
+#
+# 🧊️ `-zstack-size=8388608` is the plugin guest's shadow stack, and it belongs HERE — with the memory
+# maximum it is carved out of — rather than in whichever build command happens to produce a component.
+# It used to be passed per invocation by `🔌️plugin/🏗️build/📋️plan/🟦️.ts`'s `pluginCargoArgs`, so a plain
+# `cargo build -p <plugin> --target wasm32-wasip2 --profile wasm-dev` wrote a component with wasm-ld's
+# DEFAULT 1 MiB stack into the same shared target directory the dev host and the MCP gateway both read
+# from. At `opt-level = 0` that tape runs out inside `Event::InstanceOpen`: `UiPatchApplyArena::default`
+# alone spends ~654 KiB of it zero-initialising a 93.5 KiB static, and the guest traps below address 0
+# (ticket 26/09/18 slice A2, `📓️a2-mcp-plugin-host-instance-open.md` §3). A component's stack size is
+# part of its ABI, not of one builder's argv.
+[target.wasm32-wasip2]
+rustflags = ["-Z", "threads=8", "-C", "link-arg=--max-memory=536870912", "-C", "link-arg=-zstack-size=8388608"]
+
+# 🔗️ Every glibc Linux host links with the `rust-lld` the pinned toolchain ships (`lib/rustlib/<host>/bin/gcc-ld`),
+# so no distribution package decides whether a native build links: `mold` was required here, installed only on
+# apt-get systems, and every other distribution failed at the first build script's link step. x86_64 already
+# defaults to the self-contained LLD; aarch64 still defaults to GNU ld, so both hosts state it explicitly. Measured
+# link times against mold and GNU ld: ticket 26/09/23/END-TO-END-OS-HUB-COLLABORATION-MCP, `📓️wp-z2.md`.
+# Target-scoped rustflags REPLACE [build].rustflags, so `-Z threads=8` is repeated.
+[target.'cfg(all(target_os = "linux", target_env = "gnu"))']
+rustflags = ["-Z", "threads=8", "-C", "linker-features=+lld", "-C", "link-self-contained=+linker", "-Z", "unstable-options"]
+
+# 🧵️ The NATIVE test thread's stack. `libtest` spawns every test on a thread whose default stack is
+# 2 MiB, and an unoptimised build of an artifact app overruns it before the first assertion: the async
+# state machines of `context::app_with_registry` → `new_app_with_registry` → `VcsArtifactApp::open`
+# are materialised inline by `block_on`, measured at 325 KiB, 227 KiB and 221 KiB of frame each, and
+# one `procedural generation3d` fixture boot alone lands on 2_096_176 bytes — 976 bytes under the
+# default. A stack overflow ABORTS the process instead of failing the test, so the run dies under
+# whichever test the allocator happened to be in: that is the whole of the "9 generation3d `--lib`
+# reds that swap between runs" (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+# `📓️editor-verbs-cancel-undo-2026-09-13.md`). Thread stacks are reserved, not committed, so the
+# headroom costs address space only. Same defect class as the wasm `-zstack-size` bump above.
+[env]
+RUST_MIN_STACK = "67108864"

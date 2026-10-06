@@ -1,0 +1,13 @@
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{de}\ExplSyntaxOff
+\begin{VizFigure}[width=80,height=40,title={}]
+\SemioVizTable{xy-nodes}{id,group,x,y,parent}
+\SemioVizRow{xy-nodes}{{\SemioVizString{A}},{\SemioVizString{G}},{\SemioVizString{0}},{\SemioVizString{}},{\SemioVizString{}}}
+\SemioVizRow{xy-nodes}{{\SemioVizString{B}},{\SemioVizString{G}},{\SemioVizString{1}},{\SemioVizString{1}},{\SemioVizString{A}}}
+\SemioVizTable{xy-edges}{source,target}
+\SemioVizRow{xy-edges}{{\SemioVizString{A}},{\SemioVizString{B}}}
+\SemioVizTheme{default}[appearance=dark]
+\SemioVizChart{commit-graph}[data={xy-edges},id={id},iterations={1},labels={false},layout={force},nodes={xy-nodes},source={source},target={target}]
+% 80mm × 40mm, dark appearance
+\end{VizFigure}
+\endgroup

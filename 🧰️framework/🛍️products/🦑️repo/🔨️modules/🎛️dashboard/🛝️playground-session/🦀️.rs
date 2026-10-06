@@ -18,7 +18,10 @@ pub fn run(root: &Path, args: &ParsedArgs) -> i32 {
     let opts = dev_options_from_args(args);
     let env = build_dev_env(&playground.variant, Some(playground), &opts);
     println!("[semio dev] {} via {} on port {}", playground.variant, opts.renderer, env.iter().find(|(key, _)| key == "S_OS_PORT").map(|(_, value)| value.as_str()).unwrap_or("?"));
-    spawn_inherit("bun", &["nx", "run", "@semio-tech/framework-os-dev:dev"], root, &env)
+    let target = match opts.renderer.as_str() { "wgpu-native" => format!("run-{}-native-dev", playground.variant), "wgpu" | "wgpu-wasm" => format!("dev-{}-wgpu-dev", playground.variant), "react" => format!("dev-{}-react-dev", playground.variant), renderer => { eprintln!("[semio dev] unknown renderer {renderer}"); return 1; } };
+    let mut args = vec!["nx".to_string(), "run".into(), format!("@semio-tech/framework-os-dev:{target}")];
+    if opts.renderer == "wgpu-native" { if let Lock::Individual(id) = &opts.example { args.extend(["--".into(), "--example".into(), id.clone()]); } }
+    spawn_inherit("bun", &args.iter().map(String::as_str).collect::<Vec<_>>(), root, &env)
 }
 // #endregion 🔖️Command
 

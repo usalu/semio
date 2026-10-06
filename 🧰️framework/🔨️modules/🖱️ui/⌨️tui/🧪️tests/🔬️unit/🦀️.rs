@@ -1,7 +1,7 @@
 
 use crate::tui::ansi::{AnsiParser, AnsiPatch, emit_runs, setup_sequence, teardown_sequence};
 use crate::tui::cell::{Cell, CellBuffer, DiffRun, attr, diff};
-use crate::tui::chrome::{ChromeState, FooterState, KeyHint, NavItem, NavbarState, WindowState, mount_window_layout, shell, window_chip_layout};
+use crate::tui::chrome::{ChromeState, FooterState, KeyHint, NavItem, NavbarState, WindowState, mount_window_layout, shell, window_chip_layout, window_content_padding};
 use crate::tui::event::{Event, Key, KeyEvent, MouseEvent, MouseKind};
 use crate::tui::geometry::{Pos, Rect, Size};
 use crate::tui::layout::{Constraint, Dimension, Direction, WindowLayout, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode, create_default_layout, even_window_layout, solve, solve_window_layout};
@@ -1172,6 +1172,126 @@ fn window_stack_tabs_respect_bottom_corners() {
 }
 
 #[test]
+fn window_silhouette_keeps_one_continuous_outline_around_the_notch() {
+    let theme = Theme::new(AppearanceName::Dark);
+    let rect = Rect::new(0, 0, 40, 8);
+    let sentinel = Cell { ch: '.', fg: [1, 2, 3], bg: [4, 5, 6], attrs: 0, width: 1 };
+    let mut buf = CellBuffer::new(Size { width: 40, height: 8 }, sentinel);
+    ChromeState::Window(WindowState::new("Commands")).paint(&theme, rect, &mut buf);
+    assert_eq!(buf.get(38, 0).copied(), Some(sentinel), "the notch beside the title chip stays outside the window");
+    assert_eq!(buf.get(2, 4).unwrap().bg, theme.surface(Surface::Window));
+    let hair = row_text(&buf, 2);
+    let bend = hair.rfind('\u{2514}').expect("chip bends into the body");
+    let tail = &hair[bend..];
+    assert!(tail.chars().all(|ch| ch != ' ' && ch != '.'), "outline breaks across the body cap: {hair:?}");
+    assert!(tail.ends_with('\u{2510}'), "body cap does not close on the right: {hair:?}");
+    assert_eq!(window_content_padding(&WindowState::new("Commands"), rect), [3, 1, 1, 1]);
+}
+
+#[test]
+fn window_bottom_notch_is_outside_the_continuous_outline() {
+    use crate::tui::chrome::WindowStackTabState;
+    use crate::tui::layout::WindowStackCorner;
+    let theme = Theme::new(AppearanceName::Dark);
+    let rect = Rect::new(0, 0, 50, 8);
+    let sentinel = Cell { ch: '.', fg: [1, 2, 3], bg: [4, 5, 6], attrs: 0, width: 1 };
+    let mut buf = CellBuffer::new(Size { width: 50, height: 8 }, sentinel);
+    let window = WindowState::new("Main").with_stack_tab_states(vec![WindowStackTabState::new("top", WindowStackCorner::TopLeft), WindowStackTabState::new("bot", WindowStackCorner::BottomRight)], 0);
+    ChromeState::Window(window).paint(&theme, rect, &mut buf);
+    assert_eq!(buf.get(0, 7).copied(), Some(sentinel), "no dangling corner in the bottom-left notch");
+    assert_eq!(buf.get(0, 5).unwrap().ch, '\u{2514}');
+}
+
+#[test]
+fn composed_window_keeps_the_silhouette_when_the_body_paints() {
+    let mut tui = crate::tui::engine::Tui::new(Size { width: 60, height: 16 }, Theme::new(AppearanceName::Dark));
+    let navbar = NavbarState { left: vec![], center: vec![NavItem { id: "d".into(), label: "dashboard".into(), active: false }], right: vec![] };
+    let footer = FooterState { hints: vec![], status: String::new() };
+    let layout = create_default_layout(&["w1".into()], "row", None, Some(&["Commands".into()]));
+    let mut built = shell(&mut tui.scene, navbar, footer, &layout);
+    let (_id, chrome) = built.windows[0].clone();
+    let widget = tui.scene.add(chrome, Node::new(NodeContent::Widget(WidgetState::Wizard(WizardState::new(vec!["alpha".into()])))));
+    tui.scene.node_mut(widget).set_constraint(Constraint { width: Dimension::Weight(1), height: Dimension::Weight(1), ..Default::default() });
+    built.remount(&mut tui.scene, &layout);
+    tui.set_focus(Some(widget));
+    let _ = tui.render_full();
+    let win = tui.scene.rect(chrome);
+    let frame = tui.frame();
+    let hair = row_text(frame, win.y + 2);
+    let bend = hair.rfind('\u{2514}').unwrap_or_else(|| panic!("missing bend {hair:?}"));
+    assert!(hair[bend..].chars().all(|ch| ch != ' '), "body overwrote the silhouette: {hair:?}");
+    let body = row_text(frame, win.y + 3);
+    assert!(body.contains('/'), "wizard should start under the outline, got {body:?}");
+    assert_eq!(frame.get(win.x + win.width - 2, win.y).unwrap().bg, tui.theme.surface(Surface::Base));
+}
+
+#[test]
+fn window_hairline_opens_only_under_the_active_tab() {
+    let theme = Theme::new(AppearanceName::Dark);
+    let rect = Rect::new(0, 0, 60, 8);
+    for active in [0usize, 1] {
+        let mut w = WindowState::new("Main").with_stack_tabs(vec!["alpha".into(), "beta".into()], active);
+        w.focused = true;
+        let layout = window_chip_layout(&w, rect);
+        let mut buf = CellBuffer::new(Size { width: 60, height: 8 }, Cell::blank([0, 0, 0], [0, 0, 0]));
+        ChromeState::Window(w).paint(&theme, rect, &mut buf);
+        let group = layout.groups.iter().find(|g| g.corner == crate::tui::layout::WindowStackCorner::TopLeft).expect("top-left tabs");
+        for tab in &group.tabs {
+            let open = tab.index == active;
+            for x in (tab.x + 1)..(tab.x + tab.interior_width + 1) {
+                let ch = buf.get(x, layout.top_body_y).unwrap().ch;
+                if open {
+                    assert_eq!(ch, ' ', "active tab {active} must stay open at {x}: {}", row_text(&buf, layout.top_body_y));
+                } else {
+                    assert_eq!(ch, '\u{2500}', "inactive tab must stay closed at {x}: {}", row_text(&buf, layout.top_body_y));
+                }
+            }
+        }
+        let hair = row_text(&buf, layout.top_body_y);
+        let bend = hair.rfind('\u{2514}').unwrap_or_else(|| panic!("missing active bend {hair:?}"));
+        assert!(hair[bend..].chars().all(|ch| ch != ' '), "silhouette breaks after the active tab: {hair:?}");
+        assert!(hair.ends_with('\u{2510}'), "body cap does not close: {hair:?}");
+        assert_eq!(buf.get(0, 0).unwrap().fg, theme.role(Role::ActiveBase), "focused silhouette uses the active color");
+        assert_eq!(buf.get(rect.width - 1, layout.top_body_y).unwrap().fg, theme.role(Role::ActiveBase));
+    }
+    let plain = WindowState::new("Main").with_stack_tabs(vec!["alpha".into(), "beta".into()], 0);
+    let mut buf = CellBuffer::new(Size { width: 60, height: 8 }, Cell::blank([0, 0, 0], [0, 0, 0]));
+    ChromeState::Window(plain).paint(&theme, rect, &mut buf);
+    assert_eq!(buf.get(0, 0).unwrap().fg, theme.role(Role::BorderNormal), "an unfocused silhouette uses the normal border");
+}
+
+#[test]
+fn window_bottom_hairline_opens_only_under_the_active_tab() {
+    use crate::tui::chrome::WindowStackTabState;
+    use crate::tui::layout::WindowStackCorner;
+    let theme = Theme::new(AppearanceName::Dark);
+    let rect = Rect::new(0, 0, 60, 8);
+    let mut w = WindowState::new("Main").with_stack_tab_states(
+        vec![WindowStackTabState::new("one", WindowStackCorner::BottomLeft), WindowStackTabState::new("two", WindowStackCorner::BottomLeft)],
+        1,
+    );
+    w.focused = true;
+    let layout = window_chip_layout(&w, rect);
+    let mut buf = CellBuffer::new(Size { width: 60, height: 8 }, Cell::blank([0, 0, 0], [0, 0, 0]));
+    ChromeState::Window(w).paint(&theme, rect, &mut buf);
+    let y = layout.bottom_body_y.expect("bottom hairline");
+    let group = layout.groups.iter().find(|g| g.corner == WindowStackCorner::BottomLeft).expect("bottom tabs");
+    assert!(group.tabs.len() >= 2, "two bottom tabs");
+    for tab in &group.tabs {
+        let open = tab.index == 1;
+        for x in (tab.x + 1)..(tab.x + tab.interior_width + 1) {
+            let ch = buf.get(x, y).unwrap().ch;
+            if open {
+                assert_eq!(ch, ' ', "active bottom tab must stay open at {x}: {}", row_text(&buf, y));
+            } else {
+                assert_eq!(ch, '\u{2500}', "inactive bottom tab must stay closed at {x}: {}", row_text(&buf, y));
+            }
+        }
+    }
+    assert_eq!(buf.get(0, rect.height - 1).unwrap().fg, theme.role(Role::ActiveBase));
+}
+
+#[test]
 fn paint_log_shows_the_tail_when_following() {
     let theme = Theme::new(AppearanceName::Dark);
     let mut log = LogState::new(10);
@@ -1383,7 +1503,7 @@ fn pty_spawn_echo_hello() {
     use crate::tui::pty::{Pty, PtySize};
     use std::time::{Duration, Instant};
 
-    let mut pty = Pty::spawn("/bin/echo", &["hello"], &[], None, PtySize { cols: 80, rows: 24 }).expect("spawn echo");
+    let mut pty = Pty::spawn("/bin/echo", &["hello"], &[], &[], None, PtySize { cols: 80, rows: 24 }).expect("spawn echo");
     let mut out = Vec::new();
     let mut buf = [0u8; 1024];
     let deadline = Instant::now() + Duration::from_secs(2);
@@ -1416,7 +1536,7 @@ fn pty_kill_terminates_child_process_group() {
     use std::process as system_process;
     use std::time::{Duration, Instant};
 
-    let mut pty = Pty::spawn("bash", &["-c", "sleep 300 & sleep 300; wait"], &[], None, PtySize { cols: 80, rows: 24 }).expect("spawn bash sleep group");
+    let mut pty = Pty::spawn("bash", &["-c", "sleep 300 & sleep 300; wait"], &[], &[], None, PtySize { cols: 80, rows: 24 }).expect("spawn bash sleep group");
     let pid = pty.pid();
     let deadline = Instant::now() + Duration::from_secs(2);
     let mut saw_child = false;
@@ -1442,7 +1562,7 @@ fn pty_kill_terminates_child_process_group() {
 fn pty_resize_ok() {
     use crate::tui::pty::{Pty, PtySize};
 
-    let mut pty = Pty::spawn("/bin/sleep", &["1"], &[], None, PtySize { cols: 80, rows: 24 }).expect("spawn sleep");
+    let mut pty = Pty::spawn("/bin/sleep", &["1"], &[], &[], None, PtySize { cols: 80, rows: 24 }).expect("spawn sleep");
     pty.resize(PtySize { cols: 100, rows: 40 }).expect("resize");
     pty.kill().expect("kill");
 }

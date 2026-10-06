@@ -1,0 +1,14 @@
+[
+  {
+    "session": 5840,
+    "exitCode": 1,
+    "log": "\ud83d\uddd1\ufe0fgenerated\\catalogue-vector-base-admission-red.log",
+    "logSha256": "0eda2f5e73aefd9987d268f42801ec6a9eae43fd8f9510da4b2fd03fe466d2a6"
+  },
+  {
+    "session": 22817,
+    "exitCode": 0,
+    "log": "\ud83d\uddd1\ufe0fgenerated\\catalogue-vector-base-admission-green.log",
+    "logSha256": "eafcae6daaf5de8a0111ca0ba8b06a35eaa7ca60419acc04a4ce3b8b4d1a4b9b"
+  }
+]

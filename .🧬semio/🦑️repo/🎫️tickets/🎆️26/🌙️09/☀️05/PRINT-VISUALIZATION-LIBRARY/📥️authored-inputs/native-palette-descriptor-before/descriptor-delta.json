@@ -1,0 +1,449 @@
+[
+  {
+    "family": "geo-choropleth",
+    "key": "steps",
+    "before": {
+      "syntax": "expression",
+      "type": "integer",
+      "description": {
+        "en": "Number of integration or iteration steps.",
+        "de": "Anzahl der Integrations- bzw. Iterationsschritte."
+      }
+    }
+  },
+  {
+    "family": "geo-choropleth",
+    "key": "paletteSteps",
+    "after": {
+      "syntax": "expression",
+      "type": "integer",
+      "minimum": 1,
+      "default": 5,
+      "description": {
+        "en": "Number of geographic palette levels, independently of vector integration steps; one level uses the palette midpoint.",
+        "de": "Anzahl der geografischen Palettenstufen unabhängig von den Vektorintegrationsschritten; eine Stufe nutzt die Palettenmitte."
+      }
+    },
+    "retainedOwnSteps": false
+  },
+  {
+    "family": "geo-cartogram",
+    "key": "steps",
+    "before": {
+      "syntax": "expression",
+      "type": "integer",
+      "description": {
+        "en": "Number of integration or iteration steps.",
+        "de": "Anzahl der Integrations- bzw. Iterationsschritte."
+      }
+    }
+  },
+  {
+    "family": "geo-cartogram",
+    "key": "paletteSteps",
+    "after": {
+      "syntax": "expression",
+      "type": "integer",
+      "minimum": 1,
+      "default": 5,
+      "description": {
+        "en": "Number of geographic palette levels, independently of vector integration steps; one level uses the palette midpoint.",
+        "de": "Anzahl der geografischen Palettenstufen unabhängig von den Vektorintegrationsschritten; eine Stufe nutzt die Palettenmitte."
+      }
+    },
+    "retainedOwnSteps": false
+  },
+  {
+    "family": "geo-tilegrid",
+    "key": "steps",
+    "before": {
+      "syntax": "expression",
+      "type": "integer",
+      "description": {
+        "en": "Number of integration or iteration steps.",
+        "de": "Anzahl der Integrations- bzw. Iterationsschritte."
+      }
+    }
+  },
+  {
+    "family": "geo-tilegrid",
+    "key": "paletteSteps",
+    "after": {
+      "syntax": "expression",
+      "type": "integer",
+      "minimum": 1,
+      "default": 5,
+      "description": {
+        "en": "Number of geographic palette levels, independently of vector integration steps; one level uses the palette midpoint.",
+        "de": "Anzahl der geografischen Palettenstufen unabhängig von den Vektorintegrationsschritten; eine Stufe nutzt die Palettenmitte."
+      }
+    },
+    "retainedOwnSteps": false
+  },
+  {
+    "family": "geo-field",
+    "key": "steps",
+    "before": {
+      "syntax": "expression",
+      "type": "integer",
+      "description": {
+        "en": "Number of integration or iteration steps.",
+        "de": "Anzahl der Integrations- bzw. Iterationsschritte."
+      }
+    }
+  },
+  {
+    "family": "geo-field",
+    "key": "paletteSteps",
+    "after": {
+      "syntax": "expression",
+      "type": "integer",
+      "minimum": 1,
+      "default": 5,
+      "description": {
+        "en": "Number of geographic palette levels, independently of vector integration steps; one level uses the palette midpoint.",
+        "de": "Anzahl der geografischen Palettenstufen unabhängig von den Vektorintegrationsschritten; eine Stufe nutzt die Palettenmitte."
+      }
+    },
+    "retainedOwnSteps": false
+  },
+  {
+    "family": "geo-terrain",
+    "key": "steps",
+    "before": {
+      "syntax": "expression",
+      "type": "integer",
+      "description": {
+        "en": "Number of integration or iteration steps.",
+        "de": "Anzahl der Integrations- bzw. Iterationsschritte."
+      }
+    }
+  },
+  {
+    "family": "geo-terrain",
+    "key": "paletteSteps",
+    "after": {
+      "syntax": "expression",
+      "type": "integer",
+      "minimum": 1,
+      "default": 5,
+      "description": {
+        "en": "Number of geographic palette levels, independently of vector integration steps; one level uses the palette midpoint.",
+        "de": "Anzahl der geografischen Palettenstufen unabhängig von den Vektorintegrationsschritten; eine Stufe nutzt die Palettenmitte."
+      }
+    },
+    "retainedOwnSteps": false
+  },
+  {
+    "family": "geo-weather",
+    "key": "steps",
+    "before": {
+      "syntax": "expression",
+      "type": "integer",
+      "description": {
+        "en": "Number of integration or iteration steps.",
+        "de": "Anzahl der Integrations- bzw. Iterationsschritte."
+      }
+    }
+  },
+  {
+    "family": "geo-weather",
+    "key": "paletteSteps",
+    "after": {
+      "syntax": "expression",
+      "type": "integer",
+      "minimum": 1,
+      "default": 5,
+      "description": {
+        "en": "Number of geographic palette levels, independently of vector integration steps; one level uses the palette midpoint.",
+        "de": "Anzahl der geografischen Palettenstufen unabhängig von den Vektorintegrationsschritten; eine Stufe nutzt die Palettenmitte."
+      }
+    },
+    "retainedOwnSteps": false
+  },
+  {
+    "family": "spatial-scalar-field",
+    "key": "steps",
+    "before": {
+      "syntax": "expression",
+      "type": "integer",
+      "description": {
+        "en": "Number of integration or iteration steps.",
+        "de": "Anzahl der Integrations- bzw. Iterationsschritte."
+      }
+    }
+  },
+  {
+    "family": "spatial-scalar-field",
+    "key": "paletteSteps",
+    "after": {
+      "syntax": "expression",
+      "type": "integer",
+      "minimum": 1,
+      "default": 5,
+      "description": {
+        "en": "Number of geographic palette levels, independently of vector integration steps; one level uses the palette midpoint.",
+        "de": "Anzahl der geografischen Palettenstufen unabhängig von den Vektorintegrationsschritten; eine Stufe nutzt die Palettenmitte."
+      }
+    },
+    "retainedOwnSteps": false
+  },
+  {
+    "family": "geo-basemap",
+    "key": "steps",
+    "before": {
+      "syntax": "expression",
+      "type": "integer",
+      "description": {
+        "en": "Number of integration or iteration steps.",
+        "de": "Anzahl der Integrations- bzw. Iterationsschritte."
+      }
+    }
+  },
+  {
+    "family": "geo-basemap",
+    "key": "paletteSteps",
+    "after": {
+      "syntax": "expression",
+      "type": "integer",
+      "minimum": 1,
+      "default": 5,
+      "description": {
+        "en": "Number of geographic palette levels, independently of vector integration steps; one level uses the palette midpoint.",
+        "de": "Anzahl der geografischen Palettenstufen unabhängig von den Vektorintegrationsschritten; eine Stufe nutzt die Palettenmitte."
+      }
+    },
+    "retainedOwnSteps": false
+  },
+  {
+    "family": "geo-graticule",
+    "key": "steps",
+    "before": {
+      "syntax": "expression",
+      "type": "integer",
+      "description": {
+        "en": "Number of integration or iteration steps.",
+        "de": "Anzahl der Integrations- bzw. Iterationsschritte."
+      }
+    }
+  },
+  {
+    "family": "geo-graticule",
+    "key": "paletteSteps",
+    "after": {
+      "syntax": "expression",
+      "type": "integer",
+      "minimum": 1,
+      "default": 5,
+      "description": {
+        "en": "Number of geographic palette levels, independently of vector integration steps; one level uses the palette midpoint.",
+        "de": "Anzahl der geografischen Palettenstufen unabhängig von den Vektorintegrationsschritten; eine Stufe nutzt die Palettenmitte."
+      }
+    },
+    "retainedOwnSteps": false
+  },
+  {
+    "family": "geo-geodesic",
+    "key": "steps",
+    "before": {
+      "syntax": "expression",
+      "type": "integer",
+      "description": {
+        "en": "Number of integration or iteration steps.",
+        "de": "Anzahl der Integrations- bzw. Iterationsschritte."
+      }
+    }
+  },
+  {
+    "family": "geo-geodesic",
+    "key": "paletteSteps",
+    "after": {
+      "syntax": "expression",
+      "type": "integer",
+      "minimum": 1,
+      "default": 5,
+      "description": {
+        "en": "Number of geographic palette levels, independently of vector integration steps; one level uses the palette midpoint.",
+        "de": "Anzahl der geografischen Palettenstufen unabhängig von den Vektorintegrationsschritten; eine Stufe nutzt die Palettenmitte."
+      }
+    },
+    "retainedOwnSteps": false
+  },
+  {
+    "family": "geo-route",
+    "key": "steps",
+    "before": {
+      "syntax": "expression",
+      "type": "integer",
+      "description": {
+        "en": "Number of integration or iteration steps.",
+        "de": "Anzahl der Integrations- bzw. Iterationsschritte."
+      }
+    }
+  },
+  {
+    "family": "geo-route",
+    "key": "paletteSteps",
+    "after": {
+      "syntax": "expression",
+      "type": "integer",
+      "minimum": 1,
+      "default": 5,
+      "description": {
+        "en": "Number of geographic palette levels, independently of vector integration steps; one level uses the palette midpoint.",
+        "de": "Anzahl der geografischen Palettenstufen unabhängig von den Vektorintegrationsschritten; eine Stufe nutzt die Palettenmitte."
+      }
+    },
+    "retainedOwnSteps": false
+  },
+  {
+    "family": "geo-flow",
+    "key": "steps",
+    "before": {
+      "syntax": "expression",
+      "type": "integer",
+      "description": {
+        "en": "Number of integration or iteration steps.",
+        "de": "Anzahl der Integrations- bzw. Iterationsschritte."
+      }
+    }
+  },
+  {
+    "family": "geo-flow",
+    "key": "paletteSteps",
+    "after": {
+      "syntax": "expression",
+      "type": "integer",
+      "minimum": 1,
+      "default": 5,
+      "description": {
+        "en": "Number of geographic palette levels, independently of vector integration steps; one level uses the palette midpoint.",
+        "de": "Anzahl der geografischen Palettenstufen unabhängig von den Vektorintegrationsschritten; eine Stufe nutzt die Palettenmitte."
+      }
+    },
+    "retainedOwnSteps": false
+  },
+  {
+    "family": "spatial-vector-field",
+    "key": "paletteSteps",
+    "after": {
+      "syntax": "expression",
+      "type": "integer",
+      "minimum": 1,
+      "default": 5,
+      "description": {
+        "en": "Number of geographic palette levels, independently of vector integration steps; one level uses the palette midpoint.",
+        "de": "Anzahl der geografischen Palettenstufen unabhängig von den Vektorintegrationsschritten; eine Stufe nutzt die Palettenmitte."
+      }
+    },
+    "retainedOwnSteps": true
+  },
+  {
+    "family": "geo-symbol",
+    "key": "steps",
+    "before": {
+      "syntax": "expression",
+      "type": "integer",
+      "description": {
+        "en": "Number of integration or iteration steps.",
+        "de": "Anzahl der Integrations- bzw. Iterationsschritte."
+      }
+    }
+  },
+  {
+    "family": "geo-symbol",
+    "key": "paletteSteps",
+    "after": {
+      "syntax": "expression",
+      "type": "integer",
+      "minimum": 1,
+      "default": 5,
+      "description": {
+        "en": "Number of geographic palette levels, independently of vector integration steps; one level uses the palette midpoint.",
+        "de": "Anzahl der geografischen Palettenstufen unabhängig von den Vektorintegrationsschritten; eine Stufe nutzt die Palettenmitte."
+      }
+    },
+    "retainedOwnSteps": false
+  },
+  {
+    "family": "geo-dotdensity",
+    "key": "steps",
+    "before": {
+      "syntax": "expression",
+      "type": "integer",
+      "description": {
+        "en": "Number of integration or iteration steps.",
+        "de": "Anzahl der Integrations- bzw. Iterationsschritte."
+      }
+    }
+  },
+  {
+    "family": "geo-dotdensity",
+    "key": "paletteSteps",
+    "after": {
+      "syntax": "expression",
+      "type": "integer",
+      "minimum": 1,
+      "default": 5,
+      "description": {
+        "en": "Number of geographic palette levels, independently of vector integration steps; one level uses the palette midpoint.",
+        "de": "Anzahl der geografischen Palettenstufen unabhängig von den Vektorintegrationsschritten; eine Stufe nutzt die Palettenmitte."
+      }
+    },
+    "retainedOwnSteps": false
+  },
+  {
+    "family": "geo-hexbin",
+    "key": "steps",
+    "before": {
+      "syntax": "expression",
+      "type": "integer",
+      "description": {
+        "en": "Number of integration or iteration steps.",
+        "de": "Anzahl der Integrations- bzw. Iterationsschritte."
+      }
+    }
+  },
+  {
+    "family": "geo-hexbin",
+    "key": "paletteSteps",
+    "after": {
+      "syntax": "expression",
+      "type": "integer",
+      "minimum": 1,
+      "default": 5,
+      "description": {
+        "en": "Number of geographic palette levels, independently of vector integration steps; one level uses the palette midpoint.",
+        "de": "Anzahl der geografischen Palettenstufen unabhängig von den Vektorintegrationsschritten; eine Stufe nutzt die Palettenmitte."
+      }
+    },
+    "retainedOwnSteps": false
+  },
+  {
+    "family": "spatial-tessellation",
+    "key": "steps",
+    "before": {
+      "syntax": "expression",
+      "type": "integer",
+      "description": {
+        "en": "Number of integration or iteration steps.",
+        "de": "Anzahl der Integrations- bzw. Iterationsschritte."
+      }
+    }
+  },
+  {
+    "family": "spatial-tessellation",
+    "key": "paletteSteps",
+    "after": {
+      "syntax": "expression",
+      "type": "integer",
+      "minimum": 1,
+      "default": 5,
+      "description": {
+        "en": "Number of geographic palette levels, independently of vector integration steps; one level uses the palette midpoint.",
+        "de": "Anzahl der geografischen Palettenstufen unabhängig von den Vektorintegrationsschritten; eine Stufe nutzt die Palettenmitte."
+      }
+    },
+    "retainedOwnSteps": false
+  }
+]

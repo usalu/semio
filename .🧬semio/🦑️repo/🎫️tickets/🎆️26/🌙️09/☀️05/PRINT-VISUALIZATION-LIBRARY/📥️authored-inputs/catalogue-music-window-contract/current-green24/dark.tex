@@ -1,0 +1,145 @@
+\documentclass[type=paper,language=de,theme=dark]{semio}
+\usepackage{semio-viz-probe}
+\usepackage{semio-viz}
+\title{Music Authored Windows}
+\author{Semio}
+\date{}
+\errorcontextlines=200
+\begin{document}
+\SemioVizProbeBegin{music-window-controls}{dark}
+\SemioVizProbeOn
+\SemioVizProbePage
+\clearpage\SemioVizProbeBegin{music-window-controls}{piano-roll-omitted}\ExplSyntaxOn\semio_viz_probe_values:nn{window/control}{1}\ExplSyntaxOff
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{de}\ExplSyntaxOff
+\begin{VizFigure}[width=80,height=40,title={}]
+\draw[line width=.01mm] (0,0) rectangle (80,40);\special{pdf:literal direct /SemioVizControlpiano-roll-omitted BMC}
+\SemioVizTheme{default}[appearance=dark]
+\SemioVizChart{piano-roll}[axes={false},curve={0/60,2/67,4/64},domain={0,7},grid={false},height={40},highPitch={84},lowPitch={48},mode={piano-roll},notes={0/1/60/80,2/0.5/67/100,4/2/64/75},range={},width={80}]
+% 80mm × 40mm, dark appearance
+\special{pdf:literal direct EMC}\end{VizFigure}
+\endgroup
+
+\clearpage\SemioVizProbeBegin{music-window-controls}{piano-roll-authored}\ExplSyntaxOn\semio_viz_probe_values:nn{window/control}{1}\ExplSyntaxOff
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{de}\ExplSyntaxOff
+\begin{VizFigure}[width=80,height=40,title={}]
+\draw[line width=.01mm] (0,0) rectangle (80,40);\special{pdf:literal direct /SemioVizControlpiano-roll-authored BMC}
+\SemioVizTheme{default}[appearance=dark]
+\SemioVizChart{piano-roll}[axes={false},curve={0/60,2/67,4/64},domain={0,7},grid={false},height={40},highPitch={84},lowPitch={48},mode={piano-roll},notes={0/1/60/80,2/0.5/67/100,4/2/64/75},range={36,108},width={80}]
+% 80mm × 40mm, dark appearance
+\special{pdf:literal direct EMC}\end{VizFigure}
+\endgroup
+
+\clearpage\SemioVizProbeBegin{music-window-controls}{midi-omitted}\ExplSyntaxOn\semio_viz_probe_values:nn{window/control}{1}\ExplSyntaxOff
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{de}\ExplSyntaxOff
+\begin{VizFigure}[width=80,height=40,title={}]
+\draw[line width=.01mm] (0,0) rectangle (80,40);\special{pdf:literal direct /SemioVizControlmidi-omitted BMC}
+\SemioVizTheme{default}[appearance=dark]
+\SemioVizChart{midi-event-plot}[axes={false},curve={0/60,2/67,4/64},domain={0,7},grid={false},height={40},highPitch={84},lowPitch={48},mode={midi},notes={0/1/60/80,2/0.5/67/100,4/2/64/75},range={},width={80}]
+% 80mm × 40mm, dark appearance
+\special{pdf:literal direct EMC}\end{VizFigure}
+\endgroup
+
+\clearpage\SemioVizProbeBegin{music-window-controls}{midi-authored}\ExplSyntaxOn\semio_viz_probe_values:nn{window/control}{1}\ExplSyntaxOff
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{de}\ExplSyntaxOff
+\begin{VizFigure}[width=80,height=40,title={}]
+\draw[line width=.01mm] (0,0) rectangle (80,40);\special{pdf:literal direct /SemioVizControlmidi-authored BMC}
+\SemioVizTheme{default}[appearance=dark]
+\SemioVizChart{midi-event-plot}[axes={false},curve={0/60,2/67,4/64},domain={0,7},grid={false},height={40},highPitch={84},lowPitch={48},mode={midi},notes={0/1/60/80,2/0.5/67/100,4/2/64/75},range={36,108},width={80}]
+% 80mm × 40mm, dark appearance
+\special{pdf:literal direct EMC}\end{VizFigure}
+\endgroup
+
+\clearpage\SemioVizProbeBegin{music-window-controls}{rhythm-omitted}\ExplSyntaxOn\semio_viz_probe_values:nn{window/control}{1}\ExplSyntaxOff
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{de}\ExplSyntaxOff
+\begin{VizFigure}[width=80,height=40,title={}]
+\draw[line width=.01mm] (0,0) rectangle (80,40);\special{pdf:literal direct /SemioVizControlrhythm-omitted BMC}
+\SemioVizTheme{default}[appearance=dark]
+\SemioVizChart{rhythm-timeline}[axes={false},curve={0/60,2/67,4/64},domain={0,7},grid={false},height={40},highPitch={84},lowPitch={48},mode={rhythm},notes={0/1/60/80,2/0.5/67/100,4/2/64/75},range={},width={80}]
+% 80mm × 40mm, dark appearance
+\special{pdf:literal direct EMC}\end{VizFigure}
+\endgroup
+
+\clearpage\SemioVizProbeBegin{music-window-controls}{rhythm-authored}\ExplSyntaxOn\semio_viz_probe_values:nn{window/control}{1}\ExplSyntaxOff
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{de}\ExplSyntaxOff
+\begin{VizFigure}[width=80,height=40,title={}]
+\draw[line width=.01mm] (0,0) rectangle (80,40);\special{pdf:literal direct /SemioVizControlrhythm-authored BMC}
+\SemioVizTheme{default}[appearance=dark]
+\SemioVizChart{rhythm-timeline}[axes={false},curve={0/60,2/67,4/64},domain={0,7},grid={false},height={40},highPitch={84},lowPitch={48},mode={rhythm},notes={0/1/60/80,2/0.5/67/100,4/2/64/75},range={0,2},width={80}]
+% 80mm × 40mm, dark appearance
+\special{pdf:literal direct EMC}\end{VizFigure}
+\endgroup
+
+\clearpage\SemioVizProbeBegin{music-window-controls}{tempo-omitted}\ExplSyntaxOn\semio_viz_probe_values:nn{window/control}{1}\ExplSyntaxOff
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{de}\ExplSyntaxOff
+\begin{VizFigure}[width=80,height=40,title={}]
+\draw[line width=.01mm] (0,0) rectangle (80,40);\special{pdf:literal direct /SemioVizControltempo-omitted BMC}
+\SemioVizTheme{default}[appearance=dark]
+\SemioVizChart{tempo-map}[axes={false},curve={0/60,2/67,4/64},domain={0,7},grid={false},height={40},highPitch={84},lowPitch={48},mode={tempo},notes={0/1/60/80,2/0.5/67/100,4/2/64/75},range={},width={80}]
+% 80mm × 40mm, dark appearance
+\special{pdf:literal direct EMC}\end{VizFigure}
+\endgroup
+
+\clearpage\SemioVizProbeBegin{music-window-controls}{tempo-authored}\ExplSyntaxOn\semio_viz_probe_values:nn{window/control}{1}\ExplSyntaxOff
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{de}\ExplSyntaxOff
+\begin{VizFigure}[width=80,height=40,title={}]
+\draw[line width=.01mm] (0,0) rectangle (80,40);\special{pdf:literal direct /SemioVizControltempo-authored BMC}
+\SemioVizTheme{default}[appearance=dark]
+\SemioVizChart{tempo-map}[axes={false},curve={0/60,2/67,4/64},domain={0,7},grid={false},height={40},highPitch={84},lowPitch={48},mode={tempo},notes={0/1/60/80,2/0.5/67/100,4/2/64/75},range={36,108},width={80}]
+% 80mm × 40mm, dark appearance
+\special{pdf:literal direct EMC}\end{VizFigure}
+\endgroup
+
+\clearpage\SemioVizProbeBegin{music-window-controls}{dynamics-omitted}\ExplSyntaxOn\semio_viz_probe_values:nn{window/control}{1}\ExplSyntaxOff
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{de}\ExplSyntaxOff
+\begin{VizFigure}[width=80,height=40,title={}]
+\draw[line width=.01mm] (0,0) rectangle (80,40);\special{pdf:literal direct /SemioVizControldynamics-omitted BMC}
+\SemioVizTheme{default}[appearance=dark]
+\SemioVizChart{dynamic-profile}[axes={false},curve={0/60,2/67,4/64},domain={0,7},grid={false},height={40},highPitch={84},lowPitch={48},mode={dynamics},notes={0/1/60/80,2/0.5/67/100,4/2/64/75},range={},width={80}]
+% 80mm × 40mm, dark appearance
+\special{pdf:literal direct EMC}\end{VizFigure}
+\endgroup
+
+\clearpage\SemioVizProbeBegin{music-window-controls}{dynamics-authored}\ExplSyntaxOn\semio_viz_probe_values:nn{window/control}{1}\ExplSyntaxOff
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{de}\ExplSyntaxOff
+\begin{VizFigure}[width=80,height=40,title={}]
+\draw[line width=.01mm] (0,0) rectangle (80,40);\special{pdf:literal direct /SemioVizControldynamics-authored BMC}
+\SemioVizTheme{default}[appearance=dark]
+\SemioVizChart{dynamic-profile}[axes={false},curve={0/60,2/67,4/64},domain={0,7},grid={false},height={40},highPitch={84},lowPitch={48},mode={dynamics},notes={0/1/60/80,2/0.5/67/100,4/2/64/75},range={36,108},width={80}]
+% 80mm × 40mm, dark appearance
+\special{pdf:literal direct EMC}\end{VizFigure}
+\endgroup
+
+\clearpage\SemioVizProbeBegin{music-window-controls}{pitch-contour-omitted}\ExplSyntaxOn\semio_viz_probe_values:nn{window/control}{1}\ExplSyntaxOff
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{de}\ExplSyntaxOff
+\begin{VizFigure}[width=80,height=40,title={}]
+\draw[line width=.01mm] (0,0) rectangle (80,40);\special{pdf:literal direct /SemioVizControlpitch-contour-omitted BMC}
+\SemioVizTheme{default}[appearance=dark]
+\SemioVizChart{pitch-contour}[axes={false},curve={0/60,2/67,4/64},domain={0,7},grid={false},height={40},highPitch={84},lowPitch={48},mode={pitch-contour},notes={0/1/60/80,2/0.5/67/100,4/2/64/75},range={},width={80}]
+% 80mm × 40mm, dark appearance
+\special{pdf:literal direct EMC}\end{VizFigure}
+\endgroup
+
+\clearpage\SemioVizProbeBegin{music-window-controls}{pitch-contour-authored}\ExplSyntaxOn\semio_viz_probe_values:nn{window/control}{1}\ExplSyntaxOff
+\begingroup
+\ExplSyntaxOn\tl_set:Nn\l_semio_language_tl{de}\ExplSyntaxOff
+\begin{VizFigure}[width=80,height=40,title={}]
+\draw[line width=.01mm] (0,0) rectangle (80,40);\special{pdf:literal direct /SemioVizControlpitch-contour-authored BMC}
+\SemioVizTheme{default}[appearance=dark]
+\SemioVizChart{pitch-contour}[axes={false},curve={0/60,2/67,4/64},domain={0,7},grid={false},height={40},highPitch={84},lowPitch={48},mode={pitch-contour},notes={0/1/60/80,2/0.5/67/100,4/2/64/75},range={36,108},width={80}]
+% 80mm × 40mm, dark appearance
+\special{pdf:literal direct EMC}\end{VizFigure}
+\endgroup
+
+\SemioVizProbeEnd
+\end{document}

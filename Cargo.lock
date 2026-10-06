@@ -6402,6 +6402,7 @@ dependencies = [
  "semio-framework-repo-tickets",
  "semio-framework-repo-tree",
  "semio-framework-ui",
+ "semio-framework-ui-locale",
  "semio-framework-ui-styling",
  "serde",
  "serde_json",

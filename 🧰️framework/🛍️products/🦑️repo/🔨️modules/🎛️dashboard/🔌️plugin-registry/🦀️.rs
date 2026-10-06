@@ -28,7 +28,7 @@ pub fn run(root: &Path, subcommand: &str) -> i32 {
 // #region 🔖️GeneratedCatalog
 fn check_generated_plugin_registry(root: &Path) -> Vec<String> {
     let output = generated_dir(root);
-    ["🔣️plugins.json", "🔣️playgrounds.json"]
+    ["🔌️plugins.json", "🎠️playgrounds.json"]
         .iter()
         .filter_map(|name| match std::fs::read_to_string(output.join(name)) {
             Ok(text) if serde_json::from_str::<serde_json::Value>(&text).is_ok() => None,

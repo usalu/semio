@@ -6,7 +6,19 @@
   "stdout": "native renderer artifact\n",
   "changedStdout": "changed native renderer artifact\n",
   "profiles": [
-    { "profile": "dev", "target": "native-build", "output": "dist/native-dev" },
-    { "profile": "release", "target": "native-build-release", "output": "dist/native-release" }
-  ]
+    {
+      "profile": "dev",
+      "target": "native-build",
+      "output": "dist/native-dev"
+    },
+    {
+      "profile": "release",
+      "target": "native-build-release",
+      "output": "dist/native-release"
+    }
+  ],
+  "heldRun": {
+    "profile": "dev",
+    "readyTimeoutMs": 5000
+  }
 }

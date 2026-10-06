@@ -2,9 +2,15 @@
   "$schema": "../../../🧰️framework/🛍️products/❓️quiz/🧬️schema/🔣️.json#/$defs/Catalog",
   "schema": "semio.quiz.catalog/v1",
   "id": "architecture",
-  "title": { "en": "Architecture and Technology Quizzes", "de": "Quizze zu Architektur und Technologie" },
+  "title": {
+    "en": "Architecture and Technology Quizzes",
+    "de": "Quizze zu Architektur und Technologie"
+  },
   "introduction": {
-    "title": { "en": "How the quizzes work", "de": "So funktionieren die Quizze" },
+    "title": {
+      "en": "How the quizzes work",
+      "de": "So funktionieren die Quizze"
+    },
     "paragraphs": [
       {
         "en": "These quizzes train your feeling for the numbers behind energy-efficient architecture: power and energy, U-values, heating and cooling loads, air change rates and energy demands. Each quiz consists of a few tasks in which you classify, sort or match.",
@@ -42,51 +48,123 @@
     {
       "id": "physics-expert",
       "emoji": "🧲",
-      "label": { "en": "Physics Expert", "de": "Physik-Profi" },
-      "description": { "en": "Scored 100% in a run of the Physical Understanding quiz on medium or harder.", "de": "100 % in einem Durchgang des Quiz „Physikalisches Verständnis“ auf Mittel oder schwerer." },
-      "rule": { "kind": "perfect-quiz", "quiz": "physics", "challenge": "medium" }
+      "label": {
+        "en": "Physics Expert",
+        "de": "Physik-Profi"
+      },
+      "description": {
+        "en": "Scored 100% in a run of the Physical Understanding quiz on medium or harder.",
+        "de": "100 % in einem Durchgang des Quiz „Physikalisches Verständnis“ auf Mittel oder schwerer."
+      },
+      "rule": {
+        "kind": "perfect-quiz",
+        "quiz": "physics",
+        "challenge": "medium"
+      }
     },
     {
       "id": "heating-expert",
       "emoji": "🔥",
-      "label": { "en": "Heating Expert", "de": "Heiz-Profi" },
-      "description": { "en": "Scored 100% in a run of the Heating quiz on medium or harder.", "de": "100 % in einem Durchgang des Quiz „Heizen“ auf Mittel oder schwerer." },
-      "rule": { "kind": "perfect-quiz", "quiz": "heating", "challenge": "medium" }
+      "label": {
+        "en": "Heating Expert",
+        "de": "Heiz-Profi"
+      },
+      "description": {
+        "en": "Scored 100% in a run of the Heating quiz on medium or harder.",
+        "de": "100 % in einem Durchgang des Quiz „Heizen“ auf Mittel oder schwerer."
+      },
+      "rule": {
+        "kind": "perfect-quiz",
+        "quiz": "heating",
+        "challenge": "medium"
+      }
     },
     {
       "id": "cooling-expert",
       "emoji": "❄️",
-      "label": { "en": "Cooling Expert", "de": "Kühl-Profi" },
-      "description": { "en": "Scored 100% in a run of the Cooling quiz on medium or harder.", "de": "100 % in einem Durchgang des Quiz „Kühlen“ auf Mittel oder schwerer." },
-      "rule": { "kind": "perfect-quiz", "quiz": "cooling", "challenge": "medium" }
+      "label": {
+        "en": "Cooling Expert",
+        "de": "Kühl-Profi"
+      },
+      "description": {
+        "en": "Scored 100% in a run of the Cooling quiz on medium or harder.",
+        "de": "100 % in einem Durchgang des Quiz „Kühlen“ auf Mittel oder schwerer."
+      },
+      "rule": {
+        "kind": "perfect-quiz",
+        "quiz": "cooling",
+        "challenge": "medium"
+      }
     },
     {
       "id": "demand-expert",
       "emoji": "📊",
-      "label": { "en": "Energy Demand Expert", "de": "Energiebedarfs-Profi" },
-      "description": { "en": "Scored 100% in a run of the Energy Demand quiz on medium or harder.", "de": "100 % in einem Durchgang des Quiz „Energiebedarf“ auf Mittel oder schwerer." },
-      "rule": { "kind": "perfect-quiz", "quiz": "demand", "challenge": "medium" }
+      "label": {
+        "en": "Energy Demand Expert",
+        "de": "Energiebedarfs-Profi"
+      },
+      "description": {
+        "en": "Scored 100% in a run of the Energy Demand quiz on medium or harder.",
+        "de": "100 % in einem Durchgang des Quiz „Energiebedarf“ auf Mittel oder schwerer."
+      },
+      "rule": {
+        "kind": "perfect-quiz",
+        "quiz": "demand",
+        "challenge": "medium"
+      }
     },
     {
       "id": "numerical-brain",
       "emoji": "🧮",
-      "label": { "en": "Numerical Brain", "de": "Zahlenhirn" },
-      "description": { "en": "Sorted every sorting task of the catalog without a single mistake on medium or harder.", "de": "Jede Sortieraufgabe des Katalogs auf Mittel oder schwerer ganz ohne Fehler sortiert." },
-      "rule": { "kind": "perfect-tasks", "taskKind": "sorting", "challenge": "medium" }
+      "label": {
+        "en": "Numerical Brain",
+        "de": "Zahlenhirn"
+      },
+      "description": {
+        "en": "Sorted every sorting task of the catalog without a single mistake on medium or harder.",
+        "de": "Jede Sortieraufgabe des Katalogs auf Mittel oder schwerer ganz ohne Fehler sortiert."
+      },
+      "rule": {
+        "kind": "perfect-tasks",
+        "taskKind": "sorting",
+        "challenge": "medium"
+      }
     },
     {
       "id": "pattern-seer",
       "emoji": "🔍",
-      "label": { "en": "Pattern Seer", "de": "Musterblick" },
-      "description": { "en": "Solved every classification task of the catalog without a single mistake on medium or harder.", "de": "Jede Klassifizierungsaufgabe des Katalogs auf Mittel oder schwerer ganz ohne Fehler gelöst." },
-      "rule": { "kind": "perfect-tasks", "taskKind": "classification", "challenge": "medium" }
+      "label": {
+        "en": "Pattern Seer",
+        "de": "Musterblick"
+      },
+      "description": {
+        "en": "Solved every classification task of the catalog without a single mistake on medium or harder.",
+        "de": "Jede Klassifizierungsaufgabe des Katalogs auf Mittel oder schwerer ganz ohne Fehler gelöst."
+      },
+      "rule": {
+        "kind": "perfect-tasks",
+        "taskKind": "classification",
+        "challenge": "medium"
+      }
     },
     {
       "id": "completionist",
       "emoji": "🏁",
-      "label": { "en": "Completionist", "de": "Rundum dabei" },
-      "description": { "en": "Submitted at least one run of every quiz.", "de": "Mindestens einen Durchgang jedes Quiz abgegeben." },
-      "rule": { "kind": "completed-quizzes" }
+      "label": {
+        "en": "Completionist",
+        "de": "Rundum dabei"
+      },
+      "description": {
+        "en": "Submitted at least one run of every quiz.",
+        "de": "Mindestens einen Durchgang jedes Quiz abgegeben."
+      },
+      "rule": {
+        "kind": "completed-quizzes"
+      }
     }
-  ]
+  ],
+  "short": {
+    "en": "A&T Quizzes",
+    "de": "A&T Quizze"
+  }
 }

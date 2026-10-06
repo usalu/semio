@@ -430,6 +430,7 @@ export function RunScreen(props: { readonly session: QuizSession; readonly state
                 <li key={entry.id}>
                   <button
                     type="button"
+                    data-icon-host=""
                     aria-current={position === index ? "step" : undefined}
                     onClick={() => go(position)}
                     className={cn(
@@ -438,7 +439,7 @@ export function RunScreen(props: { readonly session: QuizSession; readonly state
                     )}
                   >
                     <span className="min-w-0 font-semibold">
-                      <IconLabel icon={entry.icon} order={position}>
+                      <IconLabel icon={entry.icon}>
                         {position + 1}. {localized(entry.title, locale)}
                       </IconLabel>
                     </span>

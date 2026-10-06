@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 
@@ -28,7 +28,7 @@ export async function testNativeRendererOutputs(workspace: string, output: strin
   put(".gitignore", "node_modules\n.nx\ndist\noracle\n.runs\n");
   put(`${rust}/Cargo.toml`, `[workspace]\n[package]\nname=${JSON.stringify(fixture.crate)}\nversion="0.0.0"\nedition="2021"\n[features]\nnative-bin=[]\n[[bin]]\nname=${JSON.stringify(fixture.binary)}\npath="🦀️.rs"\nrequired-features=["native-bin"]\n`);
   put(`${rust}/Cargo.lock`, `version=4\n[[package]]\nname=${JSON.stringify(fixture.crate)}\nversion="0.0.0"\n`);
-  const source = (stdout: string) => `fn main() { print!(${JSON.stringify(stdout)}); }\n`;
+  const source = (stdout: string) => `fn main() { let output=${JSON.stringify(stdout)}; print!("{}",output); let args:Vec<String>=std::env::args().collect(); if args.get(1).map(String::as_str)==Some("--hold") { std::fs::write(&args[2],output).unwrap(); while !std::path::Path::new(&args[3]).exists() { std::thread::sleep(std::time::Duration::from_millis(10)); } } }\n`;
   put(`${rust}/🦀️.rs`, source(fixture.stdout));
   put("📜️script.ts", `import { appendFileSync } from "node:fs";
 import { join } from "node:path";
@@ -63,6 +63,23 @@ appendFileSync(join(root, ".runs"), profile + "\\n");
   await run(); assert.deepEqual(runs(), ["dev", "release"]);
   for (const [index, row] of fixture.profiles.entries()) assert.deepEqual(readFileSync(join(root, rust, row.output, binary)), bytes[index]);
   await check(fixture.stdout);
-  put(`${rust}/🦀️.rs`, source(fixture.changedStdout));
-  await run(); assert.deepEqual(runs(), ["dev", "dev", "release", "release"]); await check(fixture.changedStdout);
+  const heldProfile=fixture.profiles.find((row:{profile:string})=>row.profile===fixture.heldRun.profile);
+  const ready=join(root,"held-ready"),release=join(root,"held-release"),controller=new AbortController();
+  const {runNativeBinary}=await import(join(workspace,fixture.owner,"⌨️native-entrypoint/📜️script.ts"));
+  const held=runNativeBinary(join(root,rust,heldProfile.output,binary),["--hold",ready,release],env,root,controller.signal);
+  const settled=held.then(()=>({error:undefined}),error=>({error}));
+  try {
+    const started=Date.now();
+    while(!existsSync(ready)){assert.ok(Date.now()-started<fixture.heldRun.readyTimeoutMs,"actual native child did not report readiness");await new Promise(accept=>setTimeout(accept,10));}
+    assert.equal(readFileSync(ready,"utf8"),fixture.stdout);
+    put(`${rust}/🦀️.rs`, source(fixture.changedStdout));
+    await run(); assert.deepEqual(runs(), ["dev", "dev", "release", "release"]); await check(fixture.changedStdout);
+    assert.equal(readFileSync(ready,"utf8"),fixture.stdout,"the already running child retains its original image");
+  } finally {
+    writeFileSync(release,"release\n");
+    const timeout=setTimeout(()=>controller.abort(),5000);
+    const result=await settled;clearTimeout(timeout);
+    assert.equal(result.error,undefined,String(result.error));
+  }
+
 }

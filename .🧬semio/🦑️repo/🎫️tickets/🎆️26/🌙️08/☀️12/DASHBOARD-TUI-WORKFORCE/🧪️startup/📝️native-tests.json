@@ -1,0 +1,84 @@
+[
+  {
+    "path": "dashboard/🖥️terminal/🧪️tests/🔬️unit/🦀️.rs",
+    "replace": [
+      {
+        "from": "fn dashboard(locale: Option<Locale>)",
+        "to": "fn dashboard(locale: Locale)"
+      },
+      {
+        "from": "locale, light: false",
+        "to": "locale, light: false, commands: Vec::new(), inventory: None, inventory_status: String::new(), preferences: crate::preferences::Preferences::default(), preference_path: std::env::temp_dir().join(\"unused-dashboard-preferences\"), saving_preferences: None, shared_preferences: false"
+      },
+      {
+        "from": "dashboard.attach_wizard(&mut tui, chrome, \"w1\")",
+        "to": "dashboard.attach_view(&mut tui, chrome, \"w1\", \"overview\")"
+      },
+      {
+        "from": "fn language_has_no_default_and_controls_are_visible_in_both_languages()",
+        "to": "fn opinionated_defaults_and_controls_are_visible_in_both_languages()"
+      },
+      {
+        "from": "dashboard(None)",
+        "to": "dashboard(Locale::English)"
+      },
+      {
+        "from": "WindowBody::Wizard { .. }), \"ordinary startup must not ask for language\"",
+        "to": "WindowBody::Overview { .. }), \"ordinary startup must not ask for language\""
+      },
+      {
+        "from": "assert!(tui.render_full().0.contains(\"Language\"));\n    dashboard.handle_wizard_signal(&mut tui, \"w1\", WidgetSignal::Activated(1));\n    assert!(matches!(dashboard.locale, Some(Locale::German)));",
+        "to": "assert!(tui.render_full().0.contains(\"New task\"));\n    dashboard.handle_wizard_signal(&mut tui, \"w1\", WidgetSignal::Activated(0));\n    assert!(matches!(dashboard.windows[0].body, WindowBody::Launcher { .. }));\n    dashboard.locale = Locale::German;"
+      },
+      {
+        "from": "dashboard.locale = Some(Locale::English)",
+        "to": "dashboard.locale = Locale::English"
+      },
+      {
+        "from": "dashboard(Some(Locale::English))",
+        "to": "dashboard(Locale::English)",
+        "all": true
+      }
+    ]
+  },
+  {
+    "path": "dashboard/🌳️command-tree/🧪️tests/🔬️unit/🦀️.rs",
+    "replace": [
+      {
+        "from": "assert!(selection.leaf.is_none(), \"language authority cannot be implicit\");\n            let language = selection.children.iter().find(|child| child.key == \"language\").unwrap();\n            assert_eq!(language.children.iter().map(|child|child.key.as_str()).collect::<Vec<_>>(),fixture[\"locales\"].as_array().unwrap().iter().map(|locale|locale.as_str().unwrap()).collect::<Vec<_>>());\n            assert!(language.children.iter().all(|child|child.leaf.is_none()));",
+        "to": "assert!(selection.children.is_empty(), \"presentation must not add command questions\");\n            assert!(selection.leaf.is_some());"
+      },
+      {
+        "from": "let mut node = selection;\n                    for key in [\"language\", locale.as_str().unwrap(), \"terminology\", terminology.as_str().unwrap()] { node = node.children.iter().find(|child| child.key == key).unwrap_or_else(|| panic!(\"missing explicit {key}\")); }\n                    let Some(CommandLeaf::Process(spec)) = &node.leaf else { panic!(\"missing process\") };\n                    assert!(node.children.is_empty());",
+        "to": "let Some(CommandLeaf::Process(mut spec)) = selection.leaf.clone() else { panic!(\"missing process\") };\n                    let preferences = crate::preferences::Preferences { language: locale.as_str().unwrap().into(), terminology: terminology.as_str().unwrap().into(), ..Default::default() };\n                    preferences.bind(&mut spec);"
+      },
+      {
+        "from": "collect_inferred_targets(&root, &mut trie);",
+        "to": "collect_inferred_targets(&root, &mut trie, &std::sync::atomic::AtomicBool::new(false));",
+        "all": true
+      }
+    ]
+  },
+  {
+    "path": "dashboard/🖥️terminal/🦀️.rs",
+    "replace": [
+      {
+        "from": "use crate::command_tree::{action_key, ",
+        "to": "use crate::command_tree::{"
+      },
+      {
+        "from": "if k.key == Key::Char('q') && k.mods == 0 && !dash.terminal_input {",
+        "to": "if k.key == Key::Char('q') && k.mods == 0 && !dash.terminal_input && !dash.focused_window().is_some_and(|window| matches!(window.body, WindowBody::Launcher { .. })) {"
+      }
+    ]
+  },
+  {
+    "path": "dashboard/🧪️tests/🌀️control-plane/🟦️.ts",
+    "replace": [
+      {
+        "from": "test(\"Ajv and Nx independently admit every explicit renderer language selection\"",
+        "to": "test(\"Ajv and Nx independently admit every configured renderer language selection\""
+      }
+    ]
+  }
+]

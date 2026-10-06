@@ -1,0 +1,224 @@
+{
+  "sessions": [
+    {
+      "id": 20697,
+      "producer": "typescript",
+      "exitCode": 1
+    },
+    {
+      "id": 68915,
+      "producer": "rust",
+      "exitCode": 1
+    }
+  ],
+  "failure": {
+    "actual": [
+      -3,
+      -2,
+      -0.9092974268256817,
+      -0.1411200080598672
+    ],
+    "expected": [
+      -1,
+      -1,
+      5,
+      0
+    ]
+  },
+  "beforeSource": {
+    "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-geo-routes.sty",
+    "sha256": "1C1391CE02BA1C8C6C5C83E31B19F6FCF26E0C4E368DC58B97ED538CB76A701F"
+  },
+  "artifacts": [
+    {
+      "path": "🗑️generated/spatial-structure-native-seven-ts/spatial-data/light/🧪️probe-input/light.tex",
+      "bytes": 13440,
+      "sha256": "23CF874F0C5AF678C640DC5F3CFCD0ADD5060556C1F87D6D1816F23D9094AFF7"
+    },
+    {
+      "path": "🗑️generated/spatial-structure-native-seven-ts/spatial-data/light/🧪️probe-out/light.log",
+      "bytes": 83469,
+      "sha256": "34F96B64F7051BBD2455691A164EDDDC6269719450E90A3839EC63656E79F3E5"
+    },
+    {
+      "path": "🗑️generated/spatial-structure-native-seven-ts/spatial-data/light/🧪️probe-out/light.pdf",
+      "bytes": 24166,
+      "sha256": "CE4790A1039A0B6604D46E9E9BE5AACF40C8D80750DA52223E2385EDB4848A1E"
+    },
+    {
+      "path": "🗑️generated/spatial-structure-native-seven-ts/spatial-data/light/🧪️probe-source/.semio-library/modules/graph/_.tex",
+      "bytes": 18630,
+      "sha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88"
+    },
+    {
+      "path": "🗑️generated/spatial-structure-native-seven-ts/spatial-data/light/🧪️probe-source/.semio-library/semio-latex/texput.log",
+      "bytes": 697,
+      "sha256": "AC726A100BDF9B7AA8907E50BFC7288AC420D92235B4C516B6DDACF22651E091"
+    },
+    {
+      "path": "🗑️generated/spatial-structure-native-seven-ts/spatial-data/light/🧪️probe-source/light.tex",
+      "bytes": 13440,
+      "sha256": "23CF874F0C5AF678C640DC5F3CFCD0ADD5060556C1F87D6D1816F23D9094AFF7"
+    },
+    {
+      "path": "🗑️generated/spatial-structure-native-seven-ts/spatial-data/zero-dark/🧪️probe-input/dark.tex",
+      "bytes": 963,
+      "sha256": "70B62D72425E6F91A73AE64FCBAD88FA00DA18361F6E6E0DBF5815837C5A92DF"
+    },
+    {
+      "path": "🗑️generated/spatial-structure-native-seven-ts/spatial-data/zero-dark/🧪️probe-out/dark.log",
+      "bytes": 82801,
+      "sha256": "B7A0D71C43362087EAB8E248D7D8BE09B882E63268BAADA350F43AAF4F255318"
+    },
+    {
+      "path": "🗑️generated/spatial-structure-native-seven-ts/spatial-data/zero-dark/🧪️probe-out/dark.pdf",
+      "bytes": 12298,
+      "sha256": "7FBC20DAFE3CB60305C3DC7CCA11813B62620BA124075F8E949140AC1768CD4A"
+    },
+    {
+      "path": "🗑️generated/spatial-structure-native-seven-ts/spatial-data/zero-dark/🧪️probe-source/.semio-library/modules/graph/_.tex",
+      "bytes": 18630,
+      "sha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88"
+    },
+    {
+      "path": "🗑️generated/spatial-structure-native-seven-ts/spatial-data/zero-dark/🧪️probe-source/.semio-library/semio-latex/texput.log",
+      "bytes": 697,
+      "sha256": "AC726A100BDF9B7AA8907E50BFC7288AC420D92235B4C516B6DDACF22651E091"
+    },
+    {
+      "path": "🗑️generated/spatial-structure-native-seven-ts/spatial-data/zero-dark/🧪️probe-source/dark.tex",
+      "bytes": 963,
+      "sha256": "70B62D72425E6F91A73AE64FCBAD88FA00DA18361F6E6E0DBF5815837C5A92DF"
+    },
+    {
+      "path": "🗑️generated/spatial-structure-native-seven-ts/spatial-data/zero-light/🧪️probe-input/light.tex",
+      "bytes": 966,
+      "sha256": "091B27CFA3BCB427EB1DDB3636A10BC9A3C5F073F41E5F3E87332DC88068F229"
+    },
+    {
+      "path": "🗑️generated/spatial-structure-native-seven-ts/spatial-data/zero-light/🧪️probe-out/light.log",
+      "bytes": 82818,
+      "sha256": "7CC2FD0ADC2755AF40F527E67CBE2C74F66F2FA175939FE8AA17F431D6810124"
+    },
+    {
+      "path": "🗑️generated/spatial-structure-native-seven-ts/spatial-data/zero-light/🧪️probe-out/light.pdf",
+      "bytes": 12219,
+      "sha256": "EEDCC4072A9320EFA4CA2F0009B95E1ADF0D6DC732A6EEF476AA01E376561E53"
+    },
+    {
+      "path": "🗑️generated/spatial-structure-native-seven-ts/spatial-data/zero-light/🧪️probe-source/.semio-library/modules/graph/_.tex",
+      "bytes": 18630,
+      "sha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88"
+    },
+    {
+      "path": "🗑️generated/spatial-structure-native-seven-ts/spatial-data/zero-light/🧪️probe-source/.semio-library/semio-latex/texput.log",
+      "bytes": 697,
+      "sha256": "AC726A100BDF9B7AA8907E50BFC7288AC420D92235B4C516B6DDACF22651E091"
+    },
+    {
+      "path": "🗑️generated/spatial-structure-native-seven-ts/spatial-data/zero-light/🧪️probe-source/light.tex",
+      "bytes": 966,
+      "sha256": "091B27CFA3BCB427EB1DDB3636A10BC9A3C5F073F41E5F3E87332DC88068F229"
+    },
+    {
+      "path": "🗑️generated/spatial-rust-native-seven-final/spatial-data/light/🧪️probe-input/light.tex",
+      "bytes": 12978,
+      "sha256": "A9252115CCB81BECCA7505A32748FB7DF4D05CFAF64A6D4BF2422A2E879E5748"
+    },
+    {
+      "path": "🗑️generated/spatial-rust-native-seven-final/spatial-data/light/🧪️probe-out/light.log",
+      "bytes": 83469,
+      "sha256": "34F96B64F7051BBD2455691A164EDDDC6269719450E90A3839EC63656E79F3E5"
+    },
+    {
+      "path": "🗑️generated/spatial-rust-native-seven-final/spatial-data/light/🧪️probe-out/light.pdf",
+      "bytes": 24166,
+      "sha256": "CE4790A1039A0B6604D46E9E9BE5AACF40C8D80750DA52223E2385EDB4848A1E"
+    },
+    {
+      "path": "🗑️generated/spatial-rust-native-seven-final/spatial-data/light/🧪️probe-source/.semio-library/modules/graph/_.tex",
+      "bytes": 18630,
+      "sha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88"
+    },
+    {
+      "path": "🗑️generated/spatial-rust-native-seven-final/spatial-data/light/🧪️probe-source/.semio-library/semio-latex/texput.log",
+      "bytes": 697,
+      "sha256": "AC726A100BDF9B7AA8907E50BFC7288AC420D92235B4C516B6DDACF22651E091"
+    },
+    {
+      "path": "🗑️generated/spatial-rust-native-seven-final/spatial-data/light/🧪️probe-source/light.tex",
+      "bytes": 12978,
+      "sha256": "A9252115CCB81BECCA7505A32748FB7DF4D05CFAF64A6D4BF2422A2E879E5748"
+    },
+    {
+      "path": "🗑️generated/spatial-rust-native-seven-final/spatial-data/zero-dark/🧪️probe-input/dark.tex",
+      "bytes": 963,
+      "sha256": "70B62D72425E6F91A73AE64FCBAD88FA00DA18361F6E6E0DBF5815837C5A92DF"
+    },
+    {
+      "path": "🗑️generated/spatial-rust-native-seven-final/spatial-data/zero-dark/🧪️probe-out/dark.log",
+      "bytes": 82801,
+      "sha256": "B7A0D71C43362087EAB8E248D7D8BE09B882E63268BAADA350F43AAF4F255318"
+    },
+    {
+      "path": "🗑️generated/spatial-rust-native-seven-final/spatial-data/zero-dark/🧪️probe-out/dark.pdf",
+      "bytes": 12298,
+      "sha256": "7FBC20DAFE3CB60305C3DC7CCA11813B62620BA124075F8E949140AC1768CD4A"
+    },
+    {
+      "path": "🗑️generated/spatial-rust-native-seven-final/spatial-data/zero-dark/🧪️probe-source/.semio-library/modules/graph/_.tex",
+      "bytes": 18630,
+      "sha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88"
+    },
+    {
+      "path": "🗑️generated/spatial-rust-native-seven-final/spatial-data/zero-dark/🧪️probe-source/.semio-library/semio-latex/texput.log",
+      "bytes": 697,
+      "sha256": "AC726A100BDF9B7AA8907E50BFC7288AC420D92235B4C516B6DDACF22651E091"
+    },
+    {
+      "path": "🗑️generated/spatial-rust-native-seven-final/spatial-data/zero-dark/🧪️probe-source/dark.tex",
+      "bytes": 963,
+      "sha256": "70B62D72425E6F91A73AE64FCBAD88FA00DA18361F6E6E0DBF5815837C5A92DF"
+    },
+    {
+      "path": "🗑️generated/spatial-rust-native-seven-final/spatial-data/zero-light/🧪️probe-input/light.tex",
+      "bytes": 966,
+      "sha256": "091B27CFA3BCB427EB1DDB3636A10BC9A3C5F073F41E5F3E87332DC88068F229"
+    },
+    {
+      "path": "🗑️generated/spatial-rust-native-seven-final/spatial-data/zero-light/🧪️probe-out/light.log",
+      "bytes": 82818,
+      "sha256": "7CC2FD0ADC2755AF40F527E67CBE2C74F66F2FA175939FE8AA17F431D6810124"
+    },
+    {
+      "path": "🗑️generated/spatial-rust-native-seven-final/spatial-data/zero-light/🧪️probe-out/light.pdf",
+      "bytes": 12219,
+      "sha256": "EEDCC4072A9320EFA4CA2F0009B95E1ADF0D6DC732A6EEF476AA01E376561E53"
+    },
+    {
+      "path": "🗑️generated/spatial-rust-native-seven-final/spatial-data/zero-light/🧪️probe-source/.semio-library/modules/graph/_.tex",
+      "bytes": 18630,
+      "sha256": "81BE72DEC428AEB2F8956CBD35AE395371B17542047D2174D493445528D37C88"
+    },
+    {
+      "path": "🗑️generated/spatial-rust-native-seven-final/spatial-data/zero-light/🧪️probe-source/.semio-library/semio-latex/texput.log",
+      "bytes": 697,
+      "sha256": "AC726A100BDF9B7AA8907E50BFC7288AC420D92235B4C516B6DDACF22651E091"
+    },
+    {
+      "path": "🗑️generated/spatial-rust-native-seven-final/spatial-data/zero-light/🧪️probe-source/light.tex",
+      "bytes": 966,
+      "sha256": "091B27CFA3BCB427EB1DDB3636A10BC9A3C5F073F41E5F3E87332DC88068F229"
+    },
+    {
+      "path": "🗑️generated/spatial-structure-native-seven-ts.log",
+      "bytes": 14532,
+      "sha256": "532F602C5DD2211C412B76E253AB297D2B5B34D56B02EF310EF0272EC5F868FF"
+    },
+    {
+      "path": "🗑️generated/spatial-rust-native-seven-final.log",
+      "bytes": 12494,
+      "sha256": "422B6F0C5E13CC3A73940FFF33D055F1099CBFCE432E1F9DC1DE636F1519A3B2"
+    }
+  ]
+}

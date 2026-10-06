@@ -1,0 +1,1 @@
+  \SemioTableRow{\Key{paletteSteps} & \Key{integer} & \Key{5} & \ApiText{Positive number of discrete colour-ramp levels, independent of vector integration steps. One level uses the palette midpoint.}{Positive Anzahl diskreter Farbverlaufsstufen. Vektorintegrationsschritte sind separat. Eine Stufe nutzt die Palettenmitte.}}

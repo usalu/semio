@@ -1,0 +1,29 @@
+{
+  "outerExitCode": 0,
+  "outerTerminalSession": 89638,
+  "nativeMismatchCount": 1,
+  "bindings": [
+    {
+      "dataSha256": "6551eae29d19c287a975073a638d8c0047c3dff97f831b8b03fa3ba066fbba3a",
+      "domainSha256": "63c05ee65e8617cd0defc041d640bc7f27b74ac2b905eebaef791fc631ad2113",
+      "actualAccept": true,
+      "id": "string-seven",
+      "expectedAccept": true
+    },
+    {
+      "dataSha256": "6551eae29d19c287a975073a638d8c0047c3dff97f831b8b03fa3ba066fbba3a",
+      "domainSha256": "63c05ee65e8617cd0defc041d640bc7f27b74ac2b905eebaef791fc631ad2113",
+      "actualAccept": true,
+      "id": "number-seven",
+      "expectedAccept": false
+    },
+    {
+      "dataSha256": "6551eae29d19c287a975073a638d8c0047c3dff97f831b8b03fa3ba066fbba3a",
+      "domainSha256": "63c05ee65e8617cd0defc041d640bc7f27b74ac2b905eebaef791fc631ad2113",
+      "actualAccept": true,
+      "id": "carrier-command-strings",
+      "expectedAccept": true
+    }
+  ],
+  "observedAt": "2026-10-06T03:22:02.1558145+02:00"
+}

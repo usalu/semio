@@ -4314,10 +4314,10 @@ pub(crate) mod kernel_runtime {
 
     /// 🧩️ Reads one completed component into the compiler's contiguous input page by page. The
     /// mounted native I/O authority answers at most one `JOB_PAYLOAD_PAGE_BYTES` page per request, so a
-    /// whole-file read refused every real guest (block release is 17.6 MB) and no native shell could
-    /// mount one; the bound is the execution-target component bound the hub itself enforces.
-    async fn read_native_component(path: &std::path::Path) -> Result<Vec<u8>, String> {
-        let bound = semio_framework_os_kernel::os_directory::DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES;
+    /// whole-file read refused every real guest. Local unoptimized components use the same
+    /// 256 MiB input ceiling as descriptor emission; network execution-target admission is separate.
+    pub(super) async fn read_native_component(path: &std::path::Path) -> Result<Vec<u8>, String> {
+        let bound = 256 * 1024 * 1024;
         let mut component = Vec::new();
         let mut offset = 0u64;
         loop {
@@ -9622,7 +9622,7 @@ pub(crate) mod kernel_runtime {
 
     impl KernelPoolFuture {
         pub(crate) fn spawn(pool: semio_framework_async::WorkerPool, lane: semio_framework_async::Lane, future: impl Future<Output = ()> + Send + 'static) -> Arc<Self> {
-            let task = Arc::new(Self { pool, lane, future: Mutex::new(Some(Box::pin(future))), scheduled: std::sync::atomic::AtomicBool::new(false), notified: std::sync::atomic::AtomicBool::new(true) });
+            let task = Arc::new(Self { pool, lane, future: Mutex::new(Some(Box::pin(crate::drive_renderer_worker_task(future)))), scheduled: std::sync::atomic::AtomicBool::new(false), notified: std::sync::atomic::AtomicBool::new(true) });
             task.schedule();
             task
         }
@@ -10694,6 +10694,20 @@ pub mod scale_bench {
     }
 }
 //#endregion 🔖️ScaleBench
+
+/// 🧑‍🏭️ Advances bounded native I/O turns on application and kernel workers before presentation exists.
+#[cfg(not(target_arch = "wasm32"))]
+async fn drive_renderer_worker_task<F: Future>(future: F) -> F::Output {
+    let mut future = Box::pin(future);
+    std::future::poll_fn(|cx| {
+        let result = future.as_mut().poll(cx);
+        let advanced = pump_renderer_io_sessions(16);
+        if result.is_pending() && advanced != 0 {
+            cx.waker().wake_by_ref();
+        }
+        result
+    }).await
+}
 
 #[cfg(not(target_arch = "wasm32"))]
 fn spawn_app_task<F>(future: F)
@@ -18856,6 +18870,7 @@ fn world3d_interaction_trace(surface_id: &str, state: &infinite_world::world::Wo
 #[cfg(not(target_arch = "wasm32"))]
 async fn boot_runtime(
     window: Arc<Window>,
+    gpu: impl std::future::Future<Output = Result<GpuContext, String>> + Send + 'static,
     plugin_filter: String,
     #[cfg(target_arch = "wasm32")] plugins: Option<JsValue>,
     #[cfg(not(target_arch = "wasm32"))] plugin_modules_root: std::path::PathBuf,
@@ -18890,7 +18905,7 @@ async fn boot_runtime(
     let mut atlas = FontAtlas::from_bytes(&font_bytes).map_err(|err| format!("atlas failed: {err}"))?;
     atlas.set_raster_scale(dpr);
     let icons = icon_atlas::build_icon_atlas_scaled(dpr);
-    let mut gpu = GpuContext::from_window(window.clone()).await.map_err(|err| format!("gpu init failed: {err}"))?;
+    let mut gpu = gpu.await.map_err(|err| format!("gpu init failed: {err}"))?;
     gpu.resize(css_width, css_height, dpr);
     gpu.upload_font_atlas(&atlas);
     gpu.upload_icon_atlas(&icons);
@@ -19311,6 +19326,16 @@ pub fn run_native(plugin_filter: &str, plugin_modules_root: std::path::PathBuf, 
 /// so a real hub round trip has time to land before the dump.
 #[cfg(not(target_arch = "wasm32"))]
 pub async fn run_smoke(plugin_filter: &str, plugin_modules_root: std::path::PathBuf,services:Vec<semio_framework_os_kernel::os_directory::client::InstalledServiceContributionV1>) -> i32 {
+    let axes = match shell::shell_language_axes() {
+        Ok(axes) => axes,
+        Err(error) => { eprintln!("smoke: {error}"); return 1; }
+    };
+    run_smoke_with_axes(plugin_filter,plugin_modules_root,services,axes).await
+}
+
+/// 🧭️ Boots the exact selected native plugin under caller-declared presentation axes.
+#[cfg(not(target_arch = "wasm32"))]
+pub(crate) async fn run_smoke_with_axes(plugin_filter: &str, plugin_modules_root: std::path::PathBuf,services:Vec<semio_framework_os_kernel::os_directory::client::InstalledServiceContributionV1>,axes:(semio_framework_ui_locale::Locale,semio_framework_ui_locale::Terminology)) -> i32 {
     let loaded = match load_wasm_plugins(plugin_filter, &plugin_modules_root).await {
         Ok(entries) => entries,
         Err(error) => {
@@ -19319,10 +19344,7 @@ pub async fn run_smoke(plugin_filter: &str, plugin_modules_root: std::path::Path
         }
     };
     let entries = filter_plugins(loaded, plugin_filter);
-    let (locale, terminology) = match shell::shell_language_axes() {
-        Ok(axes) => axes,
-        Err(error) => { eprintln!("smoke: {error}"); return 1; }
-    };
+    let (locale, terminology) = axes;
     let mut shell = ShellState::new(entries, plugin_filter.to_string(), locale, terminology);
     shell.install_document_services(services);
     if let Err(error) = shell.boot().await {
@@ -19340,8 +19362,9 @@ pub async fn run_smoke(plugin_filter: &str, plugin_modules_root: std::path::Path
     let _ = shell.refresh_ui(semio_framework::kernel::UiDirtyScope::Full).await;
     let identity_summary = shell.identity.as_ref().map(|identity| serde_json::json!({ "userId": identity.user_id, "email": identity.email, "hubBaseUrl": identity.hub_base_url }));
     let window_documents: Vec<_> = shell.window_ui.iter().map(|(window, document)| serde_json::json!({ "window": window, "generation": document.generation() })).collect();
+    let booted = plugin_filter.is_empty() || shell.session.is_some();
     let report = serde_json::json!({
-        "booted": true,
+        "booted": booted,
         "identity": identity_summary,
         "identityOffline": shell.identity_offline,
         "openSpaceId": shell.open_space_id,
@@ -19351,7 +19374,7 @@ pub async fn run_smoke(plugin_filter: &str, plugin_modules_root: std::path::Path
     match serde_json::to_string_pretty(&report) {
         Ok(json) => {
             println!("{json}");
-            0
+            i32::from(!booted)
         }
         Err(error) => {
             eprintln!("smoke: report encode failed: {error}");

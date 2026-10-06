@@ -1,0 +1,297 @@
+{
+  "owner": "NETWORK-FLOW",
+  "options": {
+    "bow": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Bow height as a fraction of the span.",
+        "de": "Bogenhöhe als Bruchteil der Spannweite."
+      }
+    },
+    "charge": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Many-body charge of the force layout; negative values repel.",
+        "de": "Ladung der Vielteilchenkraft im Kräftelayout; negative Werte stoßen ab."
+      }
+    },
+    "colorBy": {
+      "syntax": "identifier",
+      "type": "string",
+      "description": {
+        "en": "As in `graph`.",
+        "de": "Wie in der Familie `graph`."
+      }
+    },
+    "columns": {
+      "syntax": "expression",
+      "type": "integer",
+      "description": {
+        "en": "Number of columns of the layout grid.",
+        "de": "Anzahl der Spalten des Anordnungsgitters."
+      }
+    },
+    "curvature": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Curvature of a link, as a fraction of its span.",
+        "de": "Krümmung einer Kante als Bruchteil ihrer Spannweite."
+      }
+    },
+    "data": {
+      "syntax": "identifier",
+      "type": "string",
+      "description": {
+        "en": "Name of the table the family reads.",
+        "de": "Name der Tabelle, die die Familie liest."
+      }
+    },
+    "directed": {
+      "syntax": "scalar",
+      "type": "boolean",
+      "description": {
+        "en": "As in `graph`.",
+        "de": "Wie in der Familie `graph`."
+      }
+    },
+    "forces": {
+      "syntax": "records",
+      "type": "string",
+      "description": {
+        "en": "Forces the deterministic layout applies.",
+        "de": "Kräfte, die das deterministische Layout anwendet."
+      }
+    },
+    "group": {
+      "syntax": "identifier",
+      "type": "string",
+      "description": {
+        "en": "Column that groups the nodes.",
+        "de": "Spalte, die die Knoten gruppiert."
+      }
+    },
+    "id": {
+      "syntax": "identifier",
+      "type": "string",
+      "description": {
+        "en": "Column holding the row identifier.",
+        "de": "Spalte mit der Zeilenkennung."
+      }
+    },
+    "innerRadius": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Inner spoke radius in layout coordinates, uniformly fitted into the frame.",
+        "de": "Innerer Speichenradius in Layoutkoordinaten, gleichmäßig in den Rahmen eingepasst."
+      },
+      "default": 0.3
+    },
+    "iterations": {
+      "syntax": "expression",
+      "type": "integer",
+      "description": {
+        "en": "Fixed iteration count of the deterministic layout.",
+        "de": "Feste Iterationszahl des deterministischen Layouts."
+      }
+    },
+    "label": {
+      "syntax": "identifier",
+      "type": "string",
+      "description": {
+        "en": "Column holding the visible caption.",
+        "de": "Spalte mit der sichtbaren Beschriftung."
+      }
+    },
+    "labels": {
+      "syntax": "scalar",
+      "type": "boolean",
+      "description": {
+        "en": "As in `graph`.",
+        "de": "Wie in der Familie `graph`."
+      }
+    },
+    "layout": {
+      "syntax": "identifier",
+      "type": "string",
+      "description": {
+        "en": "Layout algorithm that places the nodes.",
+        "de": "Layoutalgorithmus, der die Knoten platziert."
+      }
+    },
+    "linkDistance": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Rest length of a link in the force layout.",
+        "de": "Ruhelänge einer Kante im Kräftelayout."
+      }
+    },
+    "linkWidth": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "As in `graph`.",
+        "de": "Wie in der Familie `graph`."
+      }
+    },
+    "mode": {
+      "syntax": "identifier",
+      "type": "string",
+      "description": {
+        "en": "Straight axis with bows, or a ring with chords.",
+        "de": "Gerade Achse mit Bögen oder ein Ring mit Sehnen."
+      }
+    },
+    "nodes": {
+      "syntax": "identifier",
+      "type": "string",
+      "description": {
+        "en": "Name of the node table.",
+        "de": "Name der Knotentabelle."
+      }
+    },
+    "order": {
+      "syntax": "identifier",
+      "type": "string",
+      "description": {
+        "en": "Within-group spoke order: index, name, descending degree, group, component or cluster; ties preserve input order.",
+        "de": "Reihenfolge innerhalb der Gruppenspeichen: index, name, absteigender degree, group, component oder cluster; Gleichstände bewahren die Eingabereihenfolge."
+      },
+      "default": "degree"
+    },
+    "orientation": {
+      "syntax": "identifier",
+      "type": "string",
+      "description": {
+        "en": "Primary direction of the layout.",
+        "de": "Hauptrichtung der Anordnung."
+      }
+    },
+    "outerRadius": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Outer spoke radius in the same uniformly fitted layout coordinates.",
+        "de": "Äußerer Speichenradius in denselben gleichmäßig eingepassten Layoutkoordinaten."
+      },
+      "default": 1
+    },
+    "padding": {
+      "syntax": "expression",
+      "type": "string",
+      "description": {
+        "en": "As in `graph`.",
+        "de": "Wie in der Familie `graph`."
+      }
+    },
+    "root": {
+      "syntax": "expression",
+      "type": "integer",
+      "description": {
+        "en": "Node the layout starts from.",
+        "de": "Knoten, bei dem das Layout beginnt."
+      },
+      "default": 1
+    },
+    "seed": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "Seed of the deterministic pseudo-random layout.",
+        "de": "Startwert des deterministischen Pseudozufallslayouts."
+      }
+    },
+    "shape": {
+      "syntax": "identifier",
+      "type": "string",
+      "description": {
+        "en": "Shape of the node marks.",
+        "de": "Form der Knotenmarken."
+      }
+    },
+    "side": {
+      "syntax": "identifier",
+      "type": "string",
+      "description": {
+        "en": "Which half the bows of a linear diagram occupy.",
+        "de": "Welche Hälfte die Bögen eines linearen Diagramms einnehmen."
+      }
+    },
+    "signed": {
+      "syntax": "scalar",
+      "type": "boolean",
+      "description": {
+        "en": "As in `graph`.",
+        "de": "Wie in der Familie `graph`."
+      }
+    },
+    "size": {
+      "syntax": "expression",
+      "type": "number",
+      "description": {
+        "en": "As in `graph`.",
+        "de": "Wie in der Familie `graph`."
+      }
+    },
+    "sizeBy": {
+      "syntax": "identifier",
+      "type": "string",
+      "description": {
+        "en": "What the node size encodes.",
+        "de": "Was die Knotengröße codiert."
+      }
+    },
+    "source": {
+      "syntax": "identifier",
+      "type": "string",
+      "description": {
+        "en": "Column holding the source node of an edge.",
+        "de": "Spalte mit dem Quellknoten einer Kante."
+      }
+    },
+    "sweeps": {
+      "syntax": "expression",
+      "type": "integer",
+      "description": {
+        "en": "Ordering sweeps of the crossing reduction.",
+        "de": "Sortierdurchläufe der Kreuzungsreduktion."
+      }
+    },
+    "target": {
+      "syntax": "identifier",
+      "type": "string",
+      "description": {
+        "en": "Column holding the target node of an edge, or the target value.",
+        "de": "Spalte mit dem Zielknoten einer Kante oder mit dem Zielwert."
+      }
+    },
+    "variant": {
+      "syntax": "identifier",
+      "type": "string",
+      "description": {
+        "en": "Sub-kind the family renders; the catalogue slug of the chart kind. The family must draw a different geometry for every variant it declares.",
+        "de": "Untertyp, den die Familie zeichnet; der Katalog-Slug der Diagrammart. Die Familie muss für jede deklarierte Variante eine andere Geometrie zeichnen."
+      }
+    },
+    "weight": {
+      "syntax": "identifier",
+      "type": "string",
+      "description": {
+        "en": "Column holding the edge weight.",
+        "de": "Spalte mit dem Kantengewicht."
+      }
+    },
+    "weightWidth": {
+      "syntax": "scalar",
+      "type": "boolean",
+      "description": {
+        "en": "As in `graph`.",
+        "de": "Wie in der Familie `graph`."
+      }
+    }
+  }
+}

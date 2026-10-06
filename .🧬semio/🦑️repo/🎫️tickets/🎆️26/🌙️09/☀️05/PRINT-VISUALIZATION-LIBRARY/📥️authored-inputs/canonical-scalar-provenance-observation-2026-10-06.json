@@ -1,0 +1,231 @@
+[
+  {
+    "id": "string-null-root",
+    "ajvAdmission": true,
+    "ajvErrors": null,
+    "mutationMessages": [],
+    "replayMessages": [],
+    "complete": true,
+    "diagnostics": [
+      {
+        "code": "print.chart.scene-unavailable",
+        "path": "chart/presets",
+        "message": "Catalogue geometry is inferred by the LaTeX implementation; a numerical scene is unavailable for this figure."
+      }
+    ],
+    "emittedRows": [
+      "\\SemioVizRow{scalar-probe}{{\\SemioVizString{null}},{\\SemioVizString{}},{1},{\\SemioVizString{String null}}}"
+    ],
+    "tikz": "\\begingroup\n\\ExplSyntaxOn\\tl_set:Nn\\l_semio_language_tl{en}\\ExplSyntaxOff\n\\begin{VizFigure}[width=80,height=48,title={}]\n\\SemioVizTable{scalar-probe}{id,pred,duration,label}\n\\SemioVizRow{scalar-probe}{{\\SemioVizString{null}},{\\SemioVizString{}},{1},{\\SemioVizString{String null}}}\n\\SemioVizTheme{default}[appearance=light]\n\\SemioVizChart{critical-path-network}[data={scalar-probe},id={id},label={label},mode={critical-path},pred={pred},value={duration}]\n% 80mm × 48mm, light appearance\n\\end{VizFigure}\n\\endgroup\n"
+  },
+  {
+    "id": "string-undefined-root",
+    "ajvAdmission": true,
+    "ajvErrors": null,
+    "mutationMessages": [],
+    "replayMessages": [],
+    "complete": true,
+    "diagnostics": [
+      {
+        "code": "print.chart.scene-unavailable",
+        "path": "chart/presets",
+        "message": "Catalogue geometry is inferred by the LaTeX implementation; a numerical scene is unavailable for this figure."
+      }
+    ],
+    "emittedRows": [
+      "\\SemioVizRow{scalar-probe}{{\\SemioVizString{undefined}},{\\SemioVizString{}},{1},{\\SemioVizString{String undefined}}}"
+    ],
+    "tikz": "\\begingroup\n\\ExplSyntaxOn\\tl_set:Nn\\l_semio_language_tl{en}\\ExplSyntaxOff\n\\begin{VizFigure}[width=80,height=48,title={}]\n\\SemioVizTable{scalar-probe}{id,pred,duration,label}\n\\SemioVizRow{scalar-probe}{{\\SemioVizString{undefined}},{\\SemioVizString{}},{1},{\\SemioVizString{String undefined}}}\n\\SemioVizTheme{default}[appearance=light]\n\\SemioVizChart{critical-path-network}[data={scalar-probe},id={id},label={label},mode={critical-path},pred={pred},value={duration}]\n% 80mm × 48mm, light appearance\n\\end{VizFigure}\n\\endgroup\n"
+  },
+  {
+    "id": "string-true-root",
+    "ajvAdmission": true,
+    "ajvErrors": null,
+    "mutationMessages": [],
+    "replayMessages": [],
+    "complete": true,
+    "diagnostics": [
+      {
+        "code": "print.chart.scene-unavailable",
+        "path": "chart/presets",
+        "message": "Catalogue geometry is inferred by the LaTeX implementation; a numerical scene is unavailable for this figure."
+      }
+    ],
+    "emittedRows": [
+      "\\SemioVizRow{scalar-probe}{{\\SemioVizString{true}},{\\SemioVizString{}},{1},{\\SemioVizString{String true}}}"
+    ],
+    "tikz": "\\begingroup\n\\ExplSyntaxOn\\tl_set:Nn\\l_semio_language_tl{en}\\ExplSyntaxOff\n\\begin{VizFigure}[width=80,height=48,title={}]\n\\SemioVizTable{scalar-probe}{id,pred,duration,label}\n\\SemioVizRow{scalar-probe}{{\\SemioVizString{true}},{\\SemioVizString{}},{1},{\\SemioVizString{String true}}}\n\\SemioVizTheme{default}[appearance=light]\n\\SemioVizChart{critical-path-network}[data={scalar-probe},id={id},label={label},mode={critical-path},pred={pred},value={duration}]\n% 80mm × 48mm, light appearance\n\\end{VizFigure}\n\\endgroup\n"
+  },
+  {
+    "id": "actual-null-id",
+    "ajvAdmission": true,
+    "ajvErrors": null,
+    "mutationMessages": [],
+    "replayMessages": [],
+    "complete": true,
+    "diagnostics": [
+      {
+        "code": "print.chart.scene-unavailable",
+        "path": "chart/presets",
+        "message": "Catalogue geometry is inferred by the LaTeX implementation; a numerical scene is unavailable for this figure."
+      }
+    ],
+    "emittedRows": [
+      "\\SemioVizRow{scalar-probe}{{\\SemioVizNull{}},{\\SemioVizString{}},{1},{\\SemioVizString{Actual null}}}"
+    ],
+    "tikz": "\\begingroup\n\\ExplSyntaxOn\\tl_set:Nn\\l_semio_language_tl{en}\\ExplSyntaxOff\n\\begin{VizFigure}[width=80,height=48,title={}]\n\\SemioVizTable{scalar-probe}{id,pred,duration,label}\n\\SemioVizRow{scalar-probe}{{\\SemioVizNull{}},{\\SemioVizString{}},{1},{\\SemioVizString{Actual null}}}\n\\SemioVizTheme{default}[appearance=light]\n\\SemioVizChart{critical-path-network}[data={scalar-probe},id={id},label={label},mode={critical-path},pred={pred},value={duration}]\n% 80mm × 48mm, light appearance\n\\end{VizFigure}\n\\endgroup\n"
+  },
+  {
+    "id": "boolean-id",
+    "ajvAdmission": true,
+    "ajvErrors": null,
+    "mutationMessages": [],
+    "replayMessages": [],
+    "complete": true,
+    "diagnostics": [
+      {
+        "code": "print.chart.scene-unavailable",
+        "path": "chart/presets",
+        "message": "Catalogue geometry is inferred by the LaTeX implementation; a numerical scene is unavailable for this figure."
+      }
+    ],
+    "emittedRows": [
+      "\\SemioVizRow{scalar-probe}{{\\SemioVizBoolean{true}},{\\SemioVizString{}},{1},{\\SemioVizString{Boolean}}}"
+    ],
+    "tikz": "\\begingroup\n\\ExplSyntaxOn\\tl_set:Nn\\l_semio_language_tl{en}\\ExplSyntaxOff\n\\begin{VizFigure}[width=80,height=48,title={}]\n\\SemioVizTable{scalar-probe}{id,pred,duration,label}\n\\SemioVizRow{scalar-probe}{{\\SemioVizBoolean{true}},{\\SemioVizString{}},{1},{\\SemioVizString{Boolean}}}\n\\SemioVizTheme{default}[appearance=light]\n\\SemioVizChart{critical-path-network}[data={scalar-probe},id={id},label={label},mode={critical-path},pred={pred},value={duration}]\n% 80mm × 48mm, light appearance\n\\end{VizFigure}\n\\endgroup\n"
+  },
+  {
+    "id": "missing-id",
+    "ajvAdmission": true,
+    "ajvErrors": null,
+    "mutationMessages": [],
+    "replayMessages": [],
+    "complete": true,
+    "diagnostics": [
+      {
+        "code": "print.chart.scene-unavailable",
+        "path": "chart/presets",
+        "message": "Catalogue geometry is inferred by the LaTeX implementation; a numerical scene is unavailable for this figure."
+      }
+    ],
+    "emittedRows": [
+      "\\SemioVizRow{scalar-probe}{{\\SemioVizUndefined{}},{\\SemioVizString{}},{1},{\\SemioVizString{Missing ID}}}"
+    ],
+    "tikz": "\\begingroup\n\\ExplSyntaxOn\\tl_set:Nn\\l_semio_language_tl{en}\\ExplSyntaxOff\n\\begin{VizFigure}[width=80,height=48,title={}]\n\\SemioVizTable{scalar-probe}{id,pred,duration,label}\n\\SemioVizRow{scalar-probe}{{\\SemioVizUndefined{}},{\\SemioVizString{}},{1},{\\SemioVizString{Missing ID}}}\n\\SemioVizTheme{default}[appearance=light]\n\\SemioVizChart{critical-path-network}[data={scalar-probe},id={id},label={label},mode={critical-path},pred={pred},value={duration}]\n% 80mm × 48mm, light appearance\n\\end{VizFigure}\n\\endgroup\n"
+  },
+  {
+    "id": "null-parent",
+    "ajvAdmission": true,
+    "ajvErrors": null,
+    "mutationMessages": [],
+    "replayMessages": [],
+    "complete": true,
+    "diagnostics": [
+      {
+        "code": "print.chart.scene-unavailable",
+        "path": "chart/presets",
+        "message": "Catalogue geometry is inferred by the LaTeX implementation; a numerical scene is unavailable for this figure."
+      }
+    ],
+    "emittedRows": [
+      "\\SemioVizRow{scalar-probe}{{\\SemioVizString{child}},{\\SemioVizNull{}},{1},{\\SemioVizString{Null parent}}}"
+    ],
+    "tikz": "\\begingroup\n\\ExplSyntaxOn\\tl_set:Nn\\l_semio_language_tl{en}\\ExplSyntaxOff\n\\begin{VizFigure}[width=80,height=48,title={}]\n\\SemioVizTable{scalar-probe}{id,pred,duration,label}\n\\SemioVizRow{scalar-probe}{{\\SemioVizString{child}},{\\SemioVizNull{}},{1},{\\SemioVizString{Null parent}}}\n\\SemioVizTheme{default}[appearance=light]\n\\SemioVizChart{critical-path-network}[data={scalar-probe},id={id},label={label},mode={critical-path},pred={pred},value={duration}]\n% 80mm × 48mm, light appearance\n\\end{VizFigure}\n\\endgroup\n"
+  },
+  {
+    "id": "missing-parent",
+    "ajvAdmission": true,
+    "ajvErrors": null,
+    "mutationMessages": [],
+    "replayMessages": [],
+    "complete": true,
+    "diagnostics": [
+      {
+        "code": "print.chart.scene-unavailable",
+        "path": "chart/presets",
+        "message": "Catalogue geometry is inferred by the LaTeX implementation; a numerical scene is unavailable for this figure."
+      }
+    ],
+    "emittedRows": [
+      "\\SemioVizRow{scalar-probe}{{\\SemioVizString{child}},{\\SemioVizUndefined{}},{1},{\\SemioVizString{Missing parent}}}"
+    ],
+    "tikz": "\\begingroup\n\\ExplSyntaxOn\\tl_set:Nn\\l_semio_language_tl{en}\\ExplSyntaxOff\n\\begin{VizFigure}[width=80,height=48,title={}]\n\\SemioVizTable{scalar-probe}{id,pred,duration,label}\n\\SemioVizRow{scalar-probe}{{\\SemioVizString{child}},{\\SemioVizUndefined{}},{1},{\\SemioVizString{Missing parent}}}\n\\SemioVizTheme{default}[appearance=light]\n\\SemioVizChart{critical-path-network}[data={scalar-probe},id={id},label={label},mode={critical-path},pred={pred},value={duration}]\n% 80mm × 48mm, light appearance\n\\end{VizFigure}\n\\endgroup\n"
+  },
+  {
+    "id": "literal-null-parent",
+    "ajvAdmission": true,
+    "ajvErrors": null,
+    "mutationMessages": [],
+    "replayMessages": [],
+    "complete": true,
+    "diagnostics": [
+      {
+        "code": "print.chart.scene-unavailable",
+        "path": "chart/presets",
+        "message": "Catalogue geometry is inferred by the LaTeX implementation; a numerical scene is unavailable for this figure."
+      }
+    ],
+    "emittedRows": [
+      "\\SemioVizRow{scalar-probe}{{\\SemioVizString{null}},{\\SemioVizString{}},{1},{\\SemioVizString{Root}}}",
+      "\\SemioVizRow{scalar-probe}{{\\SemioVizString{child}},{\\SemioVizString{null}},{1},{\\SemioVizString{Child}}}"
+    ],
+    "tikz": "\\begingroup\n\\ExplSyntaxOn\\tl_set:Nn\\l_semio_language_tl{en}\\ExplSyntaxOff\n\\begin{VizFigure}[width=80,height=48,title={}]\n\\SemioVizTable{scalar-probe}{id,pred,duration,label}\n\\SemioVizRow{scalar-probe}{{\\SemioVizString{null}},{\\SemioVizString{}},{1},{\\SemioVizString{Root}}}\n\\SemioVizRow{scalar-probe}{{\\SemioVizString{child}},{\\SemioVizString{null}},{1},{\\SemioVizString{Child}}}\n\\SemioVizTheme{default}[appearance=light]\n\\SemioVizChart{critical-path-network}[data={scalar-probe},id={id},label={label},mode={critical-path},pred={pred},value={duration}]\n% 80mm × 48mm, light appearance\n\\end{VizFigure}\n\\endgroup\n"
+  },
+  {
+    "id": "actual-null-duration",
+    "ajvAdmission": true,
+    "ajvErrors": null,
+    "mutationMessages": [],
+    "replayMessages": [],
+    "complete": true,
+    "diagnostics": [
+      {
+        "code": "print.chart.scene-unavailable",
+        "path": "chart/presets",
+        "message": "Catalogue geometry is inferred by the LaTeX implementation; a numerical scene is unavailable for this figure."
+      }
+    ],
+    "emittedRows": [
+      "\\SemioVizRow{scalar-probe}{{\\SemioVizString{a}},{\\SemioVizString{}},{\\SemioVizNull{}},{\\SemioVizString{Null duration}}}"
+    ],
+    "tikz": "\\begingroup\n\\ExplSyntaxOn\\tl_set:Nn\\l_semio_language_tl{en}\\ExplSyntaxOff\n\\begin{VizFigure}[width=80,height=48,title={}]\n\\SemioVizTable{scalar-probe}{id,pred,duration,label}\n\\SemioVizRow{scalar-probe}{{\\SemioVizString{a}},{\\SemioVizString{}},{\\SemioVizNull{}},{\\SemioVizString{Null duration}}}\n\\SemioVizTheme{default}[appearance=light]\n\\SemioVizChart{critical-path-network}[data={scalar-probe},id={id},label={label},mode={critical-path},pred={pred},value={duration}]\n% 80mm × 48mm, light appearance\n\\end{VizFigure}\n\\endgroup\n"
+  },
+  {
+    "id": "string-null-duration",
+    "ajvAdmission": true,
+    "ajvErrors": null,
+    "mutationMessages": [],
+    "replayMessages": [],
+    "complete": true,
+    "diagnostics": [
+      {
+        "code": "print.chart.scene-unavailable",
+        "path": "chart/presets",
+        "message": "Catalogue geometry is inferred by the LaTeX implementation; a numerical scene is unavailable for this figure."
+      }
+    ],
+    "emittedRows": [
+      "\\SemioVizRow{scalar-probe}{{\\SemioVizString{a}},{\\SemioVizString{}},{\\SemioVizString{null}},{\\SemioVizString{String duration}}}"
+    ],
+    "tikz": "\\begingroup\n\\ExplSyntaxOn\\tl_set:Nn\\l_semio_language_tl{en}\\ExplSyntaxOff\n\\begin{VizFigure}[width=80,height=48,title={}]\n\\SemioVizTable{scalar-probe}{id,pred,duration,label}\n\\SemioVizRow{scalar-probe}{{\\SemioVizString{a}},{\\SemioVizString{}},{\\SemioVizString{null}},{\\SemioVizString{String duration}}}\n\\SemioVizTheme{default}[appearance=light]\n\\SemioVizChart{critical-path-network}[data={scalar-probe},id={id},label={label},mode={critical-path},pred={pred},value={duration}]\n% 80mm × 48mm, light appearance\n\\end{VizFigure}\n\\endgroup\n"
+  },
+  {
+    "id": "boolean-duration",
+    "ajvAdmission": true,
+    "ajvErrors": null,
+    "mutationMessages": [],
+    "replayMessages": [],
+    "complete": true,
+    "diagnostics": [
+      {
+        "code": "print.chart.scene-unavailable",
+        "path": "chart/presets",
+        "message": "Catalogue geometry is inferred by the LaTeX implementation; a numerical scene is unavailable for this figure."
+      }
+    ],
+    "emittedRows": [
+      "\\SemioVizRow{scalar-probe}{{\\SemioVizString{a}},{\\SemioVizString{}},{\\SemioVizBoolean{true}},{\\SemioVizString{Boolean duration}}}"
+    ],
+    "tikz": "\\begingroup\n\\ExplSyntaxOn\\tl_set:Nn\\l_semio_language_tl{en}\\ExplSyntaxOff\n\\begin{VizFigure}[width=80,height=48,title={}]\n\\SemioVizTable{scalar-probe}{id,pred,duration,label}\n\\SemioVizRow{scalar-probe}{{\\SemioVizString{a}},{\\SemioVizString{}},{\\SemioVizBoolean{true}},{\\SemioVizString{Boolean duration}}}\n\\SemioVizTheme{default}[appearance=light]\n\\SemioVizChart{critical-path-network}[data={scalar-probe},id={id},label={label},mode={critical-path},pred={pred},value={duration}]\n% 80mm × 48mm, light appearance\n\\end{VizFigure}\n\\endgroup\n"
+  }
+]

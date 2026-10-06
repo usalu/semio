@@ -1,0 +1,7 @@
+# Final Close Client Guard Independent Audit
+
+Read-only review of retained ticket-retention script transport/close branch confirms the explicit lifecycle boundary: exact ticket path and no_management=true, nonempty unique file list and summary, source-bound rebuilt binary with successful test/build/read-only status, all18 input hashes and current open status are checked before spawn. Returned actual tool schema is independently admitted with AJV before tools/call. The child uses only process-local REPO_MCP_BIN and preserves the shared default servers. EOF/helper exit precedes persisted ticket.status=closed and exact summary verification. Root performs generated cleanup and retained-input inventory verification after selected processes exit. This lane dispatched no lifecycle and found no concrete blocking guard/order issue.
+
+Reviewed current script SHA256 `
+D138C57DA547C5C2CE5463F72C454F71B7FAF572CCBFEF7E59CFA1B5B2F52C42
+`. The prior read-only54537 proof remains bound to its original831968BC script input; Root2245 independently proves the extended current client in its own retained44B9 capsule. The ticket helper lies outside the18 compiled source/control inputs, native765 and Rust826 scopes. BinaryAfter may be absent on systems that permit generated-output unlinking during close; the meaningful pre-call binary guard remains exact, and this is deliberately distinct from read-only binary stability.

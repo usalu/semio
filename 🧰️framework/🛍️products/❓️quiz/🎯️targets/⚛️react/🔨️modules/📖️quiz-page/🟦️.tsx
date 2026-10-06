@@ -139,7 +139,7 @@ function QuizCrowd(props: QuizProps & { readonly gate: CrowdGate; readonly think
           <ScoreFigure name={text("quiz.crowd.scoresFigure", { subject: title })} bins={crowd?.scores} own={state.learnerView?.best[quiz.id]?.score} text={text} locale={locale} />
           {(sheet?.sheet.tasks ?? []).map((task) => (
             <section key={task.id} aria-labelledby={`${id}-${task.id}`} className="flex flex-col gap-single">
-              <h3 id={`${id}-${task.id}`} className="m-0 text-sm font-semibold">
+              <h3 data-icon-host="" id={`${id}-${task.id}`} className="m-0 text-sm font-semibold">
                 <IconLabel icon={task.icon}>{localized(task.title, locale)}</IconLabel>
               </h3>
               <TaskFigures task={task} title={localized(task.title, locale)} crowd={crowd} thinking={thinking} answer={sheet?.answers[task.id]} text={text} locale={locale} />
@@ -216,7 +216,7 @@ export function QuizPage(props: QuizProps & { readonly view: PaneView; readonly 
       <QuizCard id={`${id}-tasks`} card="quiz-tasks" anchor={PRESENCE_ANCHORS.quizTasks(quiz.id)} icon={<CardIcon icon="list" />} title={text("quiz.quizPage.tasks")}>
         <ol role="list" className="m-0 flex list-none flex-col gap-single p-0">
           {quiz.tasks.map((task, index) => (
-            <li key={task.id} data-pet-prop={petProp(quiz.id, task.id)} className="flex min-w-0 items-center gap-double border border-normal px-double py-single text-sm">
+            <li key={task.id} data-icon-host="" data-pet-prop={petProp(quiz.id, task.id)} className="flex min-w-0 items-center gap-double border border-normal px-double py-single text-sm">
               <span className="quiz-nowrap w-[2ch] shrink-0 font-semibold tabular-nums text-muted-foreground">{index + 1}</span>
               <TaskGlyph task={task} />
               <span className="min-w-0 flex-1 font-medium">{localized(task.title, locale)}</span>

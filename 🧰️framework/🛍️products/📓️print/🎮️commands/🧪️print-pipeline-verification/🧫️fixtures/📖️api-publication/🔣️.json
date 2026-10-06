@@ -1,0 +1,589 @@
+{
+  "schema": {
+    "required": [
+      "languages",
+      "themes",
+      "minimumCaptionGapPt",
+      "boundsTolerancePt",
+      "renderScale",
+      "headings",
+      "forbiddenContents",
+      "defaultSamples"
+    ],
+    "properties": {
+      "themes": {
+        "const": [
+          "light",
+          "dark"
+        ]
+      },
+      "renderScale": {
+        "const": 1.5
+      },
+      "forbiddenContents": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "boundsTolerancePt": {
+        "const": 2
+      },
+      "minimumCaptionGapPt": {
+        "const": 2
+      },
+      "languages": {
+        "const": [
+          "en",
+          "de"
+        ]
+      },
+      "headings": {
+        "maxItems": 3,
+        "minItems": 3,
+        "items": {
+          "required": [
+            "en",
+            "de"
+          ],
+          "properties": {
+            "de": {
+              "type": "string",
+              "minLength": 1
+            },
+            "en": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "additionalProperties": false,
+          "type": "object"
+        },
+        "type": "array"
+      },
+      "defaultSamples": {
+        "maxItems": 91,
+        "minItems": 91,
+        "items": {
+          "required": [
+            "table",
+            "key",
+            "expected"
+          ],
+          "properties": {
+            "key": {
+              "enum": [
+                "axes",
+                "grid"
+              ]
+            },
+            "table": {
+              "type": "string",
+              "pattern": "^sci-"
+            },
+            "expected": {
+              "const": false
+            }
+          },
+          "additionalProperties": false,
+          "type": "object"
+        },
+        "type": "array"
+      }
+    },
+    "additionalProperties": false,
+    "type": "object"
+  },
+  "vectors": {
+    "languages": [
+      "en",
+      "de"
+    ],
+    "themes": [
+      "light",
+      "dark"
+    ],
+    "minimumCaptionGapPt": 2,
+    "boundsTolerancePt": 2,
+    "renderScale": 1.5,
+    "headings": [
+      {
+        "en": "Reading this reference",
+        "de": "Diese Referenz lesen"
+      },
+      {
+        "en": "Authored spatial table views",
+        "de": "Verfasste räumliche Tabellenansichten"
+      },
+      {
+        "en": "Vector field",
+        "de": "Vektorfeld"
+      }
+    ],
+    "forbiddenContents": [
+      "\\ApiText",
+      "\\Key{",
+      "\\Cs{",
+      "\\ApiTitle",
+      "\\u00"
+    ],
+    "defaultSamples": [
+      {
+        "table": "sci-3d",
+        "key": "axes",
+        "expected": false
+      },
+      {
+        "table": "sci-3d",
+        "key": "grid",
+        "expected": false
+      },
+      {
+        "table": "sci-pathway",
+        "key": "axes",
+        "expected": false
+      },
+      {
+        "table": "sci-pathway",
+        "key": "grid",
+        "expected": false
+      },
+      {
+        "table": "sci-pedigree",
+        "key": "axes",
+        "expected": false
+      },
+      {
+        "table": "sci-pedigree",
+        "key": "grid",
+        "expected": false
+      },
+      {
+        "table": "sci-punnett",
+        "key": "axes",
+        "expected": false
+      },
+      {
+        "table": "sci-punnett",
+        "key": "grid",
+        "expected": false
+      },
+      {
+        "table": "sci-lifecycle",
+        "key": "axes",
+        "expected": false
+      },
+      {
+        "table": "sci-lifecycle",
+        "key": "grid",
+        "expected": false
+      },
+      {
+        "table": "sci-circos",
+        "key": "axes",
+        "expected": false
+      },
+      {
+        "table": "sci-circos",
+        "key": "grid",
+        "expected": false
+      },
+      {
+        "table": "sci-ideogram",
+        "key": "axes",
+        "expected": false
+      },
+      {
+        "table": "sci-ideogram",
+        "key": "grid",
+        "expected": false
+      },
+      {
+        "table": "sci-seqlogo",
+        "key": "axes",
+        "expected": false
+      },
+      {
+        "table": "sci-seqlogo",
+        "key": "grid",
+        "expected": false
+      },
+      {
+        "table": "sci-contact-map",
+        "key": "axes",
+        "expected": false
+      },
+      {
+        "table": "sci-contact-map",
+        "key": "grid",
+        "expected": false
+      },
+      {
+        "table": "sci-clinical-timeline",
+        "key": "grid",
+        "expected": false
+      },
+      {
+        "table": "sci-nomogram",
+        "key": "axes",
+        "expected": false
+      },
+      {
+        "table": "sci-nomogram",
+        "key": "grid",
+        "expected": false
+      },
+      {
+        "table": "sci-schematic",
+        "key": "axes",
+        "expected": false
+      },
+      {
+        "table": "sci-schematic",
+        "key": "grid",
+        "expected": false
+      },
+      {
+        "table": "sci-molecule",
+        "key": "axes",
+        "expected": false
+      },
+      {
+        "table": "sci-molecule",
+        "key": "grid",
+        "expected": false
+      },
+      {
+        "table": "sci-orbital",
+        "key": "axes",
+        "expected": false
+      },
+      {
+        "table": "sci-orbital",
+        "key": "grid",
+        "expected": false
+      },
+      {
+        "table": "sci-crystal",
+        "key": "axes",
+        "expected": false
+      },
+      {
+        "table": "sci-crystal",
+        "key": "grid",
+        "expected": false
+      },
+      {
+        "table": "sci-circuit",
+        "key": "axes",
+        "expected": false
+      },
+      {
+        "table": "sci-circuit",
+        "key": "grid",
+        "expected": false
+      },
+      {
+        "table": "sci-smith",
+        "key": "axes",
+        "expected": false
+      },
+      {
+        "table": "sci-smith",
+        "key": "grid",
+        "expected": false
+      },
+      {
+        "table": "sci-beam",
+        "key": "axes",
+        "expected": false
+      },
+      {
+        "table": "sci-beam",
+        "key": "grid",
+        "expected": false
+      },
+      {
+        "table": "sci-truss",
+        "key": "axes",
+        "expected": false
+      },
+      {
+        "table": "sci-truss",
+        "key": "grid",
+        "expected": false
+      },
+      {
+        "table": "sci-dimensioned",
+        "key": "axes",
+        "expected": false
+      },
+      {
+        "table": "sci-dimensioned",
+        "key": "grid",
+        "expected": false
+      },
+      {
+        "table": "sci-construction",
+        "key": "axes",
+        "expected": false
+      },
+      {
+        "table": "sci-construction",
+        "key": "grid",
+        "expected": false
+      },
+      {
+        "table": "sci-transform",
+        "key": "axes",
+        "expected": false
+      },
+      {
+        "table": "sci-transform",
+        "key": "grid",
+        "expected": false
+      },
+      {
+        "table": "sci-tiling",
+        "key": "axes",
+        "expected": false
+      },
+      {
+        "table": "sci-tiling",
+        "key": "grid",
+        "expected": false
+      },
+      {
+        "table": "sci-fractal",
+        "key": "axes",
+        "expected": false
+      },
+      {
+        "table": "sci-fractal",
+        "key": "grid",
+        "expected": false
+      },
+      {
+        "table": "sci-mesh",
+        "key": "axes",
+        "expected": false
+      },
+      {
+        "table": "sci-mesh",
+        "key": "grid",
+        "expected": false
+      },
+      {
+        "table": "sci-pitch",
+        "key": "axes",
+        "expected": false
+      },
+      {
+        "table": "sci-pitch",
+        "key": "grid",
+        "expected": false
+      },
+      {
+        "table": "sci-bracket",
+        "key": "axes",
+        "expected": false
+      },
+      {
+        "table": "sci-bracket",
+        "key": "grid",
+        "expected": false
+      },
+      {
+        "table": "sci-dynamics",
+        "key": "grid",
+        "expected": false
+      },
+      {
+        "table": "sci-abstract-diagram",
+        "key": "axes",
+        "expected": false
+      },
+      {
+        "table": "sci-abstract-diagram",
+        "key": "grid",
+        "expected": false
+      },
+      {
+        "table": "sci-grid-diagram",
+        "key": "axes",
+        "expected": false
+      },
+      {
+        "table": "sci-grid-diagram",
+        "key": "grid",
+        "expected": false
+      },
+      {
+        "table": "sci-braid",
+        "key": "axes",
+        "expected": false
+      },
+      {
+        "table": "sci-braid",
+        "key": "grid",
+        "expected": false
+      },
+      {
+        "table": "sci-set",
+        "key": "axes",
+        "expected": false
+      },
+      {
+        "table": "sci-set",
+        "key": "grid",
+        "expected": false
+      },
+      {
+        "table": "sci-upset",
+        "key": "axes",
+        "expected": false
+      },
+      {
+        "table": "sci-upset",
+        "key": "grid",
+        "expected": false
+      },
+      {
+        "table": "sci-probability-tree",
+        "key": "axes",
+        "expected": false
+      },
+      {
+        "table": "sci-probability-tree",
+        "key": "grid",
+        "expected": false
+      },
+      {
+        "table": "sci-simplex",
+        "key": "axes",
+        "expected": false
+      },
+      {
+        "table": "sci-simplex",
+        "key": "grid",
+        "expected": false
+      },
+      {
+        "table": "sci-transition",
+        "key": "axes",
+        "expected": false
+      },
+      {
+        "table": "sci-transition",
+        "key": "grid",
+        "expected": false
+      },
+      {
+        "table": "sci-force",
+        "key": "axes",
+        "expected": false
+      },
+      {
+        "table": "sci-force",
+        "key": "grid",
+        "expected": false
+      },
+      {
+        "table": "sci-spacetime",
+        "key": "grid",
+        "expected": false
+      },
+      {
+        "table": "sci-feynman",
+        "key": "axes",
+        "expected": false
+      },
+      {
+        "table": "sci-feynman",
+        "key": "grid",
+        "expected": false
+      },
+      {
+        "table": "sci-levels",
+        "key": "grid",
+        "expected": false
+      },
+      {
+        "table": "sci-fieldlines",
+        "key": "grid",
+        "expected": false
+      },
+      {
+        "table": "sci-wave",
+        "key": "grid",
+        "expected": false
+      },
+      {
+        "table": "sci-optics",
+        "key": "axes",
+        "expected": false
+      },
+      {
+        "table": "sci-optics",
+        "key": "grid",
+        "expected": false
+      },
+      {
+        "table": "sci-poincare",
+        "key": "axes",
+        "expected": false
+      },
+      {
+        "table": "sci-poincare",
+        "key": "grid",
+        "expected": false
+      },
+      {
+        "table": "sci-timefreq",
+        "key": "grid",
+        "expected": false
+      },
+      {
+        "table": "sci-staff",
+        "key": "axes",
+        "expected": false
+      },
+      {
+        "table": "sci-staff",
+        "key": "grid",
+        "expected": false
+      },
+      {
+        "table": "sci-tonnetz",
+        "key": "axes",
+        "expected": false
+      },
+      {
+        "table": "sci-tonnetz",
+        "key": "grid",
+        "expected": false
+      },
+      {
+        "table": "sci-skewt",
+        "key": "grid",
+        "expected": false
+      },
+      {
+        "table": "sci-climate-series",
+        "key": "grid",
+        "expected": false
+      },
+      {
+        "table": "sci-climograph",
+        "key": "grid",
+        "expected": false
+      },
+      {
+        "table": "sci-geo-section",
+        "key": "grid",
+        "expected": false
+      }
+    ]
+  }
+}

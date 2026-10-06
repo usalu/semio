@@ -1,0 +1,62 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/📓️print/🦀️.rs",
+    "input": "owner-1.txt",
+    "sha256": "593D6C623B9457CC996D8EFFDFD4058047F654E9C5BF1524A474D8F763093FC3"
+  },
+  {
+    "path": "🧰️framework/🛍️products/📓️print/📦️packages/🦀️rust/Cargo.toml",
+    "input": "owner-2.txt",
+    "sha256": "C5BBB2AF1D7EE2A3B8253A2FCB050733FAAC5D3E379FF3C679E409E572420D34"
+  },
+  {
+    "path": "🧰️framework/🛍️products/📓️print/🧬️schema/📸️snapshot/🦀️.rs",
+    "input": "owner-3.txt",
+    "sha256": "FD5B9AA5E68A81B3CB18AD16C494AECBD755DDB1194D424C83E78D902FD65852"
+  },
+  {
+    "path": "🧰️framework/🛍️products/📓️print/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+    "input": "owner-4.txt",
+    "sha256": "7E9AF1C04A436BD79EE22AC311DD9D0A594B8EE62495228909A437B9CBD87A1D"
+  },
+  {
+    "path": "🧰️framework/🛍️products/📓️print/🧬️schema/📸️snapshot/🚦️native/🦀️.rs",
+    "input": "owner-5.txt",
+    "sha256": "DA5B4250495F0F36D59EDB9A515775100F686DEE2823973AC242660161BD6057"
+  },
+  {
+    "path": "🧰️framework/🛍️products/📓️print/🧬️schema/🔀️diff/🦀️.rs",
+    "input": "owner-6.txt",
+    "sha256": "4055DB0B82DEAC0D78F5C939D056BDAFD534AF454B6D6E09E2974453A305923F"
+  },
+  {
+    "path": "🧰️framework/🛍️products/📓️print/🧬️schema/🧬️mutations/🦀️.rs",
+    "input": "owner-7.txt",
+    "sha256": "FBEAA44AF4EC31B3E6D22315AC56BD022678D7EFB5DF32D2F7B35999CCFCA65C"
+  },
+  {
+    "path": "🧰️framework/🛍️products/📓️print/🧬️schema/🧬️mutations/📦️codec/🦀️.rs",
+    "input": "owner-8.txt",
+    "sha256": "27DC435DFC21F4F19C61DCEA3FAFBFB848E01EA23097607B5EC622D643271299"
+  },
+  {
+    "path": "🧰️framework/🛍️products/📓️print/🧬️schema/💡️inferences/🦀️.rs",
+    "input": "owner-9.txt",
+    "sha256": "7B183CB88EC8333263F2AE80A0FDB8CB62F65ABBBB57B84E0EF7184D37480DAC"
+  },
+  {
+    "path": "🧰️framework/🛍️products/📓️print/🧬️schema/💡️inferences/🎨theme/🦀️.rs",
+    "input": "owner-10.txt",
+    "sha256": "F0D28DF8D5BCAD2EE65D3C64AE715480638C90D21522760FB02D4C14F3A0EA0A"
+  },
+  {
+    "path": "🧰️framework/🛍️products/📓️print/🧪️tests/🧬️chart-mutations/🦀️.rs",
+    "input": "owner-11.txt",
+    "sha256": "63FC22470579E0AD8FF339678E56F5EAE66C192816B07188BDBF0865F978ADE6"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔁️transfer/🦀️.rs",
+    "input": "owner-12.txt",
+    "sha256": "6AC2F9E9364F76D45D6FBAE709637FEE6E41DC55FF0955AA83B8EFE49753CC09"
+  }
+]

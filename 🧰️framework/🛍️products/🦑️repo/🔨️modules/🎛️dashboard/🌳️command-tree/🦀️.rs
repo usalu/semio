@@ -1,4 +1,4 @@
-//! 🌳️ The wizard command tree: the runtime repo walk that turns every nx target into a wizard
+//! 🌳️ The workspace command tree: background discovery of executable Nx targets and repo actions.
 //! path, the playground development leaves injected from the generated catalog, and the repo-domain
 //! leaves (tickets, goals, analyze, tree, statutes) that the Rust domain crates answer in process.
 
@@ -8,7 +8,7 @@ use std::path::{Path, PathBuf};
 
 // #region 🔖️Types
 /// ▶️ One runnable shell invocation built by the wizard.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct CommandSpec {
     pub cmd: String,
     pub args: Vec<String>,
@@ -18,14 +18,14 @@ pub struct CommandSpec {
 
 /// 🍃️ What activating a wizard leaf does: run a process in a pseudo-terminal window, or call the
 /// repo domain in process and show what it answered in an output window.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum CommandLeaf {
     Process(CommandSpec),
     Repo(RepoAction),
 }
 
 /// 🌳️ One node in the runtime-discovered command tree.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct CommandNode {
     pub key: String,
     pub label: String,
@@ -42,14 +42,24 @@ const TAXONOMY_SKIP_KEYS: &[&str] = &["packages", "modules", "products", "plugin
 const VERB_ORDER: &[&str] = &["dev", "build", "test", "verify", "gate", "lint", "format", "generate", "publish", "tickets", "goals", "analyze", "tree", "statutes"];
 
 /// 🧭️ Walks the repo at `root` and builds the wizard command tree.
-pub fn discover(root: &Path) -> CommandNode {
+pub fn discover(root: &Path) -> CommandNode { discover_cancellable(root, &std::sync::atomic::AtomicBool::new(false)) }
+
+/// ⏳️ Discovers current commands with cooperative cancellation.
+pub fn discover_cancellable(root: &Path, cancelled: &std::sync::atomic::AtomicBool) -> CommandNode {
     let mut trie = TrieNode::default();
-    collect_project_targets(root, root, &mut trie);
-    inject_playground_dev(root, &mut trie);
-    inject_repo_domain(root, &mut trie, repo_implementation());
+    collect_project_targets(root, root, &mut trie, cancelled);
+    if !cancelled.load(std::sync::atomic::Ordering::Relaxed) { collect_inferred_targets(root, &mut trie, cancelled); }
+    if !cancelled.load(std::sync::atomic::Ordering::Relaxed) { collect_workspace_scripts(root, &mut trie); inject_playground_dev(root, &mut trie); inject_repo_domain(root, &mut trie, repo_implementation()); }
     let mut root_node = trie.into_command_node("root", "semio");
     sort_tree(&mut root_node, 0);
     root_node
+}
+/// 🌱️ Immediate known launch commands without a recursive source walk or Nx graph.
+pub fn seed(root: &Path) -> CommandNode {
+    let mut trie = TrieNode::default();
+    collect_workspace_scripts(root, &mut trie);
+    inject_playground_dev(root, &mut trie);
+    let mut tree = trie.into_command_node("root", "semio"); sort_tree(&mut tree, 0); tree
 }
 // #endregion 🔖️Discover
 
@@ -101,16 +111,19 @@ fn segment(key: impl Into<String>, label: impl Into<String>) -> Segment {
 // #endregion 🔖️Trie
 
 // #region 🔖️Walk
-fn collect_project_targets(root: &Path, dir: &Path, trie: &mut TrieNode) {
+fn collect_project_targets(root: &Path, dir: &Path, trie: &mut TrieNode, cancelled: &std::sync::atomic::AtomicBool) {
+    if cancelled.load(std::sync::atomic::Ordering::Relaxed) { return; }
     let Ok(entries) = fs::read_dir(dir) else { return };
     for entry in entries.flatten() {
+        let Ok(kind) = entry.file_type() else { continue };
+        if kind.is_symlink() { continue; }
         let path = entry.path();
-        if path.is_dir() {
+        if kind.is_dir() {
             let name = path.file_name().and_then(|s| s.to_str()).unwrap_or("");
             if should_skip_walk_dir(name) {
                 continue;
             }
-            collect_project_targets(root, &path, trie);
+            collect_project_targets(root, &path, trie, cancelled);
             continue;
         }
         if !PROJECT_MANIFESTS.iter().any(|m| path.file_name().and_then(|s| s.to_str()) == Some(*m)) {
@@ -124,9 +137,10 @@ fn collect_project_targets(root: &Path, dir: &Path, trie: &mut TrieNode) {
             continue;
         }
         let manifest_dir = path.parent().unwrap_or(dir);
-        let segments = taxonomy_segments(root, manifest_dir);
+        let mut segments = taxonomy_segments(root, manifest_dir);
+        if segments.is_empty() { segments.push(segment("workspace", "workspace")); }
         for (target, _) in targets.unwrap() {
-            let spec = CommandSpec { cmd: "bun".into(), args: vec!["nx".into(), "run".into(), format!("{project_name}:{target}")], cwd: root.to_path_buf(), env: Vec::new() };
+            let spec = CommandSpec { cmd: "bun".into(), args: vec!["nx".into(), "run".into(), format!("{project_name}:{target}")], cwd: root.to_path_buf(), env: nx_env() };
             let mut path_segments = vec![segment(target.clone(), target.clone())];
             path_segments.extend(segments.clone());
             trie.insert_path(&path_segments, CommandLeaf::Process(spec));
@@ -134,9 +148,74 @@ fn collect_project_targets(root: &Path, dir: &Path, trie: &mut TrieNode) {
     }
 }
 
+
+struct CancellationReader<'a> { file: fs::File, cancelled: &'a std::sync::atomic::AtomicBool }
+impl std::io::Read for CancellationReader<'_> {
+    fn read(&mut self, buffer: &mut [u8]) -> std::io::Result<usize> {
+        if self.cancelled.load(std::sync::atomic::Ordering::Relaxed) { return Err(std::io::Error::new(std::io::ErrorKind::Interrupted, "command discovery cancelled")); }
+        std::io::Read::read(&mut self.file, buffer)
+    }
+}
+
+#[derive(serde::Deserialize)]
+struct NxCommandGraph { nodes: BTreeMap<String, NxCommandProject> }
+#[derive(serde::Deserialize)]
+struct NxCommandProject { data: NxCommandData }
+#[derive(serde::Deserialize)]
+struct NxCommandData { root: PathBuf, #[serde(default)] targets: BTreeMap<String, serde::de::IgnoredAny> }
+
+fn collect_inferred_targets(root: &Path, trie: &mut TrieNode, cancelled: &std::sync::atomic::AtomicBool) {
+    let store = root.join(".nx/workspace-data");
+    let path = store.join("project-graph.json"); let started = std::time::Instant::now();
+    let graph = loop {
+        if cancelled.load(std::sync::atomic::Ordering::Relaxed) { return; }
+        let file = match fs::File::open(&path) { Ok(file) => file, Err(error) if error.kind() == std::io::ErrorKind::NotFound => return, Err(_) => { if started.elapsed().as_secs() >= 2 { return; } std::thread::sleep(std::time::Duration::from_millis(20)); continue; } };
+        let before = file.metadata().ok().map(|value| (value.len(), value.modified().ok()));
+        let reader = std::io::BufReader::with_capacity(65536, CancellationReader { file, cancelled });
+        let result = serde_json::from_reader::<_, NxCommandGraph>(reader);
+        let after = fs::metadata(&path).ok().map(|value| (value.len(), value.modified().ok()));
+        if before == after { if let Ok(graph) = result { break graph; } }
+        if started.elapsed().as_secs() >= 2 { return; }
+        std::thread::sleep(std::time::Duration::from_millis(20));
+    };
+    for (name, project) in graph.nodes {
+        if project.data.root.is_absolute() || project.data.root.components().any(|part| match part { std::path::Component::Normal(value) => value.to_str().is_none_or(should_skip_walk_dir), std::path::Component::CurDir => false, _ => true }) { continue; }
+        let owner = root.join(project.data.root);
+        if !owner.is_dir() { continue; }
+        let mut segments = taxonomy_segments(root, &owner);
+        if segments.is_empty() { segments.push(segment("workspace", "workspace")); }
+        for target in project.data.targets.keys() {
+            let mut path = vec![segment(target, target)]; path.extend(segments.clone());
+            let spec = CommandSpec { cmd: "bun".into(), args: vec!["nx".into(), "run".into(), format!("{name}:{target}")], cwd: root.to_path_buf(), env: nx_env() };
+            trie.insert_path(&path, CommandLeaf::Process(spec));
+        }
+    }
+}
+
+fn collect_workspace_scripts(root: &Path, trie: &mut TrieNode) {
+    let Ok(text) = fs::read_to_string(root.join("package.json")) else { return };
+    let Ok(manifest) = serde_json::from_str::<serde_json::Value>(&text) else { return };
+    let Some(scripts) = manifest.get("scripts").and_then(serde_json::Value::as_object) else { return };
+    for (name, command) in scripts {
+        if name == "nx" || name == "dashboard" || name.starts_with("dashboard:") || !command.as_str().is_some_and(|command| command.starts_with("bun nx ") || command.starts_with("nx ")) { continue; }
+        let mut parts = name.split(':');
+        let verb = parts.next().unwrap_or(name);
+        let mut path = vec![segment(verb, verb), segment("scripts", "workspace scripts")];
+        let rest: Vec<_> = parts.map(|part| segment(part, part)).collect();
+        if rest.is_empty() { path.push(segment("workspace", "workspace")); } else { path.extend(rest); }
+        path.push(segment("run", "▶ run"));
+        let spec = CommandSpec { cmd: "bun".into(), args: vec!["run".into(), name.clone()], cwd: root.to_path_buf(), env: nx_env() };
+        trie.insert_path(&path, CommandLeaf::Process(spec));
+    }
+}
+
 fn should_skip_walk_dir(name: &str) -> bool {
     let key = segment_key(name);
     WALK_SKIP_DIRS.iter().any(|s| key == *s) || name.starts_with('.') && name != ".semio"
+}
+
+fn nx_env() -> Vec<(String, String)> {
+    [("NX_NATIVE_COMMAND_RUNNER", "false"), ("NX_TUI", "false")].into_iter().map(|(key, value)| (key.into(), value.into())).collect()
 }
 
 fn should_skip_taxonomy_segment(name: &str) -> bool {
@@ -156,13 +235,21 @@ fn segment_key(component: &str) -> String {
 }
 
 fn inject_playground_dev(root: &Path, trie: &mut TrieNode) {
-    let catalog = crate::catalog::load_playground_catalog(root);
-    for row in catalog {
+    for row in crate::catalog::load_playground_catalog(root) {
         for renderer in ["react", "wgpu-wasm", "wgpu-native"] {
-            let env = crate::env_contract::build_dev_env(&row.variant, Some(&row), &crate::env_contract::DevOptions { renderer: renderer.into(), ..Default::default() });
-            let spec = CommandSpec { cmd: "bun".into(), args: vec!["nx".into(), "run".into(), "@semio-tech/framework-os-dev:dev".into()], cwd: root.to_path_buf(), env };
-            let path = vec![segment("dev", "dev"), segment(segment_key(&row.plugin_id), row.plugin_id.clone()), segment(segment_key(&row.variant), row.variant.clone()), segment(renderer, renderer)];
-            trie.insert_path(&path, CommandLeaf::Process(spec));
+            for example in std::iter::once(None).chain(row.examples.iter().map(Some)) {
+                let opts = crate::env_contract::DevOptions { renderer: renderer.into(), example: example.map_or(crate::options::Lock::All, |id| crate::options::Lock::Individual(id.clone())), language: crate::options::Lock::Individual("en".into()), terminology: crate::options::Lock::Individual("native".into()), appearance: crate::options::Lock::Individual("dark".into()), ..Default::default() };
+                let mut env = crate::env_contract::build_dev_env(&row.variant, Some(&row), &opts);
+                env.extend(nx_env());
+                let target = match renderer { "wgpu-native" => format!("run-{}-native-dev", row.variant), "wgpu-wasm" => format!("dev-{}-wgpu-dev", row.variant), _ => format!("dev-{}-react-dev", row.variant) };
+                let mut args = vec!["nx".into(), "run".into(), format!("@semio-tech/framework-os-dev:{target}")];
+                if renderer == "wgpu-native" { if let Some(id) = example { args.extend(["--".into(), "--example".into(), id.clone()]); } }
+                let spec = CommandSpec { cmd: "bun".into(), args, cwd: root.to_path_buf(), env };
+                let mut path = vec![segment("dev", "dev"), segment(segment_key(&row.plugin_id), row.plugin_id.clone()), segment(segment_key(&row.variant), row.variant.clone()), segment(renderer, renderer)];
+                if let Some(id) = example { path.extend([segment("examples", "examples"), segment(id, id)]); }
+                else { path.push(segment("all", "all examples")); }
+                trie.insert_path(&path, CommandLeaf::Process(spec));
+            }
         }
     }
 }
@@ -174,6 +261,8 @@ fn verb_rank(key: &str) -> usize {
 fn sort_tree(node: &mut CommandNode, depth: usize) {
     if depth == 0 {
         node.children.sort_by(|a, b| verb_rank(&a.key).cmp(&verb_rank(&b.key)).then_with(|| a.label.cmp(&b.label)));
+    } else if node.key == "language" {
+        node.children.sort_by_key(|child| ui_locale::Locale::ALL.iter().position(|locale| locale.as_str() == child.key).unwrap_or(usize::MAX));
     } else {
         node.children.sort_by(|a, b| a.label.cmp(&b.label));
     }
@@ -217,7 +306,7 @@ pub fn go_binary_path(root: &Path) -> PathBuf {
 /// The Rust implementation answers every variant in process through the domain crates — the same
 /// functions the `semio` verbs call — and the Go implementation answers the same variant by
 /// spawning `semio-repo` with [`RepoAction::go_argv`] into a pseudo-terminal window.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum RepoAction {
     TicketShow { id: String },
     TicketFiles { id: String },
@@ -716,6 +805,14 @@ pub fn action_key(action: &RepoAction) -> String {
 // #endregion 🔖️Projection
 
 // #region 🔖️Command
+/// 🦀️ Executes an owned repo action in a managed process so expensive queries remain cancellable.
+pub fn run_action(root: &Path, parsed: &crate::args::ParsedArgs) -> i32 {
+    match parsed.flag("action").and_then(|value| serde_json::from_str::<RepoAction>(value).ok()) {
+        Some(action) => { println!("{}", action.execute(root)); 0 },
+        None => { eprintln!("[dashboard] invalid repo action"); 2 }
+    }
+}
+
 /// 🌳️ Presents the discovered command tree without entering the interactive dashboard.
 pub fn run(root: &Path, parsed: &crate::args::ParsedArgs) -> i32 {
     let root = parsed.flag("root").map_or_else(|| root.to_path_buf(), PathBuf::from);

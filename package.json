@@ -30,6 +30,10 @@
     "nx": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts nx",
     "setup": "bun nx run workspace:setup",
     "start": "bun nx run workspace:start",
+    "dashboard": "bun nx run @semio-tech/repo-cli-rs:run --outputStyle=stream",
+    "dashboard:start": "bun nx run @semio-tech/repo-cli-rs:daemon --outputStyle=stream -- start",
+    "dashboard:status": "bun nx run @semio-tech/repo-cli-rs:daemon --outputStyle=stream -- status",
+    "dashboard:stop": "bun nx run @semio-tech/repo-cli-rs:daemon --outputStyle=stream -- stop",
     "dev": "bun nx run workspace:dev",
     "dev:storybook": "bun nx run workspace:dev-storybook",
     "dev:storybook:ui": "bun nx run workspace:dev-storybook-ui",
@@ -154,7 +158,9 @@
     "cpp:build": "bun nx run workspace:cpp-build --",
     "cpp:test": "bun nx run workspace:cpp-test --",
     "publish": "bun nx run workspace:publish",
-    "wasm:flow-core": "nx run semio-framework-os-flow-core:wasm"
+    "wasm:flow-core": "nx run semio-framework-os-flow-core:wasm",
+    "dashboard:install": "bun nx run @semio-tech/repo-cli-rs:install --outputStyle=stream",
+    "dashboard:preferences": "bun nx run @semio-tech/repo-cli-rs:preferences --outputStyle=stream"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

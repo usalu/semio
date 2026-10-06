@@ -1,5 +1,6 @@
 {
   "version": 1,
+  "intrinsic": [null,true,false,1,-2,1.25,"Grüße_雪\u0000\\{}&",[],{},[null,true,"false",{"nested":[7.5,false,"雪"]}],{"second":[1,2],"first":{"nil":null,"caption":"A&B_雪"}}],
   "csv": [
     {
       "schema": "csv.owner.雪\u0000",

@@ -31,5 +31,23 @@
     [
       "--frozen-lockfile"
     ]
+  ],
+  "watcherSelections": [
+    {
+      "SEMIO_LOCKED_LOCALE": "en",
+      "SEMIO_LOCKED_TERMINOLOGY": "native"
+    },
+    {
+      "SEMIO_LOCKED_LOCALE": "en",
+      "SEMIO_LOCKED_TERMINOLOGY": "reuse"
+    },
+    {
+      "SEMIO_LOCKED_LOCALE": "de",
+      "SEMIO_LOCKED_TERMINOLOGY": "native"
+    },
+    {
+      "SEMIO_LOCKED_LOCALE": "de",
+      "SEMIO_LOCKED_TERMINOLOGY": "reuse"
+    }
   ]
 }

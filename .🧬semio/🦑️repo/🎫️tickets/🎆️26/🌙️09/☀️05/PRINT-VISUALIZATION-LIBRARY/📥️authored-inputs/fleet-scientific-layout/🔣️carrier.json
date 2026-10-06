@@ -1,0 +1,72 @@
+{
+  "width": 80,
+  "explicitHeight": 40,
+  "tolerancePt": 0.05,
+  "cases": [
+    {
+      "de": "Räumliche Dichtekarte",
+      "slug": "spatial-density-map",
+      "en": "Spatial density map"
+    },
+    {
+      "de": "Hexbin-Karte",
+      "slug": "hexbin-map",
+      "en": "Hexbin map"
+    },
+    {
+      "de": "Choroplethenkarte",
+      "slug": "choropleth-map",
+      "en": "Choropleth map"
+    },
+    {
+      "de": "Säulendiagramm",
+      "slug": "column-chart",
+      "en": "Column chart"
+    },
+    {
+      "slug": "feynman-diagram",
+      "en": "Feynman diagram",
+      "de": "Feynman-Diagramm"
+    },
+    {
+      "slug": "knot-diagram",
+      "en": "Knot diagram",
+      "de": "Knotendiagramm"
+    },
+    {
+      "slug": "braid-diagram",
+      "en": "Braid diagram",
+      "de": "Zopfdiagramm"
+    },
+    {
+      "slug": "commutative-diagram",
+      "en": "Commutative diagram",
+      "de": "Commutative-Diagramm"
+    },
+    {
+      "slug": "cayley-graph",
+      "en": "Cayley graph",
+      "de": "Cayley-Graph"
+    },
+    {
+      "slug": "electron-configuration-diagram",
+      "en": "Electron configuration diagram",
+      "de": "Elektronenkonfigurationsdiagramm"
+    },
+    {
+      "slug": "orbital-visualization",
+      "en": "Orbital visualization",
+      "de": "Orbital-Visualisierung"
+    },
+    {
+      "slug": "crystal-structure",
+      "en": "Crystal structure",
+      "de": "Kristallstruktur"
+    },
+    {
+      "slug": "unit-cell-diagram",
+      "en": "Unit-cell diagram",
+      "de": "Elementarzellendiagramm"
+    }
+  ]
+}

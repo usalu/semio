@@ -1,0 +1,36 @@
+{
+  "schema": {
+    "required": [
+      "id",
+      "pred",
+      "duration"
+    ],
+    "properties": {
+      "duration": {
+        "minimum": 0,
+        "type": "number"
+      },
+      "id": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "pred": {
+        "type": "string"
+      }
+    },
+    "type": "object"
+  },
+  "cases": [
+    "string-null-root",
+    "string-undefined-root",
+    "string-true-root",
+    "literal-null-parent",
+    "actual-null-id",
+    "missing-id",
+    "boolean-id",
+    "null-parent",
+    "missing-parent"
+  ],
+  "canonicalParentColumn": "pred",
+  "policyOwner": "Existing compileNativeDomainReferenceControls rowValid: required id,parent,value; string nonempty ID, string parent; empty string root"
+}

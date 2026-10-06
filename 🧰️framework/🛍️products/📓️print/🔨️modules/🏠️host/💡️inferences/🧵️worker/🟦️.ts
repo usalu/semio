@@ -3,7 +3,7 @@ import {vizChartInferenceToJsonValue} from "../../../../🚪️io/📝️text/�
 import type { VizChartSnapshot } from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import type { VizChartInference, VizChartInferenceProgress } from "../../../../🧬️schema/💡️inferences/🟦️.ts";
 import { planVizChart, renderVizTikzPlan, renderVizScenePlan } from "../../../../🧬️schema/💡️inferences/🖼️render/🟦️.ts";
-import { validateVizChartSpecification, validateVizChartInference } from "../../../../🧬️schema/💡️inferences/✅️validation/🟦️.ts";
+import { admitVizChartSpecification, validateVizChartInference } from "../../../../🧬️schema/💡️inferences/✅️validation/🟦️.ts";
 import { inferVizPresetTikz } from "../../../../🧬️schema/💡️inferences/📚️catalogue/🟦️.ts";
 type Message = { readonly kind: "progress"; readonly progress: VizChartInferenceProgress } | { readonly kind: "result"; readonly result: VizChartInference };
 type Endpoint = { postMessage(value: Message): void; onmessage: ((event: { readonly data: VizChartSnapshot }) => void) | null };
@@ -15,15 +15,13 @@ function infer(snapshot: VizChartSnapshot, post: (message: Message) => void): vo
     let completed = -1;
     const progress = (value: number) => { const next = Math.max(completed, Math.min(total, value)); if (next === completed) return; completed = next; post({ kind: "progress", progress: { completed, total } }); };
     progress(0);
-    const diagnostics = validateVizChartSpecification(spec);
-    if (diagnostics.length > 0) { post({ kind: "result", result: { tikz: "", diagnostics, complete: false } }); return; }
-    if(spec.language===undefined)throw new Error("chart inference requires an explicit language");
-    const complete={...spec,language:spec.language};
+    const admission = admitVizChartSpecification(spec);
+    if (admission.chart === undefined) { post({ kind: "result", result: { tikz: "", diagnostics: admission.diagnostics, complete: false } }); return; }
     progress(1);
-    const chart = { ...complete, presets: [], ...((spec.presets?.length ?? 0) > 0 ? { title: undefined } : {}) };
+    const chart = { ...admission.chart, presets: [], ...((spec.presets?.length ?? 0) > 0 ? { title: undefined } : {}) };
     const plan = planVizChart(chart, { onProgress: (done, layers) => progress(1 + Math.floor(done / Math.max(1, layers) * (total - 4))) });
     progress(total - 2);
-    const tikz = inferVizPresetTikz(complete, renderVizTikzPlan(plan), () => progress(total - 2));
+    const tikz = inferVizPresetTikz(admission.chart, renderVizTikzPlan(plan), () => progress(total - 2));
     progress(total - 1);
     const scene = (spec.presets?.length ?? 0) > 0 ? undefined : renderVizScenePlan(plan);
     const result: VizChartInference = (spec.presets?.length ?? 0) > 0

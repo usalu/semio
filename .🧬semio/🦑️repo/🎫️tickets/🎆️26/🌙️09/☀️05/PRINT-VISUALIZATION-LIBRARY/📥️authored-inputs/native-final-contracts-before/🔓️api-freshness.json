@@ -1,0 +1,2749 @@
+{
+  "printed": {
+    "declarations": [
+      {
+        "id": "stored-result",
+        "declarations": [
+          {
+            "name": "width",
+            "operation": "typed",
+            "type": "number",
+            "control": true
+          },
+          {
+            "name": "unknown",
+            "operation": "store",
+            "control": true
+          }
+        ],
+        "keys": [
+          "width",
+          "unknown"
+        ]
+      },
+      {
+        "id": "empty-handler",
+        "declarations": [
+          {
+            "name": "width",
+            "operation": "typed",
+            "type": "number",
+            "control": true
+          },
+          {
+            "name": "unknown",
+            "operation": "empty",
+            "control": false
+          }
+        ],
+        "keys": [
+          "width"
+        ]
+      },
+      {
+        "id": "forward-handler",
+        "declarations": [
+          {
+            "name": "width",
+            "operation": "typed",
+            "type": "number",
+            "control": true
+          },
+          {
+            "name": "unknown",
+            "operation": "forward",
+            "control": false
+          }
+        ],
+        "keys": [
+          "width"
+        ]
+      },
+      {
+        "id": "typed-unknown",
+        "declarations": [
+          {
+            "name": "unknown",
+            "operation": "typed",
+            "type": "string",
+            "control": true
+          }
+        ],
+        "keys": [
+          "unknown"
+        ]
+      },
+      {
+        "id": "property-stored-result",
+        "declarations": [
+          {
+            "name": "width",
+            "operation": "typed",
+            "type": "number",
+            "control": true
+          },
+          {
+            "name": "unknown",
+            "operation": "prop-store",
+            "control": true
+          }
+        ],
+        "keys": [
+          "width",
+          "unknown"
+        ]
+      }
+    ],
+    "nativeContracts": {
+      "histogram": {
+        "height": {
+          "type": "number"
+        }
+      },
+      "dendrogram": {
+        "labels": {
+          "type": "boolean"
+        },
+        "nodeRadius": {
+          "type": "number"
+        },
+        "nodeWidth": {
+          "type": "number"
+        },
+        "nodeHeight": {
+          "type": "number"
+        },
+        "innerRadius": {
+          "type": "number"
+        },
+        "padding": {
+          "type": "number"
+        },
+        "paddingOuter": {
+          "type": "number"
+        },
+        "radialOffset": {
+          "type": "number"
+        },
+        "separationOther": {
+          "type": "number"
+        },
+        "separationDepth": {
+          "type": "boolean"
+        },
+        "round": {
+          "type": "boolean"
+        },
+        "relaxation": {
+          "type": "integer"
+        },
+        "radius": {
+          "type": "string"
+        }
+      },
+      "text-viz": {
+        "pad": {
+          "type": "number",
+          "default": "2.5"
+        }
+      },
+      "transform-statistical": {
+        "samples": {
+          "type": "integer",
+          "default": "24"
+        },
+        "bandwidth": {
+          "type": "number",
+          "default": "0"
+        },
+        "data": {
+          "type": "string",
+          "default": "demo-distribution"
+        },
+        "group": {
+          "type": "string",
+          "default": "grp"
+        },
+        "probabilities": {
+          "type": "string",
+          "default": "0,0.25,0.5,0.75,1"
+        }
+      },
+      "namespace": {
+        "variant": {
+          "type": "string",
+          "default": "charts"
+        },
+        "data": {
+          "type": "string",
+          "default": "demo"
+        },
+        "caption": {
+          "type": "boolean",
+          "default": "true"
+        },
+        "locator": {
+          "type": "boolean",
+          "default": "true"
+        },
+        "order": {
+          "type": "string",
+          "default": "adjacency,alluvial,annotation,arc,architecture,area,axis,bar,biology,bundling,charts,chemistry,chord,choropleth,concept,contours,correlation,diagram,distribution,engineering,field,financial,flow,geo,graph,hierarchy,infographic,interactionstate,layout,legend,line,map,matrix,network,network-matrix,pack,parallelsets,partition,physics,polar,process,projection,routes,scale,scatter,scientific,signal,statistical,surface,symbols,table,theme,tree,uml"
+        },
+        "swatch": {
+          "type": "number",
+          "default": "2.4"
+        }
+      },
+      "figure": {
+        "variant": {
+          "type": "string",
+          "default": "themes"
+        },
+        "data": {
+          "type": "string",
+          "default": "demo"
+        },
+        "x": {
+          "type": "string",
+          "default": "cat"
+        },
+        "y": {
+          "type": "string",
+          "default": "val"
+        },
+        "category": {
+          "type": "string",
+          "default": "grp"
+        },
+        "label": {
+          "type": "string",
+          "default": "label"
+        },
+        "cut": {
+          "type": "number",
+          "default": "6"
+        },
+        "panels": {
+          "type": "integer",
+          "default": "3"
+        },
+        "gap": {
+          "type": "number",
+          "default": "3"
+        },
+        "swatch": {
+          "type": "number",
+          "default": "6"
+        },
+        "patterns": {
+          "type": "string",
+          "default": "hatch,crosshatch,dots,grid"
+        },
+        "textKinds": {
+          "type": "string",
+          "default": "title,label,value,chip"
+        }
+      },
+      "grammar": {
+        "variant": {
+          "type": "string",
+          "default": "point"
+        },
+        "data": {
+          "type": "string",
+          "default": "demo"
+        },
+        "x": {
+          "type": "string",
+          "default": "cat"
+        },
+        "y": {
+          "type": "string",
+          "default": "val"
+        },
+        "y2": {
+          "type": "string",
+          "default": "val2"
+        },
+        "category": {
+          "type": "string",
+          "default": "grp"
+        },
+        "label": {
+          "type": "string",
+          "default": "label"
+        },
+        "bins": {
+          "type": "integer",
+          "default": "4"
+        },
+        "samples": {
+          "type": "integer",
+          "default": "24"
+        },
+        "corners": {
+          "type": "integer",
+          "default": "3"
+        },
+        "swatch": {
+          "type": "number",
+          "default": "6"
+        },
+        "marks": {
+          "type": "string",
+          "default": "dot,straight-line,band,sector,straight-connector,rectangular-region,label"
+        }
+      },
+      "encoding": {
+        "variant": {
+          "type": "string",
+          "default": "cartesian-x-y"
+        },
+        "data": {
+          "type": "string",
+          "default": "demo"
+        },
+        "column": {
+          "type": "string",
+          "default": "val"
+        },
+        "column2": {
+          "type": "string",
+          "default": "val2"
+        },
+        "text": {
+          "type": "string",
+          "default": "cat"
+        },
+        "samples": {
+          "type": "integer",
+          "default": "0"
+        },
+        "low": {
+          "type": "number",
+          "default": "1.6"
+        },
+        "high": {
+          "type": "number",
+          "default": "7"
+        },
+        "span": {
+          "type": "number",
+          "default": "120"
+        },
+        "swatch": {
+          "type": "number",
+          "default": "7"
+        },
+        "strands": {
+          "type": "integer",
+          "default": "4"
+        },
+        "symbols": {
+          "type": "string",
+          "default": "dot,square,triangle,diamond,cross"
+        },
+        "dashes": {
+          "type": "string",
+          "default": "none,dashed,dotted,dash-dot"
+        },
+        "patterns": {
+          "type": "string",
+          "default": "hatch,crosshatch,dots,grid"
+        },
+        "arrows": {
+          "type": "string",
+          "default": "none,end,start,both"
+        },
+        "fonts": {
+          "type": "string",
+          "default": "scriptsize,footnotesize,small,normalsize,large"
+        },
+        "weights": {
+          "type": "string",
+          "default": "mdseries,bfseries"
+        }
+      },
+      "scale": {
+        "variant": {
+          "type": "string",
+          "default": "linear"
+        },
+        "domain": {
+          "type": "string",
+          "default": "0,10"
+        },
+        "range": {
+          "type": "string",
+          "default": "0,60"
+        },
+        "nice": {
+          "type": "boolean",
+          "default": "false"
+        }
+      },
+      "shape": {
+        "variant": {
+          "type": "string",
+          "default": "lines"
+        },
+        "curves": {
+          "type": "string",
+          "default": "linear,cardinal,natural,step"
+        }
+      },
+      "layout-algorithm": {
+        "variant": {
+          "type": "string",
+          "default": "stack"
+        },
+        "x": {
+          "type": "string",
+          "default": "t"
+        },
+        "series": {
+          "type": "string",
+          "default": "series"
+        },
+        "value": {
+          "type": "string",
+          "default": "value"
+        },
+        "binColumn": {
+          "type": "string",
+          "default": "value"
+        },
+        "pieColumn": {
+          "type": "string",
+          "default": "val"
+        },
+        "order": {
+          "type": "string",
+          "default": "auto"
+        },
+        "bins": {
+          "type": "integer",
+          "default": "8"
+        },
+        "amount": {
+          "type": "number",
+          "default": "3"
+        },
+        "innerRadius": {
+          "type": "number",
+          "default": "0"
+        }
+      },
+      "transform-data": {
+        "variant": {
+          "type": "string",
+          "default": "filter"
+        },
+        "data": {
+          "type": "string",
+          "default": "demo"
+        },
+        "group": {
+          "type": "string",
+          "default": "grp"
+        },
+        "value": {
+          "type": "string",
+          "default": "val"
+        },
+        "key": {
+          "type": "string",
+          "default": "cat"
+        },
+        "second": {
+          "type": "string",
+          "default": "val2"
+        },
+        "predicate": {
+          "type": "string",
+          "default": "val > 4"
+        },
+        "sortBy": {
+          "type": "string",
+          "default": "val"
+        },
+        "descending": {
+          "type": "boolean",
+          "default": "true"
+        },
+        "windowSize": {
+          "type": "integer",
+          "default": "3"
+        },
+        "windowKind": {
+          "type": "string",
+          "default": "movingAverage"
+        }
+      },
+      "arch-axonometric": {
+        "angle-x": {
+          "type": "number",
+          "default": "-30"
+        },
+        "angle-y": {
+          "type": "number",
+          "default": "30"
+        }
+      },
+      "mark-point": {
+        "radius": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "rx": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "ry": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "outerRadius": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "targetRadius": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "padRadius": {
+          "type": "number | string",
+          "syntax": "expression"
+        }
+      },
+      "mark-line": {
+        "radius": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "rx": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "ry": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "outerRadius": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "targetRadius": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "padRadius": {
+          "type": "number | string",
+          "syntax": "expression"
+        }
+      },
+      "mark-area": {
+        "radius": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "rx": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "ry": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "outerRadius": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "targetRadius": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "padRadius": {
+          "type": "number | string",
+          "syntax": "expression"
+        }
+      },
+      "mark-arc": {
+        "radius": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "rx": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "ry": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "outerRadius": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "targetRadius": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "padRadius": {
+          "type": "number | string",
+          "syntax": "expression"
+        }
+      },
+      "mark-connector": {
+        "radius": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "rx": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "ry": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "outerRadius": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "targetRadius": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "padRadius": {
+          "type": "number | string",
+          "syntax": "expression"
+        }
+      },
+      "mark-region": {
+        "radius": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "rx": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "ry": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "outerRadius": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "targetRadius": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "padRadius": {
+          "type": "number | string",
+          "syntax": "expression"
+        }
+      },
+      "mark-annotation": {
+        "radius": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "rx": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "ry": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "outerRadius": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "targetRadius": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "padRadius": {
+          "type": "number | string",
+          "syntax": "expression"
+        }
+      },
+      "geo-choropleth": {
+        "width": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "height": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "opacity": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "paletteSteps": {
+          "type": "integer",
+          "syntax": "expression",
+          "default": "5"
+        }
+      },
+      "geo-cartogram": {
+        "width": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "height": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "opacity": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "paletteSteps": {
+          "type": "integer",
+          "syntax": "expression",
+          "default": "5"
+        }
+      },
+      "geo-tilegrid": {
+        "width": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "height": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "opacity": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "paletteSteps": {
+          "type": "integer",
+          "syntax": "expression",
+          "default": "5"
+        }
+      },
+      "geo-field": {
+        "width": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "height": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "opacity": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "paletteSteps": {
+          "type": "integer",
+          "syntax": "expression",
+          "default": "5"
+        }
+      },
+      "geo-terrain": {
+        "width": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "height": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "opacity": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "labels": {
+          "type": "boolean",
+          "syntax": "scalar"
+        },
+        "paletteSteps": {
+          "type": "integer",
+          "syntax": "expression",
+          "default": "5"
+        }
+      },
+      "geo-weather": {
+        "width": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "height": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "opacity": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "cell": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "paletteSteps": {
+          "type": "integer",
+          "syntax": "expression",
+          "default": "5"
+        }
+      },
+      "spatial-scalar-field": {
+        "width": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "height": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "opacity": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "paletteSteps": {
+          "type": "integer",
+          "syntax": "expression",
+          "default": "5"
+        }
+      },
+      "geo-basemap": {
+        "places": {
+          "syntax": "identifier",
+          "type": "string",
+          "default": "demo-geo-cities"
+        },
+        "width": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "height": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "opacity": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "paletteSteps": {
+          "type": "integer",
+          "syntax": "expression",
+          "default": "5"
+        }
+      },
+      "geo-graticule": {
+        "width": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "height": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "opacity": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "paletteSteps": {
+          "type": "integer",
+          "syntax": "expression",
+          "default": "5"
+        }
+      },
+      "geo-geodesic": {
+        "width": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "height": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "opacity": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "paletteSteps": {
+          "type": "integer",
+          "syntax": "expression",
+          "default": "5"
+        }
+      },
+      "geo-route": {
+        "width": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "height": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "opacity": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "paletteSteps": {
+          "type": "integer",
+          "syntax": "expression",
+          "default": "5"
+        }
+      },
+      "geo-flow": {
+        "width": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "height": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "opacity": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "paletteSteps": {
+          "type": "integer",
+          "syntax": "expression",
+          "default": "5"
+        }
+      },
+      "spatial-vector-field": {
+        "width": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "height": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "opacity": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "steps": {
+          "type": "integer",
+          "syntax": "expression"
+        },
+        "paletteSteps": {
+          "type": "integer",
+          "syntax": "expression",
+          "default": "5"
+        }
+      },
+      "geo-symbol": {
+        "width": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "height": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "opacity": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "paletteSteps": {
+          "type": "integer",
+          "syntax": "expression",
+          "default": "5"
+        }
+      },
+      "geo-dotdensity": {
+        "width": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "height": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "opacity": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "paletteSteps": {
+          "type": "integer",
+          "syntax": "expression",
+          "default": "5"
+        }
+      },
+      "geo-hexbin": {
+        "width": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "height": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "opacity": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "paletteSteps": {
+          "type": "integer",
+          "syntax": "expression",
+          "default": "5"
+        }
+      },
+      "spatial-tessellation": {
+        "width": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "height": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "opacity": {
+          "type": "number",
+          "syntax": "expression"
+        },
+        "paletteSteps": {
+          "type": "integer",
+          "syntax": "expression",
+          "default": "5"
+        }
+      },
+      "composition-bar": {
+        "data": {
+          "type": "string",
+          "default": "demo-parts"
+        }
+      },
+      "swimlane": {
+        "bend": {
+          "type": "number",
+          "syntax": "expression"
+        }
+      }
+    },
+    "required": {
+      "sci-set": [
+        "fit",
+        "padding"
+      ]
+    },
+    "cases": [
+      {
+        "id": "both-rows",
+        "tables": [
+          {
+            "name": "sci-set",
+            "rows": [
+              "fit",
+              "padding"
+            ]
+          }
+        ],
+        "missing": []
+      },
+      {
+        "id": "missing-fit",
+        "tables": [
+          {
+            "name": "sci-set",
+            "rows": [
+              "padding"
+            ]
+          }
+        ],
+        "missing": [
+          "sci-set:fit"
+        ]
+      },
+      {
+        "id": "wrong-owner",
+        "tables": [
+          {
+            "name": "sci-set",
+            "rows": [
+              "padding"
+            ]
+          },
+          {
+            "name": "sci-geometry",
+            "rows": [
+              "fit"
+            ]
+          }
+        ],
+        "missing": [
+          "sci-set:fit"
+        ]
+      },
+      {
+        "id": "prose-is-not-row",
+        "tables": [
+          {
+            "name": "sci-set",
+            "rows": [
+              "padding"
+            ],
+            "prose": [
+              "fit"
+            ],
+            "comments": [
+              "fit"
+            ]
+          }
+        ],
+        "missing": [
+          "sci-set:fit"
+        ]
+      },
+      {
+        "id": "grouped-first-cell",
+        "tables": [
+          {
+            "name": "sci-set",
+            "rows": [],
+            "groupedRows": [
+              [
+                "fit",
+                "padding"
+              ]
+            ]
+          }
+        ],
+        "missing": []
+      },
+      {
+        "id": "nested-first-cell",
+        "tables": [
+          {
+            "name": "sci-set",
+            "rows": [
+              "padding"
+            ],
+            "nestedRows": [
+              "fit"
+            ]
+          }
+        ],
+        "missing": []
+      },
+      {
+        "id": "other-cells-not-keys",
+        "tables": [
+          {
+            "name": "sci-set",
+            "rows": [
+              "padding"
+            ],
+            "otherCells": [
+              "fit"
+            ]
+          }
+        ],
+        "missing": [
+          "sci-set:fit"
+        ]
+      }
+    ],
+    "scopeBindings": {
+      "api-registry": "registry",
+      "api-helper-cart-family-keys": "helper:semio_viz_cart_family_keys",
+      "api-path-family-area": "semio / viz / family / area",
+      "api-path-family-bar": "semio / viz / family / bar",
+      "api-path-scale": "semio / viz / scale",
+      "api-path-family-common": "semio / viz / family / common",
+      "api-path-layer": "semio / viz / layer",
+      "api-path-family-axis": "semio / viz / family / axis",
+      "api-path-axis": "semio / viz / axis",
+      "api-path-facet": "semio / viz / facet",
+      "api-path-legend": "semio / viz / legend",
+      "api-path-concat": "semio / viz / concat",
+      "api-path-concat-item": "semio / viz / concat / item",
+      "api-path-annotation": "semio / viz / annotation",
+      "api-path-dashboard": "semio / viz / dashboard",
+      "api-path-dashboard-cell": "semio / viz / dashboard / cell",
+      "api-path-inset": "semio / viz / inset",
+      "api-path-diagram": "semio / viz / diagram",
+      "api-path-geo-fromtable": "semio / viz / geo / fromtable",
+      "api-helper-snk-keys-add": "helper:semio_viz_snk_keys_add",
+      "api-path-geo-base": "semio / viz / geo / base",
+      "api-path-geo-projection": "semio / viz / geo / projection",
+      "api-path-geo-part": "semio / viz / geo / part",
+      "api-path-family-geo-field": "semio / viz / family / geo-field",
+      "api-path-family-spatial-scalar-field": "semio / viz / family / spatial-scalar-field",
+      "api-path-family-geo-terrain": "semio / viz / family / geo-terrain",
+      "api-path-family-geo-route": "semio / viz / family / geo-route",
+      "api-path-hierarchy": "semio / viz / hierarchy",
+      "api-path-hierarchy-layout": "semio / viz / hierarchy / layout",
+      "api-path-hierarchy-render": "semio / viz / hierarchy / render",
+      "api-path-family-mark": "semio / viz / family / mark",
+      "api-helper-arc-keys-add": "helper:semio_viz_arc_keys_add",
+      "api-helper-bun-keys-add": "helper:semio_viz_bun_keys_add",
+      "api-helper-chord-keys-add": "helper:semio_viz_chord_keys_add",
+      "api-helper-net-keys-add": "helper:semio_viz_net_keys_add",
+      "api-path-data": "semio / viz / data",
+      "api-helper-mat-keys-add": "helper:semio_viz_mat_keys_add",
+      "api-helper-sci-keys-canvas": "helper:semio_viz_sci_keys_canvas",
+      "api-helper-space-keys-camera": "helper:semio_viz_space_keys_camera",
+      "api-path-mark": "semio / viz / mark",
+      "api-path-text": "semio / viz / text",
+      "api-path-transform": "semio / viz / transform",
+      "area": "semio / viz / family / area",
+      "bar": "semio / viz / family / bar",
+      "api-path-geo-field": "semio / viz / family / geo-field",
+      "api-path-geo-terrain": "semio / viz / family / geo-terrain"
+    },
+    "inherited": {
+      "required": {
+        "sci-set": {
+          "fit": {
+            "type": "boolean",
+            "default": "true"
+          },
+          "width": {
+            "type": "number",
+            "default": "60",
+            "unit": "mm"
+          }
+        }
+      },
+      "reachable": {
+        "sci-set": {
+          "helper:semio_viz_sci_keys_canvas": [
+            "width"
+          ]
+        }
+      },
+      "bindings": {
+        "canvas": "helper:semio_viz_sci_keys_canvas",
+        "foreign": "semio / viz / scale"
+      },
+      "base": {
+        "families": [
+          {
+            "name": "sci-set",
+            "refs": [
+              "canvas"
+            ],
+            "rows": [
+              {
+                "name": "fit",
+                "type": "boolean",
+                "default": "true",
+                "meaning": {
+                  "en": "Shrink only if needed.",
+                  "de": "Nur bei Bedarf verkleinern."
+                }
+              }
+            ]
+          }
+        ],
+        "tables": [
+          {
+            "name": "canvas",
+            "scope": "helper:semio_viz_sci_keys_canvas",
+            "rows": [
+              {
+                "name": "width",
+                "type": "number",
+                "default": "60",
+                "meaning": {
+                  "en": "Canvas width in mm.",
+                  "de": "Leinwandbreite in mm."
+                }
+              }
+            ]
+          },
+          {
+            "name": "foreign",
+            "scope": "semio / viz / scale",
+            "rows": [
+              {
+                "name": "width",
+                "type": "number",
+                "default": "60",
+                "meaning": {
+                  "en": "Other width in mm.",
+                  "de": "Andere Breite in mm."
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "cases": [
+        {
+          "id": "valid",
+          "findings": []
+        },
+        {
+          "id": "wrong-type",
+          "path": [
+            "tables",
+            0,
+            "rows",
+            0,
+            "type"
+          ],
+          "value": "string",
+          "findings": [
+            "sci-set:width:type"
+          ]
+        },
+        {
+          "id": "wrong-default",
+          "path": [
+            "tables",
+            0,
+            "rows",
+            0,
+            "default"
+          ],
+          "value": "80",
+          "findings": [
+            "sci-set:width:default"
+          ]
+        },
+        {
+          "id": "missing-de",
+          "path": [
+            "tables",
+            0,
+            "rows",
+            0,
+            "meaning",
+            "de"
+          ],
+          "value": "",
+          "findings": [
+            "sci-set:width:de"
+          ]
+        },
+        {
+          "id": "missing-en",
+          "path": [
+            "tables",
+            0,
+            "rows",
+            0,
+            "meaning",
+            "en"
+          ],
+          "value": "",
+          "findings": [
+            "sci-set:width:en"
+          ]
+        },
+        {
+          "id": "wrong-unit",
+          "path": [
+            "tables",
+            0,
+            "rows",
+            0,
+            "meaning",
+            "en"
+          ],
+          "value": "Canvas width in pt.",
+          "findings": [
+            "sci-set:width:en:unit"
+          ]
+        },
+        {
+          "id": "dangling-table",
+          "path": [
+            "tables",
+            0,
+            "name"
+          ],
+          "value": "absent",
+          "findings": [
+            "sci-set:invalid-scope:canvas",
+            "sci-set:width"
+          ]
+        },
+        {
+          "id": "unreachable-scope",
+          "path": [
+            "families",
+            0,
+            "refs"
+          ],
+          "value": [
+            "foreign"
+          ],
+          "findings": [
+            "sci-set:invalid-scope:foreign",
+            "sci-set:width"
+          ]
+        },
+        {
+          "id": "wrong-scope-binding",
+          "path": [
+            "tables",
+            0,
+            "scope"
+          ],
+          "value": "semio / viz / scale",
+          "findings": [
+            "sci-set:invalid-binding:canvas",
+            "sci-set:width"
+          ]
+        },
+        {
+          "id": "phantom-shared-key",
+          "path": [
+            "tables",
+            0,
+            "rows",
+            1
+          ],
+          "value": {
+            "name": "phantom",
+            "type": "number",
+            "default": "0",
+            "meaning": {
+              "en": "Unaccepted.",
+              "de": "Nicht akzeptiert."
+            }
+          },
+          "findings": [
+            "sci-set:unreachable:canvas:phantom"
+          ]
+        },
+        {
+          "id": "missing-family",
+          "path": [
+            "families"
+          ],
+          "value": [],
+          "findings": [
+            "sci-set:missing-section"
+          ]
+        },
+        {
+          "id": "removed-inherited-row",
+          "path": [
+            "tables",
+            0,
+            "rows"
+          ],
+          "value": [],
+          "findings": [
+            "sci-set:width"
+          ]
+        },
+        {
+          "id": "later-section-leak",
+          "path": [
+            "families",
+            0,
+            "refs"
+          ],
+          "value": [],
+          "laterRefs": [
+            "canvas"
+          ],
+          "findings": [
+            "sci-set:width"
+          ]
+        },
+        {
+          "id": "verbatim-shared-table",
+          "path": [
+            "tables",
+            0,
+            "literal"
+          ],
+          "value": true,
+          "findings": [
+            "sci-set:invalid-scope:canvas",
+            "sci-set:width"
+          ]
+        },
+        {
+          "id": "code-shared-table",
+          "path": [
+            "tables",
+            0,
+            "code"
+          ],
+          "value": true,
+          "findings": [
+            "sci-set:invalid-scope:canvas",
+            "sci-set:width"
+          ]
+        }
+      ]
+    },
+    "translations": {
+      "tables": [
+        {
+          "name": "sci-set",
+          "rows": [
+            {
+              "name": "fit",
+              "type": "boolean",
+              "default": "true",
+              "meaning": {
+                "en": "Shrink the proportional circles when needed.",
+                "de": "Die proportionalen Kreise bei Bedarf verkleinern."
+              }
+            }
+          ]
+        },
+        {
+          "name": "transform-statistical",
+          "rows": [
+            {
+              "name": "fit",
+              "type": "string",
+              "default": "linear",
+              "meaning": {
+                "en": "Regression model: linear, polynomial, exponential, logarithmic or power.",
+                "de": "Regressionsmodell: linear, polynomial, exponentiell, logarithmisch oder Potenz."
+              }
+            }
+          ]
+        }
+      ],
+      "queries": [
+        {
+          "scope": "sci-set",
+          "key": "fit",
+          "de": "Die proportionalen Kreise bei Bedarf verkleinern."
+        },
+        {
+          "scope": "transform-statistical",
+          "key": "fit",
+          "de": "Regressionsmodell: linear, polynomial, exponentiell, logarithmisch oder Potenz."
+        },
+        {
+          "scope": "unrelated",
+          "key": "fit",
+          "de": ""
+        }
+      ]
+    },
+    "scalars": [
+      {
+        "id": "same-list",
+        "type": "string",
+        "expected": "a,b,c",
+        "rendered": "a, b, c",
+        "findings": []
+      },
+      {
+        "id": "reordered-list",
+        "type": "string",
+        "expected": "a,b,c",
+        "rendered": "a, c, b",
+        "findings": [
+          "example:values:default"
+        ]
+      },
+      {
+        "id": "union-order",
+        "type": "number | string | boolean | null",
+        "renderedType": "null | boolean | number | string",
+        "expected": "undefined",
+        "rendered": "undefined",
+        "findings": []
+      },
+      {
+        "id": "millimetre-number",
+        "type": "number",
+        "renderedType": "mm",
+        "expected": "6",
+        "rendered": "6",
+        "findings": []
+      },
+      {
+        "id": "named-string",
+        "type": "string",
+        "renderedType": "name",
+        "expected": "draft",
+        "rendered": "draft",
+        "findings": []
+      },
+      {
+        "id": "unit-not-boolean",
+        "type": "boolean",
+        "renderedType": "mm",
+        "expected": "6",
+        "rendered": "6",
+        "findings": [
+          "example:values:type"
+        ]
+      }
+    ],
+    "regions": [
+      {
+        "id": "exclude-undeclared-comment",
+        "regions": [
+          {
+            "name": "Keys",
+            "scope": "neutral / theme",
+            "keys": [
+              {
+                "name": "stroke",
+                "type": "string",
+                "declared": true
+              },
+              {
+                "name": "font",
+                "type": "string",
+                "declared": false
+              }
+            ]
+          }
+        ],
+        "expected": [
+          {
+            "scope": "neutral / theme",
+            "keys": [
+              "stroke"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "same-region-distinct-owners",
+        "regions": [
+          {
+            "name": "Keys",
+            "scope": "neutral / set",
+            "keys": [
+              {
+                "name": "fit",
+                "type": "boolean",
+                "declared": true
+              }
+            ]
+          },
+          {
+            "name": "Keys",
+            "scope": "neutral / regression",
+            "keys": [
+              {
+                "name": "fit",
+                "type": "string",
+                "declared": true
+              }
+            ]
+          }
+        ],
+        "expected": [
+          {
+            "scope": "neutral / set",
+            "keys": [
+              "fit"
+            ]
+          },
+          {
+            "scope": "neutral / regression",
+            "keys": [
+              "fit"
+            ]
+          }
+        ]
+      }
+    ],
+    "routing": [
+      {
+        "id": "direct",
+        "tree": {
+          "scope": "semio / viz / family / example",
+          "key": "own"
+        },
+        "expected": [
+          "semio / viz / family / example"
+        ]
+      },
+      {
+        "id": "literal-forward",
+        "tree": {
+          "scope": "semio / viz / family / example",
+          "key": "own",
+          "children": [
+            {
+              "scope": "neutral / shared",
+              "key": "width"
+            }
+          ]
+        },
+        "expected": [
+          "neutral / shared",
+          "semio / viz / family / example"
+        ]
+      },
+      {
+        "id": "forward-cycle",
+        "tree": {
+          "scope": "semio / viz / family / example",
+          "key": "own",
+          "children": [
+            {
+              "scope": "neutral / shared",
+              "key": "width",
+              "forward": "semio / viz / family / example"
+            }
+          ]
+        },
+        "expected": [
+          "neutral / shared",
+          "semio / viz / family / example"
+        ]
+      }
+    ],
+    "typeClasses": {
+      "mm": "number",
+      "name": "string"
+    },
+    "groupedSpecs": [
+      {
+        "id": "mixed-group",
+        "keys": [
+          {
+            "name": "width",
+            "type": "number",
+            "default": "6"
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "default": "draft"
+          }
+        ],
+        "types": [
+          "mm",
+          "name"
+        ],
+        "defaults": [
+          "6",
+          "draft"
+        ],
+        "findings": []
+      },
+      {
+        "id": "mixed-group-wrong-default",
+        "keys": [
+          {
+            "name": "width",
+            "type": "number",
+            "default": "6"
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "default": "draft"
+          }
+        ],
+        "types": [
+          "mm",
+          "name"
+        ],
+        "defaults": [
+          "6",
+          "other"
+        ],
+        "findings": [
+          "example:title:default"
+        ]
+      }
+    ],
+    "sourcePolicy": [
+      {
+        "table": "api-path-force",
+        "allowed": true,
+        "scope": "semio / viz / layout / force",
+        "key": "seed"
+      },
+      {
+        "table": "graph",
+        "allowed": true,
+        "scope": "semio / viz / family / graph",
+        "key": "seed"
+      },
+      {
+        "table": "api-path-placement",
+        "allowed": false,
+        "scope": "semio / viz / layout / place",
+        "key": "seed"
+      }
+    ],
+    "syntaxContracts": [
+      {
+        "spec": {
+          "syntax": "expression"
+        },
+        "key": "expr",
+        "family": "sci-function"
+      },
+      {
+        "spec": {
+          "syntax": "text"
+        },
+        "key": "title",
+        "family": "sci-function"
+      },
+      {
+        "spec": {
+          "items": "identifier",
+          "syntax": "records"
+        },
+        "key": "symbols",
+        "family": "encoding"
+      },
+      {
+        "spec": {
+          "items": "text",
+          "syntax": "records"
+        },
+        "key": "headers",
+        "family": "table"
+      }
+    ],
+    "inheritedContracts": [
+      {
+        "spec": {
+          "syntax": "identifier",
+          "type": "string"
+        },
+        "scope": "semio / viz / legend",
+        "key": "channel",
+        "family": "composition",
+        "allowed": false
+      },
+      {
+        "spec": {
+          "type": "boolean",
+          "default": true,
+          "syntax": "scalar"
+        },
+        "scope": "semio / viz / axis",
+        "key": "domain",
+        "family": "composition",
+        "allowed": false
+      },
+      {
+        "spec": {
+          "syntax": "paint",
+          "type": "string"
+        },
+        "scope": "semio / viz / axis",
+        "key": "fill",
+        "family": "composition",
+        "allowed": false
+      },
+      {
+        "spec": {
+          "syntax": "records",
+          "type": "string"
+        },
+        "scope": "semio / viz / axis",
+        "key": "gridDash",
+        "family": "composition",
+        "allowed": false
+      },
+      {
+        "spec": {
+          "syntax": "paint",
+          "type": "string"
+        },
+        "scope": "semio / viz / axis",
+        "key": "gridStroke",
+        "family": "composition",
+        "allowed": false
+      },
+      {
+        "spec": {
+          "type": "number",
+          "default": 0,
+          "syntax": "expression"
+        },
+        "scope": "semio / viz / axis",
+        "key": "labelRotation",
+        "family": "composition",
+        "allowed": false
+      },
+      {
+        "spec": {
+          "syntax": "expression",
+          "type": "number"
+        },
+        "scope": "semio / viz / axis",
+        "key": "labelSize",
+        "family": "composition",
+        "allowed": false
+      },
+      {
+        "spec": {
+          "type": "string",
+          "default": "area",
+          "syntax": "identifier"
+        },
+        "scope": "semio / viz / legend",
+        "key": "sizeMode",
+        "family": "composition",
+        "allowed": false
+      },
+      {
+        "spec": {
+          "syntax": "expression",
+          "type": "number"
+        },
+        "scope": "semio / viz / legend",
+        "key": "spacing",
+        "family": "composition",
+        "allowed": false
+      },
+      {
+        "spec": {
+          "syntax": "paint",
+          "type": "string"
+        },
+        "scope": "semio / viz / axis",
+        "key": "stroke",
+        "family": "composition",
+        "allowed": false
+      },
+      {
+        "spec": {
+          "syntax": "expression",
+          "type": "number"
+        },
+        "scope": "semio / viz / axis",
+        "key": "strokeWidth",
+        "family": "composition",
+        "allowed": false
+      },
+      {
+        "spec": {
+          "syntax": "expression",
+          "type": "number"
+        },
+        "scope": "semio / viz / axis",
+        "key": "titleSize",
+        "family": "composition",
+        "allowed": false
+      },
+      {
+        "spec": {
+          "type": "boolean",
+          "default": true,
+          "syntax": "scalar"
+        },
+        "scope": "semio / viz / axis",
+        "key": "domain",
+        "family": "axis",
+        "allowed": false
+      },
+      {
+        "spec": {
+          "syntax": "paint",
+          "type": "string"
+        },
+        "scope": "semio / viz / axis",
+        "key": "fill",
+        "family": "axis",
+        "allowed": false
+      },
+      {
+        "spec": {
+          "syntax": "records",
+          "type": "string"
+        },
+        "scope": "semio / viz / axis",
+        "key": "gridDash",
+        "family": "axis",
+        "allowed": false
+      },
+      {
+        "spec": {
+          "syntax": "paint",
+          "type": "string"
+        },
+        "scope": "semio / viz / axis",
+        "key": "gridStroke",
+        "family": "axis",
+        "allowed": false
+      },
+      {
+        "spec": {
+          "type": "number",
+          "default": 0,
+          "syntax": "expression"
+        },
+        "scope": "semio / viz / axis",
+        "key": "labelRotation",
+        "family": "axis",
+        "allowed": false
+      },
+      {
+        "spec": {
+          "syntax": "expression",
+          "type": "number"
+        },
+        "scope": "semio / viz / axis",
+        "key": "labelSize",
+        "family": "axis",
+        "allowed": false
+      },
+      {
+        "spec": {
+          "syntax": "paint",
+          "type": "string"
+        },
+        "scope": "semio / viz / axis",
+        "key": "stroke",
+        "family": "axis",
+        "allowed": false
+      },
+      {
+        "spec": {
+          "syntax": "expression",
+          "type": "number"
+        },
+        "scope": "semio / viz / axis",
+        "key": "strokeWidth",
+        "family": "axis",
+        "allowed": false
+      },
+      {
+        "spec": {
+          "syntax": "style",
+          "type": "string"
+        },
+        "scope": "semio / viz / axis",
+        "key": "style",
+        "family": "axis",
+        "allowed": false
+      },
+      {
+        "spec": {
+          "syntax": "expression",
+          "type": "number"
+        },
+        "scope": "semio / viz / axis",
+        "key": "titleSize",
+        "family": "axis",
+        "allowed": false
+      },
+      {
+        "spec": {
+          "enum": [
+            "butt",
+            "round",
+            "square"
+          ],
+          "type": "string",
+          "default": "butt",
+          "syntax": "identifier"
+        },
+        "scope": "semio / viz / mark",
+        "key": "cap",
+        "family": "mark-point",
+        "allowed": true
+      },
+      {
+        "spec": {
+          "enum": [
+            "miter",
+            "round",
+            "bevel"
+          ],
+          "type": "string",
+          "default": "miter",
+          "syntax": "identifier"
+        },
+        "scope": "semio / viz / mark",
+        "key": "join",
+        "family": "mark-point",
+        "allowed": true
+      },
+      {
+        "spec": {
+          "enum": [
+            "butt",
+            "round",
+            "square"
+          ],
+          "type": "string",
+          "default": "butt",
+          "syntax": "identifier"
+        },
+        "scope": "semio / viz / mark",
+        "key": "cap",
+        "family": "mark-line",
+        "allowed": true
+      },
+      {
+        "spec": {
+          "enum": [
+            "miter",
+            "round",
+            "bevel"
+          ],
+          "type": "string",
+          "default": "miter",
+          "syntax": "identifier"
+        },
+        "scope": "semio / viz / mark",
+        "key": "join",
+        "family": "mark-line",
+        "allowed": true
+      },
+      {
+        "spec": {
+          "enum": [
+            "butt",
+            "round",
+            "square"
+          ],
+          "type": "string",
+          "default": "butt",
+          "syntax": "identifier"
+        },
+        "scope": "semio / viz / mark",
+        "key": "cap",
+        "family": "mark-area",
+        "allowed": true
+      },
+      {
+        "spec": {
+          "enum": [
+            "miter",
+            "round",
+            "bevel"
+          ],
+          "type": "string",
+          "default": "miter",
+          "syntax": "identifier"
+        },
+        "scope": "semio / viz / mark",
+        "key": "join",
+        "family": "mark-area",
+        "allowed": true
+      },
+      {
+        "spec": {
+          "enum": [
+            "butt",
+            "round",
+            "square"
+          ],
+          "type": "string",
+          "default": "butt",
+          "syntax": "identifier"
+        },
+        "scope": "semio / viz / mark",
+        "key": "cap",
+        "family": "mark-arc",
+        "allowed": true
+      },
+      {
+        "spec": {
+          "enum": [
+            "miter",
+            "round",
+            "bevel"
+          ],
+          "type": "string",
+          "default": "miter",
+          "syntax": "identifier"
+        },
+        "scope": "semio / viz / mark",
+        "key": "join",
+        "family": "mark-arc",
+        "allowed": true
+      },
+      {
+        "spec": {
+          "enum": [
+            "butt",
+            "round",
+            "square"
+          ],
+          "type": "string",
+          "default": "butt",
+          "syntax": "identifier"
+        },
+        "scope": "semio / viz / mark",
+        "key": "cap",
+        "family": "mark-connector",
+        "allowed": true
+      },
+      {
+        "spec": {
+          "enum": [
+            "miter",
+            "round",
+            "bevel"
+          ],
+          "type": "string",
+          "default": "miter",
+          "syntax": "identifier"
+        },
+        "scope": "semio / viz / mark",
+        "key": "join",
+        "family": "mark-connector",
+        "allowed": true
+      },
+      {
+        "spec": {
+          "enum": [
+            "butt",
+            "round",
+            "square"
+          ],
+          "type": "string",
+          "default": "butt",
+          "syntax": "identifier"
+        },
+        "scope": "semio / viz / mark",
+        "key": "cap",
+        "family": "mark-region",
+        "allowed": true
+      },
+      {
+        "spec": {
+          "enum": [
+            "miter",
+            "round",
+            "bevel"
+          ],
+          "type": "string",
+          "default": "miter",
+          "syntax": "identifier"
+        },
+        "scope": "semio / viz / mark",
+        "key": "join",
+        "family": "mark-region",
+        "allowed": true
+      },
+      {
+        "spec": {
+          "enum": [
+            "butt",
+            "round",
+            "square"
+          ],
+          "type": "string",
+          "default": "butt",
+          "syntax": "identifier"
+        },
+        "scope": "semio / viz / mark",
+        "key": "cap",
+        "family": "mark-annotation",
+        "allowed": true
+      },
+      {
+        "spec": {
+          "enum": [
+            "miter",
+            "round",
+            "bevel"
+          ],
+          "type": "string",
+          "default": "miter",
+          "syntax": "identifier"
+        },
+        "scope": "semio / viz / mark",
+        "key": "join",
+        "family": "mark-annotation",
+        "allowed": true
+      },
+      {
+        "spec": {
+          "enum": [
+            "butt",
+            "round",
+            "square"
+          ],
+          "type": "string",
+          "default": "butt",
+          "syntax": "identifier"
+        },
+        "scope": "semio / viz / mark",
+        "key": "cap",
+        "family": "namespace",
+        "allowed": false
+      },
+      {
+        "spec": {
+          "enum": [
+            "miter",
+            "round",
+            "bevel"
+          ],
+          "type": "string",
+          "default": "miter",
+          "syntax": "identifier"
+        },
+        "scope": "semio / viz / mark",
+        "key": "join",
+        "family": "namespace",
+        "allowed": false
+      },
+      {
+        "spec": {
+          "enum": [
+            "butt",
+            "round",
+            "square"
+          ],
+          "type": "string",
+          "default": "butt",
+          "syntax": "identifier"
+        },
+        "scope": "semio / viz / mark",
+        "key": "cap",
+        "family": "figure",
+        "allowed": false
+      },
+      {
+        "spec": {
+          "enum": [
+            "miter",
+            "round",
+            "bevel"
+          ],
+          "type": "string",
+          "default": "miter",
+          "syntax": "identifier"
+        },
+        "scope": "semio / viz / mark",
+        "key": "join",
+        "family": "figure",
+        "allowed": false
+      },
+      {
+        "spec": {
+          "enum": [
+            "butt",
+            "round",
+            "square"
+          ],
+          "type": "string",
+          "default": "butt",
+          "syntax": "identifier"
+        },
+        "scope": "semio / viz / mark",
+        "key": "cap",
+        "family": "grammar",
+        "allowed": false
+      },
+      {
+        "spec": {
+          "enum": [
+            "butt",
+            "round",
+            "square"
+          ],
+          "type": "string",
+          "default": "butt",
+          "syntax": "identifier"
+        },
+        "scope": "semio / viz / mark",
+        "key": "cap",
+        "family": "encoding",
+        "allowed": false
+      },
+      {
+        "spec": {
+          "enum": [
+            "miter",
+            "round",
+            "bevel"
+          ],
+          "type": "string",
+          "default": "miter",
+          "syntax": "identifier"
+        },
+        "scope": "semio / viz / mark",
+        "key": "join",
+        "family": "encoding",
+        "allowed": false
+      },
+      {
+        "spec": {
+          "syntax": "identifier",
+          "type": "string"
+        },
+        "scope": "semio / viz / legend",
+        "key": "channel",
+        "family": "scale",
+        "allowed": false
+      },
+      {
+        "spec": {
+          "syntax": "paint",
+          "type": "string"
+        },
+        "scope": "semio / viz / axis",
+        "key": "fill",
+        "family": "scale",
+        "allowed": false
+      },
+      {
+        "spec": {
+          "syntax": "records",
+          "type": "string"
+        },
+        "scope": "semio / viz / axis",
+        "key": "gridDash",
+        "family": "scale",
+        "allowed": false
+      },
+      {
+        "spec": {
+          "syntax": "paint",
+          "type": "string"
+        },
+        "scope": "semio / viz / axis",
+        "key": "gridStroke",
+        "family": "scale",
+        "allowed": false
+      },
+      {
+        "spec": {
+          "type": "number",
+          "default": 0,
+          "syntax": "expression"
+        },
+        "scope": "semio / viz / axis",
+        "key": "labelRotation",
+        "family": "scale",
+        "allowed": false
+      },
+      {
+        "spec": {
+          "syntax": "expression",
+          "type": "number"
+        },
+        "scope": "semio / viz / axis",
+        "key": "labelSize",
+        "family": "scale",
+        "allowed": false
+      },
+      {
+        "spec": {
+          "type": "string",
+          "default": "area",
+          "syntax": "identifier"
+        },
+        "scope": "semio / viz / legend",
+        "key": "sizeMode",
+        "family": "scale",
+        "allowed": false
+      },
+      {
+        "spec": {
+          "syntax": "expression",
+          "type": "number"
+        },
+        "scope": "semio / viz / legend",
+        "key": "spacing",
+        "family": "scale",
+        "allowed": false
+      },
+      {
+        "spec": {
+          "syntax": "paint",
+          "type": "string"
+        },
+        "scope": "semio / viz / axis",
+        "key": "stroke",
+        "family": "scale",
+        "allowed": false
+      },
+      {
+        "spec": {
+          "syntax": "expression",
+          "type": "number"
+        },
+        "scope": "semio / viz / axis",
+        "key": "strokeWidth",
+        "family": "scale",
+        "allowed": false
+      },
+      {
+        "spec": {
+          "syntax": "expression",
+          "type": "number"
+        },
+        "scope": "semio / viz / axis",
+        "key": "titleSize",
+        "family": "scale",
+        "allowed": false
+      },
+      {
+        "spec": {
+          "syntax": "expression",
+          "type": "number"
+        },
+        "scope": "semio / viz / legend",
+        "key": "x",
+        "family": "scale",
+        "allowed": false
+      },
+      {
+        "spec": {
+          "syntax": "expression",
+          "type": "number"
+        },
+        "scope": "semio / viz / legend",
+        "key": "y",
+        "family": "scale",
+        "allowed": false
+      },
+      {
+        "spec": {
+          "enum": [
+            "butt",
+            "round",
+            "square"
+          ],
+          "type": "string",
+          "default": "butt",
+          "syntax": "identifier"
+        },
+        "scope": "semio / viz / mark",
+        "key": "cap",
+        "family": "layout-algorithm",
+        "allowed": false
+      },
+      {
+        "spec": {
+          "enum": [
+            "miter",
+            "round",
+            "bevel"
+          ],
+          "type": "string",
+          "default": "miter",
+          "syntax": "identifier"
+        },
+        "scope": "semio / viz / mark",
+        "key": "join",
+        "family": "layout-algorithm",
+        "allowed": false
+      },
+      {
+        "spec": {
+          "enum": [
+            "butt",
+            "round",
+            "square"
+          ],
+          "type": "string",
+          "default": "butt",
+          "syntax": "identifier"
+        },
+        "scope": "semio / viz / mark",
+        "key": "cap",
+        "family": "transform-data",
+        "allowed": false
+      },
+      {
+        "spec": {
+          "enum": [
+            "butt",
+            "round",
+            "square"
+          ],
+          "type": "string",
+          "default": "butt",
+          "syntax": "identifier"
+        },
+        "scope": "semio / viz / mark",
+        "key": "cap",
+        "family": "transform-statistical",
+        "allowed": false
+      }
+    ],
+    "tokenRoutes": [
+      {
+        "id": "authored-first-parameter",
+        "parameter": 1,
+        "forward": true,
+        "route": "direct",
+        "expected": [
+          "semio / viz / family / example",
+          "neutral / inner"
+        ]
+      },
+      {
+        "id": "fixed-internal-options",
+        "parameter": 1,
+        "forward": false,
+        "route": "direct",
+        "expected": [
+          "semio / viz / family / example"
+        ]
+      },
+      {
+        "id": "authored-second-parameter",
+        "parameter": 2,
+        "forward": true,
+        "route": "direct",
+        "expected": [
+          "semio / viz / family / example",
+          "neutral / inner"
+        ]
+      },
+      {
+        "id": "stored-authored-options",
+        "parameter": 1,
+        "forward": true,
+        "route": "stored",
+        "expected": [
+          "semio / viz / family / example",
+          "neutral / inner"
+        ]
+      },
+      {
+        "id": "known-residual-options",
+        "parameter": 1,
+        "forward": true,
+        "route": "known",
+        "expected": [
+          "semio / viz / family / example",
+          "neutral / inner"
+        ]
+      },
+      {
+        "id": "overwritten-authored-alias",
+        "parameter": 1,
+        "forward": false,
+        "route": "overwritten",
+        "expected": [
+          "semio / viz / family / example"
+        ]
+      },
+      {
+        "id": "long-balanced-unknown-forward",
+        "parameter": 1,
+        "forward": true,
+        "route": "long-forward",
+        "expected": [
+          "semio / viz / family / example",
+          "neutral / inner"
+        ]
+      }
+    ],
+    "forbiddenDescriptors": [
+      {
+        "family": "composition-bar",
+        "key": "strokeWidth"
+      },
+      {
+        "family": "grammar",
+        "key": "strokeWidth"
+      },
+      {
+        "family": "axis",
+        "key": "unknown"
+      },
+      {
+        "family": "scale",
+        "key": "clamp"
+      }
+    ],
+    "sharedTranslations": [
+      {
+        "local": false,
+        "target": "helper:semio_viz_net_keys_add",
+        "binding": true,
+        "id": "actual-helper-inheritance",
+        "root": "helper:semio_viz_bun_keys_add",
+        "reachable": true
+      },
+      {
+        "local": false,
+        "target": "semio / viz / mark",
+        "binding": true,
+        "id": "foreign-scope-rejected",
+        "root": "helper:semio_viz_bun_keys_add",
+        "reachable": false
+      },
+      {
+        "local": false,
+        "target": "helper:semio_viz_net_keys_add",
+        "binding": false,
+        "id": "dangling-source-binding-rejected",
+        "root": "helper:semio_viz_bun_keys_add",
+        "reachable": false
+      },
+      {
+        "local": true,
+        "target": "helper:semio_viz_net_keys_add",
+        "binding": true,
+        "id": "local-meaning-precedes-shared",
+        "root": "helper:semio_viz_bun_keys_add",
+        "reachable": true
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "current",
+      "fresh": true
+    },
+    {
+      "id": "stale-version",
+      "path": [
+        "schemaVersion"
+      ],
+      "value": 0,
+      "fresh": false
+    },
+    {
+      "id": "same-version-key",
+      "path": [
+        "packages",
+        0,
+        "keyFamilies",
+        0,
+        "keys",
+        0,
+        "name"
+      ],
+      "value": "stale-anchor",
+      "fresh": false
+    },
+    {
+      "id": "same-version-description",
+      "path": [
+        "packages",
+        0,
+        "keyFamilies",
+        0,
+        "keys",
+        0,
+        "description",
+        "en"
+      ],
+      "value": "Stale authored description",
+      "fresh": false
+    },
+    {
+      "id": "missing-marker",
+      "path": [
+        "_comment"
+      ],
+      "value": "",
+      "fresh": false
+    },
+    {
+      "id": "same-content-extra-byte",
+      "suffix": "\n",
+      "fresh": false
+    }
+  ]
+}

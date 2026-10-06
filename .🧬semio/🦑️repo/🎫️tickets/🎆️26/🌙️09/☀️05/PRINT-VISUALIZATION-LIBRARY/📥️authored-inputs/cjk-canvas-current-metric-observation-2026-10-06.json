@@ -1,0 +1,395 @@
+{
+  "registered": true,
+  "hashes": {
+    "primary": {
+      "path": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖼️assets/🔤️font/🅰️anta/🅰️Anta-Regular.ttf",
+      "sha256": "9f3b9723a50c1244d49906b1892b3aad43876ab9a2de80288db47821b0c7b298"
+    },
+    "fallback": {
+      "path": "C:/git/semio/🧰️framework/🛍️products/📓️print/🖼️assets/🔤️font/🌏️noto-sans-cjk-sc/🌏️NotoSansCJKsc-Regular.otf",
+      "sha256": "2c76254f6fc379fddfce0a7e84fb5385bb135d3e399294f6eeb6680d0365b74b"
+    }
+  },
+  "rows": [
+    {
+      "text": "根",
+      "sizeTeXPt": 8,
+      "runs": [
+        {
+          "text": "根",
+          "mm": 2.8098749697208407,
+          "ink": [
+            0,
+            11,
+            10,
+            2
+          ]
+        }
+      ],
+      "canvasExpectedMm": 2.8098749697208407,
+      "existingMm": 1.4058392140583922,
+      "deltaMm": -1.4040357556624485,
+      "cjk": true
+    },
+    {
+      "text": "葉",
+      "sizeTeXPt": 8,
+      "runs": [
+        {
+          "text": "葉",
+          "mm": 2.8098749697208407,
+          "ink": [
+            0,
+            11,
+            10,
+            2
+          ]
+        }
+      ],
+      "canvasExpectedMm": 2.8098749697208407,
+      "existingMm": 1.4058392140583922,
+      "deltaMm": -1.4040357556624485,
+      "cjk": true
+    },
+    {
+      "text": "根葉",
+      "sizeTeXPt": 8,
+      "runs": [
+        {
+          "text": "根葉",
+          "mm": 5.622395833333333,
+          "ink": [
+            0,
+            21.624893188476562,
+            10,
+            2
+          ]
+        }
+      ],
+      "canvasExpectedMm": 5.622395833333333,
+      "existingMm": 2.8116784281167844,
+      "deltaMm": -2.8107174052165487,
+      "cjk": true
+    },
+    {
+      "text": "Root 根 / Leaf 葉",
+      "sizeTeXPt": 8,
+      "runs": [
+        {
+          "text": "Root ",
+          "mm": 7.093479025363922,
+          "ink": [
+            0,
+            23.69873046875,
+            8,
+            0
+          ]
+        },
+        {
+          "text": "根",
+          "mm": 2.8098749697208407,
+          "ink": [
+            0,
+            11,
+            10,
+            2
+          ]
+        },
+        {
+          "text": " / Leaf ",
+          "mm": 10.363728682200113,
+          "ink": [
+            0,
+            36.05650329589844,
+            9,
+            0
+          ]
+        },
+        {
+          "text": "葉",
+          "mm": 2.8098749697208407,
+          "ink": [
+            0,
+            11,
+            10,
+            2
+          ]
+        }
+      ],
+      "canvasExpectedMm": 23.076957647005717,
+      "existingMm": 20.272091635533414,
+      "deltaMm": -2.8048660114723027,
+      "cjk": true
+    },
+    {
+      "text": "office affine fi fl",
+      "sizeTeXPt": 8,
+      "runs": [
+        {
+          "text": "office affine fi fl",
+          "mm": 20.671895106633503,
+          "ink": [
+            0,
+            78.0611572265625,
+            8,
+            0
+          ]
+        }
+      ],
+      "canvasExpectedMm": 20.671895106633503,
+      "existingMm": 20.675721253632215,
+      "deltaMm": 0.0038261469987119767,
+      "cjk": false
+    },
+    {
+      "text": "Straße Größe",
+      "sizeTeXPt": 8,
+      "runs": [
+        {
+          "text": "Straße Größe",
+          "mm": 17.555103762944537,
+          "ink": [
+            0,
+            66.21696472167969,
+            9,
+            0
+          ]
+        }
+      ],
+      "canvasExpectedMm": 17.555103762944537,
+      "existingMm": 17.557888387297634,
+      "deltaMm": 0.0027846243530973425,
+      "cjk": false
+    },
+    {
+      "text": "  First Child  ",
+      "sizeTeXPt": 8,
+      "runs": [
+        {
+          "text": "  First Child  ",
+          "mm": 16.478249677022298,
+          "ink": [
+            0,
+            59.16380310058594,
+            9,
+            0
+          ]
+        }
+      ],
+      "canvasExpectedMm": 16.478249677022298,
+      "existingMm": 16.480169849176697,
+      "deltaMm": 0.0019201721543993244,
+      "cjk": false
+    },
+    {
+      "text": "a,b",
+      "sizeTeXPt": 8,
+      "runs": [
+        {
+          "text": "a,b",
+          "mm": 3.8893749495347336,
+          "ink": [
+            0,
+            14.570556640625,
+            8,
+            1
+          ]
+        }
+      ],
+      "canvasExpectedMm": 3.8893749495347336,
+      "existingMm": 3.8907698560951984,
+      "deltaMm": 0.0013949065604648148,
+      "cjk": false
+    },
+    {
+      "text": "根",
+      "sizeTeXPt": 12,
+      "runs": [
+        {
+          "text": "根",
+          "mm": 4.217458222309748,
+          "ink": [
+            0,
+            16,
+            14,
+            2
+          ]
+        }
+      ],
+      "canvasExpectedMm": 4.217458222309748,
+      "existingMm": 2.108758821087588,
+      "deltaMm": -2.10869940122216,
+      "cjk": true
+    },
+    {
+      "text": "葉",
+      "sizeTeXPt": 12,
+      "runs": [
+        {
+          "text": "葉",
+          "mm": 4.217458222309748,
+          "ink": [
+            0,
+            16,
+            14,
+            2
+          ]
+        }
+      ],
+      "canvasExpectedMm": 4.217458222309748,
+      "existingMm": 2.108758821087588,
+      "deltaMm": -2.10869940122216,
+      "cjk": true
+    },
+    {
+      "text": "根葉",
+      "sizeTeXPt": 12,
+      "runs": [
+        {
+          "text": "根葉",
+          "mm": 8.434916444619496,
+          "ink": [
+            0,
+            31.93756103515625,
+            14,
+            2
+          ]
+        }
+      ],
+      "canvasExpectedMm": 8.434916444619496,
+      "existingMm": 4.217517642175176,
+      "deltaMm": -4.21739880244432,
+      "cjk": true
+    },
+    {
+      "text": "Root 根 / Leaf 葉",
+      "sizeTeXPt": 12,
+      "runs": [
+        {
+          "text": "Root ",
+          "mm": 10.641541989644368,
+          "ink": [
+            -1,
+            35.548095703125,
+            11,
+            0
+          ]
+        },
+        {
+          "text": "根",
+          "mm": 4.217458222309748,
+          "ink": [
+            0,
+            16,
+            14,
+            2
+          ]
+        },
+        {
+          "text": " / Leaf ",
+          "mm": 15.544270833333334,
+          "ink": [
+            0,
+            54.08476257324219,
+            12,
+            0
+          ]
+        },
+        {
+          "text": "葉",
+          "mm": 4.217458222309748,
+          "ink": [
+            0,
+            16,
+            14,
+            2
+          ]
+        }
+      ],
+      "canvasExpectedMm": 34.6207292675972,
+      "existingMm": 30.408137453300125,
+      "deltaMm": -4.212591814297074,
+      "cjk": true
+    },
+    {
+      "text": "office affine fi fl",
+      "sizeTeXPt": 12,
+      "runs": [
+        {
+          "text": "office affine fi fl",
+          "mm": 31.00916585922241,
+          "ink": [
+            0,
+            117.09173583984375,
+            11,
+            0
+          ]
+        }
+      ],
+      "canvasExpectedMm": 31.00916585922241,
+      "existingMm": 31.01358188044832,
+      "deltaMm": 0.004416021225910782,
+      "cjk": false
+    },
+    {
+      "text": "Straße Größe",
+      "sizeTeXPt": 12,
+      "runs": [
+        {
+          "text": "Straße Größe",
+          "mm": 26.331332445144653,
+          "ink": [
+            0,
+            99.325439453125,
+            11,
+            0
+          ]
+        }
+      ],
+      "canvasExpectedMm": 26.331332445144653,
+      "existingMm": 26.33683258094645,
+      "deltaMm": 0.005500135801796091,
+      "cjk": false
+    },
+    {
+      "text": "  First Child  ",
+      "sizeTeXPt": 12,
+      "runs": [
+        {
+          "text": "  First Child  ",
+          "mm": 24.71473013559977,
+          "ink": [
+            0,
+            88.74571228027344,
+            12,
+            0
+          ]
+        }
+      ],
+      "canvasExpectedMm": 24.71473013559977,
+      "existingMm": 24.720254773765046,
+      "deltaMm": 0.005524638165276485,
+      "cjk": false
+    },
+    {
+      "text": "a,b",
+      "sizeTeXPt": 12,
+      "runs": [
+        {
+          "text": "a,b",
+          "mm": 5.834062298138936,
+          "ink": [
+            0,
+            21.8558349609375,
+            11,
+            1
+          ]
+        }
+      ],
+      "canvasExpectedMm": 5.834062298138936,
+      "existingMm": 5.836154784142797,
+      "deltaMm": 0.00209248600386136,
+      "cjk": false
+    }
+  ]
+}

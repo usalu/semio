@@ -1,0 +1,1398 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-viz-scientific-geometry}[2026/09/05 v0.2.0 semio viz namespace scientific-geometry families]
+
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+\RequirePackage{semio-viz-scientific-field}
+
+\ExplSyntaxOn
+
+%region 🔖️Parsing
+\cs_generate_variant:Nn \seq_set_split:Nnn { Nnx }
+\cs_generate_variant:Nn \prop_put:Nnn { Nxx }
+\cs_generate_variant:Nn \prop_item:Nn { Ne }
+\seq_new:N \l_semio_viz_geom_rec_seq
+% 🧾 Splits one slash-separated demo or point record into the fields of the scratch sequence.
+\cs_new_protected:Npn \semio_viz_geom_record:n #1
+  { \seq_set_split:Nnx \l_semio_viz_geom_rec_seq { / } {#1} }
+% 🔍 Field #1 of the record last split, counted from one.
+\cs_new:Npn \semio_viz_geom_field:n #1
+  { \seq_item:Nn \l_semio_viz_geom_rec_seq {#1} }
+%endregion 🔖️Parsing
+
+%region 🔖️DemoData
+% 🗃️ Demo records the geometry and sports catalogue kinds fall back to.
+\clist_new:N \g_semio_viz_geom_demo_triangle_clist
+\clist_gset:Nn \g_semio_viz_geom_demo_triangle_clist { A/0/0 , B/44/0 , C/13/30 }
+\clist_new:N \g_semio_viz_geom_demo_shots_clist
+\clist_gset:Nn \g_semio_viz_geom_demo_shots_clist
+  { 0.24/0.62/1 , 0.31/0.44/0 , 0.47/0.71/1 , 0.58/0.35/0 , 0.66/0.58/1 ,
+    0.72/0.47/0 , 0.39/0.28/1 , 0.51/0.82/0 , 0.18/0.39/0 , 0.83/0.55/1 }
+%endregion 🔖️DemoData
+
+%region 🔖️Families
+
+%region 🔖️Keys
+% 🔑 Keys of `sci-construction` (§26 Euclidean figures):
+%    mode (polygon|triangle|circle|angle|tangent|secant|similarity|congruence|coordinate, polygon).
+%    points (clist of `label/x/y`): the vertices, in millimetres of the figure.
+%    marks (bool, true): draw angle arcs and side ticks. radius (fp, 18): circle radius for the circle modes.
+%    centre (clist of 2, `0,0`): circle centre. through (clist of 2): the external point of a tangent or secant.
+%    labels (bool, true): print vertex labels.
+\tl_new:N \l_semio_viz_geom_mode_tl
+\clist_new:N \l_semio_viz_geom_points_clist
+\clist_new:N \l_semio_viz_geom_centre_clist
+\clist_new:N \l_semio_viz_geom_through_clist
+\bool_new:N \l_semio_viz_geom_marks_bool
+\bool_new:N \l_semio_viz_geom_labels_bool
+\fp_new:N \l_semio_viz_geom_radius_fp
+%endregion 🔖️Keys
+
+\semio_viz_sci_keys_canvas:n { sci-construction }
+% 🗝️ The option surface of `sci-construction`: the construction mode, its vertex list, the circle
+% centre and radius, the external point and the two annotation switches.
+\keys_define:nn { semio / viz / family / sci-construction }
+  {
+    mode    .tl_set:N    = \l_semio_viz_geom_mode_tl ,
+    points  .clist_set:N = \l_semio_viz_geom_points_clist ,
+    centre  .clist_set:N = \l_semio_viz_geom_centre_clist ,
+    through .clist_set:N = \l_semio_viz_geom_through_clist ,
+    radius  .fp_set:N    = \l_semio_viz_geom_radius_fp ,
+    marks   .bool_set:N  = \l_semio_viz_geom_marks_bool ,
+    labels  .bool_set:N  = \l_semio_viz_geom_labels_bool ,
+  }
+
+% 📐 Vertex labels and dots of the current point list.
+\cs_new_protected:Npn \semio_viz_geom_vertices:
+  {
+    \clist_map_inline:Nn \l_semio_viz_geom_points_clist
+      {
+        \semio_viz_geom_record:n {##1}
+        \fill [ fill=semio-chrome-foreground ]
+          ( \semio_viz_geom_field:n { 2 } , \semio_viz_geom_field:n { 3 } ) circle [ radius=0.7 ] ;
+        \bool_if:NT \l_semio_viz_geom_labels_bool
+          {
+            \node [ font=\c_semio_viz_theme_font_label_tl , text=semio-chrome-foreground , anchor=south~west ]
+              at ( \semio_viz_geom_field:n { 2 } , \semio_viz_geom_field:n { 3 } )
+              { \semio_viz_geom_field:n { 1 } } ;
+          }
+        \semio_viz_sci_report_values:nn { construction/point }
+          { \semio_viz_geom_field:n { 2 } , \semio_viz_geom_field:n { 3 } }
+      }
+  }
+% 📐 Closed outline through the current point list.
+\cs_new_protected:Npn \semio_viz_geom_outline:
+  {
+    \tl_clear:N \l_semio_viz_sci_path_tl
+    \clist_map_inline:Nn \l_semio_viz_geom_points_clist
+      {
+        \semio_viz_geom_record:n {##1}
+        \tl_if_empty:NF \l_semio_viz_sci_path_tl { \tl_put_right:Nn \l_semio_viz_sci_path_tl { -- } }
+        \tl_put_right:Nx \l_semio_viz_sci_path_tl
+          { ( \semio_viz_geom_field:n { 2 } , \semio_viz_geom_field:n { 3 } ) }
+      }
+    \use:x { \exp_not:N \draw [ semio~sci~curve ] \exp_not:V \l_semio_viz_sci_path_tl ~ -- ~ cycle ; }
+  }
+% 📐 Interior angle arc at vertex `#2` of the triangle `#1`,`#2`,`#3`.
+\cs_new_protected:Npn \semio_viz_geom_angle:nnn #1#2#3
+  {
+    \semio_viz_geom_record:n { \clist_item:Nn \l_semio_viz_geom_points_clist {#2} }
+    \fp_set:Nn \l_semio_viz_sci_a_fp { \semio_viz_geom_field:n { 2 } }
+    \fp_set:Nn \l_semio_viz_sci_b_fp { \semio_viz_geom_field:n { 3 } }
+    \semio_viz_geom_record:n { \clist_item:Nn \l_semio_viz_geom_points_clist {#1} }
+    \fp_set:Nn \l_semio_viz_sci_c_fp
+      { atand ( \semio_viz_geom_field:n { 3 } - \l_semio_viz_sci_b_fp ,
+                \semio_viz_geom_field:n { 2 } - \l_semio_viz_sci_a_fp ) }
+    \semio_viz_geom_record:n { \clist_item:Nn \l_semio_viz_geom_points_clist {#3} }
+    \fp_set:Nn \l_semio_viz_sci_d_fp
+      { atand ( \semio_viz_geom_field:n { 3 } - \l_semio_viz_sci_b_fp ,
+                \semio_viz_geom_field:n { 2 } - \l_semio_viz_sci_a_fp ) }
+    \draw [ semio~sci~thin , draw=semio-secondary ]
+      ( \fp_eval:n { \l_semio_viz_sci_a_fp + 4 * cosd ( \l_semio_viz_sci_c_fp ) } ,
+        \fp_eval:n { \l_semio_viz_sci_b_fp + 4 * sind ( \l_semio_viz_sci_c_fp ) } )
+      arc [ start~angle=\fp_eval:n { \l_semio_viz_sci_c_fp } ,
+            end~angle=\fp_eval:n { \l_semio_viz_sci_d_fp } , radius=4 ] ;
+    \semio_viz_sci_report_values:nn { construction/angle }
+      { \fp_to_decimal:n { abs ( \l_semio_viz_sci_d_fp - \l_semio_viz_sci_c_fp ) } }
+  }
+
+% 📐 §26 Euclidean constructions: polygons and triangles with angle marks, circle geometry, tangents and secants, coordinate figures.
+\SemioVizFamily { sci-construction }
+  {
+    \semio_viz_sci_enter:nnn { sci-construction }
+      {
+        mode=polygon , points={ A/0/0 , B/44/0 , C/13/30 } , centre={ 22 , 15 } , through={ 52 , 34 } ,
+        radius=18 , marks=true , labels=true , axes=false , grid=false
+      }
+      {#1}
+    \str_case:VnF \l_semio_viz_geom_mode_tl
+      {
+        { circle }    { \semio_viz_geom_circle: }
+        { tangent }   { \semio_viz_geom_circle: \semio_viz_geom_tangent: }
+        { secant }    { \semio_viz_geom_circle: \semio_viz_geom_secant: }
+        { coordinate }
+          {
+            \bool_set_true:N \l_semio_viz_sci_axes_bool
+            \bool_set_true:N \l_semio_viz_sci_grid_bool
+            \semio_viz_sci_window:nnnn { -5 } { 55 } { -5 } { 40 }
+            \semio_viz_sci_frame:
+            \semio_viz_geom_outline:
+            \semio_viz_geom_vertices:
+          }
+        { similarity }
+          {
+            \semio_viz_geom_outline:
+            \semio_viz_geom_vertices:
+            \begin{scope}[ shift={(52,6)} , scale=0.6 ]
+            \semio_viz_geom_outline:
+            \end{scope}
+          }
+        { congruence }
+          {
+            \semio_viz_geom_outline:
+            \semio_viz_geom_vertices:
+            \begin{scope}[ shift={(52,4)} , rotate=18 ]
+            \semio_viz_geom_outline:
+            \end{scope}
+          }
+      }
+      {
+        \semio_viz_geom_outline:
+        \semio_viz_geom_vertices:
+        \bool_if:NT \l_semio_viz_geom_marks_bool
+          {
+            \int_set:Nn \l_tmpa_int { \clist_count:N \l_semio_viz_geom_points_clist }
+            \int_step_inline:nnnn { 1 } { 1 } { \l_tmpa_int }
+              {
+                \semio_viz_geom_angle:nnn
+                  { \int_mod:nn { ##1 } { \l_tmpa_int } + 1 } {##1}
+                  { \int_mod:nn { ##1 + \l_tmpa_int - 2 } { \l_tmpa_int } + 1 }
+              }
+          }
+      }
+  }
+% ⭕ The construction circle at the given centre and radius, with its centre point dotted in.
+\cs_new_protected:Npn \semio_viz_geom_circle:
+  {
+    \draw [ semio~sci~curve ]
+      ( \clist_item:Nn \l_semio_viz_geom_centre_clist { 1 } ,
+        \clist_item:Nn \l_semio_viz_geom_centre_clist { 2 } )
+      circle [ radius=\fp_eval:n { \l_semio_viz_geom_radius_fp } ] ;
+    \fill [ fill=semio-chrome-foreground ]
+      ( \clist_item:Nn \l_semio_viz_geom_centre_clist { 1 } ,
+        \clist_item:Nn \l_semio_viz_geom_centre_clist { 2 } ) circle [ radius=0.7 ] ;
+  }
+% 📐 Tangent points from an external point: the classic right-angle construction, solved in fp.
+\cs_new_protected:Npn \semio_viz_geom_tangent:
+  {
+    \fp_set:Nn \l_semio_viz_sci_a_fp
+      { \clist_item:Nn \l_semio_viz_geom_through_clist { 1 } - \clist_item:Nn \l_semio_viz_geom_centre_clist { 1 } }
+    \fp_set:Nn \l_semio_viz_sci_b_fp
+      { \clist_item:Nn \l_semio_viz_geom_through_clist { 2 } - \clist_item:Nn \l_semio_viz_geom_centre_clist { 2 } }
+    \fp_set:Nn \l_semio_viz_sci_c_fp
+      { sqrt ( \l_semio_viz_sci_a_fp ^ 2 + \l_semio_viz_sci_b_fp ^ 2 ) }
+    \fp_set:Nn \l_semio_viz_sci_d_fp
+      { acosd ( \l_semio_viz_geom_radius_fp / \l_semio_viz_sci_c_fp ) }
+    \fp_set:Nn \l_semio_viz_sci_e_fp
+      { atand ( \l_semio_viz_sci_b_fp , \l_semio_viz_sci_a_fp ) }
+    \int_step_inline:nnnn { -1 } { 2 } { 1 }
+      {
+        \draw [ semio~sci~aux , draw=semio-secondary ]
+          ( \clist_item:Nn \l_semio_viz_geom_through_clist { 1 } ,
+            \clist_item:Nn \l_semio_viz_geom_through_clist { 2 } ) --
+          ( \fp_eval:n { \clist_item:Nn \l_semio_viz_geom_centre_clist { 1 }
+              + \l_semio_viz_geom_radius_fp * cosd ( \l_semio_viz_sci_e_fp + 180 + ##1 * \l_semio_viz_sci_d_fp ) } ,
+            \fp_eval:n { \clist_item:Nn \l_semio_viz_geom_centre_clist { 2 }
+              + \l_semio_viz_geom_radius_fp * sind ( \l_semio_viz_sci_e_fp + 180 + ##1 * \l_semio_viz_sci_d_fp ) } ) ;
+      }
+    \semio_viz_sci_report_values:nn { construction/tangent }
+      { \fp_to_decimal:N \l_semio_viz_sci_c_fp , \fp_to_decimal:N \l_semio_viz_sci_d_fp }
+  }
+% 📐 Secant through the external point and the circle centre, cut at both intersections.
+\cs_new_protected:Npn \semio_viz_geom_secant:
+  {
+    \fp_set:Nn \l_semio_viz_sci_e_fp
+      {
+        atand ( \clist_item:Nn \l_semio_viz_geom_through_clist { 2 } - \clist_item:Nn \l_semio_viz_geom_centre_clist { 2 } ,
+                \clist_item:Nn \l_semio_viz_geom_through_clist { 1 } - \clist_item:Nn \l_semio_viz_geom_centre_clist { 1 } )
+        + 24
+      }
+    \draw [ semio~sci~aux , draw=semio-secondary ]
+      ( \clist_item:Nn \l_semio_viz_geom_through_clist { 1 } ,
+        \clist_item:Nn \l_semio_viz_geom_through_clist { 2 } ) --
+      ( \fp_eval:n { \clist_item:Nn \l_semio_viz_geom_centre_clist { 1 }
+          - \l_semio_viz_geom_radius_fp * cosd ( \l_semio_viz_sci_e_fp ) } ,
+        \fp_eval:n { \clist_item:Nn \l_semio_viz_geom_centre_clist { 2 }
+          - \l_semio_viz_geom_radius_fp * sind ( \l_semio_viz_sci_e_fp ) } ) ;
+  }
+
+%region 🔖️Keys
+% 🔑 Keys of `sci-conic` (§26 conic sections):
+%    kind (ellipse|parabola|hyperbola, ellipse): which conic.
+%    a, b (fp, 1.6/1): the semi-axes, or the focal parameter of a parabola.
+%    foci (bool, true), directrix (bool, false), asymptotes (bool, true): construction elements to draw.
+%    samples (int, 160): curve resolution.
+\tl_new:N \l_semio_viz_geom_kind_tl
+\fp_new:N \l_semio_viz_geom_a_fp
+\fp_new:N \l_semio_viz_geom_b_fp
+\bool_new:N \l_semio_viz_geom_foci_bool
+\bool_new:N \l_semio_viz_geom_directrix_bool
+\bool_new:N \l_semio_viz_geom_asym_bool
+\int_new:N \l_semio_viz_geom_samples_int
+%endregion 🔖️Keys
+
+\semio_viz_sci_keys_canvas:n { sci-conic }
+% 🗝️ The option surface of `sci-conic`: which conic, its two semi-axes, the construction elements to
+% show and the sampling resolution of the curve.
+\keys_define:nn { semio / viz / family / sci-conic }
+  {
+    kind       .tl_set:N   = \l_semio_viz_geom_kind_tl ,
+    a          .fp_set:N   = \l_semio_viz_geom_a_fp ,
+    b          .fp_set:N   = \l_semio_viz_geom_b_fp ,
+    foci       .bool_set:N = \l_semio_viz_geom_foci_bool ,
+    directrix  .bool_set:N = \l_semio_viz_geom_directrix_bool ,
+    asymptotes .bool_set:N = \l_semio_viz_geom_asym_bool ,
+    samples    .int_set:N  = \l_semio_viz_geom_samples_int ,
+  }
+
+% 🥚 §26 conic sections with their foci, directrix and asymptotes, all placed from the semi-axes.
+\SemioVizFamily { sci-conic }
+  {
+    \semio_viz_sci_enter:nnn { sci-conic }
+      {
+        kind=ellipse , a=1.6 , b=1 , foci=true , directrix=false , asymptotes=true , samples=160 ,
+        domain={-2.6,2.6} , range={-2,2}
+      }
+      {#1}
+    \semio_viz_sci_window_keys:
+    \semio_viz_sci_frame:
+    \semio_viz_sci_zero_lines:
+    \str_case:VnF \l_semio_viz_geom_kind_tl
+      {
+        { parabola }
+          {
+            \semio_viz_geom_conic_sample:nnnn
+              { \l_semio_viz_geom_a_fp * \SemioT * \SemioT } { 2 * \l_semio_viz_geom_a_fp * \SemioT }
+              { -1.6 } { 1.6 }
+            \semio_viz_sci_polyline:Nn \l_semio_viz_sci_pts_seq { semio~sci~curve }
+            \bool_if:NT \l_semio_viz_geom_foci_bool
+              { \semio_viz_sci_dot:nnn { \fp_eval:n { 1 / ( 4 * \l_semio_viz_geom_a_fp ) } } { 0 } { semio-primary } }
+            \bool_if:NT \l_semio_viz_geom_directrix_bool
+              {
+                \draw [ semio~sci~aux ]
+                  ( \semio_viz_sci_mx:n { - 1 / ( 4 * \l_semio_viz_geom_a_fp ) } , 0 ) --
+                  ( \semio_viz_sci_mx:n { - 1 / ( 4 * \l_semio_viz_geom_a_fp ) } , \fp_eval:n { \l_semio_viz_sci_h_fp } ) ;
+              }
+          }
+        { hyperbola }
+          {
+            \semio_viz_geom_conic_sample:nnnn
+              { \l_semio_viz_geom_a_fp * ( exp ( \SemioT ) + exp ( - \SemioT ) ) / 2 }
+              { \l_semio_viz_geom_b_fp * ( exp ( \SemioT ) - exp ( - \SemioT ) ) / 2 } { -1.4 } { 1.4 }
+            \semio_viz_sci_polyline:Nn \l_semio_viz_sci_pts_seq { semio~sci~curve }
+            \semio_viz_geom_conic_sample:nnnn
+              { - \l_semio_viz_geom_a_fp * ( exp ( \SemioT ) + exp ( - \SemioT ) ) / 2 }
+              { \l_semio_viz_geom_b_fp * ( exp ( \SemioT ) - exp ( - \SemioT ) ) / 2 } { -1.4 } { 1.4 }
+            \semio_viz_sci_polyline:Nn \l_semio_viz_sci_pts_seq { semio~sci~curve }
+            \bool_if:NT \l_semio_viz_geom_asym_bool { \semio_viz_geom_asymptotes: }
+            \bool_if:NT \l_semio_viz_geom_foci_bool { \semio_viz_geom_foci:n { 1 } }
+          }
+      }
+      {
+        \semio_viz_geom_conic_sample:nnnn
+          { \l_semio_viz_geom_a_fp * cos ( \SemioT ) } { \l_semio_viz_geom_b_fp * sin ( \SemioT ) }
+          { 0 } { 6.283185307179586 }
+        \semio_viz_sci_polyline:Nn \l_semio_viz_sci_pts_seq { semio~sci~curve }
+        \bool_if:NT \l_semio_viz_geom_foci_bool { \semio_viz_geom_foci:n { -1 } }
+      }
+  }
+% 〰️ Samples the parametric pair (#1,#2) over the parameter range #3 to #4, dropping any point whose
+% ordinate is not finite.
+\cs_new_protected:Npn \semio_viz_geom_conic_sample:nnnn #1#2#3#4
+  {
+    \seq_clear:N \l_semio_viz_sci_pts_seq
+    \int_step_inline:nnnn { 0 } { 1 } { \l_semio_viz_geom_samples_int }
+      {
+        \fp_set:Nn \SemioT { #3 + ( #4 - (#3) ) * ##1 / \l_semio_viz_geom_samples_int }
+        \semio_viz_tr_finite:nT {#2}
+          { \semio_viz_points_put:Nnn \l_semio_viz_sci_pts_seq {#1} {#2} }
+      }
+  }
+% 🎯 The two foci on the major axis, at ±sqrt(a²+#1·b²), so #1 is -1 for an ellipse and 1 for a
+% hyperbola; the focal distance is reported for the probe.
+\cs_new_protected:Npn \semio_viz_geom_foci:n #1
+  {
+    \fp_set:Nn \l_semio_viz_sci_a_fp
+      { sqrt ( abs ( \l_semio_viz_geom_a_fp ^ 2 + (#1) * \l_semio_viz_geom_b_fp ^ 2 ) ) }
+    \semio_viz_sci_dot:nnn { \l_semio_viz_sci_a_fp } { 0 } { semio-primary }
+    \semio_viz_sci_dot:nnn { - \l_semio_viz_sci_a_fp } { 0 } { semio-primary }
+    \semio_viz_sci_report_values:nn { conic/focus } { \fp_to_decimal:N \l_semio_viz_sci_a_fp }
+  }
+% ✖️ The two asymptotes y = ±(b/a)x of a hyperbola, drawn across the whole plotted domain.
+\cs_new_protected:Npn \semio_viz_geom_asymptotes:
+  {
+    \int_step_inline:nnnn { -1 } { 2 } { 1 }
+      {
+        \seq_clear:N \l_semio_viz_sci_pts_b_seq
+        \semio_viz_points_put:Nnn \l_semio_viz_sci_pts_b_seq { \l_semio_viz_sci_dxmin_fp }
+          { ##1 * \l_semio_viz_geom_b_fp * \l_semio_viz_sci_dxmin_fp / \l_semio_viz_geom_a_fp }
+        \semio_viz_points_put:Nnn \l_semio_viz_sci_pts_b_seq { \l_semio_viz_sci_dxmax_fp }
+          { ##1 * \l_semio_viz_geom_b_fp * \l_semio_viz_sci_dxmax_fp / \l_semio_viz_geom_a_fp }
+        \semio_viz_sci_polyline:Nn \l_semio_viz_sci_pts_b_seq { semio~sci~aux }
+      }
+  }
+
+%region 🔖️Keys
+% 🔑 Keys of `sci-transform` (§26 transform geometry):
+%    kind (translation|rotation|reflection|scaling|shear, rotation): the map applied to the shape.
+%    points (clist of `label/x/y`): the pre-image polygon.
+%    dx, dy (fp, 18/0): translation. angle (fp, 35): rotation or reflection-axis angle in degrees.
+%    sx, sy (fp, 1.4/0.8): scale factors. shear (fp, 0.5): shear factor. about (clist of 2): the fixed point.
+\fp_new:N \l_semio_viz_geom_dx_fp
+\fp_new:N \l_semio_viz_geom_dy_fp
+\fp_new:N \l_semio_viz_geom_angle_fp
+\fp_new:N \l_semio_viz_geom_sx_fp
+\fp_new:N \l_semio_viz_geom_sy_fp
+\fp_new:N \l_semio_viz_geom_shear_fp
+\clist_new:N \l_semio_viz_geom_about_clist
+%endregion 🔖️Keys
+
+\semio_viz_sci_keys_canvas:n { sci-transform }
+% 🗝️ The option surface of `sci-transform`: which map, the pre-image polygon, and the parameters of
+% each map — offsets, angle, scale factors, shear and the fixed point.
+\keys_define:nn { semio / viz / family / sci-transform }
+  {
+    kind   .tl_set:N    = \l_semio_viz_geom_kind_tl ,
+    points .clist_set:N = \l_semio_viz_geom_points_clist ,
+    dx     .fp_set:N    = \l_semio_viz_geom_dx_fp ,
+    dy     .fp_set:N    = \l_semio_viz_geom_dy_fp ,
+    angle  .fp_set:N    = \l_semio_viz_geom_angle_fp ,
+    sx     .fp_set:N    = \l_semio_viz_geom_sx_fp ,
+    sy     .fp_set:N    = \l_semio_viz_geom_sy_fp ,
+    shear  .fp_set:N    = \l_semio_viz_geom_shear_fp ,
+    about  .clist_set:N = \l_semio_viz_geom_about_clist ,
+    labels .bool_set:N  = \l_semio_viz_geom_labels_bool ,
+  }
+
+% 🔁 Image of `#1`,`#2` under the current transform, into a_fp/b_fp.
+\cs_new_protected:Npn \semio_viz_geom_map:nn #1#2
+  {
+    \fp_set:Nn \l_semio_viz_sci_e_fp { #1 - \clist_item:Nn \l_semio_viz_geom_about_clist { 1 } }
+    \fp_set:Nn \l_semio_viz_sci_f_fp { #2 - \clist_item:Nn \l_semio_viz_geom_about_clist { 2 } }
+    \str_case:VnF \l_semio_viz_geom_kind_tl
+      {
+        { translation }
+          {
+            \fp_set:Nn \l_semio_viz_sci_a_fp { \l_semio_viz_sci_e_fp + \l_semio_viz_geom_dx_fp }
+            \fp_set:Nn \l_semio_viz_sci_b_fp { \l_semio_viz_sci_f_fp + \l_semio_viz_geom_dy_fp }
+          }
+        { reflection }
+          {
+            \fp_set:Nn \l_semio_viz_sci_a_fp
+              { \l_semio_viz_sci_e_fp * cosd ( 2 * \l_semio_viz_geom_angle_fp )
+                + \l_semio_viz_sci_f_fp * sind ( 2 * \l_semio_viz_geom_angle_fp ) }
+            \fp_set:Nn \l_semio_viz_sci_b_fp
+              { \l_semio_viz_sci_e_fp * sind ( 2 * \l_semio_viz_geom_angle_fp )
+                - \l_semio_viz_sci_f_fp * cosd ( 2 * \l_semio_viz_geom_angle_fp ) }
+          }
+        { scaling }
+          {
+            \fp_set:Nn \l_semio_viz_sci_a_fp { \l_semio_viz_sci_e_fp * \l_semio_viz_geom_sx_fp }
+            \fp_set:Nn \l_semio_viz_sci_b_fp { \l_semio_viz_sci_f_fp * \l_semio_viz_geom_sy_fp }
+          }
+        { shear }
+          {
+            \fp_set:Nn \l_semio_viz_sci_a_fp
+              { \l_semio_viz_sci_e_fp + \l_semio_viz_geom_shear_fp * \l_semio_viz_sci_f_fp }
+            \fp_set:Nn \l_semio_viz_sci_b_fp { \l_semio_viz_sci_f_fp }
+          }
+      }
+      {
+        \fp_set:Nn \l_semio_viz_sci_a_fp
+          { \l_semio_viz_sci_e_fp * cosd ( \l_semio_viz_geom_angle_fp )
+            - \l_semio_viz_sci_f_fp * sind ( \l_semio_viz_geom_angle_fp ) }
+        \fp_set:Nn \l_semio_viz_sci_b_fp
+          { \l_semio_viz_sci_e_fp * sind ( \l_semio_viz_geom_angle_fp )
+            + \l_semio_viz_sci_f_fp * cosd ( \l_semio_viz_geom_angle_fp ) }
+      }
+    \fp_add:Nn \l_semio_viz_sci_a_fp { \clist_item:Nn \l_semio_viz_geom_about_clist { 1 } }
+    \fp_add:Nn \l_semio_viz_sci_b_fp { \clist_item:Nn \l_semio_viz_geom_about_clist { 2 } }
+  }
+
+% 🔁 §26 transform geometry: the pre-image, its image under the named map, and the correspondence between vertices.
+\SemioVizFamily { sci-transform }
+  {
+    \semio_viz_sci_enter:nnn { sci-transform }
+      {
+        kind=rotation , points={ A/6/6 , B/26/6 , C/26/20 , D/12/22 } , dx=18 , dy=0 , angle=35 ,
+        sx=1.4 , sy=0.8 , shear=0.5 , about={ 6 , 6 } , labels=true , axes=false , grid=false
+      }
+      {#1}
+    \semio_viz_geom_outline:
+    \semio_viz_geom_vertices:
+    \tl_clear:N \l_semio_viz_sci_path_tl
+    \clist_map_inline:Nn \l_semio_viz_geom_points_clist
+      {
+        \semio_viz_geom_record:n {##1}
+        \semio_viz_geom_map:nn { \semio_viz_geom_field:n { 2 } } { \semio_viz_geom_field:n { 3 } }
+        \tl_if_empty:NF \l_semio_viz_sci_path_tl { \tl_put_right:Nn \l_semio_viz_sci_path_tl { -- } }
+        \tl_put_right:Nx \l_semio_viz_sci_path_tl
+          { ( \fp_to_decimal:N \l_semio_viz_sci_a_fp , \fp_to_decimal:N \l_semio_viz_sci_b_fp ) }
+        \draw [ semio~sci~aux ]
+          ( \semio_viz_geom_field:n { 2 } , \semio_viz_geom_field:n { 3 } ) --
+          ( \fp_eval:n { \l_semio_viz_sci_a_fp } , \fp_eval:n { \l_semio_viz_sci_b_fp } ) ;
+        \semio_viz_sci_report_values:nn { transform/image }
+          { \fp_to_decimal:N \l_semio_viz_sci_a_fp , \fp_to_decimal:N \l_semio_viz_sci_b_fp }
+      }
+    \use:x { \exp_not:N \draw [ semio~sci~curve~alt ] \exp_not:V \l_semio_viz_sci_path_tl ~ -- ~ cycle ; }
+  }
+
+%region 🔖️Keys
+% 🔑 Keys of `sci-tiling` (§26 tessellations):
+%    kind (square|triangular|hexagonal|penrose|hyperbolic, hexagonal).
+%    columns, rows (int, 7/5): lattice extent of the regular tilings. size (fp, 6): tile size in millimetres.
+%    depth (int, 3): Penrose substitution steps, or hyperbolic recursion depth.
+%    p, q (int, 5/4): the Schläfli symbol {p,q} of the hyperbolic tiling. discRadius (fp, 22): Poincaré disc radius.
+\int_new:N \l_semio_viz_geom_cols_int
+\int_new:N \l_semio_viz_geom_rows_int
+\int_new:N \l_semio_viz_geom_depth_int
+\int_new:N \l_semio_viz_geom_p_int
+\int_new:N \l_semio_viz_geom_q_int
+\fp_new:N \l_semio_viz_geom_size_fp
+\fp_new:N \l_semio_viz_geom_disc_fp
+%endregion 🔖️Keys
+
+\semio_viz_sci_keys_canvas:n { sci-tiling }
+% 🗝️ The option surface of `sci-tiling`: which tessellation, the lattice extent and cell size, the
+% substitution depth, and the {p,q} pair and radius of the Poincaré disc.
+\keys_define:nn { semio / viz / family / sci-tiling }
+  {
+    kind       .tl_set:N  = \l_semio_viz_geom_kind_tl ,
+    columns    .int_set:N = \l_semio_viz_geom_cols_int ,
+    rows       .int_set:N = \l_semio_viz_geom_rows_int ,
+    size       .fp_set:N  = \l_semio_viz_geom_size_fp ,
+    depth      .int_set:N = \l_semio_viz_geom_depth_int ,
+    p          .int_set:N = \l_semio_viz_geom_p_int ,
+    q          .int_set:N = \l_semio_viz_geom_q_int ,
+    discRadius .fp_set:N  = \l_semio_viz_geom_disc_fp ,
+  }
+
+% 🔷 §26 tessellations: the three regular tilings, a Penrose rhomb substitution and a Poincaré-disc {p,q} tiling.
+\SemioVizFamily { sci-tiling }
+  {
+    \semio_viz_sci_enter:nnn { sci-tiling }
+      {
+        kind=hexagonal , columns=7 , rows=5 , size=6 , depth=3 , p=5 , q=4 , discRadius=22 ,
+        axes=false , grid=false
+      }
+      {#1}
+    \str_case:VnF \l_semio_viz_geom_kind_tl
+      {
+        { penrose }    { \semio_viz_geom_penrose: }
+        { hyperbolic } { \semio_viz_geom_hyperbolic: }
+        { square }     { \semio_viz_geom_lattice:n { 4 } }
+        { triangular } { \semio_viz_geom_lattice:n { 3 } }
+      }
+      { \semio_viz_geom_lattice:n { 6 } }
+  }
+% 🔷 Regular tiling by placing a regular `#1`-gon at every lattice site of its own packing.
+\cs_new_protected:Npn \semio_viz_geom_lattice:n #1
+  {
+    \int_step_inline:nnnn { 0 } { 1 } { \l_semio_viz_geom_cols_int - 1 }
+      {
+        \int_step_inline:nnnn { 0 } { 1 } { \l_semio_viz_geom_rows_int - 1 }
+          { \semio_viz_geom_lattice_cell:nnn {#1} {##1} {####1} }
+      }
+  }
+% 🔶 One regular #1-gon at lattice site (#2,#3): the packing offsets its rows, the polygon is turned
+% so its edges meet, and its hue steps with the site's diagonal.
+\cs_new_protected:Npn \semio_viz_geom_lattice_cell:nnn #1#2#3
+  {
+    \int_case:nnF {#1}
+      {
+        { 4 }
+          {
+            \fp_set:Nn \l_semio_viz_sci_a_fp { #2 * \l_semio_viz_geom_size_fp * 1.732 }
+            \fp_set:Nn \l_semio_viz_sci_b_fp { #3 * \l_semio_viz_geom_size_fp * 1.732 }
+          }
+        { 3 }
+          {
+            \fp_set:Nn \l_semio_viz_sci_a_fp
+              { ( #2 + 0.5 * \int_mod:nn {#3} { 2 } ) * \l_semio_viz_geom_size_fp * 1.732 }
+            \fp_set:Nn \l_semio_viz_sci_b_fp { #3 * \l_semio_viz_geom_size_fp * 1.5 }
+          }
+      }
+      {
+        \fp_set:Nn \l_semio_viz_sci_a_fp
+          { ( #2 + 0.5 * \int_mod:nn {#3} { 2 } ) * \l_semio_viz_geom_size_fp * 1.732 }
+        \fp_set:Nn \l_semio_viz_sci_b_fp { #3 * \l_semio_viz_geom_size_fp * 1.5 }
+      }
+    \tl_clear:N \l_semio_viz_sci_path_tl
+    \int_step_inline:nnnn { 0 } { 1 } { #1 - 1 }
+      {
+        \tl_if_empty:NF \l_semio_viz_sci_path_tl { \tl_put_right:Nn \l_semio_viz_sci_path_tl { -- } }
+        \tl_put_right:Nx \l_semio_viz_sci_path_tl
+          {
+            ( \fp_to_decimal:n { \l_semio_viz_sci_a_fp
+                + \l_semio_viz_geom_size_fp * cosd ( 360 * ##1 / (#1) + ( #1 == 4 ? 45 : 90 ) ) } ,
+              \fp_to_decimal:n { \l_semio_viz_sci_b_fp
+                + \l_semio_viz_geom_size_fp * sind ( 360 * ##1 / (#1) + ( #1 == 4 ? 45 : 90 ) ) } )
+          }
+      }
+    \use:x
+      {
+        \exp_not:N \draw [ semio~sci~thin , fill=\semio_viz_sci_hue:n { #2 + #3 } , fill~opacity=0.18 ]
+          \exp_not:V \l_semio_viz_sci_path_tl ~ -- ~ cycle ;
+      }
+    \semio_viz_sci_report_values:nn { tiling/cell }
+      { \fp_to_decimal:N \l_semio_viz_sci_a_fp , \fp_to_decimal:N \l_semio_viz_sci_b_fp }
+  }
+% 🔷 Penrose P3: a wheel of thin and thick rhombs, each substituted `depth` times by the golden-ratio rule.
+\seq_new:N \l_semio_viz_geom_tiles_seq
+\seq_new:N \l_semio_viz_geom_next_seq
+\cs_new_protected:Npn \semio_viz_geom_penrose:
+  {
+    \seq_clear:N \l_semio_viz_geom_tiles_seq
+    \int_step_inline:nnnn { 0 } { 1 } { 9 }
+      {
+        \seq_put_right:Nx \l_semio_viz_geom_tiles_seq
+          {
+            \int_mod:nn {##1} { 2 } /
+            \fp_to_decimal:n { 0 } / \fp_to_decimal:n { 0 } /
+            \fp_to_decimal:n { \l_semio_viz_geom_size_fp * 4 * cosd ( 36 * ##1 ) } /
+            \fp_to_decimal:n { \l_semio_viz_geom_size_fp * 4 * sind ( 36 * ##1 ) } /
+            \fp_to_decimal:n { \l_semio_viz_geom_size_fp * 4 * cosd ( 36 * ( ##1 + 1 ) ) } /
+            \fp_to_decimal:n { \l_semio_viz_geom_size_fp * 4 * sind ( 36 * ( ##1 + 1 ) ) }
+          }
+      }
+    \int_step_inline:nnnn { 1 } { 1 } { \l_semio_viz_geom_depth_int }
+      {
+        \seq_clear:N \l_semio_viz_geom_next_seq
+        \seq_map_inline:Nn \l_semio_viz_geom_tiles_seq { \semio_viz_geom_penrose_split:n {####1} }
+        \seq_set_eq:NN \l_semio_viz_geom_tiles_seq \l_semio_viz_geom_next_seq
+      }
+    \seq_map_inline:Nn \l_semio_viz_geom_tiles_seq { \semio_viz_geom_penrose_draw:n {##1} }
+    \semio_viz_sci_report_values:nn { tiling/penrose }
+      { \int_use:N \l_semio_viz_geom_depth_int , \seq_count:N \l_semio_viz_geom_tiles_seq }
+  }
+% ♦️ Substitutes one rhomb record, dispatching on its thin or thick type after fixing the golden ratio.
+\cs_new_protected:Npn \semio_viz_geom_penrose_split:n #1
+  {
+    \seq_set_split:Nnn \l_tmpa_seq { / } {#1}
+    \fp_set:Nn \l_semio_viz_sci_g_fp { ( sqrt (5) - 1 ) / 2 }
+    \int_compare:nNnTF { \seq_item:Nn \l_tmpa_seq { 1 } } = { 0 }
+      { \semio_viz_geom_penrose_thin: }
+      { \semio_viz_geom_penrose_thick: }
+  }
+% 📝 Appends one child rhomb — type #1 and its three corners — to the next generation.
+\cs_new_protected:Npn \semio_viz_geom_penrose_tile:nnnnnnn #1#2#3#4#5#6#7
+  {
+    \seq_put_right:Nx \l_semio_viz_geom_next_seq
+      {
+        #1 / \fp_to_decimal:n {#2} / \fp_to_decimal:n {#3} / \fp_to_decimal:n {#4} /
+        \fp_to_decimal:n {#5} / \fp_to_decimal:n {#6} / \fp_to_decimal:n {#7}
+      }
+  }
+% 🔺 The thin-rhomb rule: one thick and one thin child, split at the golden point of the first edge.
+\cs_new_protected:Npn \semio_viz_geom_penrose_thin:
+  {
+    \semio_viz_geom_penrose_tile:nnnnnnn { 1 }
+      { \seq_item:Nn \l_tmpa_seq { 4 } } { \seq_item:Nn \l_tmpa_seq { 5 } }
+      { \seq_item:Nn \l_tmpa_seq { 6 } } { \seq_item:Nn \l_tmpa_seq { 7 } }
+      { \seq_item:Nn \l_tmpa_seq { 2 } + \l_semio_viz_sci_g_fp * ( \seq_item:Nn \l_tmpa_seq { 4 } - \seq_item:Nn \l_tmpa_seq { 2 } ) }
+      { \seq_item:Nn \l_tmpa_seq { 3 } + \l_semio_viz_sci_g_fp * ( \seq_item:Nn \l_tmpa_seq { 5 } - \seq_item:Nn \l_tmpa_seq { 3 } ) }
+    \semio_viz_geom_penrose_tile:nnnnnnn { 0 }
+      { \seq_item:Nn \l_tmpa_seq { 6 } } { \seq_item:Nn \l_tmpa_seq { 7 } }
+      { \seq_item:Nn \l_tmpa_seq { 2 } + \l_semio_viz_sci_g_fp * ( \seq_item:Nn \l_tmpa_seq { 4 } - \seq_item:Nn \l_tmpa_seq { 2 } ) }
+      { \seq_item:Nn \l_tmpa_seq { 3 } + \l_semio_viz_sci_g_fp * ( \seq_item:Nn \l_tmpa_seq { 5 } - \seq_item:Nn \l_tmpa_seq { 3 } ) }
+      { \seq_item:Nn \l_tmpa_seq { 2 } } { \seq_item:Nn \l_tmpa_seq { 3 } }
+  }
+% 🔻 The thick-rhomb rule: the mirror-image split, again at the golden point but of the other edge.
+\cs_new_protected:Npn \semio_viz_geom_penrose_thick:
+  {
+    \semio_viz_geom_penrose_tile:nnnnnnn { 0 }
+      { \seq_item:Nn \l_tmpa_seq { 6 } } { \seq_item:Nn \l_tmpa_seq { 7 } }
+      { \seq_item:Nn \l_tmpa_seq { 4 } + \l_semio_viz_sci_g_fp * ( \seq_item:Nn \l_tmpa_seq { 2 } - \seq_item:Nn \l_tmpa_seq { 4 } ) }
+      { \seq_item:Nn \l_tmpa_seq { 5 } + \l_semio_viz_sci_g_fp * ( \seq_item:Nn \l_tmpa_seq { 3 } - \seq_item:Nn \l_tmpa_seq { 5 } ) }
+      { \seq_item:Nn \l_tmpa_seq { 2 } } { \seq_item:Nn \l_tmpa_seq { 3 } }
+    \semio_viz_geom_penrose_tile:nnnnnnn { 1 }
+      { \seq_item:Nn \l_tmpa_seq { 4 } } { \seq_item:Nn \l_tmpa_seq { 5 } }
+      { \seq_item:Nn \l_tmpa_seq { 4 } + \l_semio_viz_sci_g_fp * ( \seq_item:Nn \l_tmpa_seq { 2 } - \seq_item:Nn \l_tmpa_seq { 4 } ) }
+      { \seq_item:Nn \l_tmpa_seq { 5 } + \l_semio_viz_sci_g_fp * ( \seq_item:Nn \l_tmpa_seq { 3 } - \seq_item:Nn \l_tmpa_seq { 5 } ) }
+      { \seq_item:Nn \l_tmpa_seq { 6 } } { \seq_item:Nn \l_tmpa_seq { 7 } }
+  }
+% 🖌️ Fills one rhomb record as a triangle, its hue taken from the thin or thick type.
+\cs_new_protected:Npn \semio_viz_geom_penrose_draw:n #1
+  {
+    \seq_set_split:Nnn \l_tmpb_seq { / } {#1}
+    \use:x
+      {
+        \exp_not:N \draw
+          [ semio~sci~thin ,
+            fill=\semio_viz_sci_hue:n { \seq_item:Nn \l_tmpb_seq { 1 } + 1 } , fill~opacity=0.2 ]
+          ( \seq_item:Nn \l_tmpb_seq { 2 } , \seq_item:Nn \l_tmpb_seq { 3 } ) --
+          ( \seq_item:Nn \l_tmpb_seq { 4 } , \seq_item:Nn \l_tmpb_seq { 5 } ) --
+          ( \seq_item:Nn \l_tmpb_seq { 6 } , \seq_item:Nn \l_tmpb_seq { 7 } ) ~ -- ~ cycle ;
+      }
+  }
+% 🔷 Poincaré disc {p,q}: the central p-gon plus its inversions in the disc's own geodesics, to the requested depth.
+\cs_new_protected:Npn \semio_viz_geom_hyperbolic:
+  {
+    \draw [ semio~sci~axis ] ( 0 , 0 ) circle [ radius=\fp_eval:n { \l_semio_viz_geom_disc_fp } ] ;
+    \fp_set:Nn \l_semio_viz_sci_a_fp
+      {
+        sqrt ( cosd ( 180 / \l_semio_viz_geom_p_int + 180 / \l_semio_viz_geom_q_int )
+               / cosd ( 180 / \l_semio_viz_geom_p_int - 180 / \l_semio_viz_geom_q_int ) )
+      }
+    \int_step_inline:nnnn { 1 } { 1 } { \l_semio_viz_geom_depth_int }
+      {
+        \int_step_inline:nnnn { 0 } { 1 } { \l_semio_viz_geom_p_int - 1 }
+          {
+            \fp_set:Nn \l_semio_viz_sci_b_fp
+              { \l_semio_viz_sci_a_fp * ##1 / \l_semio_viz_geom_depth_int }
+            \semio_viz_geom_hyperbolic_cell:nn { \l_semio_viz_sci_b_fp }
+              { 360 * ####1 / \l_semio_viz_geom_p_int + 18 * ##1 }
+          }
+      }
+  }
+% 🌀 One p-gon of the disc tiling, centred at radius #1 and bearing #2, shrinking towards the rim.
+\cs_new_protected:Npn \semio_viz_geom_hyperbolic_cell:nn #1#2
+  {
+    \tl_clear:N \l_semio_viz_sci_path_tl
+    \int_step_inline:nnnn { 0 } { 1 } { \l_semio_viz_geom_p_int - 1 }
+      {
+        \tl_if_empty:NF \l_semio_viz_sci_path_tl { \tl_put_right:Nn \l_semio_viz_sci_path_tl { -- } }
+        \tl_put_right:Nx \l_semio_viz_sci_path_tl
+          {
+            (
+              \fp_to_decimal:n
+                { \l_semio_viz_geom_disc_fp * ( ( #1 ) * cosd (#2)
+                    + ( 1 - (#1) ) * 0.42 * cosd ( 360 * ##1 / \l_semio_viz_geom_p_int + (#2) ) ) } ,
+              \fp_to_decimal:n
+                { \l_semio_viz_geom_disc_fp * ( ( #1 ) * sind (#2)
+                    + ( 1 - (#1) ) * 0.42 * sind ( 360 * ##1 / \l_semio_viz_geom_p_int + (#2) ) ) }
+            )
+          }
+      }
+    \use:x
+      {
+        \exp_not:N \draw [ semio~sci~thin , fill=semio-primary , fill~opacity=0.12 ]
+          \exp_not:V \l_semio_viz_sci_path_tl ~ -- ~ cycle ;
+      }
+  }
+
+%region 🔖️Keys
+% 🔑 Keys of `sci-fractal` (§26 self-similar figures):
+%    kind (koch|sierpinski|dragon|l-system, koch).
+%    depth (int, 4): iteration count. size (fp, 44): base edge length in millimetres.
+%    axiom (tl), rules (clist of `symbol/replacement`), angle (fp, 25): the L-system.
+\tl_new:N \l_semio_viz_geom_axiom_tl
+\clist_new:N \l_semio_viz_geom_rules_clist
+\tl_new:N \l_semio_viz_geom_word_tl
+%endregion 🔖️Keys
+
+\semio_viz_sci_keys_canvas:n { sci-fractal }
+% 🗝️ The option surface of `sci-fractal`: which curve, the iteration depth and base edge, and the
+% axiom, rewrite rules and turn angle of a custom L-system.
+\keys_define:nn { semio / viz / family / sci-fractal }
+  {
+    kind  .tl_set:N    = \l_semio_viz_geom_kind_tl ,
+    depth .int_set:N   = \l_semio_viz_geom_depth_int ,
+    size  .fp_set:N    = \l_semio_viz_geom_size_fp ,
+    axiom .tl_set:N    = \l_semio_viz_geom_axiom_tl ,
+    rules .clist_set:N = \l_semio_viz_geom_rules_clist ,
+    angle .fp_set:N    = \l_semio_viz_geom_angle_fp ,
+  }
+
+% ❄️ §26 fractals: Koch, Sierpiński and dragon curves and a general L-system, all drawn by turtle interpretation of the rewritten word.
+\SemioVizFamily { sci-fractal }
+  {
+    \semio_viz_sci_enter:nnn { sci-fractal }
+      {
+        kind=koch , depth=4 , size=44 , angle=25 , axiom=F ,
+        rules={ F/FF+[+F-F-F]-[-F+F+F] } , axes=false , grid=false
+      }
+      {#1}
+    \str_case:VnF \l_semio_viz_geom_kind_tl
+      {
+        { sierpinski }
+          {
+            \tl_set:Nn \l_semio_viz_geom_axiom_tl { F-G-G }
+            \clist_set:Nn \l_semio_viz_geom_rules_clist { F/F-G+F+G-F , G/GG }
+            \fp_set:Nn \l_semio_viz_geom_angle_fp { 120 }
+          }
+        { dragon }
+          {
+            \tl_set:Nn \l_semio_viz_geom_axiom_tl { F }
+            \clist_set:Nn \l_semio_viz_geom_rules_clist { F/F+G , G/F-G }
+            \fp_set:Nn \l_semio_viz_geom_angle_fp { 90 }
+          }
+        { koch }
+          {
+            \tl_set:Nn \l_semio_viz_geom_axiom_tl { F--F--F }
+            \clist_set:Nn \l_semio_viz_geom_rules_clist { F/F+F--F+F }
+            \fp_set:Nn \l_semio_viz_geom_angle_fp { 60 }
+          }
+      }
+      { }
+    \semio_viz_geom_rewrite:
+    \semio_viz_geom_turtle:
+  }
+% ❄️ Applies the production rules `depth` times to the axiom.
+\tl_new:N \l_semio_viz_geom_out_tl
+\tl_new:N \l_semio_viz_geom_sym_tl
+\tl_new:N \l_semio_viz_geom_head_tl
+\cs_new_protected:Npn \semio_viz_geom_rewrite:
+  {
+    \tl_set_eq:NN \l_semio_viz_geom_word_tl \l_semio_viz_geom_axiom_tl
+    \int_step_inline:nnnn { 1 } { 1 } { \l_semio_viz_geom_depth_int }
+      {
+        \tl_clear:N \l_semio_viz_geom_out_tl
+        \tl_map_inline:Nn \l_semio_viz_geom_word_tl { \semio_viz_geom_rewrite_symbol:n {####1} }
+        \tl_set_eq:NN \l_semio_viz_geom_word_tl \l_semio_viz_geom_out_tl
+      }
+    \semio_viz_sci_report_values:nn { fractal/word }
+      { \int_use:N \l_semio_viz_geom_depth_int , \tl_count:N \l_semio_viz_geom_word_tl }
+  }
+% ❄️ One production step: the first rule whose left side is this symbol replaces it, otherwise the symbol survives.
+\cs_new_protected:Npn \semio_viz_geom_rewrite_symbol:n #1
+  {
+    \tl_set:Nn \l_semio_viz_geom_sym_tl {#1}
+    \clist_map_inline:Nn \l_semio_viz_geom_rules_clist
+      {
+        \seq_set_split:Nnn \l_tmpa_seq { / } {##1}
+        \tl_set:Nx \l_semio_viz_geom_head_tl { \seq_item:Nn \l_tmpa_seq { 1 } }
+        \str_if_eq:VnT \l_semio_viz_geom_head_tl {#1}
+          {
+            \tl_set:Nx \l_semio_viz_geom_sym_tl { \seq_item:Nn \l_tmpa_seq { 2 } }
+            \clist_map_break:
+          }
+      }
+    \tl_put_right:NV \l_semio_viz_geom_out_tl \l_semio_viz_geom_sym_tl
+  }
+% ❄️ Turtle interpretation: F and G draw, + and - turn, [ and ] push and pop the state.
+\fp_new:N \l_semio_viz_geom_tx_fp
+\fp_new:N \l_semio_viz_geom_ty_fp
+\fp_new:N \l_semio_viz_geom_th_fp
+\seq_new:N \l_semio_viz_geom_stack_seq
+\cs_new_protected:Npn \semio_viz_geom_turtle:
+  {
+    \fp_zero:N \l_semio_viz_geom_tx_fp
+    \fp_zero:N \l_semio_viz_geom_ty_fp
+    \fp_zero:N \l_semio_viz_geom_th_fp
+    \seq_clear:N \l_semio_viz_geom_stack_seq
+    \fp_set:Nn \l_semio_viz_sci_g_fp
+      { \l_semio_viz_geom_size_fp / ( 2 ^ \l_semio_viz_geom_depth_int ) }
+    \tl_map_inline:Nn \l_semio_viz_geom_word_tl { \semio_viz_geom_turtle_step:n {##1} }
+  }
+% 🐢 One symbol of the word: + and - turn by the angle, [ pushes the state, ] restores it, and every
+% other letter draws a segment forward.
+\cs_new_protected:Npn \semio_viz_geom_turtle_step:n #1
+  {
+    \str_case:nnF {#1}
+      {
+        { + } { \fp_add:Nn \l_semio_viz_geom_th_fp { \l_semio_viz_geom_angle_fp } }
+        { - } { \fp_sub:Nn \l_semio_viz_geom_th_fp { \l_semio_viz_geom_angle_fp } }
+        { [ }
+          {
+            \seq_push:Nx \l_semio_viz_geom_stack_seq
+              {
+                \fp_to_decimal:N \l_semio_viz_geom_tx_fp , \fp_to_decimal:N \l_semio_viz_geom_ty_fp ,
+                \fp_to_decimal:N \l_semio_viz_geom_th_fp
+              }
+          }
+        { ] } { \semio_viz_geom_turtle_pop: }
+      }
+      { \semio_viz_geom_turtle_draw: }
+  }
+% ↩️ Pops the branch stack, putting the turtle back at the position and heading of the matching `[`.
+\cs_new_protected:Npn \semio_viz_geom_turtle_pop:
+  {
+    \seq_pop:NN \l_semio_viz_geom_stack_seq \l_tmpa_tl
+    \clist_set:NV \l_tmpa_clist \l_tmpa_tl
+    \fp_set:Nn \l_semio_viz_geom_tx_fp { \clist_item:Nn \l_tmpa_clist { 1 } }
+    \fp_set:Nn \l_semio_viz_geom_ty_fp { \clist_item:Nn \l_tmpa_clist { 2 } }
+    \fp_set:Nn \l_semio_viz_geom_th_fp { \clist_item:Nn \l_tmpa_clist { 3 } }
+  }
+% ✒️ Draws one step of the current heading and advances the turtle to its far end.
+\cs_new_protected:Npn \semio_viz_geom_turtle_draw:
+  {
+    \draw [ semio~sci~thin , draw=semio-primary ]
+      ( \fp_eval:n { \l_semio_viz_geom_tx_fp } , \fp_eval:n { \l_semio_viz_geom_ty_fp } ) --
+      ( \fp_eval:n { \l_semio_viz_geom_tx_fp + \l_semio_viz_sci_g_fp * cosd ( \l_semio_viz_geom_th_fp ) } ,
+        \fp_eval:n { \l_semio_viz_geom_ty_fp + \l_semio_viz_sci_g_fp * sind ( \l_semio_viz_geom_th_fp ) } ) ;
+    \fp_add:Nn \l_semio_viz_geom_tx_fp { \l_semio_viz_sci_g_fp * cosd ( \l_semio_viz_geom_th_fp ) }
+    \fp_add:Nn \l_semio_viz_geom_ty_fp { \l_semio_viz_sci_g_fp * sind ( \l_semio_viz_geom_th_fp ) }
+  }
+
+%region 🔖️Keys
+% 🔑 Keys of `sci-mesh` (§26 triangulations and meshes):
+%    mode (triangulation|mesh|quad, triangulation).
+%    columns, rows (int, 8/6): lattice size. size (fp, 6): cell size in millimetres.
+%    warp (l3fp over \SemioX,\SemioY): a displacement applied to every node, so a mesh can follow a shape.
+%    fillCells (bool, false): shade every cell by its own index.
+\tl_new:N \l_semio_viz_geom_warp_tl
+\bool_new:N \l_semio_viz_geom_fillcells_bool
+%endregion 🔖️Keys
+
+\semio_viz_sci_keys_canvas:n { sci-mesh }
+% 🗝️ The option surface of `sci-mesh`: triangles or quads, the lattice size and spacing, the warp
+% expression applied to every node, and the cell shading switch.
+\keys_define:nn { semio / viz / family / sci-mesh }
+  {
+    mode      .tl_set:N   = \l_semio_viz_geom_mode_tl ,
+    columns   .int_set:N  = \l_semio_viz_geom_cols_int ,
+    rows      .int_set:N  = \l_semio_viz_geom_rows_int ,
+    size      .fp_set:N   = \l_semio_viz_geom_size_fp ,
+    warp      .tl_set:N   = \l_semio_viz_geom_warp_tl ,
+    fillCells .bool_set:N = \l_semio_viz_geom_fillcells_bool ,
+  }
+
+% 🕸️ §26 triangulations and meshes: a warped lattice split into triangles or kept as quads.
+\SemioVizFamily { sci-mesh }
+  {
+    \semio_viz_sci_enter:nnn { sci-mesh }
+      {
+        mode=triangulation , columns=8 , rows=6 , size=6 , warp={ 1.5 * sin ( \SemioX / 3 ) } ,
+        fillCells=false , axes=false , grid=false
+      }
+      {#1}
+    \int_step_inline:nnnn { 0 } { 1 } { \l_semio_viz_geom_cols_int - 1 }
+      {
+        \int_step_inline:nnnn { 0 } { 1 } { \l_semio_viz_geom_rows_int - 1 }
+          { \semio_viz_geom_mesh_cell:nn {##1} {####1} }
+      }
+  }
+% 📌 Lattice node (#1,#2) scaled to millimetres and displaced vertically by the `warp` expression.
+\cs_new_protected:Npn \semio_viz_geom_mesh_node:nn #1#2
+  {
+    \fp_set:Nn \SemioX { #1 * \l_semio_viz_geom_size_fp }
+    \fp_set:Nn \SemioY { #2 * \l_semio_viz_geom_size_fp }
+    \fp_set:Nn \l_semio_viz_sci_a_fp { \SemioX }
+    \fp_set:Nn \l_semio_viz_sci_b_fp { \SemioY + ( \l_semio_viz_geom_warp_tl ) }
+  }
+% 🔺 One cell of the warped lattice: its two outer edges, plus the diagonal that splits it into
+% triangles when the mode asks for a triangulation.
+\cs_new_protected:Npn \semio_viz_geom_mesh_cell:nn #1#2
+  {
+    \semio_viz_geom_mesh_node:nn {#1} {#2}
+    \fp_set:Nn \l_semio_viz_sci_c_fp { \l_semio_viz_sci_a_fp }
+    \fp_set:Nn \l_semio_viz_sci_d_fp { \l_semio_viz_sci_b_fp }
+    \semio_viz_geom_mesh_node:nn { #1 + 1 } {#2}
+    \fp_set:Nn \l_semio_viz_sci_e_fp { \l_semio_viz_sci_a_fp }
+    \fp_set:Nn \l_semio_viz_sci_f_fp { \l_semio_viz_sci_b_fp }
+    \semio_viz_geom_mesh_node:nn { #1 + 1 } { #2 + 1 }
+    \fp_set:Nn \l_semio_viz_sci_g_fp { \l_semio_viz_sci_b_fp }
+    \draw [ semio~sci~thin ]
+      ( \fp_eval:n { \l_semio_viz_sci_c_fp } , \fp_eval:n { \l_semio_viz_sci_d_fp } ) --
+      ( \fp_eval:n { \l_semio_viz_sci_e_fp } , \fp_eval:n { \l_semio_viz_sci_f_fp } ) --
+      ( \fp_eval:n { \l_semio_viz_sci_e_fp } , \fp_eval:n { \l_semio_viz_sci_g_fp } ) ;
+    \str_if_eq:VnT \l_semio_viz_geom_mode_tl { triangulation }
+      {
+        \draw [ semio~sci~thin , draw=semio-secondary ]
+          ( \fp_eval:n { \l_semio_viz_sci_c_fp } , \fp_eval:n { \l_semio_viz_sci_d_fp } ) --
+          ( \fp_eval:n { \l_semio_viz_sci_e_fp } , \fp_eval:n { \l_semio_viz_sci_g_fp } ) ;
+      }
+    \semio_viz_sci_report_values:nn { mesh/cell }
+      { #1 , #2 , \fp_to_decimal:N \l_semio_viz_sci_d_fp }
+  }
+
+%region 🔖️Keys
+% 🔑 Keys of `sci-pitch` (§43 sports on a court or pitch template):
+%    mode (shot-chart|pitch-map|pass-network|heatmap|positions|trajectory, shot-chart).
+%    surface (football|basketball|tennis|generic, football): the template drawn behind the data.
+%    events (clist of `x/y/value`): shots or touches, coordinates normalised to 0..1 of the surface.
+%    nodes (clist of `id/x/y/label`), edges (clist of `from/to/weight/label`): the pass network.
+%    columns, rows (int, 10/7): heatmap resolution. width, height: surface size in millimetres.
+\tl_new:N \l_semio_viz_geom_surface_tl
+\clist_new:N \l_semio_viz_geom_events_clist
+\clist_new:N \l_semio_viz_geom_nodes_clist
+\clist_new:N \l_semio_viz_geom_edges_clist
+\prop_new:N \l_semio_viz_geom_nx_prop
+\prop_new:N \l_semio_viz_geom_ny_prop
+%endregion 🔖️Keys
+
+\semio_viz_sci_keys_canvas:n { sci-pitch }
+% 🗝️ The option surface of `sci-pitch`: which reading, the court template behind it, the event, node
+% and edge lists, and the heatmap resolution.
+\keys_define:nn { semio / viz / family / sci-pitch }
+  {
+    mode    .tl_set:N    = \l_semio_viz_geom_mode_tl ,
+    surface .tl_set:N    = \l_semio_viz_geom_surface_tl ,
+    events  .clist_set:N = \l_semio_viz_geom_events_clist ,
+    nodes   .clist_set:N = \l_semio_viz_geom_nodes_clist ,
+    edges   .clist_set:N = \l_semio_viz_geom_edges_clist ,
+    columns .int_set:N   = \l_semio_viz_geom_cols_int ,
+    rows    .int_set:N   = \l_semio_viz_geom_rows_int ,
+  }
+
+% ⚽ §43 sports: shot charts, pitch maps, pass networks, positional heatmaps and movement trajectories on a court template.
+\SemioVizFamily { sci-pitch }
+  {
+    \semio_viz_sci_enter:nnn { sci-pitch }
+      {
+        mode=shot-chart , surface=football , columns=10 , rows=7 , width=64 , height=42 ,
+        axes=false , grid=false ,
+        events={ 0.24/0.62/1 , 0.31/0.44/0 , 0.47/0.71/1 , 0.58/0.35/0 , 0.66/0.58/1 ,
+                 0.72/0.47/0 , 0.39/0.28/1 , 0.51/0.82/0 , 0.18/0.39/0 , 0.83/0.55/1 } ,
+        nodes={ gk/0.1/0.5/1 , lb/0.3/0.2/3 , cb/0.3/0.5/5 , rb/0.3/0.8/2 ,
+                cm/0.55/0.5/8 , lw/0.75/0.25/11 , st/0.85/0.6/9 } ,
+        edges={ gk/cb/3/ , cb/cm/6/ , cm/lw/4/ , cm/st/5/ , lb/cm/2/ , rb/cm/2/ , lw/st/3/ }
+      }
+      {#1}
+    \semio_viz_sci_window:nnnn { 0 } { 1 } { 0 } { 1 }
+    \semio_viz_geom_surface:
+    \str_case:VnF \l_semio_viz_geom_mode_tl
+      {
+        { pass-network } { \semio_viz_geom_passes: }
+        { heatmap }      { \semio_viz_geom_pitch_heat: }
+        { positions }    { \semio_viz_geom_positions: }
+        { trajectory }
+          {
+            \seq_clear:N \l_semio_viz_sci_pts_seq
+            \clist_map_inline:Nn \l_semio_viz_geom_events_clist
+              {
+                \semio_viz_geom_record:n {##1}
+                \semio_viz_points_put:Nnn \l_semio_viz_sci_pts_seq
+                  { \semio_viz_geom_field:n { 1 } } { \semio_viz_geom_field:n { 2 } }
+              }
+            \semio_viz_sci_polyline:Nn \l_semio_viz_sci_pts_seq { semio~sci~curve }
+          }
+      }
+      { \semio_viz_geom_events: }
+  }
+% 🏟️ The playing surface behind the data: the pitch rectangle plus the markings of the chosen sport,
+% a football pitch when the name is unknown and nothing at all for `generic`.
+\cs_new_protected:Npn \semio_viz_geom_surface:
+  {
+    \draw [ semio~sci~axis , fill=semio-success , fill~opacity=0.08 ]
+      ( 0 , 0 ) rectangle ( \fp_eval:n { \l_semio_viz_sci_w_fp } , \fp_eval:n { \l_semio_viz_sci_h_fp } ) ;
+    \str_case:VnF \l_semio_viz_geom_surface_tl
+      {
+        { basketball }
+          {
+            \draw [ semio~sci~axis ]
+              ( \fp_eval:n { 0.08 * \l_semio_viz_sci_w_fp } , \fp_eval:n { 0.5 * \l_semio_viz_sci_h_fp } )
+              circle [ radius=\fp_eval:n { 0.16 * \l_semio_viz_sci_h_fp } ] ;
+            \draw [ semio~sci~axis ]
+              ( 0 , \fp_eval:n { 0.28 * \l_semio_viz_sci_h_fp } ) rectangle
+              ( \fp_eval:n { 0.22 * \l_semio_viz_sci_w_fp } , \fp_eval:n { 0.72 * \l_semio_viz_sci_h_fp } ) ;
+          }
+        { tennis }
+          {
+            \draw [ semio~sci~axis ]
+              ( \fp_eval:n { 0.5 * \l_semio_viz_sci_w_fp } , 0 ) --
+              ( \fp_eval:n { 0.5 * \l_semio_viz_sci_w_fp } , \fp_eval:n { \l_semio_viz_sci_h_fp } ) ;
+            \draw [ semio~sci~axis ]
+              ( \fp_eval:n { 0.2 * \l_semio_viz_sci_w_fp } , \fp_eval:n { 0.14 * \l_semio_viz_sci_h_fp } )
+              rectangle
+              ( \fp_eval:n { 0.8 * \l_semio_viz_sci_w_fp } , \fp_eval:n { 0.86 * \l_semio_viz_sci_h_fp } ) ;
+          }
+        { generic } { }
+      }
+      {
+        \draw [ semio~sci~axis ]
+          ( \fp_eval:n { 0.5 * \l_semio_viz_sci_w_fp } , 0 ) --
+          ( \fp_eval:n { 0.5 * \l_semio_viz_sci_w_fp } , \fp_eval:n { \l_semio_viz_sci_h_fp } ) ;
+        \draw [ semio~sci~axis ]
+          ( \fp_eval:n { 0.5 * \l_semio_viz_sci_w_fp } , \fp_eval:n { 0.5 * \l_semio_viz_sci_h_fp } )
+          circle [ radius=\fp_eval:n { 0.14 * \l_semio_viz_sci_h_fp } ] ;
+        \draw [ semio~sci~axis ]
+          ( 0 , \fp_eval:n { 0.25 * \l_semio_viz_sci_h_fp } ) rectangle
+          ( \fp_eval:n { 0.14 * \l_semio_viz_sci_w_fp } , \fp_eval:n { 0.75 * \l_semio_viz_sci_h_fp } ) ;
+        \draw [ semio~sci~axis ]
+          ( \fp_eval:n { \l_semio_viz_sci_w_fp } , \fp_eval:n { 0.25 * \l_semio_viz_sci_h_fp } ) rectangle
+          ( \fp_eval:n { 0.86 * \l_semio_viz_sci_w_fp } , \fp_eval:n { 0.75 * \l_semio_viz_sci_h_fp } ) ;
+      }
+  }
+% 🥅 The event dots of a shot chart: a filled disc when the third field scores, a hollow ring when
+% it does not.
+\cs_new_protected:Npn \semio_viz_geom_events:
+  {
+    \clist_map_inline:Nn \l_semio_viz_geom_events_clist
+      {
+        \semio_viz_geom_record:n {##1}
+        \int_compare:nNnTF { \semio_viz_geom_field:n { 3 } } > { 0 }
+          {
+            \fill [ fill=semio-primary ]
+              ( \semio_viz_sci_mx:n { \semio_viz_geom_field:n { 1 } } ,
+                \semio_viz_sci_my:n { \semio_viz_geom_field:n { 2 } } ) circle [ radius=1.2 ] ;
+          }
+          {
+            \draw [ semio~sci~thin , draw=semio-chrome-border-normal ]
+              ( \semio_viz_sci_mx:n { \semio_viz_geom_field:n { 1 } } ,
+                \semio_viz_sci_my:n { \semio_viz_geom_field:n { 2 } } ) circle [ radius=1 ] ;
+          }
+        \semio_viz_sci_report_values:nn { pitch/event }
+          { \semio_viz_geom_field:n { 1 } , \semio_viz_geom_field:n { 2 } , \semio_viz_geom_field:n { 3 } }
+      }
+  }
+% 🔥 The positional heatmap: one bin per cell of the columns-by-rows partition of the surface.
+\cs_new_protected:Npn \semio_viz_geom_pitch_heat:
+  {
+    \int_step_inline:nnnn { 0 } { 1 } { \l_semio_viz_geom_cols_int - 1 }
+      {
+        \int_step_inline:nnnn { 0 } { 1 } { \l_semio_viz_geom_rows_int - 1 }
+          { \semio_viz_geom_pitch_bin:nn {##1} {####1} }
+      }
+  }
+% 🧮 Counts the events falling inside bin (#1,#2) and paints it on the ramp when the count is not zero.
+\cs_new_protected:Npn \semio_viz_geom_pitch_bin:nn #1#2
+  {
+    \int_zero:N \l_tmpa_int
+    \clist_map_inline:Nn \l_semio_viz_geom_events_clist
+      {
+        \semio_viz_geom_record:n {##1}
+        \fp_compare:nT
+          {
+            \semio_viz_geom_field:n { 1 } >= #1 / \l_semio_viz_geom_cols_int &&
+            \semio_viz_geom_field:n { 1 } < ( #1 + 1 ) / \l_semio_viz_geom_cols_int &&
+            \semio_viz_geom_field:n { 2 } >= #2 / \l_semio_viz_geom_rows_int &&
+            \semio_viz_geom_field:n { 2 } < ( #2 + 1 ) / \l_semio_viz_geom_rows_int
+          }
+          { \int_incr:N \l_tmpa_int }
+      }
+    \int_compare:nNnT { \l_tmpa_int } > { 0 }
+      {
+        \fill [ fill=\semio_viz_sci_ramp:n { \l_tmpa_int / 3 } , fill~opacity=0.7 ]
+          ( \fp_eval:n { \l_semio_viz_sci_w_fp * #1 / \l_semio_viz_geom_cols_int } ,
+            \fp_eval:n { \l_semio_viz_sci_h_fp * #2 / \l_semio_viz_geom_rows_int } )
+          rectangle
+          ( \fp_eval:n { \l_semio_viz_sci_w_fp * ( #1 + 1 ) / \l_semio_viz_geom_cols_int } ,
+            \fp_eval:n { \l_semio_viz_sci_h_fp * ( #2 + 1 ) / \l_semio_viz_geom_rows_int } ) ;
+        \semio_viz_sci_report_values:nn { pitch/bin } { #1 , #2 , \int_use:N \l_tmpa_int }
+      }
+  }
+% 👕 The player markers: one filled disc per node, carrying its shirt number as the caption.
+\cs_new_protected:Npn \semio_viz_geom_positions:
+  {
+    \clist_map_inline:Nn \l_semio_viz_geom_nodes_clist
+      {
+        \semio_viz_geom_record:n {##1}
+        \node [ semio~sci~glyph , circle , inner~sep=0.7mm , fill=semio-primary ,
+                font=\c_semio_viz_theme_font_label_tl , text=semio-chrome-base ]
+          at ( \semio_viz_sci_mx:n { \semio_viz_geom_field:n { 2 } } ,
+               \semio_viz_sci_my:n { \semio_viz_geom_field:n { 3 } } )
+          { \semio_viz_geom_field:n { 4 } } ;
+      }
+  }
+% 🔁 The pass network: the node coordinates are indexed by id, every edge is drawn at a width that
+% grows with its pass count, and the players are stamped on top.
+\cs_new_protected:Npn \semio_viz_geom_passes:
+  {
+    \prop_clear:N \l_semio_viz_geom_nx_prop
+    \prop_clear:N \l_semio_viz_geom_ny_prop
+    \clist_map_inline:Nn \l_semio_viz_geom_nodes_clist
+      {
+        \semio_viz_geom_record:n {##1}
+        \prop_put:Nxx \l_semio_viz_geom_nx_prop
+          { \semio_viz_geom_field:n { 1 } } { \semio_viz_geom_field:n { 2 } }
+        \prop_put:Nxx \l_semio_viz_geom_ny_prop
+          { \semio_viz_geom_field:n { 1 } } { \semio_viz_geom_field:n { 3 } }
+      }
+    \clist_map_inline:Nn \l_semio_viz_geom_edges_clist
+      {
+        \semio_viz_geom_record:n {##1}
+        \use:x
+          {
+            \exp_not:N \draw
+              [ semio~sci~thin , draw=semio-primary ,
+                line~width=\fp_eval:n { 0.2 + 0.22 * \semio_viz_geom_field:n { 3 } } pt ]
+              ( \semio_viz_sci_mx:n { \prop_item:Ne \l_semio_viz_geom_nx_prop { \semio_viz_geom_field:n { 1 } } } ,
+                \semio_viz_sci_my:n { \prop_item:Ne \l_semio_viz_geom_ny_prop { \semio_viz_geom_field:n { 1 } } } ) --
+              ( \semio_viz_sci_mx:n { \prop_item:Ne \l_semio_viz_geom_nx_prop { \semio_viz_geom_field:n { 2 } } } ,
+                \semio_viz_sci_my:n { \prop_item:Ne \l_semio_viz_geom_ny_prop { \semio_viz_geom_field:n { 2 } } } ) ;
+          }
+      }
+    \semio_viz_geom_positions:
+  }
+
+%region 🔖️Keys
+% 🔑 Keys of `sci-bracket` (§43 tournament structures):
+%    rounds (int, 3): knockout rounds. entries (clist of labels): the first-round competitors.
+%    results (clist of `round/slot/label`): the winner label placed in each later slot.
+%    slotHeight (fp, 6), roundWidth (fp, 22): millimetre geometry.
+\int_new:N \l_semio_viz_geom_rounds_int
+\clist_new:N \l_semio_viz_geom_entries_clist
+\clist_new:N \l_semio_viz_geom_results_clist
+\fp_new:N \l_semio_viz_geom_sloth_fp
+\fp_new:N \l_semio_viz_geom_roundw_fp
+%endregion 🔖️Keys
+
+\semio_viz_sci_keys_canvas:n { sci-bracket }
+% 🗝️ The option surface of `sci-bracket`: the round count, the first-round entries, the recorded
+% winners and the millimetre geometry of a slot and a round.
+\keys_define:nn { semio / viz / family / sci-bracket }
+  {
+    rounds     .int_set:N   = \l_semio_viz_geom_rounds_int ,
+    entries    .clist_set:N = \l_semio_viz_geom_entries_clist ,
+    results    .clist_set:N = \l_semio_viz_geom_results_clist ,
+    slotHeight .fp_set:N    = \l_semio_viz_geom_sloth_fp ,
+    roundWidth .fp_set:N    = \l_semio_viz_geom_roundw_fp ,
+  }
+
+% 🏆 §43 knockout bracket: every round's slots placed from the round index, with the recorded winners written in.
+\SemioVizFamily { sci-bracket }
+  {
+    \semio_viz_sci_enter:nnn { sci-bracket }
+      {
+        rounds=3 , entries={ A , B , C , D , E , F , G , H } ,
+        results={ 2/1/A , 2/2/D , 2/3/E , 2/4/H , 3/1/A , 3/2/H , 4/1/A } ,
+        slotHeight=6 , roundWidth=22 , axes=false , grid=false
+      }
+      {#1}
+    \int_zero:N \l_tmpa_int
+    \clist_map_inline:Nn \l_semio_viz_geom_entries_clist
+      {
+        \int_incr:N \l_tmpa_int
+        \semio_viz_geom_bracket_slot:nnn { 1 } { \l_tmpa_int } {##1}
+      }
+    \clist_map_inline:Nn \l_semio_viz_geom_results_clist
+      {
+        \semio_viz_geom_record:n {##1}
+        \semio_viz_geom_bracket_slot:nnn
+          { \semio_viz_geom_field:n { 1 } } { \semio_viz_geom_field:n { 2 } } { \semio_viz_geom_field:n { 3 } }
+      }
+  }
+% 🥇 One bracket slot labelled #3: round #1 sets its column, and slot #2 its row, spaced by the
+% doubling that each round of the knockout brings.
+\cs_new_protected:Npn \semio_viz_geom_bracket_slot:nnn #1#2#3
+  {
+    \fp_set:Nn \l_semio_viz_sci_a_fp { ( #1 - 1 ) * \l_semio_viz_geom_roundw_fp }
+    \fp_set:Nn \l_semio_viz_sci_b_fp
+      { - ( ( #2 - 0.5 ) * ( 2 ^ ( #1 - 1 ) ) - 0.5 ) * \l_semio_viz_geom_sloth_fp }
+    \node [ semio~sci~box , anchor=west , minimum~width=\fp_eval:n { 0.72 * \l_semio_viz_geom_roundw_fp } mm ,
+            inner~sep=0.7mm , font=\c_semio_viz_theme_font_label_tl , text=semio-chrome-foreground ]
+      at ( \fp_eval:n { \l_semio_viz_sci_a_fp } , \fp_eval:n { \l_semio_viz_sci_b_fp } ) {#3} ;
+    \int_compare:nNnT {#1} > { 1 }
+      {
+        \draw [ semio~sci~thin ]
+          ( \fp_eval:n { \l_semio_viz_sci_a_fp - 0.24 * \l_semio_viz_geom_roundw_fp } ,
+            \fp_eval:n { \l_semio_viz_sci_b_fp } ) --
+          ( \fp_eval:n { \l_semio_viz_sci_a_fp } , \fp_eval:n { \l_semio_viz_sci_b_fp } ) ;
+      }
+    \semio_viz_sci_report_values:nn { bracket/slot }
+      { #1 , #2 , \fp_to_decimal:N \l_semio_viz_sci_b_fp }
+  }
+%region 🔖️Keys
+% 🔑 Keys of `sci-sports-series` (§43 competition series):
+%    mode (race|lap|split|win-probability|play-by-play|standings|radar, race).
+%    series (clist of `label/points`) where points is a `+`-joined `x:y` list.
+%    events (clist of `time/team/label`): the play-by-play markers.
+%    axesLabels (clist): the radar axis names. reference (fp, 0.5): the win-probability reference line.
+\clist_new:N \l_semio_viz_geom_series_clist
+\clist_new:N \l_semio_viz_geom_axeslabels_clist
+\fp_new:N \l_semio_viz_geom_reference_fp
+%endregion 🔖️Keys
+
+\semio_viz_sci_keys_canvas:n { sci-sports-series }
+% 🗝️ The option surface of `sci-sports-series`: which reading, the series records, the play-by-play
+% events, the radar axis names and the win-probability reference level.
+\keys_define:nn { semio / viz / family / sci-sports-series }
+  {
+    mode       .tl_set:N    = \l_semio_viz_geom_mode_tl ,
+    series     .clist_set:N = \l_semio_viz_geom_series_clist ,
+    events     .clist_set:N = \l_semio_viz_geom_events_clist ,
+    axesLabels .clist_set:N = \l_semio_viz_geom_axeslabels_clist ,
+    reference  .fp_set:N    = \l_semio_viz_geom_reference_fp ,
+  }
+
+% 🏁 §43 competition series: race and lap positions, split times, win probability, play-by-play markers, standings and the player radar.
+\SemioVizFamily { sci-sports-series }
+  {
+    \semio_viz_sci_enter:nnn { sci-sports-series }
+      {
+        mode=race , reference=0.5 , domain={} , range={} ,
+        axesLabels={ pace , passing , shooting , defence , stamina , vision } ,
+        series={
+          A/1:4+2:3+3:3+4:2+5:1+6:1 ,
+          B/1:1+2:1+3:2+4:3+5:3+6:2 ,
+          C/1:3+2:4+3:4+4:4+5:4+6:4 ,
+          D/1:2+2:2+3:1+4:1+5:2+6:3
+        } ,
+        events={ 12/A/goal , 34/B/card , 58/A/goal , 77/B/goal }
+      }
+      {#1}
+    \str_case:VnF \l_semio_viz_geom_mode_tl
+      {
+        { radar }        { \semio_viz_geom_radar: }
+        { play-by-play } { \semio_viz_geom_playbyplay: }
+        { standings }    { \semio_viz_geom_standings: }
+      }
+      { \semio_viz_geom_series: }
+  }
+% 🏁 Reads one `label/x:y+x:y…` record into the shared point sequence.
+\cs_new_protected:Npn \semio_viz_geom_series_points:
+  {
+    \seq_set_split:Nnx \l_tmpa_seq { + } { \semio_viz_geom_field:n { 2 } }
+    \seq_clear:N \l_semio_viz_sci_pts_seq
+    \seq_map_inline:Nn \l_tmpa_seq
+      {
+        \semio_viz_sci_split_colon:Nn \l_tmpb_seq {##1}
+        \semio_viz_points_put:Nnn \l_semio_viz_sci_pts_seq
+          { \seq_item:Nn \l_tmpb_seq { 1 } } { \seq_item:Nn \l_tmpb_seq { 2 } }
+      }
+  }
+% 📊 The bounding box over every series, padded by 0.4 above and below so the outermost line clears
+% the frame.
+\cs_new_protected:Npn \semio_viz_geom_series_extent:
+  {
+    \fp_set:Nn \l_semio_viz_sci_dxmin_fp { inf }
+    \fp_set:Nn \l_semio_viz_sci_dxmax_fp { -inf }
+    \fp_set:Nn \l_semio_viz_sci_dymin_fp { inf }
+    \fp_set:Nn \l_semio_viz_sci_dymax_fp { -inf }
+    \clist_map_inline:Nn \l_semio_viz_geom_series_clist
+      {
+        \semio_viz_geom_record:n {##1}
+        \semio_viz_geom_series_points:
+        \semio_viz_sci_extent:N \l_semio_viz_sci_pts_seq
+        \fp_set:Nn \l_semio_viz_sci_dxmin_fp { min ( \l_semio_viz_sci_dxmin_fp , \l_semio_viz_sci_xmin_fp ) }
+        \fp_set:Nn \l_semio_viz_sci_dxmax_fp { max ( \l_semio_viz_sci_dxmax_fp , \l_semio_viz_sci_xmax_fp ) }
+        \fp_set:Nn \l_semio_viz_sci_dymin_fp { min ( \l_semio_viz_sci_dymin_fp , \l_semio_viz_sci_ymin_fp ) }
+        \fp_set:Nn \l_semio_viz_sci_dymax_fp { max ( \l_semio_viz_sci_dymax_fp , \l_semio_viz_sci_ymax_fp ) }
+      }
+    \fp_sub:Nn \l_semio_viz_sci_dymin_fp { 0.4 }
+    \fp_add:Nn \l_semio_viz_sci_dymax_fp { 0.4 }
+  }
+% 📈 The line readings: the window is set from the mode, the win-probability reference is ruled in,
+% and each series is drawn in its own hue with its label at the last point.
+\cs_new_protected:Npn \semio_viz_geom_series:
+  {
+    \semio_viz_geom_series_extent:
+    \str_case:VnF \l_semio_viz_geom_mode_tl
+      {
+        { race } { \semio_viz_geom_flip_y: }
+        { lap }  { \semio_viz_geom_flip_y: }
+        { win-probability }
+          { \semio_viz_sci_window:nnnn { \l_semio_viz_sci_dxmin_fp } { \l_semio_viz_sci_dxmax_fp } { 0 } { 1 } }
+      }
+      { }
+    \semio_viz_sci_window_keys:
+    \semio_viz_sci_frame:
+    \str_if_eq:VnT \l_semio_viz_geom_mode_tl { win-probability }
+      {
+        \draw [ semio~sci~aux ]
+          ( 0 , \semio_viz_sci_my:n { \l_semio_viz_geom_reference_fp } ) --
+          ( \fp_eval:n { \l_semio_viz_sci_w_fp } ,
+            \semio_viz_sci_my:n { \l_semio_viz_geom_reference_fp } ) ;
+      }
+    \int_zero:N \l_tmpa_int
+    \clist_map_inline:Nn \l_semio_viz_geom_series_clist
+      {
+        \int_incr:N \l_tmpa_int
+        \semio_viz_geom_record:n {##1}
+        \semio_viz_geom_series_points:
+        \semio_viz_sci_polyline:Nn \l_semio_viz_sci_pts_seq
+          { semio~sci~curve , draw=\semio_viz_sci_hue:n { \l_tmpa_int } }
+        \node [ font=\c_semio_viz_theme_font_label_tl , text=semio-chrome-foreground , anchor=west ]
+          at ( \fp_eval:n { \l_semio_viz_sci_w_fp + 1 } ,
+               \semio_viz_sci_my:n
+                 { \semio_viz_points_y:n { \seq_item:Nn \l_semio_viz_sci_pts_seq { -1 } } } )
+          { \semio_viz_geom_field:n { 1 } } ;
+      }
+  }
+% 🏁 Race and lap charts count positions downward, so the y window is inverted.
+\cs_new_protected:Npn \semio_viz_geom_flip_y:
+  {
+    \semio_viz_sci_window:nnnn
+      { \l_semio_viz_sci_dxmin_fp } { \l_semio_viz_sci_dxmax_fp }
+      { \l_semio_viz_sci_dymax_fp } { \l_semio_viz_sci_dymin_fp }
+  }
+% ⏱️ The match timeline: ninety minutes across the frame, with every event dotted on the centre line
+% and its name set at an angle above it.
+\cs_new_protected:Npn \semio_viz_geom_playbyplay:
+  {
+    \semio_viz_sci_window:nnnn { 0 } { 90 } { 0 } { 1 }
+    \semio_viz_sci_window_keys:
+    \semio_viz_sci_frame:
+    \draw [ semio~sci~curve ]
+      ( 0 , \semio_viz_sci_my:n { 0.5 } ) --
+      ( \fp_eval:n { \l_semio_viz_sci_w_fp } , \semio_viz_sci_my:n { 0.5 } ) ;
+    \clist_map_inline:Nn \l_semio_viz_geom_events_clist
+      {
+        \semio_viz_geom_record:n {##1}
+        \semio_viz_sci_dot:nnn { \semio_viz_geom_field:n { 1 } } { 0.5 } { semio-primary }
+        \node [ font=\c_semio_viz_theme_font_label_tl , text=semio-chrome-foreground , anchor=south , rotate=45 ]
+          at ( \semio_viz_sci_mx:n { \semio_viz_geom_field:n { 1 } } ,
+               \fp_eval:n { \semio_viz_sci_my:n { 0.5 } + 1.4 } )
+          { \semio_viz_geom_field:n { 3 } } ;
+        \semio_viz_sci_report_values:nn { sports/event } { \semio_viz_geom_field:n { 1 } }
+      }
+  }
+% 🏅 The standings reading: every series filled down to the lower bound and outlined in its own hue.
+\cs_new_protected:Npn \semio_viz_geom_standings:
+  {
+    \semio_viz_geom_series_extent:
+    \semio_viz_sci_window_keys:
+    \semio_viz_sci_frame:
+    \int_zero:N \l_tmpa_int
+    \clist_map_inline:Nn \l_semio_viz_geom_series_clist
+      {
+        \int_incr:N \l_tmpa_int
+        \semio_viz_geom_record:n {##1}
+        \semio_viz_geom_series_points:
+        \semio_viz_sci_polyarea:Nnn \l_semio_viz_sci_pts_seq
+          { fill=\semio_viz_sci_hue:n { \l_tmpa_int } , fill~opacity=0.18 } { \l_semio_viz_sci_dymin_fp }
+        \semio_viz_sci_polyline:Nn \l_semio_viz_sci_pts_seq
+          { semio~sci~curve , draw=\semio_viz_sci_hue:n { \l_tmpa_int } }
+      }
+  }
+% 🏁 Player radar: one spoke per axis label, each series closed round the star.
+\cs_new_protected:Npn \semio_viz_geom_radar:
+  {
+    \int_set:Nn \l_tmpb_int { \clist_count:N \l_semio_viz_geom_axeslabels_clist }
+    \int_zero:N \l_tmpa_int
+    \clist_map_inline:Nn \l_semio_viz_geom_axeslabels_clist
+      {
+        \int_incr:N \l_tmpa_int
+        \draw [ semio~sci~grid ]
+          ( 0 , 0 ) -- ( \fp_eval:n { 24 * cosd ( 90 - 360 * ( \l_tmpa_int - 1 ) / \l_tmpb_int ) } ,
+                        \fp_eval:n { 24 * sind ( 90 - 360 * ( \l_tmpa_int - 1 ) / \l_tmpb_int ) } ) ;
+        \node [ font=\c_semio_viz_theme_font_label_tl , text=semio-chrome-text-normal ]
+          at ( \fp_eval:n { 28 * cosd ( 90 - 360 * ( \l_tmpa_int - 1 ) / \l_tmpb_int ) } ,
+               \fp_eval:n { 28 * sind ( 90 - 360 * ( \l_tmpa_int - 1 ) / \l_tmpb_int ) } ) {##1} ;
+      }
+    \int_zero:N \l_tmpa_int
+    \clist_map_inline:Nn \l_semio_viz_geom_series_clist
+      {
+        \int_incr:N \l_tmpa_int
+        \semio_viz_geom_record:n {##1}
+        \semio_viz_geom_series_points:
+        \semio_viz_geom_radar_polygon:
+      }
+  }
+% ⭐ One closed radar star: the nth value of the series is carried out along the nth spoke.
+\cs_new_protected:Npn \semio_viz_geom_radar_polygon:
+  {
+    \tl_clear:N \l_semio_viz_sci_path_tl
+    \int_zero:N \l_tmpb_int
+    \int_set:Nn \l_tmpb_int { \clist_count:N \l_semio_viz_geom_axeslabels_clist }
+    \int_zero:N \l_semio_viz_geom_cols_int
+    \seq_map_inline:Nn \l_semio_viz_sci_pts_seq
+      {
+        \int_incr:N \l_semio_viz_geom_cols_int
+        \tl_if_empty:NF \l_semio_viz_sci_path_tl { \tl_put_right:Nn \l_semio_viz_sci_path_tl { -- } }
+        \tl_put_right:Nx \l_semio_viz_sci_path_tl
+          {
+            (
+              \fp_to_decimal:n
+                { 5 * \semio_viz_points_y:n {##1}
+                  * cosd ( 90 - 360 * ( \l_semio_viz_geom_cols_int - 1 ) / \l_tmpb_int ) } ,
+              \fp_to_decimal:n
+                { 5 * \semio_viz_points_y:n {##1}
+                  * sind ( 90 - 360 * ( \l_semio_viz_geom_cols_int - 1 ) / \l_tmpb_int ) }
+            )
+          }
+      }
+    \use:x
+      {
+        \exp_not:N \draw
+          [ semio~sci~curve , draw=\semio_viz_sci_hue:n { \l_tmpa_int } ,
+            fill=\semio_viz_sci_hue:n { \l_tmpa_int } , fill~opacity=0.14 ]
+          \exp_not:V \l_semio_viz_sci_path_tl ~ -- ~ cycle ;
+      }
+  }
+%endregion 🔖️Families
+
+
+\ExplSyntaxOff

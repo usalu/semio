@@ -1,0 +1,640 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-viz-hierarchy-tiling}[2026/09/05 v0.3.0 semio viz hierarchy tilings: treemap, partition, voronoi treemap]
+
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+\RequirePackage{semio-viz-data}
+\RequirePackage{semio-viz-layout}
+\RequirePackage{semio-viz-probe}
+\RequirePackage{semio-viz-spatial}
+\RequirePackage{semio-viz-theme}
+\RequirePackage{tikz}
+% 🌳 The tree store and its readers live in `semio-viz-hierarchy`, which requires this file back:
+% the three hierarchy packages are one module split by size, so every entry point loads all of it.
+% `\ProvidesPackage` above has already registered this file, so the mutual load terminates here.
+\RequirePackage{semio-viz-hierarchy}
+
+\ExplSyntaxOn
+
+%region 🔖️LayoutTreemap
+\fp_new:N \l_semio_viz_hierarchy_tm_xa_fp
+\fp_new:N \l_semio_viz_hierarchy_tm_ya_fp
+\fp_new:N \l_semio_viz_hierarchy_tm_xb_fp
+\fp_new:N \l_semio_viz_hierarchy_tm_yb_fp
+\fp_new:N \l_semio_viz_hierarchy_tm_p_fp
+\fp_new:N \l_semio_viz_hierarchy_tm_k_fp
+\fp_new:N \l_semio_viz_hierarchy_tm_cursor_fp
+\fp_new:N \l_semio_viz_hierarchy_tm_value_fp
+\fp_new:N \l_semio_viz_hierarchy_tm_sum_fp
+\fp_new:N \l_semio_viz_hierarchy_tm_node_fp
+\fp_new:N \l_semio_viz_hierarchy_tm_min_fp
+\fp_new:N \l_semio_viz_hierarchy_tm_max_fp
+\fp_new:N \l_semio_viz_hierarchy_tm_alpha_fp
+\fp_new:N \l_semio_viz_hierarchy_tm_beta_fp
+\fp_new:N \l_semio_viz_hierarchy_tm_ratio_fp
+\fp_new:N \l_semio_viz_hierarchy_tm_new_fp
+\fp_new:N \l_semio_viz_hierarchy_tm_dx_fp
+\fp_new:N \l_semio_viz_hierarchy_tm_dy_fp
+\fp_new:N \l_semio_viz_hierarchy_tm_edge_fp
+\int_new:N \l_semio_viz_hierarchy_tm_ia_int
+\int_new:N \l_semio_viz_hierarchy_tm_ib_int
+\int_new:N \l_semio_viz_hierarchy_tm_n_int
+\int_new:N \l_semio_viz_hierarchy_tm_bk_int
+\int_new:N \l_semio_viz_hierarchy_tm_bhi_int
+\int_new:N \l_semio_viz_hierarchy_tm_bmid_int
+\bool_new:N \l_semio_viz_hierarchy_tm_loop_bool
+\bool_new:N \l_semio_viz_hierarchy_tm_strip_bool
+
+% 🍰 d3 `treemapDice`: children of #2 in the index range [#3,#4] share the height
+% and split the width in proportion to the row value #5.
+\cs_new_protected:Npn \semio_viz_hierarchy_tm_dice:nnnnn #1#2#3#4#5 {
+  \fp_set:Nn \l_semio_viz_hierarchy_tm_k_fp
+    { (#5) == 0 ? 0 : ( \l_semio_viz_hierarchy_tm_xb_fp - \l_semio_viz_hierarchy_tm_xa_fp ) / (#5) }
+  \fp_set_eq:NN \l_semio_viz_hierarchy_tm_cursor_fp \l_semio_viz_hierarchy_tm_xa_fp
+  \int_step_inline:nnn {#3} {#4} {
+    \int_set:Nn \l_semio_viz_hierarchy_k_int { \semio_viz_hierarchy_kid:nnn {#1} {#2} {##1} }
+    \semio_viz_hierarchy_set:nnnn {#1} { y0 } { \l_semio_viz_hierarchy_k_int }
+      { \fp_use:N \l_semio_viz_hierarchy_tm_ya_fp }
+    \semio_viz_hierarchy_set:nnnn {#1} { y1 } { \l_semio_viz_hierarchy_k_int }
+      { \fp_use:N \l_semio_viz_hierarchy_tm_yb_fp }
+    \semio_viz_hierarchy_set:nnnn {#1} { x0 } { \l_semio_viz_hierarchy_k_int }
+      { \fp_use:N \l_semio_viz_hierarchy_tm_cursor_fp }
+    \fp_add:Nn \l_semio_viz_hierarchy_tm_cursor_fp
+      { \semio_viz_hierarchy_get:nnn {#1} { val } { \l_semio_viz_hierarchy_k_int }
+        * \l_semio_viz_hierarchy_tm_k_fp }
+    \semio_viz_hierarchy_set:nnnn {#1} { x1 } { \l_semio_viz_hierarchy_k_int }
+      { \fp_use:N \l_semio_viz_hierarchy_tm_cursor_fp }
+  }
+}
+
+% 🍰 d3 `treemapSlice`: the same split along the ordinate.
+\cs_new_protected:Npn \semio_viz_hierarchy_tm_slice:nnnnn #1#2#3#4#5 {
+  \fp_set:Nn \l_semio_viz_hierarchy_tm_k_fp
+    { (#5) == 0 ? 0 : ( \l_semio_viz_hierarchy_tm_yb_fp - \l_semio_viz_hierarchy_tm_ya_fp ) / (#5) }
+  \fp_set_eq:NN \l_semio_viz_hierarchy_tm_cursor_fp \l_semio_viz_hierarchy_tm_ya_fp
+  \int_step_inline:nnn {#3} {#4} {
+    \int_set:Nn \l_semio_viz_hierarchy_k_int { \semio_viz_hierarchy_kid:nnn {#1} {#2} {##1} }
+    \semio_viz_hierarchy_set:nnnn {#1} { x0 } { \l_semio_viz_hierarchy_k_int }
+      { \fp_use:N \l_semio_viz_hierarchy_tm_xa_fp }
+    \semio_viz_hierarchy_set:nnnn {#1} { x1 } { \l_semio_viz_hierarchy_k_int }
+      { \fp_use:N \l_semio_viz_hierarchy_tm_xb_fp }
+    \semio_viz_hierarchy_set:nnnn {#1} { y0 } { \l_semio_viz_hierarchy_k_int }
+      { \fp_use:N \l_semio_viz_hierarchy_tm_cursor_fp }
+    \fp_add:Nn \l_semio_viz_hierarchy_tm_cursor_fp
+      { \semio_viz_hierarchy_get:nnn {#1} { val } { \l_semio_viz_hierarchy_k_int }
+        * \l_semio_viz_hierarchy_tm_k_fp }
+    \semio_viz_hierarchy_set:nnnn {#1} { y1 } { \l_semio_viz_hierarchy_k_int }
+      { \fp_use:N \l_semio_viz_hierarchy_tm_cursor_fp }
+  }
+}
+
+% 🟨 d3 `squarifyRatio`: greedy rows whose worst aspect ratio stays closest to the
+% target ratio. `strip` keeps every row diced, which is the Bederson strip
+% treemap and has no d3 counterpart. Complexity O(k) per parent.
+\cs_new_protected:Npn \semio_viz_hierarchy_tm_squarify:nn #1#2 {
+  \int_set:Nn \l_semio_viz_hierarchy_tm_n_int { \semio_viz_hierarchy_nk:nn {#1} {#2} }
+  \int_zero:N \l_semio_viz_hierarchy_tm_ia_int
+  \int_zero:N \l_semio_viz_hierarchy_tm_ib_int
+  \fp_set:Nn \l_semio_viz_hierarchy_tm_value_fp { \semio_viz_hierarchy_get:nnn {#1} { val } {#2} }
+  \bool_while_do:nn
+    { \int_compare_p:nNn { \l_semio_viz_hierarchy_tm_ia_int } < { \l_semio_viz_hierarchy_tm_n_int } } {
+    \fp_set:Nn \l_semio_viz_hierarchy_tm_dx_fp
+      { \l_semio_viz_hierarchy_tm_xb_fp - \l_semio_viz_hierarchy_tm_xa_fp }
+    \fp_set:Nn \l_semio_viz_hierarchy_tm_dy_fp
+      { \l_semio_viz_hierarchy_tm_yb_fp - \l_semio_viz_hierarchy_tm_ya_fp }
+    \bool_set_true:N \l_semio_viz_hierarchy_tm_loop_bool
+    \bool_while_do:Nn \l_semio_viz_hierarchy_tm_loop_bool {
+      \fp_set:Nn \l_semio_viz_hierarchy_tm_sum_fp { \semio_viz_hierarchy_get:nnn {#1} { val }
+        { \semio_viz_hierarchy_kid:nnn {#1} {#2} { \l_semio_viz_hierarchy_tm_ib_int + 1 } } }
+      \int_incr:N \l_semio_viz_hierarchy_tm_ib_int
+      \bool_set:Nn \l_semio_viz_hierarchy_tm_loop_bool
+        { \fp_compare_p:nNn { \l_semio_viz_hierarchy_tm_sum_fp } = { 0 }
+          && \int_compare_p:nNn { \l_semio_viz_hierarchy_tm_ib_int } < { \l_semio_viz_hierarchy_tm_n_int } }
+    }
+    \fp_set_eq:NN \l_semio_viz_hierarchy_tm_min_fp \l_semio_viz_hierarchy_tm_sum_fp
+    \fp_set_eq:NN \l_semio_viz_hierarchy_tm_max_fp \l_semio_viz_hierarchy_tm_sum_fp
+    \fp_set:Nn \l_semio_viz_hierarchy_tm_alpha_fp {
+      \l_semio_viz_hierarchy_tm_value_fp * \l_semio_viz_hierarchy_ratio_fp == 0 ? inf :
+      max ( \l_semio_viz_hierarchy_tm_dy_fp / \l_semio_viz_hierarchy_tm_dx_fp ,
+            \l_semio_viz_hierarchy_tm_dx_fp / \l_semio_viz_hierarchy_tm_dy_fp )
+      / ( \l_semio_viz_hierarchy_tm_value_fp * \l_semio_viz_hierarchy_ratio_fp ) }
+    \fp_set:Nn \l_semio_viz_hierarchy_tm_beta_fp
+      { \l_semio_viz_hierarchy_tm_sum_fp * \l_semio_viz_hierarchy_tm_sum_fp
+        * \l_semio_viz_hierarchy_tm_alpha_fp }
+    \fp_set:Nn \l_semio_viz_hierarchy_tm_ratio_fp {
+      max ( \l_semio_viz_hierarchy_tm_beta_fp == 0 ? inf :
+              \l_semio_viz_hierarchy_tm_max_fp / \l_semio_viz_hierarchy_tm_beta_fp ,
+            \l_semio_viz_hierarchy_tm_min_fp == 0 ? inf :
+              \l_semio_viz_hierarchy_tm_beta_fp / \l_semio_viz_hierarchy_tm_min_fp ) }
+    \bool_set:Nn \l_semio_viz_hierarchy_tm_loop_bool
+      { \int_compare_p:nNn { \l_semio_viz_hierarchy_tm_ib_int } < { \l_semio_viz_hierarchy_tm_n_int } }
+    \bool_while_do:Nn \l_semio_viz_hierarchy_tm_loop_bool {
+      \fp_set:Nn \l_semio_viz_hierarchy_tm_node_fp { \semio_viz_hierarchy_get:nnn {#1} { val }
+        { \semio_viz_hierarchy_kid:nnn {#1} {#2} { \l_semio_viz_hierarchy_tm_ib_int + 1 } } }
+      \fp_add:Nn \l_semio_viz_hierarchy_tm_sum_fp { \l_semio_viz_hierarchy_tm_node_fp }
+      \fp_set:Nn \l_semio_viz_hierarchy_tm_min_fp
+        { min ( \l_semio_viz_hierarchy_tm_min_fp , \l_semio_viz_hierarchy_tm_node_fp ) }
+      \fp_set:Nn \l_semio_viz_hierarchy_tm_max_fp
+        { max ( \l_semio_viz_hierarchy_tm_max_fp , \l_semio_viz_hierarchy_tm_node_fp ) }
+      \fp_set:Nn \l_semio_viz_hierarchy_tm_beta_fp
+        { \l_semio_viz_hierarchy_tm_sum_fp * \l_semio_viz_hierarchy_tm_sum_fp
+          * \l_semio_viz_hierarchy_tm_alpha_fp }
+      \fp_set:Nn \l_semio_viz_hierarchy_tm_new_fp {
+        max ( \l_semio_viz_hierarchy_tm_beta_fp == 0 ? inf :
+                \l_semio_viz_hierarchy_tm_max_fp / \l_semio_viz_hierarchy_tm_beta_fp ,
+              \l_semio_viz_hierarchy_tm_min_fp == 0 ? inf :
+                \l_semio_viz_hierarchy_tm_beta_fp / \l_semio_viz_hierarchy_tm_min_fp ) }
+      \fp_compare:nNnTF { \l_semio_viz_hierarchy_tm_new_fp } > { \l_semio_viz_hierarchy_tm_ratio_fp } {
+        \fp_sub:Nn \l_semio_viz_hierarchy_tm_sum_fp { \l_semio_viz_hierarchy_tm_node_fp }
+        \bool_set_false:N \l_semio_viz_hierarchy_tm_loop_bool
+      } {
+        \fp_set_eq:NN \l_semio_viz_hierarchy_tm_ratio_fp \l_semio_viz_hierarchy_tm_new_fp
+        \int_incr:N \l_semio_viz_hierarchy_tm_ib_int
+        \bool_set:Nn \l_semio_viz_hierarchy_tm_loop_bool
+          { \int_compare_p:nNn { \l_semio_viz_hierarchy_tm_ib_int } < { \l_semio_viz_hierarchy_tm_n_int } }
+      }
+    }
+    \bool_lazy_or:nnTF { \l_semio_viz_hierarchy_tm_strip_bool }
+      { \fp_compare_p:nNn { \l_semio_viz_hierarchy_tm_dx_fp } < { \l_semio_viz_hierarchy_tm_dy_fp } } {
+      \fp_set:Nn \l_semio_viz_hierarchy_tm_edge_fp {
+        \l_semio_viz_hierarchy_tm_value_fp == 0 ? \l_semio_viz_hierarchy_tm_yb_fp :
+        \l_semio_viz_hierarchy_tm_ya_fp + \l_semio_viz_hierarchy_tm_dy_fp
+          * \l_semio_viz_hierarchy_tm_sum_fp / \l_semio_viz_hierarchy_tm_value_fp }
+      \fp_set:Nn \l_semio_viz_hierarchy_tm_p_fp { \l_semio_viz_hierarchy_tm_yb_fp }
+      \fp_set_eq:NN \l_semio_viz_hierarchy_tm_yb_fp \l_semio_viz_hierarchy_tm_edge_fp
+      \semio_viz_hierarchy_tm_dice:nnnnn {#1} {#2} { \l_semio_viz_hierarchy_tm_ia_int + 1 }
+        { \l_semio_viz_hierarchy_tm_ib_int } { \l_semio_viz_hierarchy_tm_sum_fp }
+      \fp_set_eq:NN \l_semio_viz_hierarchy_tm_yb_fp \l_semio_viz_hierarchy_tm_p_fp
+      \fp_compare:nNnF { \l_semio_viz_hierarchy_tm_value_fp } = { 0 }
+        { \fp_set_eq:NN \l_semio_viz_hierarchy_tm_ya_fp \l_semio_viz_hierarchy_tm_edge_fp }
+    } {
+      \fp_set:Nn \l_semio_viz_hierarchy_tm_edge_fp {
+        \l_semio_viz_hierarchy_tm_value_fp == 0 ? \l_semio_viz_hierarchy_tm_xb_fp :
+        \l_semio_viz_hierarchy_tm_xa_fp + \l_semio_viz_hierarchy_tm_dx_fp
+          * \l_semio_viz_hierarchy_tm_sum_fp / \l_semio_viz_hierarchy_tm_value_fp }
+      \fp_set:Nn \l_semio_viz_hierarchy_tm_p_fp { \l_semio_viz_hierarchy_tm_xb_fp }
+      \fp_set_eq:NN \l_semio_viz_hierarchy_tm_xb_fp \l_semio_viz_hierarchy_tm_edge_fp
+      \semio_viz_hierarchy_tm_slice:nnnnn {#1} {#2} { \l_semio_viz_hierarchy_tm_ia_int + 1 }
+        { \l_semio_viz_hierarchy_tm_ib_int } { \l_semio_viz_hierarchy_tm_sum_fp }
+      \fp_set_eq:NN \l_semio_viz_hierarchy_tm_xb_fp \l_semio_viz_hierarchy_tm_p_fp
+      \fp_compare:nNnF { \l_semio_viz_hierarchy_tm_value_fp } = { 0 }
+        { \fp_set_eq:NN \l_semio_viz_hierarchy_tm_xa_fp \l_semio_viz_hierarchy_tm_edge_fp }
+    }
+    \fp_sub:Nn \l_semio_viz_hierarchy_tm_value_fp { \l_semio_viz_hierarchy_tm_sum_fp }
+    \int_set_eq:NN \l_semio_viz_hierarchy_tm_ia_int \l_semio_viz_hierarchy_tm_ib_int
+  }
+}
+
+% 🪓 d3 `treemapBinary`: recursive median split of the value prefix sums along the
+% longer side. Complexity O(k log k) per parent.
+\cs_new_protected:Npn \semio_viz_hierarchy_tm_binary_part:nnnnnnnnn #1#2#3#4#5#6#7#8#9 {
+  \int_compare:nNnTF {#3} < { #4 - 1 } {
+    \group_begin:
+      \int_set:Nn \l_semio_viz_hierarchy_tm_bk_int { #3 + 1 }
+      \int_set:Nn \l_semio_viz_hierarchy_tm_bhi_int { #4 - 1 }
+      \bool_while_do:nn { \int_compare_p:nNn { \l_semio_viz_hierarchy_tm_bk_int } <
+        { \l_semio_viz_hierarchy_tm_bhi_int } } {
+        \int_set:Nn \l_semio_viz_hierarchy_tm_bmid_int
+          { \int_div_truncate:nn { \l_semio_viz_hierarchy_tm_bk_int
+            + \l_semio_viz_hierarchy_tm_bhi_int } { 2 } }
+        \fp_compare:nNnTF { \semio_viz_hierarchy_get:nnn {#1} { bsum } { \l_semio_viz_hierarchy_tm_bmid_int } }
+          < { (#5) / 2 + \semio_viz_hierarchy_get:nnn {#1} { bsum } {#3} }
+          { \int_set:Nn \l_semio_viz_hierarchy_tm_bk_int { \l_semio_viz_hierarchy_tm_bmid_int + 1 } }
+          { \int_set_eq:NN \l_semio_viz_hierarchy_tm_bhi_int \l_semio_viz_hierarchy_tm_bmid_int }
+      }
+      \bool_lazy_and:nnT
+        { \fp_compare_p:nNn
+            { (#5) / 2 + \semio_viz_hierarchy_get:nnn {#1} { bsum } {#3}
+              - \semio_viz_hierarchy_get:nnn {#1} { bsum } { \l_semio_viz_hierarchy_tm_bk_int - 1 } } <
+            { \semio_viz_hierarchy_get:nnn {#1} { bsum } { \l_semio_viz_hierarchy_tm_bk_int }
+              - (#5) / 2 - \semio_viz_hierarchy_get:nnn {#1} { bsum } {#3} } }
+        { \int_compare_p:nNn { #3 + 1 } < { \l_semio_viz_hierarchy_tm_bk_int } }
+        { \int_decr:N \l_semio_viz_hierarchy_tm_bk_int }
+      \fp_set:Nn \l_semio_viz_hierarchy_tm_sum_fp
+        { \semio_viz_hierarchy_get:nnn {#1} { bsum } { \l_semio_viz_hierarchy_tm_bk_int }
+          - \semio_viz_hierarchy_get:nnn {#1} { bsum } {#3} }
+      \fp_compare:nNnTF { (#8) - (#6) } > { (#9) - (#7) } {
+        \fp_set:Nn \l_semio_viz_hierarchy_tm_edge_fp {
+          (#5) == 0 ? (#8) : ( (#6) * ( (#5) - \l_semio_viz_hierarchy_tm_sum_fp )
+            + (#8) * \l_semio_viz_hierarchy_tm_sum_fp ) / (#5) }
+        \use:x {
+          \exp_not:N \semio_viz_hierarchy_tm_binary_part:nnnnnnnnn {#1} {#2} {#3}
+            { \int_use:N \l_semio_viz_hierarchy_tm_bk_int }
+            { \fp_use:N \l_semio_viz_hierarchy_tm_sum_fp }
+            { \fp_eval:n {#6} } { \fp_eval:n {#7} }
+            { \fp_use:N \l_semio_viz_hierarchy_tm_edge_fp } { \fp_eval:n {#9} }
+          \exp_not:N \semio_viz_hierarchy_tm_binary_part:nnnnnnnnn {#1} {#2}
+            { \int_use:N \l_semio_viz_hierarchy_tm_bk_int } {#4}
+            { \fp_eval:n { (#5) - \l_semio_viz_hierarchy_tm_sum_fp } }
+            { \fp_use:N \l_semio_viz_hierarchy_tm_edge_fp } { \fp_eval:n {#7} }
+            { \fp_eval:n {#8} } { \fp_eval:n {#9} }
+        }
+      } {
+        \fp_set:Nn \l_semio_viz_hierarchy_tm_edge_fp {
+          (#5) == 0 ? (#9) : ( (#7) * ( (#5) - \l_semio_viz_hierarchy_tm_sum_fp )
+            + (#9) * \l_semio_viz_hierarchy_tm_sum_fp ) / (#5) }
+        \use:x {
+          \exp_not:N \semio_viz_hierarchy_tm_binary_part:nnnnnnnnn {#1} {#2} {#3}
+            { \int_use:N \l_semio_viz_hierarchy_tm_bk_int }
+            { \fp_use:N \l_semio_viz_hierarchy_tm_sum_fp }
+            { \fp_eval:n {#6} } { \fp_eval:n {#7} }
+            { \fp_eval:n {#8} } { \fp_use:N \l_semio_viz_hierarchy_tm_edge_fp }
+          \exp_not:N \semio_viz_hierarchy_tm_binary_part:nnnnnnnnn {#1} {#2}
+            { \int_use:N \l_semio_viz_hierarchy_tm_bk_int } {#4}
+            { \fp_eval:n { (#5) - \l_semio_viz_hierarchy_tm_sum_fp } }
+            { \fp_eval:n {#6} } { \fp_use:N \l_semio_viz_hierarchy_tm_edge_fp }
+            { \fp_eval:n {#8} } { \fp_eval:n {#9} }
+        }
+      }
+    \group_end:
+  } {
+    \int_set:Nn \l_semio_viz_hierarchy_k_int { \semio_viz_hierarchy_kid:nnn {#1} {#2} { #3 + 1 } }
+    \semio_viz_hierarchy_set:nnnn {#1} { x0 } { \l_semio_viz_hierarchy_k_int } { \fp_eval:n {#6} }
+    \semio_viz_hierarchy_set:nnnn {#1} { y0 } { \l_semio_viz_hierarchy_k_int } { \fp_eval:n {#7} }
+    \semio_viz_hierarchy_set:nnnn {#1} { x1 } { \l_semio_viz_hierarchy_k_int } { \fp_eval:n {#8} }
+    \semio_viz_hierarchy_set:nnnn {#1} { y1 } { \l_semio_viz_hierarchy_k_int } { \fp_eval:n {#9} }
+  }
+}
+
+% ⚖️ d3's binary tiling of node #2: the children's running sums drive a recursive split of the
+% rectangle at the point where the two halves come closest to equal value.
+\cs_new_protected:Npn \semio_viz_hierarchy_tm_binary:nn #1#2 {
+  \semio_viz_hierarchy_set:nnnn {#1} { bsum } { 0 } { 0 }
+  \fp_zero:N \l_semio_viz_hierarchy_tm_sum_fp
+  \int_step_inline:nn { \semio_viz_hierarchy_nk:nn {#1} {#2} } {
+    \fp_add:Nn \l_semio_viz_hierarchy_tm_sum_fp
+      { \semio_viz_hierarchy_get:nnn {#1} { val } { \semio_viz_hierarchy_kid:nnn {#1} {#2} {##1} } }
+    \semio_viz_hierarchy_set:nnnn {#1} { bsum } {##1} { \fp_use:N \l_semio_viz_hierarchy_tm_sum_fp }
+  }
+  \use:x {
+    \exp_not:N \semio_viz_hierarchy_tm_binary_part:nnnnnnnnn {#1} {#2} { 0 }
+      { \semio_viz_hierarchy_nk:nn {#1} {#2} }
+      { \semio_viz_hierarchy_get:nnn {#1} { val } {#2} }
+      { \fp_use:N \l_semio_viz_hierarchy_tm_xa_fp } { \fp_use:N \l_semio_viz_hierarchy_tm_ya_fp }
+      { \fp_use:N \l_semio_viz_hierarchy_tm_xb_fp } { \fp_use:N \l_semio_viz_hierarchy_tm_yb_fp }
+  }
+}
+
+% 🧩 Dispatches the tiling named by the `tile` key over one parent rectangle.
+\cs_new_protected:Npn \semio_viz_hierarchy_tm_tile:nn #1#2 {
+  \bool_set_false:N \l_semio_viz_hierarchy_tm_strip_bool
+  \str_case:VnF \l_semio_viz_hierarchy_tile_tl {
+    { squarify }   { \semio_viz_hierarchy_tm_squarify:nn {#1} {#2} }
+    { resquarify } { \semio_viz_hierarchy_tm_squarify:nn {#1} {#2} }
+    { strip }      { \bool_set_true:N \l_semio_viz_hierarchy_tm_strip_bool
+                     \semio_viz_hierarchy_tm_squarify:nn {#1} {#2} }
+    { dice }  { \semio_viz_hierarchy_tm_dice:nnnnn {#1} {#2} { 1 } { \semio_viz_hierarchy_nk:nn {#1} {#2} }
+                  { \semio_viz_hierarchy_get:nnn {#1} { val } {#2} } }
+    { slice } { \semio_viz_hierarchy_tm_slice:nnnnn {#1} {#2} { 1 } { \semio_viz_hierarchy_nk:nn {#1} {#2} }
+                  { \semio_viz_hierarchy_get:nnn {#1} { val } {#2} } }
+    { slice-dice } {
+      \int_if_odd:nTF { \semio_viz_hierarchy_get:nnn {#1} { dep } {#2} }
+        { \semio_viz_hierarchy_tm_slice:nnnnn {#1} {#2} { 1 } { \semio_viz_hierarchy_nk:nn {#1} {#2} }
+            { \semio_viz_hierarchy_get:nnn {#1} { val } {#2} } }
+        { \semio_viz_hierarchy_tm_dice:nnnnn {#1} {#2} { 1 } { \semio_viz_hierarchy_nk:nn {#1} {#2} }
+            { \semio_viz_hierarchy_get:nnn {#1} { val } {#2} } }
+    }
+    { binary }  { \semio_viz_hierarchy_tm_binary:nn {#1} {#2} }
+    { voronoi } { \semio_viz_hierarchy_tm_voronoi:nn {#1} {#2} }
+  }
+  { \msg_error:nnx { semio-viz } { unknown-hierarchy-tile } { \l_semio_viz_hierarchy_tile_tl } }
+}
+
+% 🗺️ d3-hierarchy `treemap()`: nested rectangles, padded per depth. Complexity
+% O(n) plus the tiling cost of every parent.
+\cs_new_protected:Npn \semio_viz_hierarchy_layout_treemap:n #1 {
+  \int_set:Nn \l_semio_viz_hierarchy_i_int { \semio_viz_hierarchy_get:nnn {#1} { root } { 0 } }
+  \semio_viz_hierarchy_set:nnnn {#1} { x0 } { \l_semio_viz_hierarchy_i_int } { 0 }
+  \semio_viz_hierarchy_set:nnnn {#1} { y0 } { \l_semio_viz_hierarchy_i_int } { 0 }
+  \semio_viz_hierarchy_set:nnnn {#1} { x1 } { \l_semio_viz_hierarchy_i_int }
+    { \fp_use:N \l_semio_viz_hierarchy_dx_fp }
+  \semio_viz_hierarchy_set:nnnn {#1} { y1 } { \l_semio_viz_hierarchy_i_int }
+    { \fp_use:N \l_semio_viz_hierarchy_dy_fp }
+  \semio_viz_hierarchy_set:nnnn {#1} { padst } { 0 } { 0 }
+  \semio_viz_hierarchy_map_pre:nn {#1} { \semio_viz_hierarchy_tm_position:nn {#1} {##1} }
+  \bool_if:NT \l_semio_viz_hierarchy_round_bool {
+    \semio_viz_hierarchy_map_pre:nn {#1} { \semio_viz_hierarchy_round_node:nn {#1} {##1} }
+  }
+}
+
+% 📦 d3 `positionNode`: applies the depth padding, then tiles the children.
+\cs_new_protected:Npn \semio_viz_hierarchy_tm_position:nn #1#2 {
+  \fp_set:Nn \l_semio_viz_hierarchy_tm_p_fp
+    { \semio_viz_hierarchy_get:nnn {#1} { padst } { \semio_viz_hierarchy_get:nnn {#1} { dep } {#2} } }
+  \fp_set:Nn \l_semio_viz_hierarchy_tm_xa_fp
+    { \semio_viz_hierarchy_get:nnn {#1} { x0 } {#2} + \l_semio_viz_hierarchy_tm_p_fp }
+  \fp_set:Nn \l_semio_viz_hierarchy_tm_ya_fp
+    { \semio_viz_hierarchy_get:nnn {#1} { y0 } {#2} + \l_semio_viz_hierarchy_tm_p_fp }
+  \fp_set:Nn \l_semio_viz_hierarchy_tm_xb_fp
+    { \semio_viz_hierarchy_get:nnn {#1} { x1 } {#2} - \l_semio_viz_hierarchy_tm_p_fp }
+  \fp_set:Nn \l_semio_viz_hierarchy_tm_yb_fp
+    { \semio_viz_hierarchy_get:nnn {#1} { y1 } {#2} - \l_semio_viz_hierarchy_tm_p_fp }
+  \semio_viz_hierarchy_tm_clamp:
+  \semio_viz_hierarchy_set:nnnn {#1} { x0 } {#2} { \fp_use:N \l_semio_viz_hierarchy_tm_xa_fp }
+  \semio_viz_hierarchy_set:nnnn {#1} { y0 } {#2} { \fp_use:N \l_semio_viz_hierarchy_tm_ya_fp }
+  \semio_viz_hierarchy_set:nnnn {#1} { x1 } {#2} { \fp_use:N \l_semio_viz_hierarchy_tm_xb_fp }
+  \semio_viz_hierarchy_set:nnnn {#1} { y1 } {#2} { \fp_use:N \l_semio_viz_hierarchy_tm_yb_fp }
+  \int_compare:nNnT { \semio_viz_hierarchy_nk:nn {#1} {#2} } > { 0 } {
+    \fp_set:Nn \l_semio_viz_hierarchy_tm_p_fp { \l_semio_viz_hierarchy_pad_inner_fp / 2 }
+    \semio_viz_hierarchy_set:nnnn {#1} { padst }
+      { \semio_viz_hierarchy_get:nnn {#1} { dep } {#2} + 1 } { \fp_use:N \l_semio_viz_hierarchy_tm_p_fp }
+    \fp_add:Nn \l_semio_viz_hierarchy_tm_xa_fp
+      { \l_semio_viz_hierarchy_pad_left_fp - \l_semio_viz_hierarchy_tm_p_fp }
+    \fp_add:Nn \l_semio_viz_hierarchy_tm_ya_fp
+      { \l_semio_viz_hierarchy_pad_top_fp - \l_semio_viz_hierarchy_tm_p_fp }
+    \fp_sub:Nn \l_semio_viz_hierarchy_tm_xb_fp
+      { \l_semio_viz_hierarchy_pad_right_fp - \l_semio_viz_hierarchy_tm_p_fp }
+    \fp_sub:Nn \l_semio_viz_hierarchy_tm_yb_fp
+      { \l_semio_viz_hierarchy_pad_bottom_fp - \l_semio_viz_hierarchy_tm_p_fp }
+    \semio_viz_hierarchy_tm_clamp:
+    \semio_viz_hierarchy_tm_tile:nn {#1} {#2}
+  }
+}
+
+% 🔒 Collapses an inverted rectangle onto its own midline, as d3 does.
+\cs_new_protected:Npn \semio_viz_hierarchy_tm_clamp: {
+  \fp_compare:nNnT { \l_semio_viz_hierarchy_tm_xb_fp } < { \l_semio_viz_hierarchy_tm_xa_fp } {
+    \fp_set:Nn \l_semio_viz_hierarchy_tm_p_fp
+      { ( \l_semio_viz_hierarchy_tm_xa_fp + \l_semio_viz_hierarchy_tm_xb_fp ) / 2 }
+    \fp_set_eq:NN \l_semio_viz_hierarchy_tm_xa_fp \l_semio_viz_hierarchy_tm_p_fp
+    \fp_set_eq:NN \l_semio_viz_hierarchy_tm_xb_fp \l_semio_viz_hierarchy_tm_p_fp
+  }
+  \fp_compare:nNnT { \l_semio_viz_hierarchy_tm_yb_fp } < { \l_semio_viz_hierarchy_tm_ya_fp } {
+    \fp_set:Nn \l_semio_viz_hierarchy_tm_p_fp
+      { ( \l_semio_viz_hierarchy_tm_ya_fp + \l_semio_viz_hierarchy_tm_yb_fp ) / 2 }
+    \fp_set_eq:NN \l_semio_viz_hierarchy_tm_ya_fp \l_semio_viz_hierarchy_tm_p_fp
+    \fp_set_eq:NN \l_semio_viz_hierarchy_tm_yb_fp \l_semio_viz_hierarchy_tm_p_fp
+  }
+}
+
+% 🔲 d3 `roundNode`: snaps the four corners to whole units.
+\cs_new_protected:Npn \semio_viz_hierarchy_round_node:nn #1#2 {
+  \clist_map_inline:nn { x0, y0, x1, y1 } {
+    \semio_viz_hierarchy_set:nnnn {#1} {##1} {#2}
+      { \fp_eval:n { round ( \semio_viz_hierarchy_get:nnn {#1} {##1} {#2} ) } }
+  }
+}
+%endregion 🔖️LayoutTreemap
+
+%region 🔖️LayoutPartition
+% 🧊 d3-hierarchy `partition()`: one row per depth, every parent diced over its
+% children. Complexity O(n).
+\cs_new_protected:Npn \semio_viz_hierarchy_layout_partition:n #1 {
+  \int_set:Nn \l_semio_viz_hierarchy_i_int { \semio_viz_hierarchy_get:nnn {#1} { root } { 0 } }
+  \int_set:Nn \l_semio_viz_hierarchy_j_int
+    { \semio_viz_hierarchy_get:nnn {#1} { hgt } { \l_semio_viz_hierarchy_i_int } + 1 }
+  \semio_viz_hierarchy_set:nnnn {#1} { x0 } { \l_semio_viz_hierarchy_i_int }
+    { \fp_use:N \l_semio_viz_hierarchy_padding_fp }
+  \semio_viz_hierarchy_set:nnnn {#1} { y0 } { \l_semio_viz_hierarchy_i_int }
+    { \fp_use:N \l_semio_viz_hierarchy_padding_fp }
+  \semio_viz_hierarchy_set:nnnn {#1} { x1 } { \l_semio_viz_hierarchy_i_int }
+    { \fp_use:N \l_semio_viz_hierarchy_dx_fp }
+  \semio_viz_hierarchy_set:nnnn {#1} { y1 } { \l_semio_viz_hierarchy_i_int }
+    { \fp_eval:n { \l_semio_viz_hierarchy_dy_fp / \l_semio_viz_hierarchy_j_int } }
+  \semio_viz_hierarchy_map_pre:nn {#1} {
+    \int_compare:nNnT { \semio_viz_hierarchy_nk:nn {#1} {##1} } > { 0 } {
+      \fp_set:Nn \l_semio_viz_hierarchy_tm_xa_fp { \semio_viz_hierarchy_get:nnn {#1} { x0 } {##1} }
+      \fp_set:Nn \l_semio_viz_hierarchy_tm_xb_fp { \semio_viz_hierarchy_get:nnn {#1} { x1 } {##1} }
+      \fp_set:Nn \l_semio_viz_hierarchy_tm_ya_fp { \l_semio_viz_hierarchy_dy_fp
+        * ( \semio_viz_hierarchy_get:nnn {#1} { dep } {##1} + 1 ) / \l_semio_viz_hierarchy_j_int }
+      \fp_set:Nn \l_semio_viz_hierarchy_tm_yb_fp { \l_semio_viz_hierarchy_dy_fp
+        * ( \semio_viz_hierarchy_get:nnn {#1} { dep } {##1} + 2 ) / \l_semio_viz_hierarchy_j_int }
+      \semio_viz_hierarchy_tm_dice:nnnnn {#1} {##1} { 1 } { \semio_viz_hierarchy_nk:nn {#1} {##1} }
+        { \semio_viz_hierarchy_get:nnn {#1} { val } {##1} }
+    }
+    \fp_set:Nn \l_semio_viz_hierarchy_tm_xa_fp { \semio_viz_hierarchy_get:nnn {#1} { x0 } {##1} }
+    \fp_set:Nn \l_semio_viz_hierarchy_tm_ya_fp { \semio_viz_hierarchy_get:nnn {#1} { y0 } {##1} }
+    \fp_set:Nn \l_semio_viz_hierarchy_tm_xb_fp
+      { \semio_viz_hierarchy_get:nnn {#1} { x1 } {##1} - \l_semio_viz_hierarchy_padding_fp }
+    \fp_set:Nn \l_semio_viz_hierarchy_tm_yb_fp
+      { \semio_viz_hierarchy_get:nnn {#1} { y1 } {##1} - \l_semio_viz_hierarchy_padding_fp }
+    \semio_viz_hierarchy_tm_clamp:
+    \semio_viz_hierarchy_set:nnnn {#1} { x0 } {##1} { \fp_use:N \l_semio_viz_hierarchy_tm_xa_fp }
+    \semio_viz_hierarchy_set:nnnn {#1} { y0 } {##1} { \fp_use:N \l_semio_viz_hierarchy_tm_ya_fp }
+    \semio_viz_hierarchy_set:nnnn {#1} { x1 } {##1} { \fp_use:N \l_semio_viz_hierarchy_tm_xb_fp }
+    \semio_viz_hierarchy_set:nnnn {#1} { y1 } {##1} { \fp_use:N \l_semio_viz_hierarchy_tm_yb_fp }
+  }
+  \bool_if:NT \l_semio_viz_hierarchy_round_bool {
+    \semio_viz_hierarchy_map_pre:nn {#1} { \semio_viz_hierarchy_round_node:nn {#1} {##1} }
+  }
+}
+%endregion 🔖️LayoutPartition
+
+%region 🔖️VoronoiTreemap
+% 🕸️ `tile=voronoi` is a capacity-constrained power diagram (Balzer's weighted
+% centroidal Voronoi treemap), not a d3 algorithm: sites start on a scrambled
+% grid inside the parent rectangle, every iteration clips the rectangle by the
+% radical axis of each site pair, moves the site onto its cell centroid and
+% adapts its weight towards the target area. Cells are stored as the `poly`
+% field (a `x,y,x,y,...` millimetre clist) plus the bounding box in x0..y1.
+% The half-plane clip stays here rather than calling semio-viz-spatial's
+% \semio_viz_spatial_clip:NNnnn: this one runs once per site pair per iteration
+% on the flat `poly` clist, and converting to the kernel's point sequences and
+% back inside that loop costs more than the routine itself.
+\clist_new:N \l_semio_viz_hierarchy_vt_poly_clist
+\clist_new:N \l_semio_viz_hierarchy_vt_new_clist
+\fp_new:N \l_semio_viz_hierarchy_vt_a_fp
+\fp_new:N \l_semio_viz_hierarchy_vt_b_fp
+\fp_new:N \l_semio_viz_hierarchy_vt_c_fp
+\fp_new:N \l_semio_viz_hierarchy_vt_px_fp
+\fp_new:N \l_semio_viz_hierarchy_vt_py_fp
+\fp_new:N \l_semio_viz_hierarchy_vt_qx_fp
+\fp_new:N \l_semio_viz_hierarchy_vt_qy_fp
+\fp_new:N \l_semio_viz_hierarchy_vt_dp_fp
+\fp_new:N \l_semio_viz_hierarchy_vt_dq_fp
+\fp_new:N \l_semio_viz_hierarchy_vt_area_fp
+\fp_new:N \l_semio_viz_hierarchy_vt_cx_fp
+\fp_new:N \l_semio_viz_hierarchy_vt_cy_fp
+\fp_new:N \l_semio_viz_hierarchy_vt_cross_fp
+\fp_new:N \l_semio_viz_hierarchy_vt_total_fp
+\fp_new:N \l_semio_viz_hierarchy_vt_target_fp
+\int_new:N \l_semio_viz_hierarchy_vt_m_int
+\int_new:N \l_semio_viz_hierarchy_vt_it_int
+
+% ✂️ Sutherland-Hodgman clip of the current polygon by the half plane a*x+b*y<=c.
+\cs_new_protected:Npn \semio_viz_hierarchy_vt_clip: {
+  \clist_clear:N \l_semio_viz_hierarchy_vt_new_clist
+  \int_set:Nn \l_semio_viz_hierarchy_vt_m_int
+    { \clist_count:N \l_semio_viz_hierarchy_vt_poly_clist / 2 }
+  \int_compare:nNnT { \l_semio_viz_hierarchy_vt_m_int } > { 0 } {
+    \int_step_inline:nn { \l_semio_viz_hierarchy_vt_m_int } {
+      \fp_set:Nn \l_semio_viz_hierarchy_vt_px_fp { \clist_item:Nn \l_semio_viz_hierarchy_vt_poly_clist
+        { \int_eval:n { 2 * ( \int_compare:nNnTF {##1} = { 1 } { \l_semio_viz_hierarchy_vt_m_int } { ##1 - 1 } ) - 1 } } }
+      \fp_set:Nn \l_semio_viz_hierarchy_vt_py_fp { \clist_item:Nn \l_semio_viz_hierarchy_vt_poly_clist
+        { \int_eval:n { 2 * ( \int_compare:nNnTF {##1} = { 1 } { \l_semio_viz_hierarchy_vt_m_int } { ##1 - 1 } ) } } }
+      \fp_set:Nn \l_semio_viz_hierarchy_vt_qx_fp
+        { \clist_item:Nn \l_semio_viz_hierarchy_vt_poly_clist { \int_eval:n { 2 * ##1 - 1 } } }
+      \fp_set:Nn \l_semio_viz_hierarchy_vt_qy_fp
+        { \clist_item:Nn \l_semio_viz_hierarchy_vt_poly_clist { \int_eval:n { 2 * ##1 } } }
+      \fp_set:Nn \l_semio_viz_hierarchy_vt_dp_fp { \l_semio_viz_hierarchy_vt_a_fp
+        * \l_semio_viz_hierarchy_vt_px_fp + \l_semio_viz_hierarchy_vt_b_fp
+        * \l_semio_viz_hierarchy_vt_py_fp - \l_semio_viz_hierarchy_vt_c_fp }
+      \fp_set:Nn \l_semio_viz_hierarchy_vt_dq_fp { \l_semio_viz_hierarchy_vt_a_fp
+        * \l_semio_viz_hierarchy_vt_qx_fp + \l_semio_viz_hierarchy_vt_b_fp
+        * \l_semio_viz_hierarchy_vt_qy_fp - \l_semio_viz_hierarchy_vt_c_fp }
+      \fp_compare:nNnTF { \l_semio_viz_hierarchy_vt_dp_fp * \l_semio_viz_hierarchy_vt_dq_fp } < { 0 }
+        { \semio_viz_hierarchy_vt_cut: } { }
+      \fp_compare:nT { \l_semio_viz_hierarchy_vt_dq_fp <= 0 } {
+        \clist_put_right:Nx \l_semio_viz_hierarchy_vt_new_clist
+          { \fp_use:N \l_semio_viz_hierarchy_vt_qx_fp , \fp_use:N \l_semio_viz_hierarchy_vt_qy_fp }
+      }
+    }
+  }
+  \clist_set_eq:NN \l_semio_viz_hierarchy_vt_poly_clist \l_semio_viz_hierarchy_vt_new_clist
+}
+
+% ➕ Appends the crossing point of the current edge with the clipping line.
+\cs_new_protected:Npn \semio_viz_hierarchy_vt_cut: {
+  \clist_put_right:Nx \l_semio_viz_hierarchy_vt_new_clist {
+    \fp_eval:n { \l_semio_viz_hierarchy_vt_px_fp + ( \l_semio_viz_hierarchy_vt_qx_fp
+      - \l_semio_viz_hierarchy_vt_px_fp ) * \l_semio_viz_hierarchy_vt_dp_fp
+      / ( \l_semio_viz_hierarchy_vt_dp_fp - \l_semio_viz_hierarchy_vt_dq_fp ) } ,
+    \fp_eval:n { \l_semio_viz_hierarchy_vt_py_fp + ( \l_semio_viz_hierarchy_vt_qy_fp
+      - \l_semio_viz_hierarchy_vt_py_fp ) * \l_semio_viz_hierarchy_vt_dp_fp
+      / ( \l_semio_viz_hierarchy_vt_dp_fp - \l_semio_viz_hierarchy_vt_dq_fp ) }
+  }
+}
+
+% 📐 Shoelace area and centroid of the current polygon.
+\cs_new_protected:Npn \semio_viz_hierarchy_vt_moments: {
+  \fp_zero:N \l_semio_viz_hierarchy_vt_area_fp
+  \fp_zero:N \l_semio_viz_hierarchy_vt_cx_fp
+  \fp_zero:N \l_semio_viz_hierarchy_vt_cy_fp
+  \int_set:Nn \l_semio_viz_hierarchy_vt_m_int
+    { \clist_count:N \l_semio_viz_hierarchy_vt_poly_clist / 2 }
+  \int_compare:nNnT { \l_semio_viz_hierarchy_vt_m_int } > { 2 } {
+    \int_step_inline:nn { \l_semio_viz_hierarchy_vt_m_int } {
+      \fp_set:Nn \l_semio_viz_hierarchy_vt_px_fp
+        { \clist_item:Nn \l_semio_viz_hierarchy_vt_poly_clist { \int_eval:n { 2 * ##1 - 1 } } }
+      \fp_set:Nn \l_semio_viz_hierarchy_vt_py_fp
+        { \clist_item:Nn \l_semio_viz_hierarchy_vt_poly_clist { \int_eval:n { 2 * ##1 } } }
+      \fp_set:Nn \l_semio_viz_hierarchy_vt_qx_fp { \clist_item:Nn \l_semio_viz_hierarchy_vt_poly_clist
+        { \int_eval:n { 2 * ( \int_compare:nNnTF {##1} = { \l_semio_viz_hierarchy_vt_m_int } { 1 } { ##1 + 1 } ) - 1 } } }
+      \fp_set:Nn \l_semio_viz_hierarchy_vt_qy_fp { \clist_item:Nn \l_semio_viz_hierarchy_vt_poly_clist
+        { \int_eval:n { 2 * ( \int_compare:nNnTF {##1} = { \l_semio_viz_hierarchy_vt_m_int } { 1 } { ##1 + 1 } ) } } }
+      \fp_set:Nn \l_semio_viz_hierarchy_vt_cross_fp
+        { \l_semio_viz_hierarchy_vt_px_fp * \l_semio_viz_hierarchy_vt_qy_fp
+        - \l_semio_viz_hierarchy_vt_qx_fp * \l_semio_viz_hierarchy_vt_py_fp }
+      \fp_add:Nn \l_semio_viz_hierarchy_vt_area_fp { \l_semio_viz_hierarchy_vt_cross_fp }
+      \fp_add:Nn \l_semio_viz_hierarchy_vt_cx_fp { ( \l_semio_viz_hierarchy_vt_px_fp
+        + \l_semio_viz_hierarchy_vt_qx_fp ) * \l_semio_viz_hierarchy_vt_cross_fp }
+      \fp_add:Nn \l_semio_viz_hierarchy_vt_cy_fp { ( \l_semio_viz_hierarchy_vt_py_fp
+        + \l_semio_viz_hierarchy_vt_qy_fp ) * \l_semio_viz_hierarchy_vt_cross_fp }
+    }
+    \fp_set:Nn \l_semio_viz_hierarchy_vt_cx_fp { \l_semio_viz_hierarchy_vt_area_fp == 0 ? 0 :
+      \l_semio_viz_hierarchy_vt_cx_fp / ( 3 * \l_semio_viz_hierarchy_vt_area_fp ) }
+    \fp_set:Nn \l_semio_viz_hierarchy_vt_cy_fp { \l_semio_viz_hierarchy_vt_area_fp == 0 ? 0 :
+      \l_semio_viz_hierarchy_vt_cy_fp / ( 3 * \l_semio_viz_hierarchy_vt_area_fp ) }
+    \fp_set:Nn \l_semio_viz_hierarchy_vt_area_fp { abs ( \l_semio_viz_hierarchy_vt_area_fp ) / 2 }
+  }
+}
+
+% 🧫 Builds the power cell of child #3 of parent #2 into the polygon variable.
+\cs_new_protected:Npn \semio_viz_hierarchy_vt_cell:nnn #1#2#3 {
+  \clist_set:Nx \l_semio_viz_hierarchy_vt_poly_clist {
+    \fp_use:N \l_semio_viz_hierarchy_tm_xa_fp , \fp_use:N \l_semio_viz_hierarchy_tm_ya_fp ,
+    \fp_use:N \l_semio_viz_hierarchy_tm_xb_fp , \fp_use:N \l_semio_viz_hierarchy_tm_ya_fp ,
+    \fp_use:N \l_semio_viz_hierarchy_tm_xb_fp , \fp_use:N \l_semio_viz_hierarchy_tm_yb_fp ,
+    \fp_use:N \l_semio_viz_hierarchy_tm_xa_fp , \fp_use:N \l_semio_viz_hierarchy_tm_yb_fp
+  }
+  \int_step_inline:nn { \semio_viz_hierarchy_nk:nn {#1} {#2} } {
+    \int_compare:nNnF { \semio_viz_hierarchy_kid:nnn {#1} {#2} {##1} } = { #3 } {
+      \fp_set:Nn \l_semio_viz_hierarchy_vt_a_fp
+        { 2 * ( \semio_viz_hierarchy_get:nnn {#1} { vx } { \semio_viz_hierarchy_kid:nnn {#1} {#2} {##1} }
+          - \semio_viz_hierarchy_get:nnn {#1} { vx } {#3} ) }
+      \fp_set:Nn \l_semio_viz_hierarchy_vt_b_fp
+        { 2 * ( \semio_viz_hierarchy_get:nnn {#1} { vy } { \semio_viz_hierarchy_kid:nnn {#1} {#2} {##1} }
+          - \semio_viz_hierarchy_get:nnn {#1} { vy } {#3} ) }
+      \fp_set:Nn \l_semio_viz_hierarchy_vt_c_fp {
+        ( \semio_viz_hierarchy_get:nnn {#1} { vx } { \semio_viz_hierarchy_kid:nnn {#1} {#2} {##1} } ) ^ 2
+        + ( \semio_viz_hierarchy_get:nnn {#1} { vy } { \semio_viz_hierarchy_kid:nnn {#1} {#2} {##1} } ) ^ 2
+        - ( \semio_viz_hierarchy_get:nnn {#1} { vx } {#3} ) ^ 2
+        - ( \semio_viz_hierarchy_get:nnn {#1} { vy } {#3} ) ^ 2
+        - \semio_viz_hierarchy_get:nnn {#1} { vw } { \semio_viz_hierarchy_kid:nnn {#1} {#2} {##1} }
+        + \semio_viz_hierarchy_get:nnn {#1} { vw } {#3} }
+      \semio_viz_hierarchy_vt_clip:
+    }
+  }
+}
+
+% 🧩 Voronoi tiling of node #2: weighted sites relaxed inside the rectangle until every child's
+% cell area is its share of the value, which is what makes a Voronoi treemap readable.
+\cs_new_protected:Npn \semio_viz_hierarchy_tm_voronoi:nn #1#2 {
+  \int_set:Nn \l_semio_viz_hierarchy_tm_n_int { \semio_viz_hierarchy_nk:nn {#1} {#2} }
+  \fp_set:Nn \l_semio_viz_hierarchy_vt_total_fp
+    { ( \l_semio_viz_hierarchy_tm_xb_fp - \l_semio_viz_hierarchy_tm_xa_fp )
+      * ( \l_semio_viz_hierarchy_tm_yb_fp - \l_semio_viz_hierarchy_tm_ya_fp ) }
+  \int_step_inline:nn { \l_semio_viz_hierarchy_tm_n_int } {
+    \semio_viz_hierarchy_set:nnnn {#1} { vx } { \semio_viz_hierarchy_kid:nnn {#1} {#2} {##1} }
+      { \fp_eval:n { \l_semio_viz_hierarchy_tm_xa_fp
+        + ( \l_semio_viz_hierarchy_tm_xb_fp - \l_semio_viz_hierarchy_tm_xa_fp )
+        * ( 0.5 + 0.4 * sind ( 137.507764 * ##1 ) ) } }
+    \semio_viz_hierarchy_set:nnnn {#1} { vy } { \semio_viz_hierarchy_kid:nnn {#1} {#2} {##1} }
+      { \fp_eval:n { \l_semio_viz_hierarchy_tm_ya_fp
+        + ( \l_semio_viz_hierarchy_tm_yb_fp - \l_semio_viz_hierarchy_tm_ya_fp )
+        * ( 0.5 + 0.4 * cosd ( 99.5017 * ##1 ) ) } }
+    \semio_viz_hierarchy_set:nnnn {#1} { vw } { \semio_viz_hierarchy_kid:nnn {#1} {#2} {##1} } { 0 }
+  }
+  \int_step_inline:nn { \l_semio_viz_hierarchy_relax_int } {
+    \int_step_inline:nn { \l_semio_viz_hierarchy_tm_n_int } {
+      \semio_viz_hierarchy_vt_relax:nnn {#1} {#2} { \semio_viz_hierarchy_kid:nnn {#1} {#2} {####1} }
+    }
+  }
+  \int_step_inline:nn { \l_semio_viz_hierarchy_tm_n_int } {
+    \semio_viz_hierarchy_vt_store:nnn {#1} {#2} { \semio_viz_hierarchy_kid:nnn {#1} {#2} {##1} }
+  }
+}
+
+% ♻️ One Lloyd plus capacity step for a single site.
+\cs_new_protected:Npn \semio_viz_hierarchy_vt_relax:nnn #1#2#3 {
+  \semio_viz_hierarchy_vt_cell:nnn {#1} {#2} {#3}
+  \semio_viz_hierarchy_vt_moments:
+  \fp_set:Nn \l_semio_viz_hierarchy_vt_target_fp {
+    \semio_viz_hierarchy_get:nnn {#1} { val } {#2} == 0 ? 0 :
+    \l_semio_viz_hierarchy_vt_total_fp * \semio_viz_hierarchy_get:nnn {#1} { val } {#3}
+      / \semio_viz_hierarchy_get:nnn {#1} { val } {#2} }
+  \fp_compare:nNnTF { \l_semio_viz_hierarchy_vt_area_fp } > { 0 } {
+    \semio_viz_hierarchy_set:nnnn {#1} { vx } {#3} { \fp_use:N \l_semio_viz_hierarchy_vt_cx_fp }
+    \semio_viz_hierarchy_set:nnnn {#1} { vy } {#3} { \fp_use:N \l_semio_viz_hierarchy_vt_cy_fp }
+    \semio_viz_hierarchy_set:nnnn {#1} { vw } {#3}
+      { \fp_eval:n { \semio_viz_hierarchy_get:nnn {#1} { vw } {#3}
+        + 0.35 * ( \l_semio_viz_hierarchy_vt_target_fp - \l_semio_viz_hierarchy_vt_area_fp ) } }
+  } {
+    \semio_viz_hierarchy_set:nnnn {#1} { vw } {#3}
+      { \fp_eval:n { \semio_viz_hierarchy_get:nnn {#1} { vw } {#3}
+        + 0.35 * \l_semio_viz_hierarchy_vt_target_fp } }
+  }
+}
+
+% 💾 Freezes the final cell as the `poly` field plus its bounding box.
+\cs_new_protected:Npn \semio_viz_hierarchy_vt_store:nnn #1#2#3 {
+  \semio_viz_hierarchy_vt_cell:nnn {#1} {#2} {#3}
+  \semio_viz_hierarchy_vt_moments:
+  \semio_viz_hierarchy_set:nnnn {#1} { poly } {#3}
+    { \exp_not:V \l_semio_viz_hierarchy_vt_poly_clist }
+  \semio_viz_hierarchy_set:nnnn {#1} { x } {#3} { \fp_use:N \l_semio_viz_hierarchy_vt_cx_fp }
+  \semio_viz_hierarchy_set:nnnn {#1} { y } {#3} { \fp_use:N \l_semio_viz_hierarchy_vt_cy_fp }
+  \int_set:Nn \l_semio_viz_hierarchy_vt_m_int
+    { \clist_count:N \l_semio_viz_hierarchy_vt_poly_clist / 2 }
+  \fp_set:Nn \l_semio_viz_hierarchy_vt_px_fp { \l_semio_viz_hierarchy_tm_xb_fp }
+  \fp_set:Nn \l_semio_viz_hierarchy_vt_qx_fp { \l_semio_viz_hierarchy_tm_xa_fp }
+  \fp_set:Nn \l_semio_viz_hierarchy_vt_py_fp { \l_semio_viz_hierarchy_tm_yb_fp }
+  \fp_set:Nn \l_semio_viz_hierarchy_vt_qy_fp { \l_semio_viz_hierarchy_tm_ya_fp }
+  \int_step_inline:nn { \l_semio_viz_hierarchy_vt_m_int } {
+    \fp_set:Nn \l_semio_viz_hierarchy_vt_px_fp { min ( \l_semio_viz_hierarchy_vt_px_fp ,
+      \clist_item:Nn \l_semio_viz_hierarchy_vt_poly_clist { \int_eval:n { 2 * ##1 - 1 } } ) }
+    \fp_set:Nn \l_semio_viz_hierarchy_vt_qx_fp { max ( \l_semio_viz_hierarchy_vt_qx_fp ,
+      \clist_item:Nn \l_semio_viz_hierarchy_vt_poly_clist { \int_eval:n { 2 * ##1 - 1 } } ) }
+    \fp_set:Nn \l_semio_viz_hierarchy_vt_py_fp { min ( \l_semio_viz_hierarchy_vt_py_fp ,
+      \clist_item:Nn \l_semio_viz_hierarchy_vt_poly_clist { \int_eval:n { 2 * ##1 } } ) }
+    \fp_set:Nn \l_semio_viz_hierarchy_vt_qy_fp { max ( \l_semio_viz_hierarchy_vt_qy_fp ,
+      \clist_item:Nn \l_semio_viz_hierarchy_vt_poly_clist { \int_eval:n { 2 * ##1 } } ) }
+  }
+  \semio_viz_hierarchy_set:nnnn {#1} { x0 } {#3} { \fp_use:N \l_semio_viz_hierarchy_vt_px_fp }
+  \semio_viz_hierarchy_set:nnnn {#1} { x1 } {#3} { \fp_use:N \l_semio_viz_hierarchy_vt_qx_fp }
+  \semio_viz_hierarchy_set:nnnn {#1} { y0 } {#3} { \fp_use:N \l_semio_viz_hierarchy_vt_py_fp }
+  \semio_viz_hierarchy_set:nnnn {#1} { y1 } {#3} { \fp_use:N \l_semio_viz_hierarchy_vt_qy_fp }
+}
+%endregion 🔖️VoronoiTreemap
+
+\ExplSyntaxOff

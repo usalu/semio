@@ -173,7 +173,7 @@ async function scaleChecks(level: Level): Promise<VizKernelCheck[]> {
         const sample = [3, 6, 7, 8, 8, 10, 13, 15, 16, 20];
         const q = d3Scale.scaleQuantile(sample, ["lo", "mid", "hi"]);
         const z = d3Scale.scaleQuantize([0, 100], ["a", "b", "c", "d"]);
-        const t = d3Scale.scaleThreshold([10, 20], ["a", "b", "c"]);
+        const t = d3Scale.scaleThreshold<number, string>([10, 20], ["a", "b", "c"]);
         return { thresholds: q.quantiles(), quantile: sample.map(q), quantizeCuts: z.thresholds(), quantize: samples(level, 0, 100).map(z), threshold: [-1, 10, 15, 20, 40].map(t) };
       },
     },
@@ -561,7 +561,7 @@ async function shapeChecks(level: Level): Promise<VizKernelCheck[]> {
           .endAngle(options.endAngle)
           .padAngle(options.padAngle ?? 0)
           .cornerRadius(options.cornerRadius ?? 0)
-          .context(recorder as never)();
+          .context(recorder as never)(options);
   
       return recorder.commands;
       },
@@ -578,7 +578,7 @@ async function shapeChecks(level: Level): Promise<VizKernelCheck[]> {
             .outerRadius(options.outerRadius)
             .startAngle(options.startAngle)
             .endAngle(options.endAngle)
-            .centroid(),
+            .centroid(options),
         ),
     },
     {
@@ -938,11 +938,11 @@ async function networkChecks(level: Level): Promise<VizKernelCheck[]> {
         let contained = true;
         tree.visit((node, x0, y0, x1, y1) => {
           if (Array.isArray(node)) return;
-          let leaf: { data: { x: number; y: number }; next?: unknown } | undefined = node as never;
+          let leaf: network.VizQuadLeaf<typeof points[number]> | undefined = node;
           while (leaf !== undefined) {
             leaves += 1;
             if (leaf.data.x < x0 || leaf.data.x > x1 || leaf.data.y < y0 || leaf.data.y > y1) contained = false;
-            leaf = leaf.next as never;
+            leaf = leaf.next;
           }
         });
         const square = Math.abs(tree.x1 - tree.x0 - (tree.y1 - tree.y0)) < 1e-9;
@@ -1105,14 +1105,14 @@ async function flowChecks(_level: Level): Promise<VizKernelCheck[]> {
       },
       oracle: () => {
         const layout = d3Sankey
-          .sankey()
-          .nodeId((node: { name: string }) => node.name)
+          .sankey<{ name: string }, {}>()
+          .nodeId(node => node.name)
           .nodeAlign(d3Alignments[align])
           .extent([
             [0, 0],
             [400, 200],
-          ])({ nodes: SANKEY_INPUT.nodes.map((node) => ({ ...node })), links: SANKEY_INPUT.links.map((link) => ({ ...link })) } as never);
-        return { nodes: layout.nodes.map((node: never) => [(node as { x0: number }).x0, (node as { x1: number }).x1, (node as { y0: number }).y0, (node as { y1: number }).y1]), links: layout.links.map((link: never) => [(link as { y0: number }).y0, (link as { y1: number }).y1, (link as { width: number }).width]) };
+          ])({ nodes: SANKEY_INPUT.nodes.map((node) => ({ ...node })), links: SANKEY_INPUT.links.map((link) => ({ ...link })) });
+        return { nodes: layout.nodes.map(node => [node.x0, node.x1, node.y0, node.y1]), links: layout.links.map(link => [link.y0, link.y1, link.width]) };
       },
       tolerance: 1e-9,
     })),
@@ -1125,14 +1125,14 @@ async function flowChecks(_level: Level): Promise<VizKernelCheck[]> {
       },
       oracle: () => {
         const layout = d3Sankey
-          .sankey()
-          .nodeId((node: { name: string }) => node.name)
+          .sankey<{ name: string }, {}>()
+          .nodeId(node => node.name)
           .extent([
             [0, 0],
             [400, 200],
-          ])({ nodes: SANKEY_INPUT.nodes.map((node) => ({ ...node })), links: SANKEY_INPUT.links.map((link) => ({ ...link })) } as never);
+          ])({ nodes: SANKEY_INPUT.nodes.map((node) => ({ ...node })), links: SANKEY_INPUT.links.map((link) => ({ ...link })) });
         const recorder = mark.vizPathRecorder();
-        (d3Sankey.sankeyLinkHorizontal() as unknown as { context(c: unknown): (link: unknown) => void }).context(recorder)(layout.links[0]);
+        recordD3Path(d3Sankey.sankeyLinkHorizontal<{ name: string }, {}>(), recorder)(layout.links[0]!);
   
       return recorder.commands;
       },
@@ -1235,7 +1235,7 @@ async function geoChecks(level: Level): Promise<VizKernelCheck[]> {
         return { count: grid.coordinates.length, first: grid.coordinates[0], last: grid.coordinates[grid.coordinates.length - 1] };
       },
       oracle: () => {
-        const grid = d3Geo.geoGraticule()() as { coordinates: [number, number][][] };
+        const grid = d3Geo.geoGraticule()();
         return { count: grid.coordinates.length, first: grid.coordinates[0], last: grid.coordinates[grid.coordinates.length - 1] };
       },
       tolerance: 1e-9,
@@ -1261,7 +1261,7 @@ async function geoChecks(level: Level): Promise<VizKernelCheck[]> {
       subject: () => geo.vizGeoPath(DEMO_POLYGON, geo.vizGeoProjection("equirectangular")),
       oracle: () => {
         const recorder = mark.vizPathRecorder();
-        d3Geo.geoPath(d3Geo.geoEquirectangular().precision(0), recorder as never)(DEMO_POLYGON as never);
+        recordD3Path(d3Geo.geoPath(d3Geo.geoEquirectangular().precision(0)), recorder)(DEMO_POLYGON as never);
   
       return recorder.commands;
       },
@@ -1554,7 +1554,7 @@ function renderChecks(): VizKernelCheck[] {
       oracle: () => {
         const x = scale.scaleBand(["a", "b", "c", "d"], [16, 152], { padding: 0.2 });
         const y = scale.scaleLinear([0, 30], [86, 8]);
-        return [12, 30, 7, 22].map((value, i) => [x(["a", "b", "c", "d"][i]!), y(value), x.bandwidth!(), 86 - y(value)]);
+        return [12, 30, 7, 22].map((value, i) => { const mapped = y(value); if (typeof mapped !== "number") throw new Error("Bar oracle requires numeric scale output"); return [x(["a", "b", "c", "d"][i]!), mapped, x.bandwidth!(), 86 - mapped]; });
       },
       tolerance: 1e-9,
     },
@@ -1603,8 +1603,15 @@ export async function vizInferenceChecks(level: Level): Promise<VizKernelCheck[]
 
 /** 🧮️ Differential language-neutral layer pipeline cases against independently imported D3 oracles. */
 async function inferredLayerChecks(): Promise<VizKernelCheck[]> {
-  const [array, d3shape, d3hierarchy, d3geo, d3hexbin, d3delaunay, d3force, d3chord, d3sankey, d3contour, regression] = await Promise.all([import("d3-array"), import("d3-shape"), import("d3-hierarchy"), import("d3-geo"), import("d3-hexbin"), import("d3-delaunay"), import("d3-force"), import("d3-chord"), import("d3-sankey"), import("d3-contour"), import("d3-regression")]);
+  const [array, d3shape, d3hierarchy, d3geo, d3hexbin, d3delaunay, d3force, d3chord, d3sankey, d3contour] = await Promise.all([import("d3-array"), import("d3-shape"), import("d3-hierarchy"), import("d3-geo"), import("d3-hexbin"), import("d3-delaunay"), import("d3-force"), import("d3-chord"), import("d3-sankey"), import("d3-contour")]);
   const rows = [{ id: "a", group: "one", x: 1, y: 3, value: 2, a: 2, b: 1 }, { id: "b", group: "two", x: 2, y: 2, value: 4, a: 4, b: 3 }, { id: "c", group: "one", x: 3, y: 1, value: 6, a: 6, b: 2 }];
+  interface RegressionBuilder {
+    (data: typeof rows): { predict(value: number): number };
+    x(accessor: (row: typeof rows[number]) => number): RegressionBuilder;
+    y(accessor: (row: typeof rows[number]) => number): RegressionBuilder;
+  }
+  const { createRequire } = await import("node:module");
+  const regression = createRequire(import.meta.url)("d3-regression") as { regressionLinear(): RegressionBuilder };
   const hierarchyRows = [{ id: "root", parent: null, value: 0 }, { id: "a", parent: "root", value: 2 }, { id: "b", parent: "root", value: 3 }, { id: "c", parent: "b", value: 1 }];
   const links = [{ source: "a", target: "b", value: 2 }, { source: "a", target: "c", value: 1 }, { source: "b", target: "c", value: 3 }];
   const makeSpec = (data: readonly VizRow[] = rows) => ({ width: 100, height: 80, language: "en" as const, margin: { left: 0, right: 0, top: 0, bottom: 0 }, tables: [{ name: "data", columns: [...new Set(data.flatMap(Object.keys))], rows: data }], layers: [] });
@@ -1624,32 +1631,32 @@ async function inferredLayerChecks(): Promise<VizKernelCheck[]> {
     check("normalize-extent", () => infer("normalize", { column: "value", mode: "extent" }).map((row) => row.value), () => rows.map((row) => (row.value - array.min(rows, (row) => row.value)!) / (array.max(rows, (row) => row.value)! - array.min(rows, (row) => row.value)!))),
     check("cumulative", () => infer("cumulative", { column: "value" }).map((row) => row.value), () => Array.from(array.cumsum(rows, (row) => row.value))),
     check("quantile", () => infer("quantile", { column: "value" }).map((row) => row.value), () => [0, 0.25, 0.5, 0.75, 1].map((p) => array.quantile(rows.map((row) => row.value), p))),
-    check("bin", () => layout("bin", { column: "value", thresholds: 3, min: 0, max: 8 }).map((row) => [row.x0, row.x1, row.count]), () => array.bin().value((row) => row.value).domain([0, 8]).thresholds(3)(rows).map((bucket) => [bucket.x0, bucket.x1, bucket.length])),
-    check("stack", () => layout("stack", { keys: "a,b", offset: "expand", order: "reverse" }).map((row) => [row.key, row.y0, row.y1]), () => d3shape.stack().keys(["a", "b"]).order(d3shape.stackOrderReverse).offset(d3shape.stackOffsetExpand)(rows).flatMap((series) => series.map((point) => [series.key, point[0], point[1]]))),
+    check("bin", () => layout("bin", { column: "value", thresholds: 3, min: 0, max: 8 }).map((row) => [row.x0, row.x1, row.count]), () => array.bin<typeof rows[number], number>().value((row) => row.value).domain([0, 8]).thresholds(3)(rows).map((bucket) => [bucket.x0, bucket.x1, bucket.length])),
+    check("stack", () => layout("stack", { keys: "a,b", offset: "expand", order: "reverse" }).map((row) => [row.key, row.y0, row.y1]), () => d3shape.stack<typeof rows[number], "a" | "b">().keys(["a", "b"]).value((row, key) => row[key]).order(d3shape.stackOrderReverse).offset(d3shape.stackOffsetExpand)(rows).flatMap((series) => series.map((point) => [series.key, point[0], point[1]]))),
     check("regression", () => infer("regression", { x: "x", y: "y" }).map((row) => [row.x, row.y]), () => { const fit = regression.regressionLinear().x((row: typeof rows[number]) => row.x).y((row: typeof rows[number]) => row.y)(rows); return rows.map((row) => [row.x, fit.predict(row.x)]); }),
     check("kde-uniform", () => infer("kde", { column: "value", min: 0, max: 8, samples: 5, bandwidth: 2, kernel: "uniform" }).map((row) => row.density), () => [0, 2, 4, 6, 8].map((x) => array.mean(rows, (row) => Math.abs(x - row.value) <= 2 ? 0.25 : 0))),
-    check("pie", () => layout("pie", { value: "value", sort: "none", startAngle: -1, endAngle: 4, padAngle: 0.2 }).map((row) => [row.index, row.startAngle, row.endAngle, row.padAngle]), () => d3shape.pie().value((row) => row.value).sort(null).startAngle(-1).endAngle(4).padAngle(0.2)(rows).map((slice) => [slice.index, slice.startAngle, slice.endAngle, slice.padAngle])),
-    check("hexbin", () => layout("hexbin", { radius: 2 }).map((row) => [row.x, row.y, row.count]), () => d3hexbin.hexbin().x((row) => row.x).y((row) => row.y).radius(2)(rows).map((bucket) => [bucket.x, bucket.y, bucket.length])),
+    check("pie", () => layout("pie", { value: "value", sort: "none", startAngle: -1, endAngle: 4, padAngle: 0.2 }).map((row) => [row.index, row.startAngle, row.endAngle, row.padAngle]), () => d3shape.pie<typeof rows[number]>().value((row) => row.value).sort(null).startAngle(-1).endAngle(4).padAngle(0.2)(rows).map((slice) => [slice.index, slice.startAngle, slice.endAngle, slice.padAngle])),
+    check("hexbin", () => layout("hexbin", { radius: 2 }).map((row) => [row.x, row.y, row.count]), () => d3hexbin.hexbin<typeof rows[number]>().x((row) => row.x).y((row) => row.y).radius(2)(rows).map((bucket) => [bucket.x, bucket.y, bucket.length])),
     check("projection", () => coordinates(layout("projection", { projection: "mercator", scale: 12, translateX: 30, translateY: 25 })), () => rows.map((row) => d3geo.geoMercator().scale(12).translate([30, 25])([row.x, row.y]))),
-    check("hull", () => coordinates(layout("hull", {}, [{ x: 0, y: 0 }, { x: 4, y: 0 }, { x: 2, y: 4 }, { x: 2, y: 1 }])).sort((a, b) => Number(a[0]) - Number(b[0]) || Number(a[1]) - Number(b[1])), () => { const points = [[0, 0], [4, 0], [2, 4], [2, 1]]; return Array.from(d3delaunay.Delaunay.from(points).hull, (i) => points[Number(i)]!).sort((a, b) => a[0]! - b[0]! || a[1]! - b[1]!); }),
+    check("hull", () => coordinates(layout("hull", {}, [{ x: 0, y: 0 }, { x: 4, y: 0 }, { x: 2, y: 4 }, { x: 2, y: 1 }])).sort((a, b) => Number(a[0]) - Number(b[0]) || Number(a[1]) - Number(b[1])), () => { const points: [number, number][] = [[0, 0], [4, 0], [2, 4], [2, 1]]; return Array.from(d3delaunay.Delaunay.from(points).hull, (i) => points[Number(i)]!).sort((a, b) => a[0]! - b[0]! || a[1]! - b[1]!); }),
     check("jitter-seed", () => { const own = layout("jitter", { seed: 1, amount: 2 }); let seed = 1; const oracle = rows.map((row) => { seed = (1664525 * seed + 1013904223) % 4294967296; const x = row.x + (seed / 4294967296 - 0.5) * 2; seed = (1664525 * seed + 1013904223) % 4294967296; return [x, row.y + (seed / 4294967296 - 0.5) * 2]; }); return coordinates(own).map((point, i) => array.sum(point.map((value, j) => Math.abs(Number(value) - oracle[i]![j]!)))); }, () => [0, 0, 0]),
     check("beeswarm", () => { const data = [{ x: 1, y: 0 }, { x: 1, y: 0 }, { x: 1, y: 0 }]; const points = layout("beeswarm", { radius: 2 }, data).map((row) => [Number(row.x), Number(row.y)]); return array.min(array.cross(points, points).filter(([a, b]) => a !== b), ([a, b]) => Math.hypot(a[0]! - b[0]!, a[1]! - b[1]!)); }, () => 4),
     check("arc", () => coordinates(layout("arc", { width: 12, origin: 3 })), () => rows.map((_, i) => [3 + i * 6, 3])),
     check("chord", () => layout("chord", { padAngle: 0.1 }, links).map((row) => [row.startAngle, row.endAngle, row.targetStartAngle, row.targetEndAngle]), () => d3chord.chord().padAngle(0.1)([[0, 2, 1], [0, 0, 3], [0, 0, 0]]).map((chord) => [chord.source.startAngle, chord.source.endAngle, chord.target.startAngle, chord.target.endAngle])),
-    check("sankey", () => layout("sankey", { width: 100, height: 80, nodeWidth: 4, nodePadding: 2 }, links).map((row) => [row.x, row.y, row.x2, row.y2, row.width]), () => d3sankey.sankey().nodeId((node: { id: string }) => node.id).extent([[0, 0], [100, 80]]).nodeWidth(4).nodePadding(2)({ nodes: ["a", "b", "c"].map((id) => ({ id })), links: links.map((row) => ({ ...row })) }).links.map((link) => [link.source.x1, link.y0, link.target.x0, link.y1, link.width])),
+    check("sankey", () => layout("sankey", { width: 100, height: 80, nodeWidth: 4, nodePadding: 2 }, links).map((row) => [row.x, row.y, row.x2, row.y2, row.width]), () => d3sankey.sankey<{ id: string }, Record<never, never>>().nodeId((node) => node.id).extent([[0, 0], [100, 80]]).nodeWidth(4).nodePadding(2)({ nodes: ["a", "b", "c"].map((id) => ({ id })), links: links.map((row) => ({ ...row })) }).links.map((link) => { if (typeof link.source !== "object" || typeof link.target !== "object") throw new Error("D3 Sankey did not resolve link nodes"); return [link.source.x1, link.y0, link.target.x0, link.y1, link.width]; })),
     check("contour", () => layout("contour", { value: "value", columns: 2, rows: 2, thresholds: 2 }, [{ value: 0 }, { value: 1 }, { value: 1 }, { value: 0 }]).map((row) => [row.x, row.y]), () => d3contour.contours().size([2, 2]).thresholds(2)([0, 1, 1, 0]).flatMap((contour) => contour.coordinates.flatMap((polygon) => polygon.flatMap((ring) => ring)))),
   ];
-  for (const algorithm of ["tree", "cluster", "treemap", "partition", "pack"] as const) checks.push(check(algorithm, () => layout(algorithm, { width: 100, height: 80 }, hierarchyRows).map((row) => algorithm === "treemap" || algorithm === "partition" ? [row.id, row.x0, row.y0, row.x1, row.y1] : algorithm === "pack" ? [row.id, row.x, row.y, row.radius] : [row.id, row.x, row.y]), () => { const root = d3hierarchy.stratify().id((row) => row.id).parentId((row) => row.parent)(hierarchyRows).sum((row) => row.value); const laid = ({tree:d3hierarchy.tree,cluster:d3hierarchy.cluster,treemap:d3hierarchy.treemap,partition:d3hierarchy.partition,pack:d3hierarchy.pack}[algorithm])().size([100, 80])(root); return laid.descendants().map((node) => algorithm === "treemap" || algorithm === "partition" ? [node.id, node.x0, node.y0, node.x1, node.y1] : algorithm === "pack" ? [node.id, node.x, node.y, node.r] : [node.id, node.x, node.y]); }));
+  for (const algorithm of ["tree", "cluster", "treemap", "partition", "pack"] as const) checks.push(check(algorithm, () => layout(algorithm, { width: 100, height: 80 }, hierarchyRows).map((row) => algorithm === "treemap" || algorithm === "partition" ? [row.id, row.x0, row.y0, row.x1, row.y1] : algorithm === "pack" ? [row.id, row.x, row.y, row.radius] : [row.id, row.x, row.y]), () => { const root = d3hierarchy.stratify<typeof hierarchyRows[number]>().id((row) => row.id).parentId((row) => row.parent)(hierarchyRows).sum((row) => row.value); if (algorithm === "treemap" || algorithm === "partition") return (algorithm === "treemap" ? d3hierarchy.treemap<typeof hierarchyRows[number]>() : d3hierarchy.partition<typeof hierarchyRows[number]>()).size([100, 80])(root).descendants().map((node) => [node.id, node.x0, node.y0, node.x1, node.y1]); if (algorithm === "pack") return d3hierarchy.pack<typeof hierarchyRows[number]>().size([100, 80])(root).descendants().map((node) => [node.id, node.x, node.y, node.r]); return (algorithm === "tree" ? d3hierarchy.tree<typeof hierarchyRows[number]>() : d3hierarchy.cluster<typeof hierarchyRows[number]>()).size([100, 80])(root).descendants().map((node) => [node.id, node.x, node.y]); }));
   checks.push(check("force", () => coordinates(layout("force", { iterations: 40, width: 100, height: 80 }, links)), () => { const nodes = ["a", "b", "c"].map(() => ({ x: NaN, y: NaN })); const simulation = d3force.forceSimulation(nodes).stop().force("charge", d3force.forceManyBody().strength(-30)).force("center", d3force.forceCenter(50, 40)).force("link", d3force.forceLink(links.map((row) => ({ source: ["a", "b", "c"].indexOf(row.source), target: ["a", "b", "c"].indexOf(row.target) }))).distance(30)); simulation.tick(40); return nodes.map((node) => [node.x, node.y]); }, 1e-6));
   const uniquePoints = [{ x: 1, y: 1 }, { x: 7, y: 1 }, { x: 4, y: 7 }, { x: 4, y: 3 }];
   const sortPoints = (points: readonly (readonly unknown[])[]) => [...points].sort((a, b) => Number(a[0]) - Number(b[0]) || Number(a[1]) - Number(b[1]));
   checks.push(check("voronoi", () => sortPoints(layout("voronoi", { width: 10, height: 10 }, uniquePoints).map((row) => [row.x, row.y])), () => { const voronoi = d3delaunay.Delaunay.from(uniquePoints, (row) => row.x, (row) => row.y).voronoi([0, 0, 10, 10]); return sortPoints(uniquePoints.flatMap((_, i) => { const polygon = voronoi.cellPolygon(i)!; return polygon.slice(0, -1); })); }));
   checks.push(check("delaunay", () => sortPoints(layout("delaunay", {}, uniquePoints).map((row) => [row.x, row.y])), () => { const triangulation = d3delaunay.Delaunay.from(uniquePoints, (row) => row.x, (row) => row.y); return sortPoints(Array.from(triangulation.triangles, (i) => [uniquePoints[Number(i)]!.x, uniquePoints[Number(i)]!.y])); }));
-  checks.push(check("bundling", () => layout("bundling", { width: 100, height: 80 }, hierarchyRows).map((row) => JSON.parse(String(row.points))), () => { const root = d3hierarchy.stratify().id((row) => row.id).parentId((row) => row.parent)(hierarchyRows); d3hierarchy.cluster().size([100, 80])(root); return root.links().map(({ source, target }) => target.path(source).map((node) => [node.x, node.y])); }));
+  checks.push(check("bundling", () => layout("bundling", { width: 100, height: 80 }, hierarchyRows).map((row) => JSON.parse(String(row.points))), () => { const root = d3hierarchy.stratify<typeof hierarchyRows[number]>().id((row) => row.id).parentId((row) => row.parent)(hierarchyRows); const laid = d3hierarchy.cluster<typeof hierarchyRows[number]>().size([100, 80])(root); return laid.links().map(({ source, target }) => target.path(source).map((node) => [node.x, node.y])); }));
   checks.push(check("dag", () => layout("dag", { layerGap: 20, nodeGap: 12 }, links).map((row) => [row.id, row.layer, row.y]), () => Array.from(array.group(["a", "b", "c"].map((id, layer) => ({ id, layer })), (row) => row.layer).values() as Iterable<{ id: string; layer: number }[]>).flatMap((bucket) => bucket.map((row) => [row.id, row.layer, row.layer * 20]))));
   checks.push(check("join", () => { const spec = makeSpec(); const extra = { name: "labels", columns: ["id", "label"], rows: [{ id: "a", label: "first" }, { id: "c", label: "last" }] }; return transform.inferVizLayerTable({ ...spec, tables: [...spec.tables, extra] }, { mark: "point", transform: [{ kind: "join", options: { table: "labels", left: "id", right: "id" } }] }).rows.map((row) => [row.id, row.label]); }, () => array.cross(rows, [{ id: "a", label: "first" }, { id: "c", label: "last" }]).filter(([a, b]) => a.id === b.id).map(([a, b]) => [a.id, b.label])));
   const alluvialRows = [{ first: "a", second: "b", value: 2 }, { first: "a", second: "c", value: 3 }];
-  checks.push(check("alluvial", () => layout("alluvial", { stages: "first,second", width: 100, height: 80, nodeWidth: 4, nodePadding: 2 }, alluvialRows).map((row) => [row.source, row.target, row.x, row.y, row.x2, row.y2, row.width]), () => { const graph = d3sankey.sankey().nodeId((node: { id: string }) => node.id).extent([[0, 0], [100, 80]]).nodeWidth(4).nodePadding(2)({ nodes: ["first/a", "second/b", "second/c"].map((id) => ({ id })), links: [...array.rollup(alluvialRows, (bucket) => array.sum(bucket, (row) => row.value), (row) => row.second)].map(([target, value]) => ({ source: "first/a", target: `second/${target}`, value })) }); return graph.links.map((link) => [link.source.id, link.target.id, link.source.x1, link.y0, link.target.x0, link.y1, link.width]); }));
+  checks.push(check("alluvial", () => layout("alluvial", { stages: "first,second", width: 100, height: 80, nodeWidth: 4, nodePadding: 2 }, alluvialRows).map((row) => [row.source, row.target, row.x, row.y, row.x2, row.y2, row.width]), () => { const graph = d3sankey.sankey<{ id: string }, Record<never, never>>().nodeId((node) => node.id).extent([[0, 0], [100, 80]]).nodeWidth(4).nodePadding(2)({ nodes: ["first/a", "second/b", "second/c"].map((id) => ({ id })), links: [...array.rollup(alluvialRows, (bucket) => array.sum(bucket, (row) => row.value), (row) => row.second)].map(([target, value]) => ({ source: "first/a", target: `second/${target}`, value })) }); return graph.links.map((link) => { if (typeof link.source !== "object" || typeof link.target !== "object") throw new Error("D3 Sankey did not resolve link nodes"); return [link.source.id, link.target.id, link.source.x1, link.y0, link.target.x0, link.y1, link.width]; }); }));
   checks.push(check("density", () => layout("density", { width: 8, height: 8, cellSize: 2, bandwidth: 2, kernel: "uniform", thresholds: 2 }, [{ x: 2, y: 2 }, { x: 3, y: 3 }]).map((row) => [row.x, row.y]), () => { const points = [[2, 2], [3, 3]]; const grid = array.range(25).map((i) => array.mean(points, ([x, y]) => Math.abs((i % 5) * 2 - x!) <= 2 && Math.abs(Math.floor(i / 5) * 2 - y!) <= 2 ? 0.25 / 4 : 0)!); return d3contour.contours().size([5, 5]).thresholds(2)(grid).flatMap((contour) => contour.coordinates.flatMap((polygon) => polygon.flatMap((ring) => ring.map(([x, y]) => [x * 2, y * 2])))); }));
   const fixtures = (await import("../../../../../🧪️tests/🧮️inferred-layer-pipeline/🔣️.json")).default;
   const { inferLayerScenario } = await import("../../../../../🧪️tests/🧮️inferred-layer-pipeline/🟦️.ts");
@@ -1665,6 +1672,14 @@ async function inferredLayerChecks(): Promise<VizKernelCheck[]> {
 //#endregion 🔖️Checks
 //#endregion 🔖️Checks
 
+/** 🖊️ Binds an independently imported D3 generator to the owned path-only context contract. */
+function recordD3Path<T extends object>(generator: T, context: mark.VizPathContext): T {
+  const setter: unknown = Reflect.get(generator, "context");
+  if (typeof setter !== "function") throw new Error("D3 generator has no context setter");
+  const configured: unknown = Reflect.apply(setter, generator, [context]);
+  if (configured !== generator) throw new Error("D3 context setter did not return its generator");
+  return generator;
+}
 /** 🧩 Resolves language-neutral chart fixtures and compares geometry with D3. */
 export async function renderGrammarChecks(): Promise<VizKernelCheck[]> {
   const { inferVizChart } = await import("../../../../../🔨️modules/🏠️host/💡️inferences/🟦️.ts");
@@ -1684,14 +1699,14 @@ export async function renderGrammarChecks(): Promise<VizKernelCheck[]> {
     const tikzIncludes = (fixture as { tikzIncludes?: string[] }).tikzIncludes;
     const sceneArcCount = (fixture as { sceneArcCount?: number }).sceneArcCount;
     return { module: "render", name: `grammar/${fixture.id}`, subject: () => {
-      if(oracle==="axis-controls")return inferVizChart({chart:spec}).then(result=>{if(!result.complete||result.plan===undefined)throw new Error(JSON.stringify(result.diagnostics));const settings=fixture as {expectedStyle?:string;expectedSizes?:number[];expectedBaselines?:string[];expectedTikzAnchors?:string[];expectedFonts?:string[];expectedTikzFonts?:string[];expectedTikzExcludes?:string[];expectedStrokes?:[string,number,number][];expectedTextFills?:string[]};return {...(settings.expectedTikzExcludes===undefined?{}:{tikzExcluded:settings.expectedTikzExcludes.map(part=>!result.tikz.includes(part))}),...(settings.expectedStrokes===undefined?{}:{strokes:result.plan.items.filter(item=>item.kind==="line"&&(Math.abs(item.x1-item.x2)>1e-10||Math.abs(item.y1-item.y2)>1e-10)).map(item=>[item.stroke,item.strokeWidth,item.opacity??1]),sceneStrokes:result.scene!.nodes.filter(entry=>entry.node.kind==="line"&&(Math.abs(entry.node.x1-entry.node.x2)>1e-10||Math.abs(entry.node.y1-entry.node.y2)>1e-10)).map(entry=>entry.node.kind==="line"?[entry.stroke?.color,entry.stroke?.width,entry.opacity??1]:undefined),textFills:result.plan.items.filter(item=>item.kind==="text").map(item=>item.fill)}),lines:result.plan.items.filter(item=>item.kind==="line"&&(Math.abs(item.x1-item.x2)>1e-10||Math.abs(item.y1-item.y2)>1e-10)).map(item=>[item.x1,item.y1,item.x2,item.y2]),texts:result.plan.items.filter(item=>item.kind==="text").map(item=>({x:item.x,y:item.y,anchor:item.anchor,rotation:item.rotation??0,content:item.content})),...(settings.expectedStyle===undefined?{}:{styles:result.plan.items.map(item=>item.tikzStyle),emitted:result.tikz.split("\n").filter(line=>line.startsWith("\\path")||line.startsWith("\\node")).every(line=>line.includes(settings.expectedStyle!))}),...(settings.expectedFonts===undefined?{}:{fonts:result.plan.items.filter(item=>item.kind==="text").map(item=>item.font),sceneFonts:result.scene!.nodes.filter(entry=>entry.node.kind==="text").map(entry=>entry.node.kind==="text"?entry.node.font:undefined),tikzFonts:result.tikz.split("\n").filter(line=>line.startsWith("\\node")).map(line=>line.match(/font=\\(SemioSans|SemioMono)/)?.[1])}),...(settings.expectedSizes===undefined?{}:{sizes:result.plan.items.filter(item=>item.kind==="text").map(item=>item.size)}),...(settings.expectedBaselines===undefined?{}:{baselines:result.plan.items.filter(item=>item.kind==="text").map(item=>item.baseline??"middle"),sceneBaselines:result.scene!.nodes.filter(entry=>entry.node.kind==="text").map(entry=>entry.node.kind==="text"?entry.node.baseline:undefined),tikzAnchors:result.tikz.split("\n").filter(line=>line.startsWith("\\node")).map(line=>line.match(/anchor=([^,]+)/)![1])})};});
+      if(oracle==="axis-controls")return inferVizChart({chart:spec}).then(result=>{if(!result.complete||result.plan===undefined)throw new Error(JSON.stringify(result.diagnostics));const settings=fixture as {expectedStyle?:string;expectedSizes?:number[];expectedBaselines?:string[];expectedTikzAnchors?:string[];expectedFonts?:string[];expectedTikzFonts?:string[];expectedTikzExcludes?:string[];expectedStrokes?:[string,number,number][];expectedTextFills?:string[]};return {...(settings.expectedTikzExcludes===undefined?{}:{tikzExcluded:settings.expectedTikzExcludes.map(part=>!result.tikz.includes(part))}),...(settings.expectedStrokes===undefined?{}:{strokes:result.plan.items.filter((item): item is Extract<render.VizRenderItem, {kind:"line"}>=>item.kind==="line"&&(Math.abs(item.x1-item.x2)>1e-10||Math.abs(item.y1-item.y2)>1e-10)).map(item=>[item.stroke,item.strokeWidth,item.opacity??1]),sceneStrokes:result.scene!.nodes.filter(entry=>entry.node.kind==="line"&&(Math.abs(entry.node.x1-entry.node.x2)>1e-10||Math.abs(entry.node.y1-entry.node.y2)>1e-10)).map(entry=>entry.node.kind==="line"?[entry.stroke?.color,entry.stroke?.width,entry.opacity??1]:undefined),textFills:result.plan.items.filter(item=>item.kind==="text").map(item=>item.fill)}),lines:result.plan.items.filter((item): item is Extract<render.VizRenderItem, {kind:"line"}>=>item.kind==="line"&&(Math.abs(item.x1-item.x2)>1e-10||Math.abs(item.y1-item.y2)>1e-10)).map(item=>[item.x1,item.y1,item.x2,item.y2]),texts:result.plan.items.filter(item=>item.kind==="text").map(item=>({x:item.x,y:item.y,anchor:item.anchor,rotation:item.rotation??0,content:item.content})),...(settings.expectedStyle===undefined?{}:{styles:result.plan.items.map(item=>item.tikzStyle),emitted:result.tikz.split("\n").filter(line=>line.startsWith("\\path")||line.startsWith("\\node")).every(line=>line.includes(settings.expectedStyle!))}),...(settings.expectedFonts===undefined?{}:{fonts:result.plan.items.filter(item=>item.kind==="text").map(item=>item.font),sceneFonts:result.scene!.nodes.filter(entry=>entry.node.kind==="text").map(entry=>entry.node.kind==="text"?entry.node.font:undefined),tikzFonts:result.tikz.split("\n").filter(line=>line.startsWith("\\node")).map(line=>line.match(/font=\\(SemioSans|SemioMono)/)?.[1])}),...(settings.expectedSizes===undefined?{}:{sizes:result.plan.items.filter(item=>item.kind==="text").map(item=>item.size)}),...(settings.expectedBaselines===undefined?{}:{baselines:result.plan.items.filter(item=>item.kind==="text").map(item=>item.baseline??"middle"),sceneBaselines:result.scene!.nodes.filter(entry=>entry.node.kind==="text").map(entry=>entry.node.kind==="text"?entry.node.baseline:undefined),tikzAnchors:result.tikz.split("\n").filter(line=>line.startsWith("\\node")).map(line=>line.match(/anchor=([^,]+)/)![1])})};});
       if (oracle === "guide-text") return inferVizChart({chart:spec}).then(result=>{if(!result.complete||result.plan===undefined)throw new Error(JSON.stringify(result.diagnostics));return result.plan.items.filter(item=>item.kind==="text").map(item=>({x:item.x,y:item.y,anchor:item.anchor,rotation:item.rotation??0,content:item.content}));});
       if (oracle === "guide") return inferVizChart({chart:spec}).then(result=>{ if(!result.complete||result.plan===undefined)throw new Error(JSON.stringify(result.diagnostics));return { lines: result.plan.items.filter(item => item.kind === "line").map(item => [item.x1,item.y1,item.x2,item.y2]), labels: result.plan.items.filter(item => item.kind === "text").map(item => item.content) }; });
       const plan = render.planVizChart(spec);
       if (oracle !== undefined) return (plan.items[0] as { commands: unknown }).commands;
       return { ...(expected === undefined ? {} : { item: Object.fromEntries(Object.keys(expected).map((key) => [key, (plan.items[0] as unknown as Record<string, unknown>)?.[key]])) }), ...(count === undefined ? {} : { count: plan.items.length }), ...(text === undefined ? {} : { text: plan.items.find((item) => item.kind === "text")?.content }), ...(tikzIncludes === undefined ? {} : { tikz: tikzIncludes.map((part) => render.renderVizTikzPlan(plan).includes(part)) }), ...(sceneArcCount === undefined ? {} : { sceneArcCount: render.renderVizScenePlan(plan).nodes.flatMap((entry) => entry.node.kind === "path" ? entry.node.segments : []).filter((segment) => segment.kind === "arc").length }) };
     }, oracle: () => {
-      if(oracle==="axis-controls"){const settings=fixture as {expectedLines:number[][];expectedTexts:unknown[];expectedStyle?:string;expectedSizes?:number[];expectedBaselines?:string[];expectedTikzAnchors?:string[];expectedFonts?:string[];expectedTikzFonts?:string[];expectedTikzExcludes?:string[];expectedStrokes?:[string,number,number][];expectedTextFills?:string[]};const lines=settings.expectedLines.map(segment=>{const recorder=mark.vizPathRecorder();d3.line().context(recorder)([[segment[0]!,segment[1]!],[segment[2]!,segment[3]!]]);return recorder.commands.flatMap(command=>command.args);});return {...(settings.expectedTikzExcludes===undefined?{}:{tikzExcluded:settings.expectedTikzExcludes.map(()=>true)}),...(settings.expectedStrokes===undefined?{}:{strokes:settings.expectedStrokes,sceneStrokes:settings.expectedStrokes.map(([paint,width,opacity])=>{const color=d3Color.rgb(paint);return [[color.r/255,color.g/255,color.b/255,color.opacity],width,opacity];}),textFills:settings.expectedTextFills}),lines,texts:settings.expectedTexts,...(settings.expectedStyle===undefined?{}:{styles:Array(settings.expectedLines.length+settings.expectedTexts.length).fill(settings.expectedStyle),emitted:true}),...(settings.expectedFonts===undefined?{}:{fonts:settings.expectedFonts,sceneFonts:settings.expectedFonts,tikzFonts:settings.expectedTikzFonts}),...(settings.expectedSizes===undefined?{}:{sizes:settings.expectedSizes}),...(settings.expectedBaselines===undefined?{}:{baselines:settings.expectedBaselines,sceneBaselines:settings.expectedBaselines,tikzAnchors:settings.expectedTikzAnchors})};}
+      if(oracle==="axis-controls"){const settings=fixture as {expectedLines:number[][];expectedTexts:unknown[];expectedStyle?:string;expectedSizes?:number[];expectedBaselines?:string[];expectedTikzAnchors?:string[];expectedFonts?:string[];expectedTikzFonts?:string[];expectedTikzExcludes?:string[];expectedStrokes?:[string,number,number][];expectedTextFills?:string[]};const lines=settings.expectedLines.map(segment=>{const recorder=mark.vizPathRecorder();recordD3Path(d3.line(), recorder)([[segment[0]!,segment[1]!],[segment[2]!,segment[3]!]]);return recorder.commands.flatMap(command=>command.args);});return {...(settings.expectedTikzExcludes===undefined?{}:{tikzExcluded:settings.expectedTikzExcludes.map(()=>true)}),...(settings.expectedStrokes===undefined?{}:{strokes:settings.expectedStrokes,sceneStrokes:settings.expectedStrokes.map(([paint,width,opacity])=>{const color=d3Color.rgb(paint);return [[color.r/255,color.g/255,color.b/255,color.opacity],width,opacity];}),textFills:settings.expectedTextFills}),lines,texts:settings.expectedTexts,...(settings.expectedStyle===undefined?{}:{styles:Array(settings.expectedLines.length+settings.expectedTexts.length).fill(settings.expectedStyle),emitted:true}),...(settings.expectedFonts===undefined?{}:{fonts:settings.expectedFonts,sceneFonts:settings.expectedFonts,tikzFonts:settings.expectedTikzFonts}),...(settings.expectedSizes===undefined?{}:{sizes:settings.expectedSizes}),...(settings.expectedBaselines===undefined?{}:{baselines:settings.expectedBaselines,sceneBaselines:settings.expectedBaselines,tikzAnchors:settings.expectedTikzAnchors})};}
       if (oracle === "guide-text") {
         const guide=spec.guides![0]!,settings=guide.options??{},declared=spec.scales![0]!,map=guideScale.scaleLinear(declared.domain as number[],declared.range as number[]);
         const horizontal=guide.orient==="top"||guide.orient==="bottom",positive=guide.orient!=="top"&&guide.orient!=="left",sign=positive?1:-1,axis=guide.orient==="top"||guide.orient==="left"?10:guide.orient==="right"?90:70;
@@ -1715,14 +1730,14 @@ export async function renderGrammarChecks(): Promise<VizKernelCheck[]> {
       if (oracle === undefined) return { ...(expected === undefined ? {} : { item: expected }), ...(count === undefined ? {} : { count }), ...(text === undefined ? {} : { text }), ...(tikzIncludes === undefined ? {} : { tikz: tikzIncludes.map(() => true) }), ...(sceneArcCount === undefined ? {} : { sceneArcCount }) };
       const rows = spec.tables![0]!.rows;
       const recorder = mark.vizPathRecorder();
-      if (oracle === "line") d3.line().x((r: unknown) => Number((r as Record<string,unknown>).x)).y((r: unknown) => Number((r as Record<string,unknown>).y)).curve(d3.curveStepAfter).context(recorder)(rows as never);
-      else if (oracle === "area") d3.area().x((r: unknown) => Number((r as Record<string,unknown>).x)).y0((r: unknown) => Number((r as Record<string,unknown>).y2)).y1((r: unknown) => Number((r as Record<string,unknown>).y)).context(recorder)(rows as never);
-      else if (oracle === "link") { const row = rows[0]!; d3.linkHorizontal().context(recorder)({ source: [Number(row.x),Number(row.y)], target: [Number(row.x2),Number(row.y2)] }); }
-      else if (oracle === "arc") { const row=rows[0]!; d3.arc().innerRadius(Number(row.innerRadius)).outerRadius(Number(row.outerRadius)).startAngle(Number(row.startAngle)).endAngle(Number(row.endAngle)).context(recorder)({} as never); return recorder.commands.map((c) => ({ ...c, args: c.args.map((v,i) => c.op === "arc" || c.op === "rect" ? i===0?v+50:i===1?v+40:v : i%2===0?v+50:v+40) })); }
+      if (oracle === "line") recordD3Path(d3.line<VizRow>().x((r) => Number(r.x)).y((r) => Number(r.y)).curve(d3.curveStepAfter), recorder)(rows);
+      else if (oracle === "area") recordD3Path(d3.area<VizRow>().x((r) => Number(r.x)).y0((r) => Number(r.y2)).y1((r) => Number(r.y)), recorder)(rows);
+      else if (oracle === "link") { const row = rows[0]!; recordD3Path(d3.linkHorizontal(), recorder)({ source: [Number(row.x),Number(row.y)], target: [Number(row.x2),Number(row.y2)] }); }
+      else if (oracle === "arc") { const row=rows[0]!; recordD3Path(d3.arc<Record<string, never>>().innerRadius(Number(row.innerRadius)).outerRadius(Number(row.outerRadius)).startAngle(Number(row.startAngle)).endAngle(Number(row.endAngle)), recorder)({}); return recorder.commands.map((c) => ({ ...c, args: c.args.map((v,i) => c.op === "arc" || c.op === "rect" ? i===0?v+50:i===1?v+40:v : i%2===0?v+50:v+40) })); }
 
-      else if (oracle === "symbol") d3.symbol().type(d3.symbolDiamond).size(Number(rows[0]!.size)).context(recorder)();
-      else if (oracle === "ribbon") { const r=rows[0]!; d3Chord.ribbon().context(recorder)({ source:{startAngle:Number(r.startAngle),endAngle:Number(r.endAngle),radius:Number(r.radius)}, target:{startAngle:Number(r.targetStartAngle),endAngle:Number(r.targetEndAngle),radius:Number(r.radius)} }); }
-      else if (oracle === "pie") { const slices=d3.pie().value((r:unknown)=>Number((r as Record<string,unknown>).value)).sortValues(null)(rows as never); d3.arc().innerRadius(3).outerRadius(20).context(recorder)(slices[0]! as never);return recorder.commands.map((c)=>({...c,args:c.args.map((v,i)=>c.op==="arc"||c.op==="rect"?i===0?v+50:i===1?v+40:v:i%2===0?v+50:v+40)})); }
+      else if (oracle === "symbol") recordD3Path(d3.symbol().type(d3.symbolDiamond).size(Number(rows[0]!.size)), recorder)();
+      else if (oracle === "ribbon") { const r=rows[0]!; recordD3Path(d3Chord.ribbon(), recorder)({ source:{startAngle:Number(r.startAngle),endAngle:Number(r.endAngle),radius:Number(r.radius)}, target:{startAngle:Number(r.targetStartAngle),endAngle:Number(r.targetEndAngle),radius:Number(r.radius)} }); }
+      else if (oracle === "pie") { const slices=d3.pie<VizRow>().value((r)=>Number(r.value)).sortValues(null)([...rows]); recordD3Path(d3.arc<import("d3-shape").PieArcDatum<VizRow>>().innerRadius(3).outerRadius(20), recorder)(slices[0]!);return recorder.commands.map((c)=>({...c,args:c.args.map((v,i)=>c.op==="arc"||c.op==="rect"?i===0?v+50:i===1?v+40:v:i%2===0?v+50:v+40)})); }
       return recorder.commands;
     }, tolerance: 1e-9 };
   });
@@ -1732,7 +1747,7 @@ export async function renderGrammarChecks(): Promise<VizKernelCheck[]> {
     checks.push({module:"render",name:`emitter/${fixture.id}`,subject:()=>wanted.map((part)=>render.renderVizTikz(fixture.spec as Parameters<typeof render.planVizChart>[0]).includes(part)),oracle:()=>wanted.map(()=>true)});
   }
   const baselineFixtures=(await import("../../../../../🧪️tests/🎬️render-scene/🔣️baseline.json")).default;
-  for(const fixture of baselineFixtures.cases)checks.push({module:"render",name:`grammar/${fixture.id}`,subject:()=>{const spec={width:10,height:10,margin:{top:0,right:0,bottom:0,left:0},tables:[],layers:[]} as Parameters<typeof render.planVizChart>[0],base=render.planVizChart(spec),plan={...base,items:[fixture.item as render.VizRenderItem]},scene=render.renderVizScenePlan(plan),tikz=render.renderVizTikzPlan(plan);return {baseline:scene.nodes[0]!.node.kind==="text"?scene.nodes[0]!.node.baseline:undefined,anchor:tikz.match(/anchor=([^,]+)/)![1]};},oracle:()=>({baseline:(fixture as {expectedBaseline?:string}).expectedBaseline??fixture.item.baseline??"middle",anchor:fixture.expectedAnchor})});
+  for(const fixture of baselineFixtures.cases)checks.push({module:"render",name:`grammar/${fixture.id}`,subject:()=>{const spec={language:"en",width:10,height:10,margin:{top:0,right:0,bottom:0,left:0},tables:[],layers:[]} satisfies Parameters<typeof render.planVizChart>[0],base=render.planVizChart(spec),plan={...base,items:[fixture.item as render.VizRenderItem]},scene=render.renderVizScenePlan(plan),tikz=render.renderVizTikzPlan(plan);return {baseline:scene.nodes[0]!.node.kind==="text"?scene.nodes[0]!.node.baseline:undefined,anchor:tikz.match(/anchor=([^,]+)/)![1]};},oracle:()=>({baseline:(fixture as {expectedBaseline?:string}).expectedBaseline??fixture.item.baseline??"middle",anchor:fixture.expectedAnchor})});
   return checks;
 }
 

@@ -1,0 +1,242 @@
+{
+  "schema": {
+    "type": "object",
+    "required": [
+      "canvas",
+      "padding",
+      "size",
+      "orders",
+      "radii",
+      "languages",
+      "nodes",
+      "edges",
+      "toleranceMm"
+    ],
+    "additionalProperties": false,
+    "properties": {
+      "canvas": {
+        "type": "array",
+        "items": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "minItems": 2,
+        "maxItems": 2
+      },
+      "padding": {
+        "type": "number",
+        "minimum": 0
+      },
+      "size": {
+        "type": "number",
+        "exclusiveMinimum": 0
+      },
+      "orders": {
+        "type": "array",
+        "items": {
+          "enum": [
+            "index",
+            "name",
+            "degree"
+          ]
+        },
+        "minItems": 3
+      },
+      "radii": {
+        "type": "array",
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "minItems": 2,
+          "maxItems": 2
+        }
+      },
+      "languages": {
+        "type": "array",
+        "items": {
+          "enum": [
+            "en",
+            "de"
+          ]
+        }
+      },
+      "nodes": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": [
+            "id",
+            "group"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "group": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "edges": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": [
+            "source",
+            "target",
+            "weight"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "source": {
+              "type": "string"
+            },
+            "target": {
+              "type": "string"
+            },
+            "weight": {
+              "type": "number"
+            }
+          }
+        }
+      },
+      "toleranceMm": {
+        "type": "number",
+        "exclusiveMinimum": 0
+      }
+    }
+  },
+  "vectors": {
+    "canvas": [
+      80,
+      50
+    ],
+    "padding": 3,
+    "size": 1.3,
+    "orders": [
+      "index",
+      "name",
+      "degree"
+    ],
+    "radii": [
+      [
+        0.3,
+        1
+      ],
+      [
+        0.6,
+        1.4
+      ]
+    ],
+    "languages": [
+      "en",
+      "de"
+    ],
+    "nodes": [
+      {
+        "id": "C",
+        "group": "g1"
+      },
+      {
+        "id": "A",
+        "group": "g1"
+      },
+      {
+        "id": "B",
+        "group": "g1"
+      },
+      {
+        "id": "F",
+        "group": "g2"
+      },
+      {
+        "id": "D",
+        "group": "g2"
+      },
+      {
+        "id": "E",
+        "group": "g2"
+      },
+      {
+        "id": "I",
+        "group": "g3"
+      },
+      {
+        "id": "G",
+        "group": "g3"
+      },
+      {
+        "id": "H",
+        "group": "g3"
+      }
+    ],
+    "edges": [
+      {
+        "source": "C",
+        "target": "D",
+        "weight": 1
+      },
+      {
+        "source": "A",
+        "target": "D",
+        "weight": 1
+      },
+      {
+        "source": "A",
+        "target": "E",
+        "weight": 1
+      },
+      {
+        "source": "B",
+        "target": "D",
+        "weight": 1
+      },
+      {
+        "source": "B",
+        "target": "E",
+        "weight": 1
+      },
+      {
+        "source": "B",
+        "target": "F",
+        "weight": 1
+      },
+      {
+        "source": "G",
+        "target": "D",
+        "weight": 1
+      },
+      {
+        "source": "H",
+        "target": "E",
+        "weight": 1
+      },
+      {
+        "source": "H",
+        "target": "F",
+        "weight": 1
+      },
+      {
+        "source": "I",
+        "target": "D",
+        "weight": 1
+      },
+      {
+        "source": "I",
+        "target": "E",
+        "weight": 1
+      },
+      {
+        "source": "I",
+        "target": "F",
+        "weight": 1
+      }
+    ],
+    "toleranceMm": 0.025
+  }
+}

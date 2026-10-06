@@ -1,0 +1,15 @@
+\subsection{\Key{api-path-spatial-vector-field}}
+\ApiScopeSource{api-path-spatial-vector-field}{semio / viz / family / spatial-vector-field}
+\ApiText{These are the common reset defaults. A catalogue kind may supply its own preset before explicit options are applied.}{Dies sind die gemeinsamen Rücksetzvorgaben. Ein Katalogtyp kann vor der Anwendung expliziter Optionen eigene Vorgaben setzen.}
+\SemioTableLong[text-size=8pt]{\Key{api-path-spatial-vector-field} \ApiText{Shared vector-field controls}{Gemeinsame Vektorfeldsteuerung}}{0.19,0.12,0.16,0.53}{\ApiKey & \ApiType & \ApiDefault & \ApiMeaning}{%
+  \SemioTableRow{\Key{render} & \Key{string} & \Key{quiver} & \ApiText{Rendering mode: quiver, streamline, streakline, particle or lic.}{Darstellungsmodus: quiver, streamline, streakline, particle oder lic.}}
+  \SemioTableRow{\Key{field} & \Key{string} & \Key{shear} & \ApiText{Analytic field selector or named rectangular vector-field collection; named fields use bilinear interpolation over their declared domain.}{Auswahl eines analytischen Felds oder Name einer rechteckigen Vektorfeldsammlung; benannte Felder verwenden bilineare Interpolation über ihrem deklarierten Bereich.}}
+  \SemioTableRow{\Key{columns} & \Key{integer} & \Key{9} & \ApiText{Number of sampled columns in the plane lattice.}{Anzahl abgetasteter Spalten im ebenen Gitter.}}
+  \SemioTableRow{\Key{rows} & \Key{integer} & \Key{6} & \ApiText{Number of sampled rows in the plane lattice.}{Anzahl abgetasteter Zeilen im ebenen Gitter.}}
+  \SemioTableRow{\Key{cell} & \Key{number} & \Key{8} & \ApiText{Distance between neighbouring plane-lattice samples in millimetres.}{Abstand benachbarter Abtastpunkte des ebenen Gitters in Millimetern.}}
+  \SemioTableRow{\Key{arrow} & \Key{number} & \Key{4} & \ApiText{Arrow length in millimetres at unit vector magnitude.}{Pfeillänge in Millimetern bei Einheitsbetrag des Vektors.}}
+  \SemioTableRow{\Key{steps} & \Key{integer} & \Key{24} & \ApiText{Number of RK4 integration steps per streamline.}{Anzahl der RK4-Integrationsschritte je Stromlinie.}}
+  \SemioTableRow{\Key{dt} & \Key{number} & \Key{0.35} & \ApiText{Time increment of each RK4 integration step.}{Zeitinkrement jedes RK4-Integrationsschritts.}}
+  \SemioTableRow{\Key{seeds} & \Key{integer} & \Key{8} & \ApiText{Number of initial streamline seeds.}{Anzahl anfänglicher Stromlinienstartpunkte.}}
+}
+

@@ -1,0 +1,5 @@
+# Mark Radius Effective Defaults Independent Audit
+
+Native radius/rx/ry/outerRadius setters (mark1840–1849) evaluate floating arithmetic. Shared reset values are radius8,rx8,ry5,outerRadius8. Explicit radius propagates to rx/ry/outer only while their explicit-set flags are false. targetRadius setter2133 is floating arithmetic; after authored options, draw2259 inherits the effective radius unless an explicit targetRadius was set. Therefore fixed targetRadius4 is unsupported. Variant defaults can change effective values, notably ribbon radius18; inheritance must preserve direct variants.
+
+PadRadius differs: token-list setter1852 and empty reset1893 preserve a blank sentinel. Sector1364 evaluates blank as sqrt(innerRadius²+outerRadius²), otherwise evaluates the authored expression. It needs an empty-or-numeric-expression contract, not unconditional fixed number or arbitrary literal text. Five immediate fp radii are numeric expression consumers; padRadius is the deferred expression/sentinel hybrid. Catalogue received exact source/default distinctions. No new native compiler invocation or runtime completion claim was made.
