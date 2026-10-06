@@ -28,8 +28,7 @@ from manim_fonts import (
     SUBTITLE_FONT_SIZE, BODY_FONT_SIZE, LABEL_FONT_SIZE, FORMULA_FONT_SIZE,
 )
 from manim_visuals import (
-    PASTEL_PINK,
-    PASTEL_WHITE, PASTEL_CYAN, PASTEL_TEAL, PASTEL_ORANGE, PASTEL_YELLOW, PASTEL_RED, PASTEL_BLUE, PASTEL_GREEN,
+    P_WHITE, P_CYAN, P_TEAL, P_ORANGE, P_YELLOW, P_RED, P_BLUE, P_GREEN,
     highlight_param, dim_arrow, math_label, math_panel, de_num, place_math,
     caption_bar, swap_caption, hold_for, subtitle_text,
     watt_anchor, set_vo_language,
@@ -41,10 +40,10 @@ set_vo_language("de")
 # 🏔️ Persistent topic title — Write once on Beat1, self.add() on later beats.
 TITLE_DE = "Modul 4: Interne Wärmegewinne"
 
-COLOR_PEOPLE = PASTEL_PINK
-COLOR_EQUIP = PASTEL_CYAN
-COLOR_LIGHT = PASTEL_YELLOW
-COLOR_HEAT = PASTEL_ORANGE
+COLOR_PEOPLE = "#F472B6"
+COLOR_EQUIP = "#38BDF8"
+COLOR_LIGHT = "#FBBF24"
+COLOR_HEAT = "#F97316"
 
 # Whole-stage fit (applied once per beat after building the stage).
 CONTENT_SCALE = 0.62
@@ -115,13 +114,13 @@ def _watts(sub: str, tracker) -> str:
 
 def _sum_parts(keys, *, lead=None):
     """🧮 Panel parts ``[lead =] Φ_p + Φ_e + … [W]`` for ``math_panel``."""
-    colors = {"p": COLOR_PEOPLE, "e": COLOR_EQUIP, "l": COLOR_LIGHT, "int": PASTEL_WHITE}
-    parts = [(f"phi_{lead}", _phi(lead), colors[lead]), (None, "=", PASTEL_WHITE)] if lead else []
+    colors = {"p": COLOR_PEOPLE, "e": COLOR_EQUIP, "l": COLOR_LIGHT, "int": P_WHITE}
+    parts = [(f"phi_{lead}", _phi(lead), colors[lead]), (None, "=", P_WHITE)] if lead else []
     for i, k in enumerate(keys):
         if i:
-            parts.append((None, "+", PASTEL_WHITE))
+            parts.append((None, "+", P_WHITE))
         parts.append((f"phi_{k}", _phi(k), colors[k]))
-    parts.append((None, r"\;[\mathrm{W}]", PASTEL_WHITE))
+    parts.append((None, r"\;[\mathrm{W}]", P_WHITE))
     return parts
 #endregion
 
@@ -129,7 +128,7 @@ def _sum_parts(keys, *, lead=None):
 _READOUT_CACHE: dict = {}
 
 
-def _live(fn, at, *, size=None, color=PASTEL_WHITE, edge="left"):
+def _live(fn, at, *, size=None, color=P_WHITE, edge="left"):
     """📟 ``math_readout`` that reuses the typeset box while ``fn()`` returns the same source.
 
     https://docs.manim.community/en/stable/reference/manim.animation.updaters.mobject_update_utils.html
@@ -154,7 +153,7 @@ def _din_ref(text: str):
     chip is added after ``_fit_stage`` and sits in absolute frame coordinates,
     so ``CONTENT_SCALE`` never touches it.
     """
-    ref = Text(text, font_size=LABEL_FONT_SIZE - 3, color=PASTEL_TEAL)
+    ref = Text(text, font_size=LABEL_FONT_SIZE - 3, color=P_TEAL)
     ref.set_opacity(0.72)
     ref.to_corner(UR, buff=0.30)
     return ref
@@ -222,7 +221,7 @@ class Beat1_WinterInterneGewinne(Scene):
 
         moon_center = np.array([-5.2, 2.8, 0])
         moon = VGroup(
-            Circle(radius=0.42, color=PASTEL_YELLOW, fill_opacity=0.85)
+            Circle(radius=0.42, color=P_YELLOW, fill_opacity=0.85)
             .move_to(moon_center).set_stroke(width=0),
             Circle(radius=0.38, color="#0B0C10", fill_opacity=1.0)
             .move_to(moon_center + np.array([0.16, 0.12, 0])).set_stroke(width=0),
@@ -235,7 +234,7 @@ class Beat1_WinterInterneGewinne(Scene):
             [4.8, -2.6, 0], [-5.2, 0.3, 0], [5.5, -1.2, 0],
         ]
         particles = VGroup(*[
-            Dot(point=pos, radius=0.035, color=PASTEL_BLUE, fill_opacity=0.55)
+            Dot(point=pos, radius=0.035, color=P_BLUE, fill_opacity=0.55)
             for pos in particle_positions
         ])
 
@@ -260,7 +259,7 @@ class Beat1_WinterInterneGewinne(Scene):
         for lab, dot in zip(source_labels, source_dots):
             lab.next_to(dot, UP, buff=0.65)
 
-        din_tag = Text("DIN V 18599", font_size=BODY_FONT_SIZE, color=PASTEL_TEAL)
+        din_tag = Text("DIN V 18599", font_size=BODY_FONT_SIZE, color=P_TEAL)
         din_tag.next_to(outer_walls, RIGHT, buff=0.40, aligned_edge=DOWN)
 
         _fit_stage(VGroup(
@@ -385,7 +384,7 @@ class Beat2_PersonenPhiP(Scene):
         )
 
         # Watt badge outside the house (not stage-scaled) — normal readable size.
-        anchor = watt_anchor(PHI_P_W, compare="bulb", title="eine sitzende Person", color=PASTEL_YELLOW)
+        anchor = watt_anchor(PHI_P_W, compare="bulb", title="eine sitzende Person")
         anchor.scale(1.0)
         anchor.next_to(house, RIGHT, buff=0.3)
         anchor.set_y(human.get_center()[1] + 0.1)
@@ -794,7 +793,7 @@ class Beat5_SummeUndDichte(Scene):
             run_time=1.6,
         )
         self.remove(p_tok, e_tok, l_tok)
-        ring = highlight_param(items, "phi_int", color=PASTEL_ORANGE)
+        ring = highlight_param(items, "phi_int", color=P_ORANGE)
         self.play(Create(ring), run_time=0.45)
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "sum"))
         hold_for(self, self.NARRATION, "sum", used=1.4 + 1.6 + 0.45 + 0.35)
@@ -806,9 +805,9 @@ class Beat5_SummeUndDichte(Scene):
 
         row2, box2, items2 = math_panel([
             ("q_int", r"q_{\mathrm{int}}", COLOR_HEAT),
-            (None, "=", PASTEL_WHITE),
-            ("frac", rf"\frac{{{_phi('int')}}}{{\textcolor{{{PASTEL_CYAN}}}{{A_{{\mathrm{{N}}}}}}}}", PASTEL_WHITE),
-            (None, r"\;[\mathrm{W/m^{2}}]", PASTEL_WHITE),
+            (None, "=", P_WHITE),
+            ("frac", rf"\frac{{{_phi('int')}}}{{\textcolor{{{P_CYAN}}}{{A_{{\mathrm{{N}}}}}}}}", P_WHITE),
+            (None, r"\;[\mathrm{W/m^{2}}]", P_WHITE),
         ], edge_buff=FORMULA_EDGE_BUFF)
         self.play(ReplacementTransform(row, row2), ReplacementTransform(box, box2), run_time=1.4)
         row, box, items = row2, box2, {**items2, "a_n": items2["frac"][0][2]}
@@ -816,12 +815,12 @@ class Beat5_SummeUndDichte(Scene):
         pw, pd = ROOM_W_M * B5_PLAN_UNIT, ROOM_D_M * B5_PLAN_UNIT
         plan = Rectangle(
             width=pw, height=pd, color=GREY_B, stroke_width=4,
-            fill_color=PASTEL_CYAN, fill_opacity=0.10,
+            fill_color=P_CYAN, fill_opacity=0.10,
         ).move_to(B5_PLAN_C)
         plan_tag = Text("Grundriss Büro", font_size=LABEL_FONT_SIZE, color=GREY_B)
         plan_tag.next_to(plan, UP, buff=0.14)
-        w_dim = dim_arrow(plan.get_corner(DL) + DOWN * 0.25, plan.get_corner(DR) + DOWN * 0.25, color=PASTEL_CYAN)
-        d_dim = dim_arrow(plan.get_corner(DR) + RIGHT * 0.25, plan.get_corner(UR) + RIGHT * 0.25, color=PASTEL_CYAN)
+        w_dim = dim_arrow(plan.get_corner(DL) + DOWN * 0.25, plan.get_corner(DR) + DOWN * 0.25, color=P_CYAN)
+        d_dim = dim_arrow(plan.get_corner(DR) + RIGHT * 0.25, plan.get_corner(UR) + RIGHT * 0.25, color=P_CYAN)
         w_on, d_on = ValueTracker(0.0), ValueTracker(0.0)
 
         def area():
@@ -830,17 +829,17 @@ class Beat5_SummeUndDichte(Scene):
         w_live = _live(
             lambda: rf"{de_num(w_on.get_value() * ROOM_W_M)}\,\mathrm{{m}}",
             np.array([plan.get_center()[0], plan.get_bottom()[1] - 0.62, 0.0]),
-            size=LABEL_FONT_SIZE, color=PASTEL_CYAN, edge="center",
+            size=LABEL_FONT_SIZE, color=P_CYAN, edge="center",
         )
         d_live = _live(
             lambda: rf"{de_num(d_on.get_value() * ROOM_D_M)}\,\mathrm{{m}}",
             np.array([plan.get_right()[0] + 0.45, plan.get_center()[1] - 0.08, 0.0]),
-            size=LABEL_FONT_SIZE, color=PASTEL_CYAN,
+            size=LABEL_FONT_SIZE, color=P_CYAN,
         )
         a_live = _live(
             lambda: rf"A_{{\mathrm{{N}}}} = {de_num(area())}\,\mathrm{{m^{{2}}}}",
             np.array([plan.get_center()[0], plan.get_center()[1] - 0.10, 0.0]),
-            size=BODY_FONT_SIZE, color=PASTEL_CYAN, edge="center",
+            size=BODY_FONT_SIZE, color=P_CYAN, edge="center",
         )
         q_on = ValueTracker(0.0)
         q_live = _live(
@@ -858,7 +857,7 @@ class Beat5_SummeUndDichte(Scene):
             w_on.animate.set_value(1.0), d_on.animate.set_value(1.0),
             run_time=1.2,
         )
-        ring = highlight_param(items, "a_n", color=PASTEL_CYAN)
+        ring = highlight_param(items, "a_n", color=P_CYAN)
         self.play(Create(ring), run_time=0.45)
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "density"))
         hold_for(self, self.NARRATION, "density", used=1.4 + 0.8 + 1.2 + 0.45 + 0.35)

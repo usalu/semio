@@ -26,6 +26,24 @@ P_GREEN = "#CAFFBF"
 #endregion
 
 
+#region Pastel palette
+# Soft companions of the base palette for series that want a calm, harmonious
+# look (Heating). Same hue roles as the base names — warm, cold, sun, air — at
+# lower saturation, so one meaning keeps one colour across every scene.
+PASTEL_WHITE = "#FFFFFF"
+PASTEL_RED = "#EFA9A3"
+PASTEL_ORANGE = "#F3C49F"
+PASTEL_YELLOW = "#F2DFA2"
+PASTEL_GREEN = "#B9DCB3"
+PASTEL_TEAL = "#93C6BC"
+PASTEL_CYAN = "#AED9DF"
+PASTEL_BLUE = "#A9C3E6"
+PASTEL_PURPLE = "#C8B8E2"
+PASTEL_PINK = "#F0BCD0"
+PASTEL_GREY = "#9AA2AC"
+#endregion
+
+
 #region Layout zones
 # Three fixed horizontal bands every beat respects, top to bottom: the title
 # block, free content, then formula_panel and caption_bar. Beats run their
@@ -258,12 +276,13 @@ def _device_glyph(kind: str, color: str):
     return VGroup(body, fins)
 
 
-def watt_anchor(watts: float, *, compare: str = "laptop", title: str | None = None):
+def watt_anchor(watts: float, *, compare: str = "laptop", title: str | None = None, color: str | None = None):
     """🔌 Badge that grounds a power number against a familiar device."""
     from manim import DOWN, RoundedRectangle, VGroup
     from manim_fonts import FORMULA_FONT_SIZE, LABEL_FONT_SIZE, body_text
 
-    name, device_w, color = _WATT_DEVICES.get(compare, _WATT_DEVICES["laptop"])
+    name, device_w, device_color = _WATT_DEVICES.get(compare, _WATT_DEVICES["laptop"])
+    color = color or device_color
     ratio = watts / device_w if device_w else 0.0
     if ratio >= 0.85 and ratio <= 1.15:
         compare_line = f"≈ 1× {name} ({device_w} W)"

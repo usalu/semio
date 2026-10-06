@@ -26,7 +26,7 @@ from manim_fonts import (
     BODY_FONT_SIZE, LABEL_FONT_SIZE, FORMULA_FONT_SIZE,
 )
 from manim_visuals import (
-    PASTEL_WHITE, PASTEL_CYAN, PASTEL_TEAL, PASTEL_ORANGE, PASTEL_YELLOW, PASTEL_RED, PASTEL_BLUE, PASTEL_GREEN,
+    P_WHITE, P_CYAN, P_TEAL, P_ORANGE, P_YELLOW, P_RED, P_BLUE, P_GREEN,
     highlight_param, caption_bar, swap_caption, hold_for, subtitle_text,
     radiation_ray, set_vo_language, dim_arrow,
     math_text, math_row, math_readout, math_panel, math_label, de_num,
@@ -38,21 +38,21 @@ set_vo_language("de")
 # 🏔️ Persistent topic title — Write once on Beat1, self.add() on later beats.
 TITLE_DE = "Modul 5: Solarer Wärmegewinn"
 
-COLOR_G = PASTEL_YELLOW
-COLOR_A = PASTEL_CYAN
-COLOR_WIN = PASTEL_CYAN
+COLOR_G = "#F7E3A1"
+COLOR_A = "#9FD3F2"
+COLOR_WIN = "#A8E6EF"
 COLOR_WALL = "#64748B"
 COLOR_FRAME = "#94A3B8"
-COLOR_FF = PASTEL_ORANGE
-COLOR_GVAL = PASTEL_GREEN
+COLOR_FF = "#F4B183"
+COLOR_GVAL = "#A8DDB5"
 COLOR_REFL = "#D9DEE6"
-COLOR_GLASS_HEAT = PASTEL_RED
+COLOR_GLASS_HEAT = "#F4A7A0"
 COLOR_FSH = "#95A5A6"
-COLOR_GOLD = PASTEL_YELLOW
-COLOR_HEAT = PASTEL_ORANGE
+COLOR_GOLD = "#F3D98B"
+COLOR_HEAT = "#F59E0B"
 COLOR_SLAB = "#737373"
-COLOR_MASS = PASTEL_CYAN
-COLOR_C = PASTEL_GREEN
+COLOR_MASS = "#38BDF8"
+COLOR_C = "#2ECC71"
 
 # Stage fills the band under the beat subtitle and above the formula/caption zone.
 # Prefer native type-scale labels — do not crush the stage to ~0.6.
@@ -156,7 +156,7 @@ def _din_ref(text: str):
     Added in absolute frame coordinates, so ``_fit_stage`` never scales it, and
     skipped on the g-value beat, which already prints its norm in the diagram.
     """
-    ref = Text(text, font_size=LABEL_FONT_SIZE - 3, color=PASTEL_TEAL)
+    ref = Text(text, font_size=LABEL_FONT_SIZE - 3, color=P_TEAL)
     ref.set_opacity(0.72)
     ref.to_corner(UR, buff=0.30)
     return ref
@@ -208,7 +208,7 @@ def _room_geo(x_w: float, y_f: float, s: float) -> dict:
 def _block(x0, x1, y0, y1, *, color=COLOR_WALL, opacity=0.55):
     """🧱 Filled axis-aligned building element."""
     return Polygon([x0, y0, 0], [x1, y0, 0], [x1, y1, 0], [x0, y1, 0],
-                   color=PASTEL_WHITE, stroke_width=1.6, fill_color=color, fill_opacity=opacity)
+                   color=P_WHITE, stroke_width=1.6, fill_color=color, fill_opacity=opacity)
 
 
 def _section_room(geo: dict, *, roof_tip=None) -> dict:
@@ -276,7 +276,7 @@ def _sun_patch(elev: float, geo: dict, edges=()) -> list:
     return [a, ha, *corner, hb, b]
 
 
-def _patch_mob(points, color=PASTEL_ORANGE):
+def _patch_mob(points, color=P_ORANGE):
     """🟧 Lit section polygon plus the sunlit floor and back-wall stretch drawn bold."""
     if len(points) < 3:
         return VGroup()
@@ -327,7 +327,7 @@ def _sun_rays(elev: float, geo: dict, boxes, heights, sun_at):
 
 def _sun_glyph():
     """🌞 Compact sun disc with a soft glow."""
-    return VGroup(Dot(radius=0.34, color=PASTEL_YELLOW, fill_opacity=0.3), Dot(radius=0.2, color=COLOR_G, fill_opacity=1.0))
+    return VGroup(Dot(radius=0.34, color=YELLOW_A, fill_opacity=0.3), Dot(radius=0.2, color=COLOR_G, fill_opacity=1.0))
 #endregion
 
 
@@ -385,34 +385,34 @@ class Beat1_VerlustZuGewinn(Scene):
         arrow_left = CurvedArrow(
             house_center + LEFT * 2.1 + DOWN * 0.2,
             house_center + LEFT * 3.2 + UP * 0.2,
-            angle=TAU / 12, color=PASTEL_CYAN,
+            angle=TAU / 12, color=P_CYAN,
         )
         arrow_right = CurvedArrow(
             house_center + RIGHT * 2.1 + DOWN * 0.2,
             house_center + RIGHT * 3.2 + UP * 0.2,
-            angle=-TAU / 12, color=PASTEL_CYAN,
+            angle=-TAU / 12, color=P_CYAN,
         )
         arrow_roof_left = CurvedArrow(
             house_center + LEFT * 1.2 + UP * 1.8,
             house_center + LEFT * 2.2 + UP * 2.6,
-            angle=TAU / 12, color=PASTEL_CYAN,
+            angle=TAU / 12, color=P_CYAN,
         )
         arrow_roof_right = CurvedArrow(
             house_center + RIGHT * 1.2 + UP * 1.8,
             house_center + RIGHT * 2.2 + UP * 2.6,
-            angle=-TAU / 12, color=PASTEL_CYAN,
+            angle=-TAU / 12, color=P_CYAN,
         )
         arrow_top = CurvedArrow(
             house_center + UP * 2.4,
             house_center + UP * 3.2 + RIGHT * 0.4,
-            angle=-TAU / 12, color=PASTEL_CYAN,
+            angle=-TAU / 12, color=P_CYAN,
         )
         loss_arrows = VGroup(
             arrow_left, arrow_right, arrow_roof_left, arrow_roof_right, arrow_top,
         )
         loss_label = VGroup(
-            Text("Wärmeverlust", font_size=BODY_FONT_SIZE, color=PASTEL_CYAN),
-            math_text(r"\Phi_{\mathrm{Verlust}}", font_size=BODY_FONT_SIZE, color=PASTEL_CYAN),
+            Text("Wärmeverlust", font_size=BODY_FONT_SIZE, color=P_CYAN),
+            math_text(r"\Phi_{\mathrm{Verlust}}", font_size=BODY_FONT_SIZE, color=P_CYAN),
         ).arrange(DOWN, buff=0.14)
         loss_label.next_to(house, RIGHT, buff=0.45).shift(UP * 0.4)
 
@@ -593,10 +593,10 @@ class Beat2_BestrahlungUndFlaeche(Scene):
         self.play(FadeIn(a_side), run_time=0.5)
 
         panel = math_panel([
-            ("phi", r"\Phi", PASTEL_WHITE), (None, "=", PASTEL_WHITE),
-            ("g", "G", COLOR_G), (None, r"\cdot", PASTEL_WHITE),
-            ("a", "A", COLOR_A), (None, r"\cdot", PASTEL_WHITE),
-            ("ff", r"F_{\mathrm{f}}", COLOR_FF), (None, r"\;[\mathrm{W}]", PASTEL_WHITE),
+            ("phi", r"\Phi", P_WHITE), (None, "=", P_WHITE),
+            ("g", "G", COLOR_G), (None, r"\cdot", P_WHITE),
+            ("a", "A", COLOR_A), (None, r"\cdot", P_WHITE),
+            ("ff", r"F_{\mathrm{f}}", COLOR_FF), (None, r"\;[\mathrm{W}]", P_WHITE),
         ])
         _fly_into(self, panel, {"g": g_lbl, "a": a_side, "ff": ff_lbl})
         ring = highlight_param(panel[2], "ff", color=COLOR_FF)
@@ -692,12 +692,12 @@ class Beat3_GWert(Scene):
         sun = VGroup(*[Circle(radius=r, stroke_width=0, fill_color=COLOR_G, fill_opacity=o).move_to([-6.15, 0.15, 0])
                        for r, o in ((0.5, 0.10), (0.36, 0.22), (0.24, 1.0))])
         incoming = _straight_band(-5.8, x_in, y_top - h / 2, h, COLOR_G, 0.38)
-        in_lbl = Text("100 %", font_size=LABEL_FONT_SIZE, color=PASTEL_WHITE).move_to([-4.6, y_top - h / 2, 0])
+        in_lbl = Text("100 %", font_size=LABEL_FONT_SIZE, color=P_WHITE).move_to([-4.6, y_top - h / 2, 0])
         reflected = _band((x_in, y_r, 0), (-1.1, y_r, 0), (-1.8, 1.95, 0), (-3.6, 1.95, 0), h * SHARE_R, COLOR_REFL, 0.35)
         refl_lbl = Text("reflektiert 20 %", font_size=LABEL_FONT_SIZE, color=COLOR_REFL)
         refl_lbl.move_to([-3.75 - refl_lbl.width / 2, 1.95, 0])
         transmitted = _straight_band(x_out, 6.0, y_t, h * SHARE_T, COLOR_G, 0.38)
-        trans_lbl = Text("durchgelassen 50 %", font_size=LABEL_FONT_SIZE, color=PASTEL_WHITE).move_to([3.1, y_t, 0])
+        trans_lbl = Text("durchgelassen 50 %", font_size=LABEL_FONT_SIZE, color=P_WHITE).move_to([3.1, y_t, 0])
         abs_lbl = Text("im Glas 30 %", font_size=LABEL_FONT_SIZE, color=COLOR_GLASS_HEAT).move_to([0.0, 2.15, 0])
         self.play(FadeIn(sun, scale=0.8), run_time=0.5)
         self.play(GrowFromEdge(incoming, LEFT), FadeIn(in_lbl), run_time=1.4)
@@ -733,11 +733,11 @@ class Beat3_GWert(Scene):
         g_sym = math_label("g", size=FORMULA_FONT_SIZE, color=COLOR_GVAL)
         g_sym.move_to(g_lbl.get_left() + RIGHT * g_sym.width / 2)
         panel = math_panel([
-            ("phi", r"\Phi", PASTEL_WHITE), (None, "=", PASTEL_WHITE),
-            ("g_irr", "G", COLOR_G), (None, r"\cdot", PASTEL_WHITE),
-            ("a", "A", COLOR_A), (None, r"\cdot", PASTEL_WHITE),
-            ("ff", r"F_{\mathrm{f}}", COLOR_FF), (None, r"\cdot", PASTEL_WHITE),
-            ("g", "g", COLOR_GVAL), (None, r"\;[\mathrm{W}]", PASTEL_WHITE),
+            ("phi", r"\Phi", P_WHITE), (None, "=", P_WHITE),
+            ("g_irr", "G", COLOR_G), (None, r"\cdot", P_WHITE),
+            ("a", "A", COLOR_A), (None, r"\cdot", P_WHITE),
+            ("ff", r"F_{\mathrm{f}}", COLOR_FF), (None, r"\cdot", P_WHITE),
+            ("g", "g", COLOR_GVAL), (None, r"\;[\mathrm{W}]", P_WHITE),
         ])
         _fly_into(self, panel, {"g": g_sym})
         ring = highlight_param(panel[2], "g", color=COLOR_GVAL)
@@ -796,9 +796,9 @@ class Beat4_SaisonaleWinkel(Scene):
 
         arc = DashedVMobject(Arc(
             radius=radius, start_angle=np.radians(ELEV_WINTER), angle=np.radians(ELEV_SUMMER - ELEV_WINTER),
-            arc_center=hub, color=PASTEL_YELLOW, stroke_width=2,
+            arc_center=hub, color=YELLOW_E, stroke_width=2,
         ), num_dashes=24)
-        arc_label = Text("Sonnenbahn", font_size=BODY_FONT_SIZE, color=PASTEL_YELLOW)
+        arc_label = Text("Sonnenbahn", font_size=BODY_FONT_SIZE, color=YELLOW_B)
         arc_label.next_to(hub + radius * _sun_dir(ELEV_WINTER), DR, buff=0.35)
         sun = _sun_glyph().move_to(sun_at())
         sun.add_updater(lambda m: m.move_to(sun_at()))
@@ -806,7 +806,7 @@ class Beat4_SaisonaleWinkel(Scene):
                                  [4.3, 1.95, 0], size=BODY_FONT_SIZE, color=COLOR_G)
         tag_summer = Text("Sommer: Überhang hält steile Strahlen ab", font_size=BODY_FONT_SIZE, color=COLOR_G)
         tag_summer.move_to([-6.5 + tag_summer.width / 2, 1.95, 0])
-        tag_winter = Text("Winter: flache Strahlen bis zur unteren Rückwand", font_size=BODY_FONT_SIZE, color=PASTEL_ORANGE)
+        tag_winter = Text("Winter: flache Strahlen bis zur unteren Rückwand", font_size=BODY_FONT_SIZE, color=P_ORANGE)
         tag_winter.move_to([-6.5 + tag_winter.width / 2, 1.95, 0])
         dark_note = Text("oben hinten: keine direkte Sonne", font_size=LABEL_FONT_SIZE, color=GREY_B)
         dark_note.move_to([geo["x_b"] + 0.18 + dark_note.width / 2, geo["y_c"] - 0.3, 0])
@@ -847,7 +847,7 @@ class Beat4_SaisonaleWinkel(Scene):
 
 
 #region Beat5 — Verschattung
-COLOR_BLIND = PASTEL_TEAL
+COLOR_BLIND = "#9CC9C2"
 FSH_BLIND = 0.15
 
 
@@ -859,7 +859,7 @@ def _hatch(rect, spacing: float = 0.2):
     while c <= x1 - y0:
         xs, xe = max(x0, c + y0), min(x1, c + y1)
         if xe - xs > 1e-3:
-            lines.add(Line([xs, xs - c, 0], [xe, xe - c, 0], color=PASTEL_WHITE, stroke_width=1.0, stroke_opacity=0.35))
+            lines.add(Line([xs, xs - c, 0], [xe, xe - c, 0], color=P_WHITE, stroke_width=1.0, stroke_opacity=0.35))
         c += spacing
     return lines
 
@@ -903,9 +903,9 @@ class Beat5_Verschattung(Scene):
         #region section
         glass_out, glass_in = -3.5, -3.3
         wall_top, wall_bottom = 1.55, -0.85
-        lintel = Rectangle(width=0.5, height=0.6, color=PASTEL_WHITE, stroke_width=2.5, fill_color="#161A21",
+        lintel = Rectangle(width=0.5, height=0.6, color=P_WHITE, stroke_width=2.5, fill_color="#161A21",
                            fill_opacity=1.0).move_to([-3.4, wall_top + 0.3, 0])
-        sill = Rectangle(width=0.5, height=0.6, color=PASTEL_WHITE, stroke_width=2.5, fill_color="#161A21",
+        sill = Rectangle(width=0.5, height=0.6, color=P_WHITE, stroke_width=2.5, fill_color="#161A21",
                          fill_opacity=1.0).move_to([-3.4, wall_bottom - 0.3, 0])
         masonry = VGroup(lintel, sill, _hatch(lintel), _hatch(sill)).set_z_index(3)
         glazing = VGroup(*[Line([x, wall_bottom, 0], [x, wall_top, 0], color=COLOR_WIN, stroke_width=3)
@@ -913,9 +913,9 @@ class Beat5_Verschattung(Scene):
         slab_left, room_end_x = lintel.get_right()[0], -0.7
         ceiling_y, floor_y = lintel.get_top()[1], sill.get_bottom()[1]
         room = VGroup(
-            Line([slab_left, ceiling_y, 0], [room_end_x, ceiling_y, 0], color=PASTEL_WHITE, stroke_width=2.5),
+            Line([slab_left, ceiling_y, 0], [room_end_x, ceiling_y, 0], color=P_WHITE, stroke_width=2.5),
             Line([slab_left, floor_y, 0], [room_end_x, floor_y, 0], color=COLOR_FRAME, stroke_width=4),
-            Line([room_end_x, floor_y, 0], [room_end_x, ceiling_y, 0], color=PASTEL_WHITE, stroke_width=2.5),
+            Line([room_end_x, floor_y, 0], [room_end_x, ceiling_y, 0], color=P_WHITE, stroke_width=2.5),
         )
         lbl_out = Text("außen", font_size=BODY_FONT_SIZE, color=COLOR_FRAME).move_to([-6.2, 0.35, 0])
         lbl_in = Text("innen", font_size=BODY_FONT_SIZE, color=COLOR_FRAME).move_to([-1.55, 1.6, 0])
@@ -949,8 +949,8 @@ class Beat5_Verschattung(Scene):
         #region F_sh scale
         sx0, sx1, sy = 1.3, 5.9, 0.35
         scale = VGroup(
-            Line([sx0, sy, 0], [sx1, sy, 0], color=PASTEL_WHITE, stroke_width=2),
-            *[Line([x, sy - 0.12, 0], [x, sy + 0.12, 0], color=PASTEL_WHITE, stroke_width=2) for x in (sx0, sx1)],
+            Line([sx0, sy, 0], [sx1, sy, 0], color=P_WHITE, stroke_width=2),
+            *[Line([x, sy - 0.12, 0], [x, sy + 0.12, 0], color=P_WHITE, stroke_width=2) for x in (sx0, sx1)],
         )
         end_l = VGroup(math_label("0", size=BODY_FONT_SIZE), Text("ganz verschattet", font_size=LABEL_FONT_SIZE,
                                                                  color=COLOR_FRAME)).arrange(DOWN, buff=0.1)
@@ -1016,7 +1016,7 @@ class Beat5_Verschattung(Scene):
 
         #region winter: blind up, overhang
         caption = swap_caption(self, caption, subtitle_text(N, "winter"))
-        overhang = Rectangle(width=1.25, height=0.16, color=PASTEL_WHITE, stroke_width=2, fill_color="#161A21",
+        overhang = Rectangle(width=1.25, height=0.16, color=P_WHITE, stroke_width=2, fill_color="#161A21",
                              fill_opacity=1.0).move_to([glass_out - 0.62, wall_top + 0.08, 0]).set_z_index(4)
         lbl_over = Text("Dachüberstand", font_size=LABEL_FONT_SIZE, color=COLOR_FRAME)
         lbl_over.move_to([overhang.get_right()[0] + 0.2 - lbl_over.width / 2, lintel.get_top()[1] + 0.25, 0])
@@ -1041,12 +1041,12 @@ class Beat5_Verschattung(Scene):
         sym = math_label(r"F_{\mathrm{sh}}", size=BODY_FONT_SIZE, color=COLOR_G)
         sym.move_to(marker_lbl.get_left() + RIGHT * sym.width / 2)
         panel = math_panel([
-            ("phi", r"\Phi", PASTEL_WHITE), (None, "=", PASTEL_WHITE),
-            ("g_irr", "G", COLOR_G), (None, r"\cdot", PASTEL_WHITE),
-            ("a", "A", COLOR_A), (None, r"\cdot", PASTEL_WHITE),
-            ("ff", r"F_{\mathrm{f}}", COLOR_FF), (None, r"\cdot", PASTEL_WHITE),
-            ("g", "g", COLOR_GVAL), (None, r"\cdot", PASTEL_WHITE),
-            ("fsh", r"F_{\mathrm{sh}}", COLOR_G), (None, r"\;[\mathrm{W}]", PASTEL_WHITE),
+            ("phi", r"\Phi", P_WHITE), (None, "=", P_WHITE),
+            ("g_irr", "G", COLOR_G), (None, r"\cdot", P_WHITE),
+            ("a", "A", COLOR_A), (None, r"\cdot", P_WHITE),
+            ("ff", r"F_{\mathrm{f}}", COLOR_FF), (None, r"\cdot", P_WHITE),
+            ("g", "g", COLOR_GVAL), (None, r"\cdot", P_WHITE),
+            ("fsh", r"F_{\mathrm{sh}}", COLOR_G), (None, r"\;[\mathrm{W}]", P_WHITE),
         ], edge_buff=1.35)
         _fly_into(self, panel, {"fsh": sym})
         ring = highlight_param(panel[2], "fsh", color=COLOR_G)
@@ -1095,7 +1095,7 @@ class Beat6_Waermespeicherung(Scene):
             width=5.8, height=0.55, color=COLOR_SLAB,
             fill_color=COLOR_SLAB, fill_opacity=0.85, stroke_width=2,
         ).move_to([0, -1.2, 0])
-        floor_label = Text("Betonbodenplatte", font_size=BODY_FONT_SIZE, color=PASTEL_WHITE)
+        floor_label = Text("Betonbodenplatte", font_size=BODY_FONT_SIZE, color=P_WHITE)
 
         left_wall = Line([-2.9, 0.85, 0], [-2.9, -0.95, 0], color="#E2E8F0", stroke_width=3)
         ceiling = Line([-2.9, 0.85, 0], [2.9, 0.85, 0], color="#E2E8F0", stroke_width=3)
@@ -1210,7 +1210,7 @@ class Beat6_Waermespeicherung(Scene):
         )
         self.play(
             wavy_lines.animate.shift(UP * 0.12),
-            floor_slab.animate.set_fill(PASTEL_ORANGE, opacity=0.75),
+            floor_slab.animate.set_fill("#D97706", opacity=0.75),
             run_time=1.2,
         )
         hold_for(self, self.NARRATION, "night", used=1.4 + 1.8 + 1.2 + 0.35)
@@ -1268,7 +1268,7 @@ class Beat7_SpeichermasseFormel(Scene):
             lx, dy = RIGHT * max(L.get_value(), 1e-3) * s, UP * max(D.get_value(), 1e-3) * s
             depth = k * max(B.get_value(), 1e-3)
             colour = interpolate_color(ManimColor(COLOR_SLAB), ManimColor(COLOR_HEAT), dT.get_value() / DT_SLAB)
-            style = dict(color=PASTEL_WHITE, stroke_width=1.5, fill_color=colour,
+            style = dict(color=P_WHITE, stroke_width=1.5, fill_color=colour,
                          fill_opacity=0.25 + 0.6 * rho.get_value() / RHO_BETON)
             return VGroup(
                 Polygon(o + dy, o + lx + dy, o + lx + dy + depth, o + dy + depth, **style),
@@ -1326,10 +1326,10 @@ class Beat7_SpeichermasseFormel(Scene):
         #region formula
         caption = swap_caption(self, caption, subtitle_text(N, "formula"))
         row, box, items = math_panel([
-            ("q", r"Q_{\mathrm{Speicher}}", COLOR_HEAT), (None, "=", PASTEL_WHITE),
-            ("m", "m", COLOR_MASS), (None, r"\cdot", PASTEL_WHITE),
-            ("c", "c", COLOR_C), (None, r"\cdot", PASTEL_WHITE),
-            ("dt", r"\Delta T", COLOR_G), (None, r"\;[\mathrm{J}]", PASTEL_WHITE),
+            ("q", r"Q_{\mathrm{Speicher}}", COLOR_HEAT), (None, "=", P_WHITE),
+            ("m", "m", COLOR_MASS), (None, r"\cdot", P_WHITE),
+            ("c", "c", COLOR_C), (None, r"\cdot", P_WHITE),
+            ("dt", r"\Delta T", COLOR_G), (None, r"\;[\mathrm{J}]", P_WHITE),
         ])
         self.play(FadeIn(row), Create(box), run_time=0.8)
         ring_m = highlight_param(items, "m", color=COLOR_MASS)
@@ -1428,16 +1428,16 @@ class Beat8_Hauptgleichung(Scene):
         )
 
         row, items = math_row([
-            ("phi", r"\Phi_{\mathrm{solar}}", PASTEL_WHITE), (None, "=", PASTEL_WHITE),
-            ("g", "G", COLOR_G), (None, r"\cdot", PASTEL_WHITE),
-            ("a", "A", COLOR_A), (None, r"\cdot", PASTEL_WHITE),
-            ("ff", r"F_{\mathrm{f}}", COLOR_FF), (None, r"\cdot", PASTEL_WHITE),
-            ("gval", "g", COLOR_GVAL), (None, r"\cdot", PASTEL_WHITE),
-            ("fsh", r"F_{\mathrm{sh}}", COLOR_FSH), (None, r"\;[\mathrm{W}]", PASTEL_WHITE),
+            ("phi", r"\Phi_{\mathrm{solar}}", P_WHITE), (None, "=", P_WHITE),
+            ("g", "G", COLOR_G), (None, r"\cdot", P_WHITE),
+            ("a", "A", COLOR_A), (None, r"\cdot", P_WHITE),
+            ("ff", r"F_{\mathrm{f}}", COLOR_FF), (None, r"\cdot", P_WHITE),
+            ("gval", "g", COLOR_GVAL), (None, r"\cdot", P_WHITE),
+            ("fsh", r"F_{\mathrm{sh}}", COLOR_FSH), (None, r"\;[\mathrm{W}]", P_WHITE),
         ])
         row.next_to(subtitle, DOWN, buff=0.95)
         row.set_x(0)
-        box = SurroundingRectangle(row, color=PASTEL_TEAL, buff=0.22, corner_radius=0.1, stroke_width=2)
+        box = SurroundingRectangle(row, color=P_TEAL, buff=0.22, corner_radius=0.1, stroke_width=2)
         self.play(
             FadeOut(labs),
             *[tok.animate.scale(items[key].height / tok.height).move_to(items[key].get_center())
@@ -1466,7 +1466,7 @@ class Beat8_Hauptgleichung(Scene):
                     rf"\textcolor{{{COLOR_FSH}}}{{{de_num(v['fsh'], 2)}}} \approx {de_num(phi())}\,\mathrm{{W}}")
 
         chain = math_readout(chain_src, lambda: box.get_bottom() + DOWN * 0.72, size=BODY_FONT_SIZE + 4,
-                             color=PASTEL_WHITE, edge="center")
+                             color=P_WHITE, edge="center")
         bar_w = 7.0
         track = always_redraw(lambda: Rectangle(width=bar_w, height=0.2, color=GREY_B, stroke_width=1.5).move_to(
             box.get_bottom() + DOWN * 1.25))
@@ -1508,10 +1508,10 @@ class Beat8_Hauptgleichung(Scene):
         store_note.next_to(chain, DOWN, buff=0.4).set_x(0)
 
         row2, items2 = math_row([
-            ("q", r"Q_{\mathrm{Speicher}}", COLOR_HEAT), (None, "=", PASTEL_WHITE),
-            ("m", "m", COLOR_MASS), (None, r"\cdot", PASTEL_WHITE),
-            ("c", "c", COLOR_C), (None, r"\cdot", PASTEL_WHITE),
-            ("dt", r"\Delta T", COLOR_G), (None, r"\;[\mathrm{J}]", PASTEL_WHITE),
+            ("q", r"Q_{\mathrm{Speicher}}", COLOR_HEAT), (None, "=", P_WHITE),
+            ("m", "m", COLOR_MASS), (None, r"\cdot", P_WHITE),
+            ("c", "c", COLOR_C), (None, r"\cdot", P_WHITE),
+            ("dt", r"\Delta T", COLOR_G), (None, r"\;[\mathrm{J}]", P_WHITE),
         ])
         row2.next_to(store_note, DOWN, buff=0.5).set_x(-3.0)
         box2 = SurroundingRectangle(row2, color=COLOR_HEAT, buff=0.22, corner_radius=0.1, stroke_width=2)

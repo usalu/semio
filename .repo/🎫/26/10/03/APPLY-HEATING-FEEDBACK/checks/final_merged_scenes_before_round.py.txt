@@ -15,8 +15,7 @@ if str(_TUTORIAL_ROOT) not in _sys.path:
 
 from manim_fonts import apply_scene_style, BODY_FONT, LABEL_FONT_SIZE
 from manim_visuals import (
-    PASTEL_CYAN, PASTEL_PURPLE, PASTEL_PINK,
-    PASTEL_WHITE, PASTEL_TEAL, PASTEL_ORANGE, PASTEL_YELLOW, PASTEL_RED, PASTEL_BLUE, PASTEL_GREEN,
+    P_WHITE, P_TEAL, P_ORANGE, P_YELLOW, P_RED, P_BLUE, P_GREEN,
     caption_bar, swap_caption, hold_for, subtitle_text, set_vo_language, begin_vo_beat,
     math_label, math_row, math_readout, math_panel, de_num, animate_flows,
 )
@@ -35,10 +34,10 @@ _ENVELOPE = [
     ("Haustür", 2.0, 1.30, 20.0),
     ("Boden", 80.0, 0.30, 10.0),
 ]
-_PHI_T = round(sum(a * u * dt for _n, a, u, dt in _ENVELOPE), -2)
+_PHI_T = sum(a * u * dt for _n, a, u, dt in _ENVELOPE)
 _H_T = _PHI_T / _DT
 _V_NET, _N_AIR, _C_AIR = 440.0, 0.5, 0.34
-_PHI_V = round(_V_NET * _N_AIR * _C_AIR * _DT, -2)
+_PHI_V = _V_NET * _N_AIR * _C_AIR * _DT
 _H_V = _PHI_V / _DT
 _PHI_LOSS = _PHI_T + _PHI_V
 #endregion
@@ -46,7 +45,7 @@ _PHI_LOSS = _PHI_T + _PHI_V
 #region Annual balance
 _SEASON_DAYS = 212
 _GT = 3500.0
-_Q_LOSS = (_H_T + _H_V) * _GT * 24.0 / 1000.0
+_Q_LOSS = (round(_H_T, 1) + round(_H_V, 1)) * _GT * 24.0 / 1000.0
 _Q_LOSS_SHOWN = round(_Q_LOSS, -2)
 _Q_SOL, _Q_INT = 3000.0, 2000.0
 _Q_GAIN = _Q_SOL + _Q_INT
@@ -113,10 +112,10 @@ _Q_H = _Q_LOSS_SHOWN - _Q_USE
 
 #region System losses (DIN V 18599-5)
 _CE_SHARE = 0.05
-_PIPE_M, _PIPE_W_PER_M, _PIPE_H = 30.0, 10.0, 3000.0
+_PIPE_M, _PIPE_W_PER_M, _PIPE_H = 30.0, 10.0, 2900.0
 _STORE_KWH_D, _STORE_D = 1.5, 200.0
 _ETA_G = 0.95
-_Q_CE = round(_CE_SHARE * _Q_H, -2)
+_Q_CE = _CE_SHARE * _Q_H
 _Q_D = _PIPE_M * _PIPE_W_PER_M * _PIPE_H / 1000.0
 _Q_S = _STORE_KWH_D * _STORE_D
 _Q_BEFORE_G = _Q_H + _Q_CE + _Q_D + _Q_S
@@ -129,7 +128,7 @@ _Q_E = _Q_BEFORE_G + _Q_G
 #region Shared helpers
 def _heading(text: str, *, size: float = 34, buff: float = 0.6):
     """🏷️ Topic heading in the style every scene of this file uses."""
-    return Text(text, font_size=size, color=PASTEL_WHITE, font=BODY_FONT, disable_ligatures=True).to_edge(UP, buff=buff)
+    return Text(text, font_size=size, color=WHITE, font=BODY_FONT, disable_ligatures=True).to_edge(UP, buff=buff)
 
 
 def _label(text: str, *, size: float = 16, color=GREY_A):
@@ -194,13 +193,13 @@ class ReviewingHeatLosses(Scene):
     NARRATION = [
         ("trans",
          "From module 2: heat flows through walls, roof, windows and floor as Phi T — the sum of U times A times Delta theta.",
-         "Aus Modul 2: Wärme fließt durch Wand, Dach, Fenster und Boden als Phi-T — Summe aus U mal A mal Delta-Theta, rund 2 300 W."),
+         "Aus Modul 2: Wärme fließt durch Wand, Dach, Fenster und Boden als Phi-T — Summe aus U mal A mal Delta-Theta, rund 2 311 W."),
         ("vent",
          "From module 3: the air change carries heat out as Phi V — V times n times c Luft times Delta theta.",
-         "Aus Modul 3: Der Luftwechsel trägt Wärme als Phi-V hinaus — V mal n mal c-Luft mal Delta-Theta, rund 1 500 W."),
+         "Aus Modul 3: Der Luftwechsel trägt Wärme als Phi-V hinaus — V mal n mal c-Luft mal Delta-Theta, rund 1 496 W."),
         ("total",
          "Both add up to the total heat-loss power Phi Verlust — after DIN V 18599-2.",
-         "Beide zusammen ergeben die Gesamtwärmeverlustleistung Phi-Verlust von rund 3 800 W — nach DIN V 18599-2."),
+         "Beide zusammen ergeben die Gesamtwärmeverlustleistung Phi-Verlust von rund 3 807 W — nach DIN V 18599-2."),
     ]
 
     def construct(self):
@@ -211,9 +210,9 @@ class ReviewingHeatLosses(Scene):
 
         title = _heading("Übersicht der Wärmeverluste")
 
-        ICY_BLUE = PASTEL_CYAN
-        DEEP_BLUE = PASTEL_BLUE
-        WARM = PASTEL_ORANGE
+        ICY_BLUE = "#38BDF8"
+        DEEP_BLUE = "#1D4ED8"
+        WARM = "#F97316"
         X0 = -6.3
 
         #region transmission
@@ -252,7 +251,7 @@ class ReviewingHeatLosses(Scene):
         self.add(v_read)
         out_paths = _through_paths(win_icon, reach=0.55, rows=(0.22,))
         in_paths = _through_paths(win_icon, reach=0.55, rows=(-0.22,), reverse=True)
-        animate_flows(self, [(out_paths, WARM, ICY_BLUE), (in_paths, PASTEL_BLUE, WARM)], run_time=3.0, waves=4,
+        animate_flows(self, [(out_paths, WARM, ICY_BLUE), (in_paths, P_BLUE, WARM)], run_time=3.0, waves=4,
                       cycles=2.0, extra=[phi_v.animate.set_value(_PHI_V)])
         hold_for(self, self.NARRATION, "vent")
         #endregion
@@ -260,8 +259,8 @@ class ReviewingHeatLosses(Scene):
         #region total
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "total"))
         left_side = VGroup(trans_formula, wall_icon, vent_formula, win_icon, t_read, v_read)
-        brace = Brace(left_side, RIGHT, color=PASTEL_WHITE, buff=0.35)
-        arrow = Arrow(brace.get_right(), brace.get_right() + RIGHT * 0.9, color=PASTEL_WHITE, buff=0.1, stroke_width=3)
+        brace = Brace(left_side, RIGHT, color=WHITE, buff=0.35)
+        arrow = Arrow(brace.get_right(), brace.get_right() + RIGHT * 0.9, color=WHITE, buff=0.1, stroke_width=3)
         loss_desc = _label("Gesamtwärmeverlustleistung (DIN V 18599-2)")
         loss_title = math_label(r"\Phi_{\mathrm{Verlust}}", size=36).next_to(loss_desc, UP, buff=0.15)
         loss_slot = math_label(rf"= {de_num(_PHI_LOSS)}\,\mathrm{{W}}", size=32).next_to(loss_desc, DOWN, buff=0.25)
@@ -307,15 +306,15 @@ class Scene2(Scene):
         title = _heading("Vom Wärmestrom zur Jahresenergie", buff=0.55)
         self.play(Write(title), run_time=0.8)
 
-        ICY_BLUE = PASTEL_CYAN
-        DEEP_BLUE = PASTEL_BLUE
-        PURPLE = PASTEL_PURPLE
-        WARM = PASTEL_ORANGE
+        ICY_BLUE = "#38BDF8"
+        DEEP_BLUE = "#0284C7"
+        PURPLE = "#C084FC"
+        WARM = "#F97316"
 
         #region power
         initial_eq, ie = math_row([
-            ("loss", r"\Phi_{\mathrm{Verlust}}", PASTEL_WHITE), ("eq", "=", PASTEL_WHITE),
-            ("t", r"\Phi_{\mathrm{T}}", ICY_BLUE), ("plus", "+", PASTEL_WHITE), ("v", r"\Phi_{\mathrm{V}}", DEEP_BLUE),
+            ("loss", r"\Phi_{\mathrm{Verlust}}", WHITE), ("eq", "=", WHITE),
+            ("t", r"\Phi_{\mathrm{T}}", ICY_BLUE), ("plus", "+", WHITE), ("v", r"\Phi_{\mathrm{V}}", DEEP_BLUE),
         ], font_size=38, buff=0.12)
         initial_eq.move_to(UP * 1.35)
 
@@ -330,7 +329,7 @@ class Scene2(Scene):
         self.play(FadeIn(initial_eq), Create(wall_icon), Create(window_icon), run_time=2)
         animate_flows(self, [(_through_paths(wall_glyph[0], reach=0.45), WARM, ICY_BLUE),
                              (_through_paths(win_glyph, reach=0.45, rows=(0.2,)), WARM, ICY_BLUE),
-                             (_through_paths(win_glyph, reach=0.45, rows=(-0.2,), reverse=True), PASTEL_BLUE, WARM)],
+                             (_through_paths(win_glyph, reach=0.45, rows=(-0.2,), reverse=True), P_BLUE, WARM)],
                       run_time=2.0, waves=3, cycles=1.5)
         hold_for(self, self.NARRATION, "phi", used=0.3 + 0.8 + 2 + 2.0)
         #endregion
@@ -357,11 +356,11 @@ class Scene2(Scene):
         h_v = ValueTracker(0.0)
         ht_read = math_readout(
             lambda: rf"H_{{\mathrm{{T}}}} = \frac{{{de_num(_PHI_T)}\,\mathrm{{W}}}}{{20\,\mathrm{{K}}}} = "
-                    rf"{de_num(h_t.get_value())}\,\mathrm{{W/K}}",
+                    rf"{de_num(h_t.get_value(), 1)}\,\mathrm{{W/K}}",
             np.array([wall_icon.get_center()[0], -1.6, 0.0]), size=20, color=ICY_BLUE, edge="center")
         hv_read = math_readout(
             lambda: rf"H_{{\mathrm{{V}}}} = \frac{{{de_num(_PHI_V)}\,\mathrm{{W}}}}{{20\,\mathrm{{K}}}} = "
-                    rf"{de_num(h_v.get_value())}\,\mathrm{{W/K}}",
+                    rf"{de_num(h_v.get_value(), 1)}\,\mathrm{{W/K}}",
             np.array([window_icon.get_center()[0], -1.6, 0.0]), size=20, color=DEEP_BLUE, edge="center")
 
         self.play(
@@ -384,22 +383,22 @@ class Scene2(Scene):
         def cp(day, kelvin):
             return O + RIGHT * (day / _SEASON_DAYS * XL) + UP * (kelvin / YMAX * YL)
 
-        x_axis = Arrow(O, O + RIGHT * (XL + 0.3), buff=0, stroke_width=2.4, color=PASTEL_WHITE,
+        x_axis = Arrow(O, O + RIGHT * (XL + 0.3), buff=0, stroke_width=2.4, color=P_WHITE,
                        tip_length=0.15, max_tip_length_to_length_ratio=0.05)
-        y_axis = Arrow(O, O + UP * (YL + 0.3), buff=0, stroke_width=2.4, color=PASTEL_WHITE,
+        y_axis = Arrow(O, O + UP * (YL + 0.3), buff=0, stroke_width=2.4, color=P_WHITE,
                        tip_length=0.15, max_tip_length_to_length_ratio=0.08)
         y_name = math_label(r"\theta_{\mathrm{i}} - \theta_{\mathrm{e}}\;[\mathrm{K}]", size=LABEL_FONT_SIZE)
         y_name.next_to(y_axis.get_end(), RIGHT, buff=0.14)
         y_ticks = VGroup(*[
-            VGroup(Line(cp(0, k) + LEFT * 0.06, cp(0, k) + RIGHT * 0.06, color=PASTEL_WHITE, stroke_width=2),
+            VGroup(Line(cp(0, k) + LEFT * 0.06, cp(0, k) + RIGHT * 0.06, color=P_WHITE, stroke_width=2),
                    math_label(str(k), cp(0, k) + LEFT * 0.14 + DOWN * 0.07, size=15, edge="right"))
             for k in (10, 20)
         ])
         months = ["Okt", "Nov", "Dez", "Jan", "Feb", "Mär", "Apr"]
         starts = [0, 31, 61, 92, 123, 151, 182, _SEASON_DAYS]
-        m_marks = VGroup(*[Line(cp(d, 0) + DOWN * 0.06, cp(d, 0) + UP * 0.06, color=PASTEL_WHITE, stroke_width=2)
+        m_marks = VGroup(*[Line(cp(d, 0) + DOWN * 0.06, cp(d, 0) + UP * 0.06, color=P_WHITE, stroke_width=2)
                            for d in starts[1:-1]])
-        m_names = VGroup(*[_label(m, size=15, color=PASTEL_WHITE).move_to(cp((a + b) / 2, 0) + DOWN * 0.22)
+        m_names = VGroup(*[_label(m, size=15, color=P_WHITE).move_to(cp((a + b) / 2, 0) + DOWN * 0.22)
                            for m, a, b in zip(months, starts[:-1], starts[1:])])
         steps = [cp(0, 0)]
         for d, v in enumerate(profile):
@@ -444,23 +443,23 @@ class Scene2(Scene):
         #region annual loss
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "annual"))
         consolidated_eq, ce = math_row([
-            ("q", r"Q_{\mathrm{Verlust}}", PASTEL_WHITE), ("eq", "=", PASTEL_WHITE), ("lp", "(", PURPLE),
-            ("ht", r"H_{\mathrm{T}}", ICY_BLUE), ("plus", "+", PASTEL_WHITE), ("hv", r"H_{\mathrm{V}}", DEEP_BLUE),
+            ("q", r"Q_{\mathrm{Verlust}}", WHITE), ("eq", "=", WHITE), ("lp", "(", PURPLE),
+            ("ht", r"H_{\mathrm{T}}", ICY_BLUE), ("plus", "+", WHITE), ("hv", r"H_{\mathrm{V}}", DEEP_BLUE),
             ("rp", ")", PURPLE), ("times", r"\cdot", PURPLE), ("gt", r"G_{\mathrm{t}}", PURPLE),
             ("times2", r"\cdot", PURPLE), ("hd", r"24\,\mathrm{h/d}", PURPLE),
         ], font_size=36, buff=0.12)
         consolidated_eq.move_to(UP * 1.35)
         values, vi = math_row([
-            ("eq", "=", PASTEL_WHITE),
-            ("h", rf"({de_num(_H_T)} + {de_num(_H_V)})\,\mathrm{{W/K}}", PASTEL_WHITE),
-            ("d1", r"\cdot", PASTEL_WHITE), ("gt", rf"{de_num(_GT)}\,\mathrm{{K\,d/a}}", PURPLE),
-            ("d2", r"\cdot", PASTEL_WHITE), ("hd", r"24\,\mathrm{h/d}", PASTEL_WHITE),
+            ("eq", "=", WHITE),
+            ("h", rf"({de_num(_H_T, 1)} + {de_num(_H_V, 1)})\,\mathrm{{W/K}}", WHITE),
+            ("d1", r"\cdot", WHITE), ("gt", rf"{de_num(_GT)}\,\mathrm{{K\,d/a}}", PURPLE),
+            ("d2", r"\cdot", WHITE), ("hd", r"24\,\mathrm{h/d}", WHITE),
         ], font_size=26, buff=0.14)
         values.move_to(UP * 0.35)
         q = ValueTracker(0.0)
         q_read = math_readout(
             lambda: rf"Q_{{\mathrm{{Verlust}}}} \approx {de_num(round(q.get_value(), -2))}\,\mathrm{{kWh/a}}",
-            np.array([0.0, -0.6, 0.0]), size=34, color=PASTEL_WHITE, edge="center")
+            np.array([0.0, -0.6, 0.0]), size=34, color=WHITE, edge="center")
 
         area_static = filled_area()
         self.remove(area)
@@ -515,8 +514,8 @@ class ReviewingHeatGains(Scene):
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
         self.play(FadeIn(caption), run_time=0.3)
 
-        SOLAR_YELLOW = PASTEL_YELLOW
-        INT_ORANGE = PASTEL_ORANGE
+        SOLAR_YELLOW = "#FDE047"
+        INT_ORANGE = "#F59E0B"
         TEXT_WHITE = "#F3F4F6"
         SUBTEXT_GREY = "#9CA3AF"
 
@@ -671,14 +670,14 @@ class Scene4(Scene):
         caption = caption_bar(subtitle_text(self.NARRATION, "day"))
         self.play(FadeIn(caption), run_time=0.3)
 
-        title = Text("Der Ausnutzungsgrad der Wärmegewinne", font_size=28, color=PASTEL_WHITE, font=BODY_FONT, disable_ligatures=True)
+        title = Text("Der Ausnutzungsgrad der Wärmegewinne", font_size=28, color=WHITE, font=BODY_FONT, disable_ligatures=True)
         title.to_edge(UP, buff=0.5)
         self.add(title)
 
-        GREEN = PASTEL_GREEN
-        RED = PASTEL_RED
-        LOSS_BLUE = PASTEL_CYAN
-        GAIN_YELLOW = PASTEL_YELLOW
+        GREEN = "#10B981"
+        RED = "#EF4444"
+        LOSS_BLUE = "#38BDF8"
+        GAIN_YELLOW = "#FDE047"
 
         #region day chart
         O = np.array([-6.1, -1.75, 0.0])
@@ -687,20 +686,20 @@ class Scene4(Scene):
         def cp(hour, kw):
             return O + RIGHT * (hour / 24.0 * XL) + UP * (kw / PMAX * YL)
 
-        x_axis = Arrow(O, O + RIGHT * (XL + 0.3), buff=0, stroke_width=2.4, color=PASTEL_WHITE,
+        x_axis = Arrow(O, O + RIGHT * (XL + 0.3), buff=0, stroke_width=2.4, color=P_WHITE,
                        tip_length=0.15, max_tip_length_to_length_ratio=0.05)
-        y_axis = Arrow(O, O + UP * (YL + 0.3), buff=0, stroke_width=2.4, color=PASTEL_WHITE,
+        y_axis = Arrow(O, O + UP * (YL + 0.3), buff=0, stroke_width=2.4, color=P_WHITE,
                        tip_length=0.15, max_tip_length_to_length_ratio=0.08)
         x_name = math_label(r"t\;[\mathrm{h}]", size=LABEL_FONT_SIZE).next_to(x_axis.get_end(), DOWN, buff=0.14)
         x_name.align_to(x_axis.get_end(), RIGHT)
         y_name = math_label(r"P\;[\mathrm{kW}]", size=LABEL_FONT_SIZE).next_to(y_axis.get_end(), RIGHT, buff=0.14)
         x_ticks = VGroup(*[
-            VGroup(Line(cp(h, 0) + DOWN * 0.06, cp(h, 0) + UP * 0.06, color=PASTEL_WHITE, stroke_width=2),
+            VGroup(Line(cp(h, 0) + DOWN * 0.06, cp(h, 0) + UP * 0.06, color=P_WHITE, stroke_width=2),
                    math_label(str(h), cp(h, 0) + DOWN * 0.3, size=15))
             for h in (6, 12, 18)
         ])
         y_ticks = VGroup(*[
-            VGroup(Line(cp(0, k) + LEFT * 0.06, cp(0, k) + RIGHT * 0.06, color=PASTEL_WHITE, stroke_width=2),
+            VGroup(Line(cp(0, k) + LEFT * 0.06, cp(0, k) + RIGHT * 0.06, color=P_WHITE, stroke_width=2),
                    math_label(str(k), cp(0, k) + LEFT * 0.14 + DOWN * 0.07, size=15, edge="right"))
             for k in (2, 4)
         ])
@@ -813,8 +812,8 @@ class Scene4(Scene):
                   run_time=0.8)
 
         initial_eq, ie = math_row([
-            ("q", r"Q_{\mathrm{Gewinn}}", PASTEL_WHITE), ("eq", "=", PASTEL_WHITE), ("sol", r"Q_{\mathrm{sol}}", PASTEL_YELLOW),
-            ("plus", "+", PASTEL_WHITE), ("int", r"Q_{\mathrm{int}}", PASTEL_ORANGE),
+            ("q", r"Q_{\mathrm{Gewinn}}", WHITE), ("eq", "=", WHITE), ("sol", r"Q_{\mathrm{sol}}", "#FDE047"),
+            ("plus", "+", WHITE), ("int", r"Q_{\mathrm{int}}", "#F97316"),
         ], font_size=38, buff=0.15)
         initial_eq.move_to(UP * 1.1)
 
@@ -822,9 +821,9 @@ class Scene4(Scene):
         self.wait(0.6)
 
         target_group, tg = math_row([
-            ("q", r"Q_{\mathrm{nutz}}", PASTEL_WHITE), ("eq", "=", PASTEL_WHITE), ("eta", r"\eta_{\mathrm{h}}", GREEN),
-            ("dot", r"\cdot", GREEN), ("lp", "(", GREEN), ("sol", r"Q_{\mathrm{sol}}", PASTEL_YELLOW),
-            ("plus", "+", PASTEL_WHITE), ("int", r"Q_{\mathrm{int}}", PASTEL_ORANGE), ("rp", ")", GREEN),
+            ("q", r"Q_{\mathrm{nutz}}", WHITE), ("eq", "=", WHITE), ("eta", r"\eta_{\mathrm{h}}", GREEN),
+            ("dot", r"\cdot", GREEN), ("lp", "(", GREEN), ("sol", r"Q_{\mathrm{sol}}", "#FDE047"),
+            ("plus", "+", WHITE), ("int", r"Q_{\mathrm{int}}", "#F97316"), ("rp", ")", GREEN),
         ], font_size=38, buff=0.12)
         target_group.move_to(UP * 1.1)
 
@@ -848,7 +847,7 @@ class Scene4(Scene):
         use_read = math_readout(
             lambda: rf"Q_{{\mathrm{{nutz}}}} = {de_num(_ETA, 2)} \cdot {de_num(_Q_GAIN)}\,\mathrm{{kWh/a}} = "
                     rf"{de_num(q_use.get_value())}\,\mathrm{{kWh/a}}",
-            np.array([0.0, 0.05, 0.0]), size=28, color=PASTEL_WHITE, edge="center")
+            np.array([0.0, 0.05, 0.0]), size=28, color=WHITE, edge="center")
         self.add(use_read)
         self.play(q_use.animate.set_value(_Q_USE), run_time=2.0)
         hold_for(self, self.NARRATION, "formula")
@@ -898,24 +897,24 @@ class UltimateEnergyBalance(Scene):
         title = Text(
             "Die Hauptgleichung des Heizwärmebedarfs (DIN V 18599)",
             font_size=26,
-            color=PASTEL_WHITE,
+            color=WHITE,
             font=BODY_FONT, disable_ligatures=True)
         title.to_edge(UP, buff=0.5)
         self.play(Write(title))
         self.wait(0.5)
 
-        LOSS_C, ETA_C, GAIN_C, QH_C = PASTEL_BLUE, PASTEL_GREEN, PASTEL_YELLOW, PASTEL_RED
+        LOSS_C, ETA_C, GAIN_C, QH_C = "#3B82F6", "#22C55E", "#EAB308", "#EF4444"
         P = DOWN * 0.5
 
         #region balance beam
         fulcrum = Polygon(P, P + DOWN * 1.2 + LEFT * 0.6, P + DOWN * 1.2 + RIGHT * 0.6, color=GREY, fill_opacity=0.5)
         base = Line(P + DOWN * 1.2 + LEFT * 1.2, P + DOWN * 1.2 + RIGHT * 1.2, color=GREY, stroke_width=4)
-        beam = Line(P + LEFT * 2.2, P + RIGHT * 2.2, color=PASTEL_WHITE, stroke_width=5)
+        beam = Line(P + LEFT * 2.2, P + RIGHT * 2.2, color=WHITE, stroke_width=5)
         left_string = Line(P + LEFT * 2.2, P + LEFT * 2.2 + DOWN * 1.2, color=GREY_B, stroke_width=2)
-        left_plate = Line(P + LEFT * 2.8 + DOWN * 1.2, P + LEFT * 1.6 + DOWN * 1.2, color=PASTEL_WHITE, stroke_width=4)
+        left_plate = Line(P + LEFT * 2.8 + DOWN * 1.2, P + LEFT * 1.6 + DOWN * 1.2, color=WHITE, stroke_width=4)
         left_pan = VGroup(left_string, left_plate)
         right_string = Line(P + RIGHT * 2.2, P + RIGHT * 2.2 + DOWN * 1.2, color=GREY_B, stroke_width=2)
-        right_plate = Line(P + RIGHT * 2.8 + DOWN * 1.2, P + RIGHT * 1.6 + DOWN * 1.2, color=PASTEL_WHITE, stroke_width=4)
+        right_plate = Line(P + RIGHT * 2.8 + DOWN * 1.2, P + RIGHT * 1.6 + DOWN * 1.2, color=WHITE, stroke_width=4)
         right_pan = VGroup(right_string, right_plate)
         beam_assembly = VGroup(beam, left_pan, right_pan)
 
@@ -940,7 +939,7 @@ class UltimateEnergyBalance(Scene):
         self.wait(0.5)
 
         q_gain_tag, gt = math_row([
-            ("eta", r"\eta_{\mathrm{h}}", ETA_C), ("dot", r"\cdot", PASTEL_WHITE), ("g", r"Q_{\mathrm{Gewinn}}", GAIN_C),
+            ("eta", r"\eta_{\mathrm{h}}", ETA_C), ("dot", r"\cdot", WHITE), ("g", r"Q_{\mathrm{Gewinn}}", GAIN_C),
         ], font_size=26, buff=0.08)
         q_gain_tag.move_to(P + RIGHT * 2.2 + UP * 2.0)
         gain_v = ValueTracker(0.0)
@@ -963,15 +962,15 @@ class UltimateEnergyBalance(Scene):
         #region master equation
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "master"))
         master_eq, me = math_row([
-            ("qh", r"Q_{\mathrm{h}}", QH_C), ("eq", "=", PASTEL_WHITE), ("loss", r"Q_{\mathrm{Verlust}}", LOSS_C),
-            ("minus", "-", PASTEL_WHITE), ("eta", r"\eta_{\mathrm{h}}", ETA_C), ("dot", r"\cdot", PASTEL_WHITE),
+            ("qh", r"Q_{\mathrm{h}}", QH_C), ("eq", "=", WHITE), ("loss", r"Q_{\mathrm{Verlust}}", LOSS_C),
+            ("minus", "-", WHITE), ("eta", r"\eta_{\mathrm{h}}", ETA_C), ("dot", r"\cdot", WHITE),
             ("gain", r"Q_{\mathrm{Gewinn}}", GAIN_C),
         ], font_size=36, buff=0.12)
         master_eq.move_to(UP * 1.2)
 
         numbers, nb = math_row([
-            ("qh", r"Q_{\mathrm{h}}", QH_C), ("eq", "=", PASTEL_WHITE), ("loss", de_num(_Q_LOSS_SHOWN), LOSS_C),
-            ("minus", "-", PASTEL_WHITE), ("gain", de_num(_Q_USE), GAIN_C), ("approx", r"\approx", PASTEL_WHITE),
+            ("qh", r"Q_{\mathrm{h}}", QH_C), ("eq", "=", WHITE), ("loss", de_num(_Q_LOSS_SHOWN), LOSS_C),
+            ("minus", "-", WHITE), ("gain", de_num(_Q_USE), GAIN_C), ("approx", r"\approx", WHITE),
             ("slot", rf"{de_num(_Q_H)}\,\mathrm{{kWh/a}}", QH_C),
         ], font_size=32, buff=0.14)
         numbers.move_to(UP * 0.1)
@@ -995,9 +994,9 @@ class UltimateEnergyBalance(Scene):
         #region expanded equation
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "expand"))
         expanded_eq, ex = math_row([
-            ("qh", r"Q_{\mathrm{h}}", QH_C), ("eq", "=", PASTEL_WHITE),
-            ("loss", r"(Q_{\mathrm{T}} + Q_{\mathrm{V}})", LOSS_C), ("minus", "-", PASTEL_WHITE),
-            ("eta", r"\eta_{\mathrm{h}}", ETA_C), ("dot", r"\cdot", PASTEL_WHITE),
+            ("qh", r"Q_{\mathrm{h}}", QH_C), ("eq", "=", WHITE),
+            ("loss", r"(Q_{\mathrm{T}} + Q_{\mathrm{V}})", LOSS_C), ("minus", "-", WHITE),
+            ("eta", r"\eta_{\mathrm{h}}", ETA_C), ("dot", r"\cdot", WHITE),
             ("gain", r"(Q_{\mathrm{sol}} + Q_{\mathrm{int}})", GAIN_C),
         ], font_size=30, buff=0.12)
         expanded_eq.move_to(DOWN * 1.1)
@@ -1026,11 +1025,11 @@ _HOUSE_DY = 0.22
 def _house_section():
     """🏠 Section through the example house: heated storey, roof, unheated cellar with boiler, store and pipes."""
     WALL = "#94A3B8"
-    PIPE = PASTEL_RED
+    PIPE = "#EF4444"
     parts = {}
-    parts["room"] = Rectangle(width=4.95, height=1.6, stroke_width=0, fill_color=PASTEL_ORANGE, fill_opacity=0.10
+    parts["room"] = Rectangle(width=4.95, height=1.6, stroke_width=0, fill_color=P_ORANGE, fill_opacity=0.10
                               ).move_to(np.array([-4.0, 0.65, 0.0]))
-    parts["cellar"] = Rectangle(width=4.95, height=1.3, stroke_width=0, fill_color=PASTEL_BLUE, fill_opacity=0.10
+    parts["cellar"] = Rectangle(width=4.95, height=1.3, stroke_width=0, fill_color=P_BLUE, fill_opacity=0.10
                                 ).move_to(np.array([-4.0, -0.95, 0.0]))
     walls = VGroup(
         Rectangle(width=0.3, height=1.6, color=WALL, fill_opacity=0.35, stroke_width=1.5).move_to(np.array([-6.65, 0.65, 0.0])),
@@ -1044,7 +1043,7 @@ def _house_section():
     parts["roof"] = Polygon(np.array([-7.0, 1.45, 0.0]), np.array([-4.0, 2.4, 0.0]), np.array([-1.0, 1.45, 0.0]),
                             color=WALL, stroke_width=2, fill_color=WALL, fill_opacity=0.15)
     parts["windows"] = VGroup(*[
-        Rectangle(width=0.3, height=0.6, color=PASTEL_BLUE, fill_color=PASTEL_BLUE, fill_opacity=0.35, stroke_width=1.5
+        Rectangle(width=0.3, height=0.6, color=P_BLUE, fill_color=P_BLUE, fill_opacity=0.35, stroke_width=1.5
                   ).move_to(np.array([x, 0.95, 0.0]))
         for x in (-6.65, -1.35)
     ])
@@ -1054,11 +1053,11 @@ def _house_section():
                ).move_to(np.array([x, 0.17, 0.0]))
         for x in (-6.33, -1.67)
     ])
-    parts["thermostat"] = Circle(radius=0.065, color=PASTEL_WHITE, stroke_width=2, fill_color=P_DEEP_GREY, fill_opacity=1
+    parts["thermostat"] = Circle(radius=0.065, color=P_WHITE, stroke_width=2, fill_color=P_DEEP_GREY, fill_opacity=1
                                  ).move_to(np.array([-6.18, 0.47, 0.0]))
-    parts["store"] = RoundedRectangle(width=0.9, height=0.8, corner_radius=0.18, color=PASTEL_YELLOW, stroke_width=2,
-                                      fill_color=PASTEL_YELLOW, fill_opacity=0.18).move_to(np.array([-4.6, -1.15, 0.0]))
-    parts["boiler"] = Rectangle(width=1.4, height=0.7, color=PASTEL_ORANGE, stroke_width=2, fill_color=PASTEL_ORANGE,
+    parts["store"] = RoundedRectangle(width=0.9, height=0.8, corner_radius=0.18, color=P_YELLOW, stroke_width=2,
+                                      fill_color=P_YELLOW, fill_opacity=0.18).move_to(np.array([-4.6, -1.15, 0.0]))
+    parts["boiler"] = Rectangle(width=1.4, height=0.7, color=P_ORANGE, stroke_width=2, fill_color=P_ORANGE,
                                 fill_opacity=0.18).move_to(np.array([-2.85, -1.2, 0.0]))
     parts["chimney"] = Rectangle(width=0.22, height=3.15, color=WALL, stroke_width=1.5, fill_color=WALL,
                                  fill_opacity=0.25).move_to(np.array([-2.35, 0.725, 0.0]))
@@ -1078,20 +1077,20 @@ def _house_section():
                                           np.array([-1.67, -0.06, 0.0])]),
     ]
     parts["sleeves"] = VGroup(
-        VMobject(color=PASTEL_WHITE, stroke_width=11, stroke_opacity=0.55).set_points_as_corners(
+        VMobject(color=P_WHITE, stroke_width=11, stroke_opacity=0.55).set_points_as_corners(
             [np.array([-6.33, -0.32, 0.0]), np.array([-6.33, -0.48, 0.0]), np.array([-1.67, -0.48, 0.0]),
              np.array([-1.67, -0.32, 0.0])]),
-        Line(np.array([-4.6, -0.75, 0.0]), np.array([-4.6, -0.48, 0.0]), color=PASTEL_WHITE, stroke_width=11,
+        Line(np.array([-4.6, -0.75, 0.0]), np.array([-4.6, -0.48, 0.0]), color=P_WHITE, stroke_width=11,
              stroke_opacity=0.55),
     )
     parts["labels"] = VGroup(
-        _label("Speicher", size=15, color=PASTEL_YELLOW).move_to(parts["store"]),
-        _label("Wärmeerzeuger", size=15, color=PASTEL_ORANGE).move_to(parts["boiler"]),
+        _label("Speicher", size=15, color=P_YELLOW).move_to(parts["store"]),
+        _label("Wärmeerzeuger", size=15, color=P_ORANGE).move_to(parts["boiler"]),
         VGroup(_label("unbeheizter", size=15, color=GREY_A), _label("Keller", size=15, color=GREY_A)
                ).arrange(DOWN, buff=0.06).move_to(np.array([-5.75, -1.15, 0.0])),
-        _label("beheizt, 20 °C", size=15, color=PASTEL_ORANGE).move_to(np.array([-4.0, 0.95, 0.0])),
+        _label("beheizt, 20 °C", size=15, color=P_ORANGE).move_to(np.array([-4.0, 0.95, 0.0])),
     )
-    parts["thermo_label"] = _label("Thermostat", size=15, color=PASTEL_WHITE).move_to(np.array([-5.4, 0.47, 0.0]))
+    parts["thermo_label"] = _label("Thermostat", size=15, color=P_WHITE).move_to(np.array([-5.4, 0.47, 0.0]))
     parts["pipe_label"] = _label("30 m Rohr", size=15, color=PIPE).move_to(np.array([-3.25, -0.68, 0.0]))
     for part in parts.values():
         for mob in (part if isinstance(part, list) else [part]):
@@ -1110,10 +1109,10 @@ class AnlagenVerluste(Scene):
          "Die Anlage muss mehr liefern: Auf dem Weg vom Kessel in den Raum verlieren Erzeuger, Speicher, Rohre und Heizkörper Wärme."),
         ("ce",
          "Emission: the radiator also heats the outer wall behind it and the thermostat regulates sluggishly — about five percent.",
-         "Übergabe: Der Heizkörper erwärmt auch die Außenwand dahinter, das Thermostat regelt träge — rund 5 Prozent, also etwa 600 kWh."),
+         "Übergabe: Der Heizkörper erwärmt auch die Außenwand dahinter, das Thermostat regelt träge — rund 5 Prozent, also 575 kWh."),
         ("d",
-         "Distribution: 30 metres of pipe in the cold cellar lose 10 watts per metre over 3,000 hours.",
-         "Verteilung: 30 Meter Rohr im kalten Keller verlieren 10 Watt pro Meter über 3 000 Stunden — 900 kWh."),
+         "Distribution: 30 metres of pipe in the cold cellar lose 10 watts per metre over 2,900 hours.",
+         "Verteilung: 30 Meter Rohr im kalten Keller verlieren 10 Watt pro Meter über 2 900 Stunden — 870 kWh."),
         ("s",
          "Storage: the buffer store loses 1.5 kilowatt-hours per day on standby, over 200 heating days.",
          "Speicherung: Der Pufferspeicher verliert im Bereitschaftsbetrieb 1,5 kWh pro Tag, über 200 Heiztage 300 kWh."),
@@ -1121,8 +1120,8 @@ class AnlagenVerluste(Scene):
          "Generation: with an efficiency of 0.95, part of the fuel energy leaves through the flue.",
          "Erzeugung: Bei einem Wirkungsgrad von 0,95 geht ein Teil als Abgas durch den Schornstein — rund 700 kWh."),
         ("sum",
-         "Final energy Q E is Q h plus all system losses: about 14,000 kilowatt-hours per year, after DIN V 18599-5.",
-         "Die Endenergie Q-E ist Q-h plus alle Anlagenverluste: rund 14 000 kWh pro Jahr, nach DIN V 18599-5."),
+         "Final energy Q E is Q h plus all system losses: about 13,940 kilowatt-hours per year, after DIN V 18599-5.",
+         "Die Endenergie Q-E ist Q-h plus alle Anlagenverluste: rund 13 940 kWh pro Jahr, nach DIN V 18599-5."),
         ("tip",
          "So keep pipes and stores inside the heated envelope and insulate the pipes.",
          "Darum gehören Rohre und Speicher in die beheizte Hülle, und die Leitungen werden gedämmt."),
@@ -1138,7 +1137,7 @@ class AnlagenVerluste(Scene):
         title = _heading("Anlagenverluste: vom Heizwärmebedarf zur Endenergie", size=28, buff=0.5)
         self.play(Write(title), run_time=0.8)
 
-        QH_C, CE_C, D_C, S_C, G_C, E_C = PASTEL_RED, PASTEL_PINK, PASTEL_ORANGE, PASTEL_YELLOW, PASTEL_PURPLE, PASTEL_WHITE
+        QH_C, CE_C, D_C, S_C, G_C, E_C = "#EF4444", "#F472B6", "#FB923C", P_YELLOW, "#A78BFA", P_WHITE
         h = _house_section()
 
         #region stacked bar
@@ -1166,7 +1165,7 @@ class AnlagenVerluste(Scene):
             mids.append(BASE + UP * (cursor + f * UNIT / 2) + RIGHT * BAR_W / 2)
             cursor += f * UNIT
         bar_live = always_redraw(bar)
-        bar_floor = Line(BASE + LEFT * 0.55, BASE + RIGHT * 0.55, color=PASTEL_WHITE, stroke_width=2)
+        bar_floor = Line(BASE + LEFT * 0.55, BASE + RIGHT * 0.55, color=P_WHITE, stroke_width=2)
         #endregion
 
         #region readout column
@@ -1181,13 +1180,13 @@ class AnlagenVerluste(Scene):
         formulas = [
             lambda: rf"Q_{{\mathrm{{h}}}} \approx {de_num(vals[0].get_value())}\,\mathrm{{kWh/a}}",
             lambda: rf"Q_{{\mathrm{{h,ce}}}} = 5\,\% \cdot {de_num(_Q_H)} \approx {de_num(vals[1].get_value())}\,\mathrm{{kWh/a}}",
-            lambda: rf"Q_{{\mathrm{{h,d}}}} = {de_num(_PIPE_M)}\,\mathrm{{m}} \cdot {de_num(_PIPE_W_PER_M)}\,\mathrm{{W/m}} \cdot {de_num(_PIPE_H)}\,\mathrm{{h}} = "
+            lambda: rf"Q_{{\mathrm{{h,d}}}} = 30\,\mathrm{{m}} \cdot 10\,\mathrm{{W/m}} \cdot 2\,900\,\mathrm{{h}} = "
                     rf"{de_num(vals[2].get_value())}\,\mathrm{{kWh/a}}",
             lambda: rf"Q_{{\mathrm{{h,s}}}} = 1{{,}}5\,\mathrm{{kWh/d}} \cdot 200\,\mathrm{{d}} = "
                     rf"{de_num(vals[3].get_value())}\,\mathrm{{kWh/a}}",
             lambda: rf"Q_{{\mathrm{{h,g}}}} = {de_num(_Q_BEFORE_G)} \cdot (1/0{{,}}95 - 1) \approx "
                     rf"{de_num(vals[4].get_value())}\,\mathrm{{kWh/a}}",
-            lambda: rf"Q_{{\mathrm{{E}}}} \approx {de_num(round(e_val.get_value(), -2))}\,\mathrm{{kWh/a}}",
+            lambda: rf"Q_{{\mathrm{{E}}}} \approx {de_num(round(e_val.get_value(), -1))}\,\mathrm{{kWh/a}}",
         ]
         readouts = [math_readout(fn, np.array([CX, y - 0.16, 0.0]), size=21, color=c)
                     for fn, y, c in zip(formulas, rows_y, row_colors)]
@@ -1208,7 +1207,7 @@ class AnlagenVerluste(Scene):
         caption = swap_caption(self, caption, subtitle_text(N, "chain"))
         self.play(FadeIn(h["store"]), FadeIn(h["boiler"]), FadeIn(h["chimney"]), Create(h["pipes"]),
                   FadeIn(h["radiators"]), FadeIn(h["thermostat"]), FadeIn(h["labels"][:3]), run_time=1.5)
-        animate_flows(self, [(h["flow_paths"], PASTEL_RED, PASTEL_RED)], run_time=3.0, waves=6, cycles=2.0, radius=0.05)
+        animate_flows(self, [(h["flow_paths"], "#F87171", "#FCA5A5")], run_time=3.0, waves=6, cycles=2.0, radius=0.05)
         hold_for(self, N, "chain")
         #endregion
 
@@ -1221,7 +1220,7 @@ class AnlagenVerluste(Scene):
         wall_paths = [Line(np.array([-6.3, y, 0.0]), np.array([-7.05, y, 0.0])).shift(UP * _HOUSE_DY)
                       for y in (0.02, 0.17, 0.32)]
         self.play(FadeIn(name_mobs[1]), FadeIn(h["thermo_label"]), Create(leaders[1]), run_time=0.5)
-        animate_flows(self, [(wall_paths, PASTEL_RED, PASTEL_BLUE)], run_time=3.0, waves=4, cycles=2.0, radius=0.05,
+        animate_flows(self, [(wall_paths, "#F87171", P_BLUE)], run_time=3.0, waves=4, cycles=2.0, radius=0.05,
                       extra=[vals[1].animate.set_value(_Q_CE), glow.animate.set_fill(opacity=0.55),
                              Wiggle(h["thermostat"], scale_value=1.4, n_wiggles=4)])
         hold_for(self, N, "ce")
@@ -1235,7 +1234,7 @@ class AnlagenVerluste(Scene):
         leak_paths = [path.shift(UP * _HOUSE_DY) for path in leak_paths]
         self.add(readouts[2])
         self.play(FadeIn(name_mobs[2]), FadeIn(h["pipe_label"]), Create(leaders[2]), run_time=0.5)
-        animate_flows(self, [(leak_paths, PASTEL_ORANGE, PASTEL_BLUE)], run_time=3.0, waves=3, cycles=2.0, radius=0.045,
+        animate_flows(self, [(leak_paths, "#FB923C", P_BLUE)], run_time=3.0, waves=3, cycles=2.0, radius=0.045,
                       extra=[vals[2].animate.set_value(_Q_D)])
         hold_for(self, N, "d")
         #endregion
@@ -1247,7 +1246,7 @@ class AnlagenVerluste(Scene):
                        for dx, dy in ((-1, 0.5), (-1, -0.4), (1, 0.6), (1, -0.5), (0.3, 1.0))]
         self.add(readouts[3])
         self.play(FadeIn(name_mobs[3]), Create(leaders[3]), run_time=0.5)
-        animate_flows(self, [(store_paths, PASTEL_YELLOW, PASTEL_BLUE)], run_time=3.0, waves=3, cycles=2.0, radius=0.045,
+        animate_flows(self, [(store_paths, P_YELLOW, P_BLUE)], run_time=3.0, waves=3, cycles=2.0, radius=0.045,
                       extra=[vals[3].animate.set_value(_Q_S)])
         hold_for(self, N, "s")
         #endregion
@@ -1259,7 +1258,7 @@ class AnlagenVerluste(Scene):
                                                ).shift(UP * _HOUSE_DY)]
         self.add(readouts[4])
         self.play(FadeIn(name_mobs[4]), Create(leaders[4]), run_time=0.5)
-        animate_flows(self, [(flue, PASTEL_ORANGE, "#D1D5DB")], run_time=3.0, waves=6, cycles=2.0, radius=0.08,
+        animate_flows(self, [(flue, "#FB923C", "#D1D5DB")], run_time=3.0, waves=6, cycles=2.0, radius=0.08,
                       extra=[vals[4].animate.set_value(_Q_G)])
         hold_for(self, N, "g")
         #endregion
@@ -1267,12 +1266,12 @@ class AnlagenVerluste(Scene):
         #region sum
         caption = swap_caption(self, caption, subtitle_text(N, "sum"))
         row, box, items = math_panel([
-            ("e", r"Q_{\mathrm{E}}", E_C), (None, "=", PASTEL_WHITE), ("h", r"Q_{\mathrm{h}}", QH_C), (None, "+", PASTEL_WHITE),
-            ("ce", r"Q_{\mathrm{h,ce}}", CE_C), (None, "+", PASTEL_WHITE), ("d", r"Q_{\mathrm{h,d}}", D_C),
-            (None, "+", PASTEL_WHITE), ("s", r"Q_{\mathrm{h,s}}", S_C), (None, "+", PASTEL_WHITE),
-            ("g", r"Q_{\mathrm{h,g}}", G_C), (None, r"\approx", PASTEL_WHITE),
-            ("v", rf"{de_num(round(_Q_E, -2))}\,\mathrm{{kWh/a}}", E_C),
-        ], color=PASTEL_TEAL)
+            ("e", r"Q_{\mathrm{E}}", E_C), (None, "=", P_WHITE), ("h", r"Q_{\mathrm{h}}", QH_C), (None, "+", P_WHITE),
+            ("ce", r"Q_{\mathrm{h,ce}}", CE_C), (None, "+", P_WHITE), ("d", r"Q_{\mathrm{h,d}}", D_C),
+            (None, "+", P_WHITE), ("s", r"Q_{\mathrm{h,s}}", S_C), (None, "+", P_WHITE),
+            ("g", r"Q_{\mathrm{h,g}}", G_C), (None, r"\approx", P_WHITE),
+            ("v", rf"{de_num(round(_Q_E, -1))}\,\mathrm{{kWh/a}}", E_C),
+        ], color=P_TEAL)
         sources = {
             key: math_label(src, _slot(r), size=21, color=c, edge="left")
             for key, src, r, c in zip(

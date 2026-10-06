@@ -144,4 +144,25 @@ Dev request: the wall graphic and the animations of the three heat paths were no
 
 - `Beat3_GWert` rebuilt on dev request (animation and colours not good): double-glazing section with an energy-flow (Sankey) diagram — 100 % solar band from a soft sun, 20 % reflected curving away, 30 % taken up by the glass (panes glow), 50 % transmitted; the warm glass then releases 10 % inward and 20 % outward. A brace collects transmitted + inward heat → g ≈ 0,6, and g flies into `Φ = G · A · F_f · g [W]`. Band widths are proportional to the shares (`SHARE_R/T/IN/OUT`, `G_VALUE = SHARE_T + SHARE_IN`); the ten-packet tally and all numeric equations are gone. Pastel `COLOR_GVAL #A8DDB5`, new `COLOR_REFL`, `COLOR_GLASS_HEAT`. Cites DIN EN 410. Re-rendered: 0 layout issues. Before-copy: `checks/m5_scene_5_before_beat3_sankey.py.txt`.
 
+## Reopened 2026-10-04 — Modul 5 Beat4 rays, Beat5 in the Cooling style
+
+- `Beat4_SaisonaleWinkel`: summer rays were added ray by ray, so removing their group left them visible in winter; they now fade out before the sweep. `_sun_rays` starts every ray at most `RAY_REACH = 2,3` out from the facade and fades it in from transparent, so the parallel bundle no longer reads wider than the sun.
+- `Beat5_Verschattung` rebuilt after the Cooling `Beat3_ShadingFactor` (dev's reference): vertical section with hatched lintel/sill, double glazing, room; parallel rays reach glass and room (F_sh = 1); a Raffstore drops in, the slats cut the rays and reflect them outward while the marker slides 1 → 0; a faint residue passes (F_sh ≈ 0,15); in winter the blind goes up and the roof overhang cuts only the top ray (F_sh ≈ 0,8). Marker on a 0…1 scale with typeset live F_sh (the Cooling version shows raw „F_V“ text); F_sh flies into `Φ = G · A · F_f · g · F_sh`. Pastel palette, `COLOR_BLIND`. Re-rendered both: 0 layout issues. Before-copy: `checks/m5_scene_5_before_beat5_cooling_style.py.txt`.
+
+## Reopened 2026-10-04 — round final numbers, window convection in Modul 1
+
+- Final calculation: numbers rounded at the source so every chain stays consistent: Φ_T 2 300 W + Φ_V 1 500 W = 3 800 W; H_T 115 + H_V 75 W/K; Q_Verlust = 190 · 3 500 · 24 / 1000 ≈ 16 000 kWh/a; Q_h = 16 000 − 0,9 · 5 000 = 11 500 kWh/a (≈ 77 kWh/(m²a)); Übergabe ≈ 600 (5 %), Verteilung 30 m · 10 W/m · 3 000 h = 900, Speicher 300, Erzeugung 13 300 · (1/0,95 − 1) = 700 → Q_E = 14 000 kWh/a. Narration numbers updated. Before-copy: `checks/final_merged_scenes_before_round.py.txt`.
+- Modul 1 `Beat3_Konvektion` (dev: convection without a window has no meaning): window opening cut into the brick wall; warm air rises at the radiator, runs under the ceiling and leaves through the top of the opened window; cold outdoor air enters at the bottom, sinks to the floor and is warmed at the radiator; room 20 → 17 °C. R_si/R_se and wind removed from this beat. Re-rendered: 0 layout issues. Before-copy: `checks/m1_scene_1_before_window_convection.py.txt`.
+
+## Reopened 2026-10-04 — pastel harmony across Heating, minimal Modul 1 section, full render
+
+- `manim_visuals.py`: additive `#region Pastel palette` (`PASTEL_WHITE … PASTEL_GREY`, same hue roles as the base palette, low saturation); `watt_anchor(..., color=None)` to override the device colour.
+- All six Heating files switched to the pastel palette: `P_<hue>` → `PASTEL_<hue>`, sharp hex literals (yellows, oranges, reds, pinks, blues, purples, greens) and Manim `WHITE / YELLOW_* / PURPLE / GREEN / RED` mapped to the matching pastel role; neutral greys and dark fills kept. Remaining default-colour helper calls (`dim_arrow` in Modul 3, `watt_anchor` in Modul 1/4) now pass pastel colours. Before-copies: `checks/pastel_before/`.
+- Modul 1 `_stage()` minimal: no tinted room or night fill (only slabs, wall, ground, moon and stars); room-fill animations in Beat3/Beat4 removed; magnifier bands clear; wall temperature tint lighter (0,22 / 0,14).
+- Full video: `checks/render_full_heating_ql.sh` renders the six sections at -ql with `LAYOUT_CHECK=1` and concatenates them to `Heating/rendered/Full_Heating_Demand_NoAudio_480p15.mp4`. The NGS intro card is skipped: `tutorial/intro/assets/` (Welfenschloss and Leibniz PNGs) was deleted in commit b2d27a373d5 but `intro_scene.py` still loads it.
+
+## Reopened 2026-10-04 — sharper white
+
+- Dev: white should be sharper, other pastels stay. `PASTEL_WHITE` `#ECE7DF` → `#FFFFFF` (same as the scene titles). Full video re-rendered with `checks/render_full_heating_ql.sh`.
+
 Status: closed 2026-10-04 (manually — repo MCP unavailable).

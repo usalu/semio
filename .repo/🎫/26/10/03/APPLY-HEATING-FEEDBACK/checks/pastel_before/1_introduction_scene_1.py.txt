@@ -17,7 +17,7 @@ from manim_fonts import (
     BODY_FONT_SIZE, LABEL_FONT_SIZE, FORMULA_FONT_SIZE,
 )
 from manim_visuals import (
-    P_DEEP_DARK, PASTEL_WHITE, PASTEL_CYAN, PASTEL_TEAL, PASTEL_ORANGE, PASTEL_YELLOW, PASTEL_RED, PASTEL_BLUE, PASTEL_GREEN,
+    P_DEEP_DARK, P_WHITE, P_CYAN, P_TEAL, P_ORANGE, P_YELLOW, P_RED, P_BLUE, P_GREEN,
     fit_band, watt_anchor, radiation_ray,
     meter, set_meter, chip, cross_mark, dim_arrow,
     highlight_param, math_label, math_panel, de_num, place_math,
@@ -50,8 +50,9 @@ RADIATOR = (-5.65, -1.05, -4.75, -0.30)
 OCCUPANT_X = -2.9
 BRICK_FILL = "#2A2E35"
 MORTAR = "#A9B0BA"
+NIGHT = "#1B2A4A"
 SLAB_GREY = "#5B6068"
-HOT = PASTEL_RED
+HOT = "#FF8A50"
 
 
 def _box(x0, y0, x1, y1, **style):
@@ -81,10 +82,10 @@ def _brick_wall():
             x += brick
     inner = _box(WALL_X0, y0, bx0, y1, stroke_width=0, fill_color="#E8E2D6", fill_opacity=0.95)
     outer = _box(bx1, y0, WALL_X1, y1, stroke_width=0, fill_color="#B9C2CC", fill_opacity=0.95)
-    outline = _box(WALL_X0, y0, WALL_X1, y1, stroke_color=PASTEL_WHITE, stroke_width=2.4, fill_opacity=0.0)
+    outline = _box(WALL_X0, y0, WALL_X1, y1, stroke_color=P_WHITE, stroke_width=2.4, fill_opacity=0.0)
     tint = VGroup(*[
         _box(bx0 + k * (bx1 - bx0) / 16, y0, bx0 + (k + 1) * (bx1 - bx0) / 16, y1,
-             stroke_width=0, fill_color=interpolate_color(ManimColor(HOT), ManimColor(PASTEL_BLUE), (k + 0.5) / 16),
+             stroke_width=0, fill_color=interpolate_color(ManimColor(HOT), ManimColor(P_BLUE), (k + 0.5) / 16),
              fill_opacity=0.0)
         for k in range(16)
     ])
@@ -95,19 +96,19 @@ def _brick_wall():
 def _radiator():
     """♨️ Panel radiator on the floor, fins and feet."""
     x0, y0, x1, y1 = RADIATOR
-    body = _box(x0, y0, x1, y1, stroke_color=PASTEL_RED, stroke_width=2.2, fill_color=PASTEL_RED, fill_opacity=0.30)
+    body = _box(x0, y0, x1, y1, stroke_color=P_RED, stroke_width=2.2, fill_color=P_RED, fill_opacity=0.30)
     fins = VGroup(*[
-        Line(np.array([x, y0 + 0.06, 0.0]), np.array([x, y1 - 0.06, 0.0]), color=PASTEL_RED, stroke_width=1.4)
+        Line(np.array([x, y0 + 0.06, 0.0]), np.array([x, y1 - 0.06, 0.0]), color=P_RED, stroke_width=1.4)
         for x in np.arange(x0 + 0.13, x1 - 0.05, 0.13)
     ])
     feet = VGroup(*[
-        Line(np.array([x, y0, 0.0]), np.array([x, FLOOR_Y, 0.0]), color=PASTEL_RED, stroke_width=2.2)
+        Line(np.array([x, y0, 0.0]), np.array([x, FLOOR_Y, 0.0]), color=P_RED, stroke_width=2.2)
         for x in (x0 + 0.12, x1 - 0.12)
     ])
     return VGroup(body, fins, feet)
 
 
-def _occupant(x=OCCUPANT_X, color=PASTEL_ORANGE, scale=2.6):
+def _occupant(x=OCCUPANT_X, color=P_ORANGE, scale=2.6):
     """🧍 Occupant — the same minimal head-and-body glyph as the other tutorial scenes, standing on the floor."""
     head = Circle(radius=0.11, color=color, stroke_width=2.2)
     body = RoundedRectangle(width=0.30, height=0.40, corner_radius=0.09, color=color, stroke_width=2.2)
@@ -121,10 +122,10 @@ def _night_sky():
     """🌙 Crescent moon and a few stars over the snow."""
     moon = VGroup(
         Circle(radius=0.28, stroke_width=0, fill_color="#F2E8C9", fill_opacity=1.0).move_to(np.array([5.25, 1.35, 0.0])),
-        Circle(radius=0.25, stroke_width=0, fill_color=P_DEEP_DARK, fill_opacity=1.0).move_to(np.array([5.37, 1.45, 0.0])),
+        Circle(radius=0.25, stroke_width=0, fill_color=NIGHT, fill_opacity=1.0).move_to(np.array([5.37, 1.45, 0.0])),
     )
     stars = VGroup(*[
-        Dot(np.array([x, y, 0.0]), radius=0.025, color=PASTEL_WHITE, fill_opacity=0.8)
+        Dot(np.array([x, y, 0.0]), radius=0.025, color=P_WHITE, fill_opacity=0.8)
         for x, y in ((2.1, 1.6), (3.0, 1.2), (3.9, 1.7), (4.5, 0.9), (5.9, 0.7), (2.6, 0.4), (4.9, 0.2), (6.0, 1.6))
     ])
     return VGroup(moon, stars)
@@ -132,8 +133,8 @@ def _night_sky():
 
 def _stage(*, scale: float = 1.0):
     """🏠 Heated room | brick exterior wall | winter night — the section Beats 1–5 share."""
-    room = _box(ROOM_X0, FLOOR_Y, WALL_X0, CEIL_Y, stroke_width=0, fill_opacity=0.0)
-    night = _box(WALL_X1, FLOOR_Y, OUT_X1, CEIL_Y + SLAB, stroke_width=0, fill_opacity=0.0)
+    room = _box(ROOM_X0, FLOOR_Y, WALL_X0, CEIL_Y, stroke_width=0, fill_color=P_ORANGE, fill_opacity=0.16)
+    night = _box(WALL_X1, FLOOR_Y, OUT_X1, CEIL_Y + SLAB, stroke_width=0, fill_color=NIGHT, fill_opacity=0.85)
     floor = _box(ROOM_X0, FLOOR_Y - SLAB, WALL_X0, FLOOR_Y, stroke_color="#8A8F98", stroke_width=1.4,
                  fill_color=SLAB_GREY, fill_opacity=0.9)
     ceiling = _box(ROOM_X0, CEIL_Y, WALL_X0, CEIL_Y + SLAB, stroke_color="#8A8F98", stroke_width=1.4,
@@ -144,9 +145,9 @@ def _stage(*, scale: float = 1.0):
     occupant = _occupant()
     sky = _night_sky()
 
-    ti = Text(f"innen {THETA_I} °C", font_size=BODY_FONT_SIZE, color=PASTEL_ORANGE)
+    ti = Text(f"innen {THETA_I} °C", font_size=BODY_FONT_SIZE, color=P_ORANGE)
     ti.move_to(np.array([(ROOM_X0 + WALL_X0) / 2, LABEL_Y, 0.0]))
-    te = Text(f"außen {THETA_E} °C", font_size=BODY_FONT_SIZE, color=PASTEL_BLUE)
+    te = Text(f"außen {THETA_E} °C", font_size=BODY_FONT_SIZE, color=P_BLUE)
     te.move_to(np.array([(WALL_X1 + OUT_X1) / 2, LABEL_Y, 0.0]))
     dth = place_math(_dtheta_label(THETA_I - THETA_E), np.array([0.0, ti.get_bottom()[1], 0.0]), "center")
 
@@ -244,8 +245,8 @@ def _loop(stage):
     pts = _loop_points()
     path = stage["fit"](_path(pts))
     color = _knots_color([
-        (0.0, HOT), (_chord_t(pts, 5), PASTEL_ORANGE), (_chord_t(pts, 9), PASTEL_BLUE),
-        (_chord_t(pts, 13), PASTEL_BLUE), (1.0, HOT),
+        (0.0, HOT), (_chord_t(pts, 5), P_ORANGE), (_chord_t(pts, 9), P_BLUE),
+        (_chord_t(pts, 13), P_BLUE), (1.0, HOT),
     ])
     return path, color
 
@@ -257,7 +258,7 @@ def _wind(stage):
         pts = [(6.1, -0.95 + 0.35 * k), (3.0, -0.95 + 0.35 * k), (1.5 + off, -0.65 + 0.25 * k),
                (0.98 + off, 0.05), (0.98 + off, 0.85), (1.6 + off, 1.45), (2.7 + off, 1.80)]
         lanes.append(stage["fit"](_path(pts)))
-    color = _knots_color([(0.0, PASTEL_BLUE), (0.45, PASTEL_BLUE), (0.75, "#C9A3E8"), (1.0, "#C9A3E8")])
+    color = _knots_color([(0.0, P_BLUE), (0.45, P_BLUE), (0.75, "#C9A3E8"), (1.0, "#C9A3E8")])
     return lanes, color
 
 
@@ -274,12 +275,12 @@ def _surface_arrows(stage, x0, x1, ys, color):
 def _ir_rays(stage, pairs):
     """📏 Infrared rays between surfaces — straight, evenly placed lines."""
     p = stage["p"]
-    return VGroup(*[radiation_ray(p(*a), p(*b), color=PASTEL_YELLOW, stroke_width=2.2) for a, b in pairs])
+    return VGroup(*[radiation_ray(p(*a), p(*b), color=P_YELLOW, stroke_width=2.2) for a, b in pairs])
 
 
 def _ray_pulses(rays, *, width: float = 6.0):
     """✨ One travelling flash per ray — the packet moving from emitter to absorber."""
-    return [ShowPassingFlash(r.copy().set_stroke(color=PASTEL_YELLOW, width=width), time_width=0.35) for r in rays]
+    return [ShowPassingFlash(r.copy().set_stroke(color=P_YELLOW, width=width), time_width=0.35) for r in rays]
 
 
 INNER_RAYS = [((-4.75, -0.65), (WALL_X0 - 0.02, y)) for y in (-0.90, -0.15, 0.60, 1.35)]
@@ -288,7 +289,7 @@ OUTER_RAYS = [((WALL_X1 + 0.02, y), (WALL_X1 + 2.02, y + 0.80)) for y in (-0.75,
 
 
 #region Wall temperature
-def _tint_wall(stage, opacity: float = 0.22):
+def _tint_wall(stage, opacity: float = 0.35):
     """🌡️ Animation that colours the masonry warm inside ➜ cold outside — the gradient conduction runs down."""
     return stage["wall"]["tint"].animate.set_fill(opacity=opacity)
 #endregion
@@ -298,9 +299,9 @@ def _tint_wall(stage, opacity: float = 0.22):
 def _route_strip(active: int | None = None):
     """🧭 Leitung · Konvektion · Strahlung — which of the three a beat is on."""
     names = ("Leitung", "Konvektion", "Strahlung")
-    colors = (PASTEL_RED, PASTEL_CYAN, PASTEL_YELLOW)
+    colors = (P_RED, P_CYAN, P_YELLOW)
     strip = VGroup(*[
-        chip(n, c if active == i else PASTEL_TEAL, font_size=LABEL_FONT_SIZE)
+        chip(n, c if active == i else P_TEAL, font_size=LABEL_FONT_SIZE)
         for i, (n, c) in enumerate(zip(names, colors))
     ]).arrange(RIGHT, buff=0.5)
     strip.move_to(np.array([0.0, -2.16, 0.0]))
@@ -321,7 +322,7 @@ def _dtheta_src(kelvin: float) -> str:
 
 def _dtheta_label(kelvin: float):
     """📏 Typeset Δθ label for the section's centre slot."""
-    return math_label(_dtheta_src(kelvin), size=BODY_FONT_SIZE, color=PASTEL_YELLOW)
+    return math_label(_dtheta_src(kelvin), size=BODY_FONT_SIZE, color=P_YELLOW)
 
 
 def _q_token(sub: str, color: str):
@@ -333,7 +334,7 @@ def _q_token(sub: str, color: str):
 _READOUT_CACHE: dict = {}
 
 
-def _live(fn, at, *, size=None, color=PASTEL_WHITE, edge="left"):
+def _live(fn, at, *, size=None, color=P_WHITE, edge="left"):
     """📟 ``math_readout`` that reuses the typeset box while ``fn()`` returns the same source.
 
     https://docs.manim.community/en/stable/reference/manim.animation.updaters.mobject_update_utils.html
@@ -393,7 +394,7 @@ def _din_ref(text: str):
     the beat is really about the heating load). Dim so it reads as a footnote,
     never competing with the diagram.
     """
-    ref = Text(text, font_size=LABEL_FONT_SIZE - 3, color=PASTEL_TEAL)
+    ref = Text(text, font_size=LABEL_FONT_SIZE - 3, color=P_TEAL)
     ref.set_opacity(0.72)
     ref.to_corner(UR, buff=0.30)
     return ref
@@ -437,20 +438,20 @@ class Beat1_DreiWegeDerWaerme(Scene):
 
         stage = _stage()
         p = stage["p"]
-        ti_cool = Text("innen 19 °C", font_size=BODY_FONT_SIZE, color=PASTEL_ORANGE).move_to(stage["ti"])
-        te_warm = Text("außen 1 °C", font_size=BODY_FONT_SIZE, color=PASTEL_BLUE).move_to(stage["te"])
+        ti_cool = Text("innen 19 °C", font_size=BODY_FONT_SIZE, color=P_ORANGE).move_to(stage["ti"])
+        te_warm = Text("außen 1 °C", font_size=BODY_FONT_SIZE, color=P_BLUE).move_to(stage["te"])
         dt = ValueTracker(0.0)
         dth_live = _live(
             lambda: _dtheta_src(dt.get_value()),
             np.array([stage["wall"]["outline"].get_center()[0], stage["ti"].get_bottom()[1], 0.0]),
-            size=BODY_FONT_SIZE, color=PASTEL_YELLOW, edge="center",
+            size=BODY_FONT_SIZE, color=P_YELLOW, edge="center",
         )
         heat_lanes = [stage["fit"](_path([(-4.6, y), (6.0, y)])) for y in (-0.75, -0.15, 0.45, 1.05)]
-        heat_color = _knots_color([(0.0, HOT), (0.48, PASTEL_ORANGE), (0.56, "#B98CC7"), (1.0, PASTEL_BLUE)])
-        reverse = _flow_arrow(p(3.0, 0.25), p(-3.0, 0.25), PASTEL_BLUE)
+        heat_color = _knots_color([(0.0, HOT), (0.48, P_ORANGE), (0.56, "#B98CC7"), (1.0, P_BLUE)])
+        reverse = _flow_arrow(p(3.0, 0.25), p(-3.0, 0.25), P_BLUE)
         no_mark = VGroup(
-            Circle(radius=0.37, color=PASTEL_RED, stroke_width=5),
-            Line(UP * 0.26 + LEFT * 0.26, DOWN * 0.26 + RIGHT * 0.26, color=PASTEL_RED, stroke_width=5),
+            Circle(radius=0.37, color=P_RED, stroke_width=5),
+            Line(UP * 0.26 + LEFT * 0.26, DOWN * 0.26 + RIGHT * 0.26, color=P_RED, stroke_width=5),
         ).move_to(p(0.0, 0.25))
         routes = _route_strip()
 
@@ -463,7 +464,7 @@ class Beat1_DreiWegeDerWaerme(Scene):
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "driver"))
         self.add(dth_live)
         self.play(dt.animate.set_value(THETA_I - THETA_E), run_time=0.8)
-        self.play(Indicate(dth_live, color=PASTEL_YELLOW, scale_factor=1.2), run_time=0.9)
+        self.play(Indicate(dth_live, color=P_YELLOW, scale_factor=1.2), run_time=0.9)
         hold_for(self, self.NARRATION, "driver", used=0.8 + 0.9 + 0.35)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "direction"))
@@ -477,7 +478,7 @@ class Beat1_DreiWegeDerWaerme(Scene):
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "never"))
         self.play(GrowArrow(reverse), run_time=0.8)
-        self.play(Create(no_mark), reverse.animate.set_stroke(color=PASTEL_WHITE, opacity=0.22), run_time=0.7)
+        self.play(Create(no_mark), reverse.animate.set_stroke(color=P_WHITE, opacity=0.22), run_time=0.7)
         hold_for(self, self.NARRATION, "never", used=0.8 + 0.7 + 0.35)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "three"))
@@ -513,7 +514,7 @@ def _lens(stage):
         rect = Rectangle(width=x1 - x0, height=2 * r + 0.2).move_to(c + np.array([(x0 + x1) / 2, 0.0, 0.0]))
         return Intersection(disc.copy(), rect, stroke_width=0, fill_color=color, fill_opacity=opacity)
 
-    bands = VGroup(band(-r, -w, P_DEEP_DARK, 0.0), band(-w, w, BRICK_FILL, 1.0), band(w, r, P_DEEP_DARK, 0.0))
+    bands = VGroup(band(-r, -w, P_ORANGE, 0.20), band(-w, w, BRICK_FILL, 1.0), band(w, r, NIGHT, 0.95))
     rim = Circle(radius=r, color="#D5D9DE", stroke_width=7).move_to(c)
     tip = c + r * np.array([np.cos(-0.87), np.sin(-0.87), 0.0])
     handle = Line(tip, tip + 0.75 * np.array([np.cos(-0.87), np.sin(-0.87), 0.0]), color="#D5D9DE", stroke_width=12)
@@ -533,7 +534,7 @@ def _lattice(lens, *, seed: int = 4):
                 index[(i, j)] = len(homes)
                 homes.append((c + np.array([x, y, 0.0]), (x - xs[0]) / (xs[-1] - xs[0])))
     pairs = [(index[a], index[b]) for a in index for b in ((a[0] + 1, a[1]), (a[0], a[1] + 1)) if b in index]
-    dots = VGroup(*[Dot(h, radius=0.065, color=PASTEL_BLUE) for h, _xn in homes])
+    dots = VGroup(*[Dot(h, radius=0.065, color=P_BLUE) for h, _xn in homes])
     bonds = VGroup(*[Line(homes[a][0], homes[b][0], color=MORTAR, stroke_width=1.6, stroke_opacity=0.55)
                      for a, b in pairs])
     rng = np.random.default_rng(seed)
@@ -544,7 +545,7 @@ def _lattice(lens, *, seed: int = 4):
             y = float(rng.uniform(-r + 0.2, r - 0.2))
             if np.hypot(x, y) < r - 0.15:
                 air.append((c + np.array([x, y, 0.0]), side, float(rng.uniform(0, TAU))))
-    air_dots = VGroup(*[Dot(h, radius=0.05, color=HOT if side < 0 else PASTEL_BLUE) for h, side, _ph in air])
+    air_dots = VGroup(*[Dot(h, radius=0.05, color=HOT if side < 0 else P_BLUE) for h, side, _ph in air])
     phases = rng.uniform(0, TAU, size=len(homes))
     return {"homes": homes, "pairs": pairs, "dots": dots, "bonds": bonds, "air": air, "air_dots": air_dots,
             "phases": phases, "index": index, "group": VGroup(bonds, dots, air_dots)}
@@ -587,13 +588,13 @@ class Beat2_Waermeleitung(Scene):
         lens = _lens(stage)
         lat = _lattice(lens)
         marker = DashedVMobject(Circle(radius=0.32, color="#D5D9DE", stroke_width=3).move_to(lens["c"]), num_dashes=16)
-        energy = _flow_arrow(p(-1.25, 2.12), p(1.25, 2.12), PASTEL_RED, width=5)
-        energy_tag = Text("Energie", font_size=LABEL_FONT_SIZE, color=PASTEL_RED).next_to(energy, LEFT, buff=0.2)
+        energy = _flow_arrow(p(-1.25, 2.12), p(1.25, 2.12), P_RED, width=5)
+        energy_tag = Text("Energie", font_size=LABEL_FONT_SIZE, color=P_RED).next_to(energy, LEFT, buff=0.2)
 
         clock = ValueTracker(0.0)
         clock.add_updater(lambda m, dt: m.increment_value(dt))
         front = ValueTracker(0.0)
-        cold, hot = ManimColor(PASTEL_BLUE), ManimColor(HOT)
+        cold, hot = ManimColor(P_BLUE), ManimColor(HOT)
 
         def temp(xn):
             return (1.0 - 0.85 * xn) * _smoothstep((front.get_value() - xn) / 0.3)
@@ -613,9 +614,9 @@ class Beat2_Waermeleitung(Scene):
 
         watched = lat["index"][(1, len({k[1] for k in lat["index"]}) // 2)]
         home_w = lat["homes"][watched][0]
-        watch_ring = Circle(radius=0.15, color=PASTEL_GREEN, stroke_width=2.5).move_to(home_w)
-        watch_tag = Text("bleibt am Platz", font_size=LABEL_FONT_SIZE, color=PASTEL_GREEN).move_to(p(-2.75, 1.35))
-        watch_lead = Line(watch_tag.get_right() + RIGHT * 0.08, watch_ring.get_left(), color=PASTEL_GREEN,
+        watch_ring = Circle(radius=0.15, color=P_GREEN, stroke_width=2.5).move_to(home_w)
+        watch_tag = Text("bleibt am Platz", font_size=LABEL_FONT_SIZE, color=P_GREEN).move_to(p(-2.75, 1.35))
+        watch_lead = Line(watch_tag.get_right() + RIGHT * 0.08, watch_ring.get_left(), color=P_GREEN,
                           stroke_width=1.4, stroke_opacity=0.7)
 
         hold_for(self, self.NARRATION, "label", used=BEAT_SUBTITLE_FADE + 0.3)
@@ -634,7 +635,7 @@ class Beat2_Waermeleitung(Scene):
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "relay"))
         self.play(GrowArrow(energy), FadeIn(energy_tag), run_time=0.6)
         self.play(front.animate.set_value(1.35), _tint_wall(stage),
-                  ShowPassingFlash(energy.copy().set_stroke(color=PASTEL_YELLOW, width=9), time_width=0.4),
+                  ShowPassingFlash(energy.copy().set_stroke(color=P_YELLOW, width=9), time_width=0.4),
                   run_time=4.0, rate_func=linear)
         hold_for(self, self.NARRATION, "relay", used=0.6 + 4.0 + 0.35)
 
@@ -645,11 +646,11 @@ class Beat2_Waermeleitung(Scene):
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "symbol"))
         lat["group"].clear_updaters()
-        token = _q_token("k", PASTEL_RED).move_to(lens["c"])
+        token = _q_token("k", P_RED).move_to(lens["c"])
         self.play(FadeOut(watch_ring), FadeOut(watch_tag), FadeOut(watch_lead),
                   ReplacementTransform(lat["group"], token), run_time=1.2)
         self.play(FadeOut(lens["group"]), token.animate.move_to(p(0.0, 0.25)),
-                  Transform(energy, _flow_arrow(p(-0.55, -0.35), p(0.55, -0.35), PASTEL_RED, width=5)),
+                  Transform(energy, _flow_arrow(p(-0.55, -0.35), p(0.55, -0.35), P_RED, width=5)),
                   FadeOut(energy_tag), run_time=1.0)
         hold_for(self, self.NARRATION, "symbol", used=1.2 + 1.0 + 0.35)
 
@@ -668,9 +669,9 @@ def _window_opening(stage):
     p = stage["p"]
     cut = Polygon(p(WALL_X0, WIN_LO), p(WALL_X1, WIN_LO), p(WALL_X1, WIN_HI), p(WALL_X0, WIN_HI),
                   stroke_width=0, fill_color=P_DEEP_DARK, fill_opacity=1.0)
-    frame = VGroup(*[Line(p(WALL_X0, y), p(WALL_X1, y), color=PASTEL_WHITE, stroke_width=2.4) for y in (WIN_LO, WIN_HI)])
-    pane = Rectangle(width=0.07 * stage["s"], height=(WIN_HI - WIN_LO) * stage["s"], stroke_color=PASTEL_CYAN,
-                     stroke_width=1.5, fill_color=PASTEL_CYAN, fill_opacity=0.35).move_to(p(0.0, (WIN_LO + WIN_HI) / 2))
+    frame = VGroup(*[Line(p(WALL_X0, y), p(WALL_X1, y), color=P_WHITE, stroke_width=2.4) for y in (WIN_LO, WIN_HI)])
+    pane = Rectangle(width=0.07 * stage["s"], height=(WIN_HI - WIN_LO) * stage["s"], stroke_color=P_CYAN,
+                     stroke_width=1.5, fill_color=P_CYAN, fill_opacity=0.35).move_to(p(0.0, (WIN_LO + WIN_HI) / 2))
     return {"cut": cut, "frame": frame, "pane": pane, "group": VGroup(cut, frame, pane)}
 
 
@@ -682,8 +683,8 @@ def _window_flows(stage):
                 (-1.6, -1.05), (-3.5, -1.08), (-4.6, -1.06), (-5.02, -0.92), (-5.2, -0.6), (-5.2, -0.25)]
     warm = stage["fit"](_path(warm_pts))
     cold = stage["fit"](_path(cold_pts))
-    warm_color = _knots_color([(0.0, HOT), (_chord_t(warm_pts, 6), PASTEL_ORANGE), (1.0, "#C9A3E8")])
-    cold_color = _knots_color([(0.0, PASTEL_BLUE), (_chord_t(cold_pts, 9), PASTEL_BLUE), (1.0, HOT)])
+    warm_color = _knots_color([(0.0, HOT), (_chord_t(warm_pts, 6), P_ORANGE), (1.0, "#C9A3E8")])
+    cold_color = _knots_color([(0.0, P_BLUE), (_chord_t(cold_pts, 9), P_BLUE), (1.0, HOT)])
     return (warm, warm_color), (cold, cold_color)
 
 
@@ -724,12 +725,12 @@ class Beat3_Konvektion(Scene):
         window = _window_opening(stage)
         (warm, warm_color), (cold, cold_color) = _window_flows(stage)
         warm_guide = warm.copy().set_stroke(color=HOT, width=2.0, opacity=0.30).set_fill(opacity=0)
-        cold_guide = cold.copy().set_stroke(color=PASTEL_BLUE, width=2.0, opacity=0.30).set_fill(opacity=0)
-        glow = stage["radiator"][0].copy().set_fill(PASTEL_RED, opacity=0.65)
+        cold_guide = cold.copy().set_stroke(color=P_BLUE, width=2.0, opacity=0.30).set_fill(opacity=0)
+        glow = stage["radiator"][0].copy().set_fill(P_RED, opacity=0.65)
         warm_tag = Text("warm, leicht", font_size=LABEL_FONT_SIZE, color=HOT).move_to(p(-4.0, 0.55))
-        cold_tag = Text("kalt, schwer", font_size=LABEL_FONT_SIZE, color=PASTEL_BLUE).move_to(p(2.6, 0.6))
-        open_tag = Text("Fenster geöffnet", font_size=LABEL_FONT_SIZE, color=PASTEL_CYAN).move_to(p(2.3, -0.75))
-        ti_cool = Text("innen 17 °C", font_size=BODY_FONT_SIZE, color=PASTEL_ORANGE).move_to(stage["ti"])
+        cold_tag = Text("kalt, schwer", font_size=LABEL_FONT_SIZE, color=P_BLUE).move_to(p(2.6, 0.6))
+        open_tag = Text("Fenster geöffnet", font_size=LABEL_FONT_SIZE, color=P_CYAN).move_to(p(2.3, -0.75))
+        ti_cool = Text("innen 17 °C", font_size=BODY_FONT_SIZE, color=P_ORANGE).move_to(stage["ti"])
 
         def flow(streams, seconds, extra=None):
             _stream(self, streams, run_time=seconds, n=12, radius=0.07, cycles=seconds / 6.0, extra=extra)
@@ -742,7 +743,7 @@ class Beat3_Konvektion(Scene):
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "heater"))
         self.play(FadeIn(glow), FadeIn(warm_tag), run_time=0.6)
         rise = stage["fit"](_path([(-5.2, -0.25), (-5.2, 0.55), (-4.95, 1.27), (-4.3, 1.50), (-2.5, 1.52), (-1.2, 1.4)]))
-        flow([(rise, _knots_color([(0.0, HOT), (1.0, PASTEL_ORANGE)]), False)], 4.0)
+        flow([(rise, _knots_color([(0.0, HOT), (1.0, P_ORANGE)]), False)], 4.0)
         hold_for(self, self.NARRATION, "heater", used=used + 0.6 + 0.6 + 4.0 + 0.35)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "window"))
@@ -754,11 +755,13 @@ class Beat3_Konvektion(Scene):
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "cold"))
         self.play(Create(cold_guide), FadeIn(cold_tag), run_time=0.6)
         flow([(warm, warm_color, False), (cold, cold_color, False)], 6.0,
-             extra=[FadeTransform(stage["ti"], ti_cool)])
+             extra=[stage["room"].animate.set_fill(interpolate_color(ManimColor(P_ORANGE), ManimColor(P_BLUE), 0.35),
+                                                   opacity=0.14),
+                    FadeTransform(stage["ti"], ti_cool)])
         hold_for(self, self.NARRATION, "cold", used=0.6 + 6.0 + 0.35)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "symbol"))
-        token = _q_token("c", PASTEL_CYAN).move_to(p(-3.0, 0.95))
+        token = _q_token("c", P_CYAN).move_to(p(-3.0, 0.95))
         self.play(ReplacementTransform(VGroup(warm_guide, cold_guide), token),
                   FadeOut(warm_tag), FadeOut(cold_tag), FadeOut(glow), run_time=1.2)
         hold_for(self, self.NARRATION, "symbol", used=1.2 + 0.35)
@@ -822,11 +825,11 @@ class Beat4_Strahlung(Scene):
         air_tag = Text("Raumluft", font_size=LABEL_FONT_SIZE, color="#9AA4B1").move_to(p(-3.0, 1.18))
         inner = _ir_rays(stage, INNER_RAYS)
         outer = _ir_rays(stage, OUTER_RAYS)
-        sky_tag = Text("kalter Nachthimmel", font_size=LABEL_FONT_SIZE, color=PASTEL_WHITE).move_to(p(4.5, 0.55))
+        sky_tag = Text("kalter Nachthimmel", font_size=LABEL_FONT_SIZE, color=P_WHITE).move_to(p(4.5, 0.55))
         loop, _ = _loop(stage)
-        loop_guide = DashedVMobject(loop.copy().set_stroke(color=PASTEL_CYAN, width=2.0, opacity=0.5), num_dashes=46)
-        no_air = Text("ohne Luft keine Konvektion", font_size=LABEL_FONT_SIZE, color=PASTEL_RED).move_to(air_tag)
-        no_mark = cross_mark(PASTEL_RED, size=0.16).move_to(p(-2.45, 1.52))
+        loop_guide = DashedVMobject(loop.copy().set_stroke(color=P_CYAN, width=2.0, opacity=0.5), num_dashes=46)
+        no_air = Text("ohne Luft keine Konvektion", font_size=LABEL_FONT_SIZE, color=P_RED).move_to(air_tag)
+        no_mark = cross_mark(P_RED, size=0.16).move_to(p(-2.45, 1.52))
 
         hold_for(self, self.NARRATION, "label", used=BEAT_SUBTITLE_FADE + 0.3)
 
@@ -835,7 +838,7 @@ class Beat4_Strahlung(Scene):
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "waves"))
         self.play(LaggedStart(*[Create(r) for r in inner], lag_ratio=0.15), run_time=1.2)
-        self.play(*_ray_pulses(inner), _tint_wall(stage, 0.14), run_time=1.3)
+        self.play(*_ray_pulses(inner), _tint_wall(stage, 0.22), run_time=1.3)
         self.play(LaggedStart(*[Create(r) for r in outer], lag_ratio=0.15), FadeIn(sky_tag), run_time=1.2)
         self.play(*_ray_pulses(inner), *_ray_pulses(outer), run_time=1.3)
         hold_for(self, self.NARRATION, "waves", used=used + 0.8 + 1.2 + 1.3 + 1.2 + 1.3 + 0.35)
@@ -843,7 +846,7 @@ class Beat4_Strahlung(Scene):
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "vacuum"))
         self.play(Create(loop_guide), run_time=0.8)
         self.play(LaggedStart(*[FadeOut(d, scale=0.3) for d in air], lag_ratio=0.03),
-                  ReplacementTransform(air_tag, no_air),
+                  ReplacementTransform(air_tag, no_air), stage["room"].animate.set_fill(opacity=0.05),
                   run_time=1.6)
         self.play(Create(no_mark), loop_guide.animate.set_stroke(opacity=0.15), run_time=0.6)
         hold_for(self, self.NARRATION, "vacuum", used=0.8 + 1.6 + 0.6 + 0.35)
@@ -854,10 +857,10 @@ class Beat4_Strahlung(Scene):
         hold_for(self, self.NARRATION, "still", used=2.6 + 0.35)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "symbol"))
-        token = _q_token("r", PASTEL_YELLOW).move_to(p(-3.0, 0.95))
+        token = _q_token("r", P_YELLOW).move_to(p(-3.0, 0.95))
         self.play(ReplacementTransform(VGroup(inner, outer), token),
                   FadeOut(loop_guide), FadeOut(no_mark), FadeOut(no_air), FadeOut(sky_tag),
-                  run_time=1.2)
+                  stage["room"].animate.set_fill(opacity=0.16), run_time=1.2)
         hold_for(self, self.NARRATION, "symbol", used=1.2 + 0.35)
 
         self.play(FadeOut(caption), run_time=0.3)
@@ -909,24 +912,24 @@ class Beat5_Zusammenfassung(Scene):
         stage = _stage(scale=SUMMARY_SCALE)
         p = stage["p"]
         zone_tags = VGroup(
-            Text("Konvektion + Strahlung", font_size=LABEL_FONT_SIZE, color=PASTEL_CYAN).move_to(p(-3.5, 2.20)),
-            Text("Leitung", font_size=LABEL_FONT_SIZE, color=PASTEL_RED).move_to(p(0.0, 2.20)),
-            Text("Konvektion + Strahlung", font_size=LABEL_FONT_SIZE, color=PASTEL_CYAN).move_to(p(3.5, 2.20)),
+            Text("Konvektion + Strahlung", font_size=LABEL_FONT_SIZE, color=P_CYAN).move_to(p(-3.5, 2.20)),
+            Text("Leitung", font_size=LABEL_FONT_SIZE, color=P_RED).move_to(p(0.0, 2.20)),
+            Text("Konvektion + Strahlung", font_size=LABEL_FONT_SIZE, color=P_CYAN).move_to(p(3.5, 2.20)),
         )
         loop, loop_color = _loop(stage)
-        loop_guide = loop.copy().set_stroke(color=PASTEL_CYAN, width=2.0, opacity=0.35).set_fill(opacity=0)
+        loop_guide = loop.copy().set_stroke(color=P_CYAN, width=2.0, opacity=0.35).set_fill(opacity=0)
         lanes, wind_color = _wind(stage)
-        wind_guides = VGroup(*[l.copy().set_stroke(color=PASTEL_CYAN, width=1.8, opacity=0.30).set_fill(opacity=0)
+        wind_guides = VGroup(*[l.copy().set_stroke(color=P_CYAN, width=1.8, opacity=0.30).set_fill(opacity=0)
                                for l in lanes])
         inner = _ir_rays(stage, INNER_RAYS)
         outer = _ir_rays(stage, OUTER_RAYS)
-        through = _flow_arrow(p(-0.55, 0.25), p(0.55, 0.25), PASTEL_RED, width=6)
+        through = _flow_arrow(p(-0.55, 0.25), p(0.55, 0.25), P_RED, width=6)
 
         eq, eq_box, items = math_panel([
-            ("ci", r"\dot{Q}_{\mathrm{c,i}}", PASTEL_CYAN), (None, "+", PASTEL_WHITE), ("ri", r"\dot{Q}_{\mathrm{r,i}}", PASTEL_YELLOW),
-            (None, "=", PASTEL_WHITE), ("k", r"\dot{Q}_{\mathrm{k}}", PASTEL_RED), (None, "=", PASTEL_WHITE),
-            ("ce", r"\dot{Q}_{\mathrm{c,e}}", PASTEL_CYAN), (None, "+", PASTEL_WHITE), ("re", r"\dot{Q}_{\mathrm{r,e}}", PASTEL_YELLOW),
-            (None, r"\;[\mathrm{W}]", PASTEL_TEAL),
+            ("ci", r"\dot{Q}_{\mathrm{c,i}}", P_CYAN), (None, "+", P_WHITE), ("ri", r"\dot{Q}_{\mathrm{r,i}}", P_YELLOW),
+            (None, "=", P_WHITE), ("k", r"\dot{Q}_{\mathrm{k}}", P_RED), (None, "=", P_WHITE),
+            ("ce", r"\dot{Q}_{\mathrm{c,e}}", P_CYAN), (None, "+", P_WHITE), ("re", r"\dot{Q}_{\mathrm{r,e}}", P_YELLOW),
+            (None, r"\;[\mathrm{W}]", P_TEAL),
         ])
 
         q = PROFILE_U * (THETA_I - THETA_E)
@@ -934,16 +937,16 @@ class Beat5_Zusammenfassung(Scene):
         theta_se = THETA_E + q * PROFILE_RSE
         prof_pts = [(-6.0, THETA_I), (-1.25, THETA_I), (WALL_X0, theta_si), (WALL_X1, theta_se),
                     (1.25, THETA_E), (6.0, THETA_E)]
-        profile = VMobject(color=PASTEL_WHITE, stroke_width=4)
+        profile = VMobject(color=P_WHITE, stroke_width=4)
         profile.set_points_as_corners([p(x, _profile_y(t)) for x, t in prof_pts])
-        prof_dots = VGroup(*[Dot(p(x, _profile_y(t)), radius=0.06, color=PASTEL_YELLOW) for x, t in prof_pts[1:5]])
+        prof_dots = VGroup(*[Dot(p(x, _profile_y(t)), radius=0.06, color=P_YELLOW) for x, t in prof_pts[1:5]])
         prof_tags = VGroup(
-            Text(f"{THETA_I} °C", font_size=LABEL_FONT_SIZE, color=PASTEL_ORANGE).move_to(p(-3.5, _profile_y(THETA_I) - 0.28)),
-            Text(f"{theta_si:.1f} °C".replace(".", ","), font_size=LABEL_FONT_SIZE, color=PASTEL_ORANGE)
+            Text(f"{THETA_I} °C", font_size=LABEL_FONT_SIZE, color=P_ORANGE).move_to(p(-3.5, _profile_y(THETA_I) - 0.28)),
+            Text(f"{theta_si:.1f} °C".replace(".", ","), font_size=LABEL_FONT_SIZE, color=P_ORANGE)
             .move_to(p(-1.75, _profile_y(theta_si) - 0.32)),
-            Text(f"{theta_se:.1f} °C".replace(".", ","), font_size=LABEL_FONT_SIZE, color=PASTEL_BLUE)
+            Text(f"{theta_se:.1f} °C".replace(".", ","), font_size=LABEL_FONT_SIZE, color=P_BLUE)
             .move_to(p(1.75, _profile_y(theta_se) + 0.32)),
-            Text(f"{THETA_E} °C", font_size=LABEL_FONT_SIZE, color=PASTEL_BLUE).move_to(p(3.5, _profile_y(THETA_E) + 0.28)),
+            Text(f"{THETA_E} °C", font_size=LABEL_FONT_SIZE, color=P_BLUE).move_to(p(3.5, _profile_y(THETA_E) + 0.28)),
         )
         iso = _din_ref("DIN EN ISO 6946")
 
@@ -963,9 +966,9 @@ class Beat5_Zusammenfassung(Scene):
         hold_for(self, self.NARRATION, "sum", used=used + 0.6 + 1.0 + 0.8 + 1.0 + 3.0 + 1.0 + 0.35)
 
         for key, keys, visual, color in (
-            ("k", ("k",), through, PASTEL_RED),
-            ("c", ("ci", "ce"), VGroup(loop_guide, wind_guides), PASTEL_CYAN),
-            ("r", ("ri", "re"), VGroup(inner, outer), PASTEL_YELLOW),
+            ("k", ("k",), through, P_RED),
+            ("c", ("ci", "ce"), VGroup(loop_guide, wind_guides), P_CYAN),
+            ("r", ("ri", "re"), VGroup(inner, outer), P_YELLOW),
         ):
             rings = VGroup(*[highlight_param(items, k, color=color) for k in keys])
             self.play(Create(rings), Indicate(visual, color=color, scale_factor=1.04), run_time=0.7)
@@ -984,8 +987,8 @@ class Beat5_Zusammenfassung(Scene):
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "standard"))
         self.play(FadeIn(iso), run_time=0.5)
-        self.play(Indicate(iso, color=PASTEL_TEAL, scale_factor=1.25), run_time=0.5)
-        self.play(Indicate(eq, color=PASTEL_TEAL, scale_factor=1.06), run_time=0.9)
+        self.play(Indicate(iso, color=P_TEAL, scale_factor=1.25), run_time=0.5)
+        self.play(Indicate(eq, color=P_TEAL, scale_factor=1.06), run_time=0.9)
         hold_for(self, self.NARRATION, "standard", used=1.0 + 0.9 + 0.35)
 
         self.play(FadeOut(caption), run_time=0.3)
@@ -1023,9 +1026,9 @@ class Beat6_VonWegenZuZahlen(Scene):
         self.play(FadeIn(caption), run_time=0.3)
 
         tokens = VGroup(
-            _q_token("k", PASTEL_RED),
-            _q_token("c", PASTEL_CYAN),
-            _q_token("r", PASTEL_YELLOW),
+            _q_token("k", P_RED),
+            _q_token("c", P_CYAN),
+            _q_token("r", P_YELLOW),
         ).arrange(DOWN, buff=0.62)
         tokens.move_to(np.array([-4.9, 1.05, 0.0]))
 
@@ -1033,32 +1036,32 @@ class Beat6_VonWegenZuZahlen(Scene):
             _flow_arrow(
                 tok.get_right() + RIGHT * 0.18,
                 np.array([-1.85, 1.05, 0.0]),
-                PASTEL_WHITE, width=3,
+                P_WHITE, width=3,
             )
             for tok in tokens
         ])
-        one = chip("ein Bauteil-Kennwert", PASTEL_TEAL)
+        one = chip("ein Bauteil-Kennwert", P_TEAL)
         one.move_to(np.array([-0.05, 1.05, 0.0]))
 
         stack = VGroup(
-            _layer(0.34, 1.9, PASTEL_WHITE, 0.20, "Putz"),
-            _layer(1.05, 1.9, PASTEL_ORANGE, 0.22, "Mauerwerk"),
-            _layer(0.95, 1.9, PASTEL_CYAN, 0.22, "Dämmung"),
-            _layer(0.26, 1.9, PASTEL_WHITE, 0.20, "Außenputz"),
+            _layer(0.34, 1.9, P_WHITE, 0.20, "Putz"),
+            _layer(1.05, 1.9, P_ORANGE, 0.22, "Mauerwerk"),
+            _layer(0.95, 1.9, P_CYAN, 0.22, "Dämmung"),
+            _layer(0.26, 1.9, P_WHITE, 0.20, "Außenputz"),
         ).arrange(RIGHT, buff=0.0, aligned_edge=UP)
         stack.move_to(np.array([2.55, -0.35, 0.0]))
         # A legend beside the stack, not a tag under each column: the thinnest
         # column (0.26 units) can never fit "Außenputz" (≈1.2 units) beneath
         # itself without overlapping its neighbour.
         legend = _layer_legend([
-            ("Putz", PASTEL_WHITE), ("Mauerwerk", PASTEL_ORANGE),
-            ("Dämmung", PASTEL_CYAN), ("Außenputz", PASTEL_WHITE),
+            ("Putz", P_WHITE), ("Mauerwerk", P_ORANGE),
+            ("Dämmung", P_CYAN), ("Außenputz", P_WHITE),
         ])
         legend.next_to(stack, DOWN, buff=0.30).set_x(stack.get_x())
 
         steps = VGroup(
-            chip("1 Schichten addieren → R", PASTEL_YELLOW, font_size=LABEL_FONT_SIZE),
-            chip("2 R umrechnen → U", PASTEL_ORANGE, font_size=LABEL_FONT_SIZE),
+            chip("1 Schichten addieren → R", P_YELLOW, font_size=LABEL_FONT_SIZE),
+            chip("2 R umrechnen → U", P_ORANGE, font_size=LABEL_FONT_SIZE),
         ).arrange(DOWN, buff=0.24)
         steps.move_to(np.array([-3.85, -1.60, 0.0]))
 
@@ -1156,7 +1159,7 @@ class Beat7_Waermedurchlasswiderstand(Scene):
             return d_m.get_value() / lam.get_value()
 
         def mat_color():
-            return interpolate_color(ManimColor(PASTEL_ORANGE), ManimColor(PASTEL_CYAN), ins.get_value())
+            return interpolate_color(ManimColor(P_ORANGE), ManimColor(P_CYAN), ins.get_value())
 
         def fit_layer(m):
             m.stretch_to_fit_width(x1() - x0)
@@ -1168,44 +1171,44 @@ class Beat7_Waermedurchlasswiderstand(Scene):
         fit_layer(layer)
         layer.add_updater(fit_layer)
 
-        mat = Text("Kalksandstein", font_size=LABEL_FONT_SIZE, color=PASTEL_ORANGE)
+        mat = Text("Kalksandstein", font_size=LABEL_FONT_SIZE, color=P_ORANGE)
         mat.next_to(np.array([x0, cy + layer_h / 2, 0.0]), UP, buff=0.16, aligned_edge=LEFT)
-        ins_tag = Text("Dämmung", font_size=LABEL_FONT_SIZE, color=PASTEL_CYAN)
+        ins_tag = Text("Dämmung", font_size=LABEL_FONT_SIZE, color=P_CYAN)
         ins_tag.next_to(np.array([x0, cy + layer_h / 2, 0.0]), UP, buff=0.16, aligned_edge=LEFT)
         lam_live = _live(
             lambda: (rf"\lambda = {de_num(lam_on.get_value() * lam.get_value(), _lam_digits(lam.get_value()))}"
                      r"\,\mathrm{W/(m\,K)}"),
             np.array([mat.get_right()[0] + 0.32, mat.get_bottom()[1], 0.0]),
-            size=LABEL_FONT_SIZE, color=PASTEL_ORANGE,
+            size=LABEL_FONT_SIZE, color=P_ORANGE,
         )
 
         warm_face = Line(
             np.array([x0 - 1.5, y_hi, 0.0]), np.array([x0, y_hi, 0.0]),
-            color=PASTEL_ORANGE, stroke_width=3,
+            color=P_ORANGE, stroke_width=3,
         )
-        cold_face = Line(np.array([x1(), y_lo, 0.0]), np.array([x1() + 1.5, y_lo, 0.0]), color=PASTEL_BLUE, stroke_width=3)
+        cold_face = Line(np.array([x1(), y_lo, 0.0]), np.array([x1() + 1.5, y_lo, 0.0]), color=P_BLUE, stroke_width=3)
         cold_face.add_updater(lambda m: m.put_start_and_end_on(
             np.array([x1(), y_lo, 0.0]), np.array([x1() + 1.5, y_lo, 0.0])))
-        grad = Line(np.array([x0, y_hi, 0.0]), np.array([x1(), y_lo, 0.0]), color=PASTEL_YELLOW, stroke_width=4)
+        grad = Line(np.array([x0, y_hi, 0.0]), np.array([x1(), y_lo, 0.0]), color=P_YELLOW, stroke_width=4)
         grad.add_updater(lambda m: m.put_start_and_end_on(
             np.array([x0, y_hi, 0.0]), np.array([x1(), y_lo, 0.0])))
-        ti = Text("20 °C", font_size=LABEL_FONT_SIZE, color=PASTEL_ORANGE)
+        ti = Text("20 °C", font_size=LABEL_FONT_SIZE, color=P_ORANGE)
         ti.next_to(warm_face.get_start(), UP, buff=0.12)
-        te = Text("0 °C", font_size=LABEL_FONT_SIZE, color=PASTEL_BLUE)
+        te = Text("0 °C", font_size=LABEL_FONT_SIZE, color=P_BLUE)
         te.add_updater(lambda m: m.next_to(np.array([x1() + 1.5, y_lo, 0.0]), DOWN, buff=0.12))
 
         d_brace = always_redraw(lambda: dim_arrow(
-            np.array([x0, y_dim, 0.0]), np.array([x1(), y_dim, 0.0]), color=PASTEL_CYAN,
+            np.array([x0, y_dim, 0.0]), np.array([x1(), y_dim, 0.0]), color=P_CYAN,
         ))
         d_live = _live(
             lambda: rf"d = {de_num(d_on.get_value() * d_m.get_value(), 2)}\,\mathrm{{m}}",
             lambda: np.array([(x0 + x1()) / 2, y_dim - 0.42, 0.0]),
-            size=BODY_FONT_SIZE, color=PASTEL_CYAN, edge="center",
+            size=BODY_FONT_SIZE, color=P_CYAN, edge="center",
         )
 
-        r_gauge = meter("R", length=2.0, thickness=0.52, color=PASTEL_YELLOW)
+        r_gauge = meter("R", length=2.0, thickness=0.52, color=P_YELLOW)
         r_gauge["group"].move_to(np.array([2.05, 1.05, 0.0]))
-        q_gauge = meter("Wärmestrom", length=2.0, thickness=0.52, color=PASTEL_RED)
+        q_gauge = meter("Wärmestrom", length=2.0, thickness=0.52, color=P_RED)
         q_gauge["group"].move_to(np.array([4.35, 1.05, 0.0]))
         set_meter(r_gauge, 0.0)
         set_meter(q_gauge, 0.0)
@@ -1215,20 +1218,20 @@ class Beat7_Waermedurchlasswiderstand(Scene):
             lambda: (rf"R = \frac{{d}}{{\lambda}} = {de_num(r_on.get_value() * r_val(), _r_digits(r_val()))}"
                      r"\,\mathrm{m^{2}K/W}"),
             np.array([3.20, -0.62, 0.0]),
-            size=BODY_FONT_SIZE, color=PASTEL_YELLOW, edge="center",
+            size=BODY_FONT_SIZE, color=P_YELLOW, edge="center",
         )
 
         eq, eq_box, items = math_panel([
-            ("r", "R", PASTEL_YELLOW), (None, "=", PASTEL_WHITE),
-            ("frac", r"\frac{\textcolor{#66FCF1}{d}}{\textcolor{#FFAAA5}{\lambda}}", PASTEL_WHITE),
-            (None, r"\;[\mathrm{m^{2}K/W}]", PASTEL_TEAL),
-        ], color=PASTEL_YELLOW)
+            ("r", "R", P_YELLOW), (None, "=", P_WHITE),
+            ("frac", r"\frac{\textcolor{#66FCF1}{d}}{\textcolor{#FFAAA5}{\lambda}}", P_WHITE),
+            (None, r"\;[\mathrm{m^{2}K/W}]", P_TEAL),
+        ], color=P_YELLOW)
         frac = items["frac"][0]
         parts = {"d": frac[0], "lam": frac[2]}
 
         sum_note = math_label(
             r"R_{\mathrm{ges}} = R_{1} + R_{2} + R_{3} + \ldots",
-            np.array([x0, -1.10, 0.0]), size=BODY_FONT_SIZE, color=PASTEL_TEAL, edge="left",
+            np.array([x0, -1.10, 0.0]), size=BODY_FONT_SIZE, color=P_TEAL, edge="left",
         )
 
         hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3)
@@ -1256,14 +1259,14 @@ class Beat7_Waermedurchlasswiderstand(Scene):
         hold_for(self, self.NARRATION, "formula", used=0.9 + 1.0 + 1.0 + 0.35)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "d"))
-        ring_d = highlight_param(parts, "d", color=PASTEL_CYAN)
+        ring_d = highlight_param(parts, "d", color=P_CYAN)
         self.play(Create(ring_d), run_time=0.4)
         self.play(d_m.animate.set_value(2 * B7_D0), run_time=1.8)
         hold_for(self, self.NARRATION, "d", used=0.4 + 1.8 + 0.35)
         self.play(FadeOut(ring_d), run_time=0.25)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "lam"))
-        ring_l = highlight_param(parts, "lam", color=PASTEL_ORANGE)
+        ring_l = highlight_param(parts, "lam", color=P_ORANGE)
         self.play(Create(ring_l), run_time=0.4)
         self.play(
             ReplacementTransform(mat, ins_tag),
@@ -1271,8 +1274,8 @@ class Beat7_Waermedurchlasswiderstand(Scene):
             run_time=1.9,
         )
         self.play(
-            Indicate(grad, color=PASTEL_YELLOW, scale_factor=1.0),
-            Indicate(q_gauge["track"], color=PASTEL_RED, scale_factor=1.05),
+            Indicate(grad, color=P_YELLOW, scale_factor=1.0),
+            Indicate(q_gauge["track"], color=P_RED, scale_factor=1.05),
             run_time=0.7,
         )
         hold_for(self, self.NARRATION, "lam", used=0.4 + 1.9 + 0.7 + 0.35)
@@ -1293,11 +1296,11 @@ class Beat7_Waermedurchlasswiderstand(Scene):
 #region Beat8 wall build-ups
 R_SI, R_SE = 0.13, 0.04
 WALL_1960 = (
-    ("Innenputz", 0.015, 0.70, PASTEL_WHITE),
-    ("Vollziegel", 0.365, 0.75, PASTEL_ORANGE),
-    ("Außenputz", 0.020, 0.87, PASTEL_WHITE),
+    ("Innenputz", 0.015, 0.70, P_WHITE),
+    ("Vollziegel", 0.365, 0.75, P_ORANGE),
+    ("Außenputz", 0.020, 0.87, P_WHITE),
 )
-WALL_SANIERT = WALL_1960[:2] + (("Dämmung", 0.20, 0.035, PASTEL_CYAN),) + WALL_1960[2:]
+WALL_SANIERT = WALL_1960[:2] + (("Dämmung", 0.20, 0.035, P_CYAN),) + WALL_1960[2:]
 B8_UNIT_PER_M = 3.6
 B8_MIN_W = 0.06
 B8_FILM_W = 0.05
@@ -1313,7 +1316,7 @@ def _wall_terms(layers) -> list[float]:
 def _wall_section(center, layers):
     """🏚️ Wall section drawn to scale — films, then one column per layer at its real thickness."""
     film = lambda: Rectangle(
-        width=B8_FILM_W, height=B8_WALL_H, stroke_width=0, fill_color=PASTEL_GREEN, fill_opacity=0.55,
+        width=B8_FILM_W, height=B8_WALL_H, stroke_width=0, fill_color=P_GREEN, fill_opacity=0.55,
     )
     cols = [
         Rectangle(
@@ -1380,7 +1383,7 @@ class Beat8_UWert(Scene):
                 + rf" = {de_num(r_now(), 2)}\,\mathrm{{m^{{2}}K/W}}"
             )
             u_src = lambda: rf"U = \frac{{1}}{{R_{{\mathrm{{ges}}}}}} = {de_num(u_now(), 2)}\,\mathrm{{W/(m^{{2}}K)}}"
-            r_live = _live(r_src, np.array([cx, -0.22, 0.0]), size=LABEL_FONT_SIZE, color=PASTEL_TEAL, edge="center")
+            r_live = _live(r_src, np.array([cx, -0.22, 0.0]), size=LABEL_FONT_SIZE, color=P_TEAL, edge="center")
             u_live = _live(u_src, np.array([cx, -0.82, 0.0]), size=BODY_FONT_SIZE, color=tag_color, edge="center")
             right = stack.get_right()[0] + 0.06
             leak = always_redraw(lambda: VGroup(*[
@@ -1395,31 +1398,31 @@ class Beat8_UWert(Scene):
                     "r_live": r_live, "u_live": u_live, "leak": leak, "card": VGroup(stack, label)}
 
         U_1960 = 1.0 / sum(_wall_terms(WALL_1960))
-        old = _card(-3.45, WALL_1960, "Altbau 1960 — ungedämmt", PASTEL_RED)
-        new = _card(3.45, WALL_SANIERT, "saniert — 20 cm Dämmung", PASTEL_CYAN)
+        old = _card(-3.45, WALL_1960, "Altbau 1960 — ungedämmt", P_RED)
+        new = _card(3.45, WALL_SANIERT, "saniert — 20 cm Dämmung", P_CYAN)
 
         films = VGroup(
-            math_label(r"R_{\mathrm{si}}", size=LABEL_FONT_SIZE, color=PASTEL_GREEN).next_to(old["stack"], LEFT, buff=0.14),
-            math_label(r"R_{\mathrm{se}}", size=LABEL_FONT_SIZE, color=PASTEL_GREEN).next_to(old["stack"], RIGHT, buff=0.14),
+            math_label(r"R_{\mathrm{si}}", size=LABEL_FONT_SIZE, color=P_GREEN).next_to(old["stack"], LEFT, buff=0.14),
+            math_label(r"R_{\mathrm{se}}", size=LABEL_FONT_SIZE, color=P_GREEN).next_to(old["stack"], RIGHT, buff=0.14),
         )
 
         r_eq, r_box, r_items = math_panel([
-            ("rges", r"R_{\mathrm{ges}}", PASTEL_TEAL), (None, "=", PASTEL_WHITE),
-            ("rsi", r"R_{\mathrm{si}}", PASTEL_GREEN), (None, "+", PASTEL_WHITE),
-            (None, r"\Sigma\,\frac{d}{\lambda}", PASTEL_YELLOW), (None, "+", PASTEL_WHITE),
-            ("rse", r"R_{\mathrm{se}}", PASTEL_GREEN),
-            (None, r"\;[\mathrm{m^{2}K/W}]", PASTEL_TEAL),
-        ], color=PASTEL_TEAL)
+            ("rges", r"R_{\mathrm{ges}}", P_TEAL), (None, "=", P_WHITE),
+            ("rsi", r"R_{\mathrm{si}}", P_GREEN), (None, "+", P_WHITE),
+            (None, r"\Sigma\,\frac{d}{\lambda}", P_YELLOW), (None, "+", P_WHITE),
+            ("rse", r"R_{\mathrm{se}}", P_GREEN),
+            (None, r"\;[\mathrm{m^{2}K/W}]", P_TEAL),
+        ], color=P_TEAL)
         u_eq, u_box, u_items = math_panel([
-            ("u", "U", PASTEL_ORANGE), (None, "=", PASTEL_WHITE),
-            (None, r"\frac{1}{R_{\mathrm{ges}}}", PASTEL_TEAL),
-            (None, r"\;[\mathrm{W/(m^{2}K)}]", PASTEL_TEAL),
-        ], color=PASTEL_ORANGE)
+            ("u", "U", P_ORANGE), (None, "=", P_WHITE),
+            (None, r"\frac{1}{R_{\mathrm{ges}}}", P_TEAL),
+            (None, r"\;[\mathrm{W/(m^{2}K)}]", P_TEAL),
+        ], color=P_ORANGE)
 
         def count_layers(card, step):
             for col, tracker in zip(card["stack"], card["on"]):
                 self.play(
-                    Indicate(col, color=PASTEL_YELLOW, scale_factor=1.0),
+                    Indicate(col, color=P_YELLOW, scale_factor=1.0),
                     tracker.animate.set_value(1.0),
                     run_time=step,
                 )
@@ -1456,8 +1459,8 @@ class Beat8_UWert(Scene):
         hold_for(self, self.NARRATION, "new", used=0.8 + 6 * 0.35 + 1.2 + 0.35)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "meaning"))
-        ring = highlight_param(u_items, "u", color=PASTEL_ORANGE)
-        self.play(Create(ring), Indicate(new["u_live"], color=PASTEL_CYAN, scale_factor=1.12), run_time=1.0)
+        ring = highlight_param(u_items, "u", color=P_ORANGE)
+        self.play(Create(ring), Indicate(new["u_live"], color=P_CYAN, scale_factor=1.12), run_time=1.0)
         hold_for(self, self.NARRATION, "meaning", used=1.0 + 0.35)
 
         self.play(FadeOut(caption), run_time=0.3)
@@ -1530,67 +1533,67 @@ class Beat9_WaermestromFormel(Scene):
             m.move_to(np.array([(fl + fr()) / 2, fcy, 0.0]))
 
         facade = Rectangle(
-            width=fr() - fl, height=fh, color=PASTEL_WHITE, stroke_width=2.5,
-            fill_color=PASTEL_TEAL, fill_opacity=0.12,
+            width=fr() - fl, height=fh, color=P_WHITE, stroke_width=2.5,
+            fill_color=P_TEAL, fill_opacity=0.12,
         )
         fit_facade(facade)
         facade.add_updater(fit_facade)
 
         w_dim = always_redraw(lambda: dim_arrow(
-            np.array([fl, fcy - fh / 2 - 0.25, 0.0]), np.array([fr(), fcy - fh / 2 - 0.25, 0.0]), color=PASTEL_CYAN,
+            np.array([fl, fcy - fh / 2 - 0.25, 0.0]), np.array([fr(), fcy - fh / 2 - 0.25, 0.0]), color=P_CYAN,
         ))
         h_dim = dim_arrow(
-            np.array([fl - 0.25, fcy - fh / 2, 0.0]), np.array([fl - 0.25, fcy + fh / 2, 0.0]), color=PASTEL_CYAN,
+            np.array([fl - 0.25, fcy - fh / 2, 0.0]), np.array([fl - 0.25, fcy + fh / 2, 0.0]), color=P_CYAN,
         )
         w_live = _live(
             lambda: rf"{de_num(w_on.get_value() * w_geo.get_value())}\,\mathrm{{m}}",
             lambda: np.array([(fl + fr()) / 2, fcy - fh / 2 - 0.62, 0.0]),
-            size=LABEL_FONT_SIZE, color=PASTEL_CYAN, edge="center",
+            size=LABEL_FONT_SIZE, color=P_CYAN, edge="center",
         )
         h_live = _live(
             lambda: rf"{de_num(h_on.get_value() * B9_H)}\,\mathrm{{m}}",
             np.array([fl - 0.42, fcy - 0.08, 0.0]),
-            size=LABEL_FONT_SIZE, color=PASTEL_CYAN, edge="right",
+            size=LABEL_FONT_SIZE, color=P_CYAN, edge="right",
         )
         a_live = _live(
             lambda: rf"A = {de_num(area())}\,\mathrm{{m^{{2}}}}",
             lambda: np.array([(fl + fr()) / 2, fcy + 0.22, 0.0]),
-            size=BODY_FONT_SIZE, color=PASTEL_CYAN, edge="center",
+            size=BODY_FONT_SIZE, color=P_CYAN, edge="center",
         )
         u_live = _live(
             lambda: rf"U = {de_num(u_t.get_value(), 2)}\,\mathrm{{W/(m^{{2}}K)}}",
             lambda: np.array([(fl + fr()) / 2, fcy - 0.40, 0.0]),
-            size=LABEL_FONT_SIZE, color=PASTEL_ORANGE, edge="center",
+            size=LABEL_FONT_SIZE, color=P_ORANGE, edge="center",
         )
 
-        ti = Text("innen 20 °C", font_size=LABEL_FONT_SIZE, color=PASTEL_ORANGE)
+        ti = Text("innen 20 °C", font_size=LABEL_FONT_SIZE, color=P_ORANGE)
         ti.next_to(np.array([fl, fcy + fh / 2, 0.0]), UP, buff=0.16, aligned_edge=LEFT)
-        te = Text("außen 0 °C", font_size=LABEL_FONT_SIZE, color=PASTEL_BLUE)
+        te = Text("außen 0 °C", font_size=LABEL_FONT_SIZE, color=P_BLUE)
         te.move_to(np.array([fl, fcy - fh / 2 - 1.10, 0.0]), aligned_edge=LEFT)
-        te_cold = Text("außen −20 °C", font_size=LABEL_FONT_SIZE, color=PASTEL_BLUE).move_to(te, aligned_edge=LEFT)
-        te_back = Text("außen 0 °C", font_size=LABEL_FONT_SIZE, color=PASTEL_BLUE).move_to(te, aligned_edge=LEFT)
+        te_cold = Text("außen −20 °C", font_size=LABEL_FONT_SIZE, color=P_BLUE).move_to(te, aligned_edge=LEFT)
+        te_back = Text("außen 0 °C", font_size=LABEL_FONT_SIZE, color=P_BLUE).move_to(te, aligned_edge=LEFT)
         dt_live = _live(
             lambda: _dtheta_src(dt_t.get_value()),
             np.array([te_cold.get_right()[0] + 0.40, te.get_bottom()[1], 0.0]),
-            size=LABEL_FONT_SIZE, color=PASTEL_BLUE,
+            size=LABEL_FONT_SIZE, color=P_BLUE,
         )
 
-        q_gauge = meter("Wärmestrom", length=2.2, thickness=0.55, color=PASTEL_RED)
+        q_gauge = meter("Wärmestrom", length=2.2, thickness=0.55, color=P_RED)
         q_gauge["group"].move_to(np.array([1.60, 0.95, 0.0]))
         set_meter(q_gauge, 0.0)
         q_gauge["fill"].add_updater(lambda m: set_meter(q_gauge, min(1.0, q_now() / B9_Q_FULL)))
         q_live = _live(
             lambda: rf"\dot{{Q}} = U \cdot A \cdot \Delta\theta = {de_num(q_now())}\,\mathrm{{W}}",
             np.array([1.60, -0.62, 0.0]),
-            size=BODY_FONT_SIZE, color=PASTEL_RED, edge="center",
+            size=BODY_FONT_SIZE, color=P_RED, edge="center",
         )
 
         eq, eq_box, items = math_panel([
-            ("q", r"\dot{Q}", PASTEL_WHITE), (None, "=", PASTEL_WHITE),
-            ("u", "U", PASTEL_ORANGE), (None, r"\cdot", PASTEL_WHITE),
-            ("a", "A", PASTEL_CYAN), (None, r"\cdot", PASTEL_WHITE),
-            ("dt", r"\Delta\theta", PASTEL_BLUE),
-            (None, r"\;[\mathrm{W}]", PASTEL_TEAL),
+            ("q", r"\dot{Q}", P_WHITE), (None, "=", P_WHITE),
+            ("u", "U", P_ORANGE), (None, r"\cdot", P_WHITE),
+            ("a", "A", P_CYAN), (None, r"\cdot", P_WHITE),
+            ("dt", r"\Delta\theta", P_BLUE),
+            (None, r"\;[\mathrm{W}]", P_TEAL),
         ])
 
         hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3)
@@ -1611,20 +1614,20 @@ class Beat9_WaermestromFormel(Scene):
         hold_for(self, self.NARRATION, "formula", used=1.0 + 0.9 + 0.9 + 0.35)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "u"))
-        ring_u = highlight_param(items, "u", color=PASTEL_ORANGE)
-        self.play(Create(ring_u), Indicate(facade, color=PASTEL_ORANGE), run_time=0.9)
+        ring_u = highlight_param(items, "u", color=P_ORANGE)
+        self.play(Create(ring_u), Indicate(facade, color=P_ORANGE), run_time=0.9)
         hold_for(self, self.NARRATION, "u", used=0.9 + 0.35)
         self.play(FadeOut(ring_u), run_time=0.25)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "a"))
-        ring_a = highlight_param(items, "a", color=PASTEL_CYAN)
+        ring_a = highlight_param(items, "a", color=P_CYAN)
         self.play(Create(ring_a), run_time=0.4)
         self.play(w_geo.animate.set_value(2 * B9_W), run_time=1.5)
         hold_for(self, self.NARRATION, "a", used=0.4 + 1.5 + 0.35)
         self.play(w_geo.animate.set_value(B9_W), FadeOut(ring_a), run_time=1.0)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "dt"))
-        ring_dt = highlight_param(items, "dt", color=PASTEL_BLUE)
+        ring_dt = highlight_param(items, "dt", color=P_BLUE)
         self.play(Create(ring_dt), run_time=0.4)
         self.play(
             ReplacementTransform(te, te_cold),
@@ -1640,22 +1643,22 @@ class Beat9_WaermestromFormel(Scene):
         )
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "power"))
-        lever = chip("Hebel in der Wand: U dämmen", PASTEL_GREEN, font_size=LABEL_FONT_SIZE)
+        lever = chip("Hebel in der Wand: U dämmen", P_GREEN, font_size=LABEL_FONT_SIZE)
         lever.move_to(np.array([fl + B9_W * B9_UNIT_PER_M / 2, -1.30, 0.0]))
         self.play(
-            Indicate(items["u"], color=PASTEL_GREEN, scale_factor=1.25),
+            Indicate(items["u"], color=P_GREEN, scale_factor=1.25),
             FadeIn(lever, shift=UP * 0.12),
             run_time=1.1,
         )
         self.play(
-            facade.animate.set_fill(PASTEL_CYAN, opacity=0.22),
+            facade.animate.set_fill(P_CYAN, opacity=0.22),
             u_t.animate.set_value(B9_U_NEW),
             run_time=1.5,
         )
         hold_for(self, self.NARRATION, "power", used=1.1 + 1.5 + 0.35)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "outro"))
-        anchor = watt_anchor(2000, compare="heater", title="ungedämmt", color=PASTEL_RED)
+        anchor = watt_anchor(2000, compare="heater", title="ungedämmt")
         anchor.scale(0.68).move_to(np.array([5.20, 0.60, 0.0]))
         self.play(FadeIn(anchor, shift=LEFT * 0.15), run_time=1.1)
         hold_for(self, self.NARRATION, "outro", used=1.1 + 0.35)
